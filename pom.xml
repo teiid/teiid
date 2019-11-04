@@ -147,6 +147,7 @@
         <version.opentracing>0.31.0</version.opentracing>
 
         <version.xerces>2.12.0</version.xerces>
+        <version.org.slf4j>1.7.28</version.org.slf4j>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -860,7 +861,12 @@
                <version>${version.opentracing}</version>
                <scope>test</scope>
             </dependency>
-            
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-ext</artifactId>
+                <version>${version.org.slf4j}</version>
+            </dependency>
             <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-jaxrs</artifactId>
@@ -1774,7 +1780,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.7.26</version>
+                <version>${version.org.slf4j}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
