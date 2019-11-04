@@ -882,9 +882,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
     }
 
     @Override
-    protected void retryLoad(VDBMetaData vdb, ModelMetaData model,
+    protected boolean retryLoad(VDBMetaData vdb, ModelMetaData model,
             Runnable job) {
         //not supported by embedded
+        return false;
     }
 
     @Override

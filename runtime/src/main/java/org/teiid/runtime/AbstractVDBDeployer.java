@@ -317,10 +317,8 @@ public abstract class AbstractVDBDeployer {
                         model.addRuntimeError(errorMsg);
                         model.setMetadataStatus(Model.MetadataStatus.FAILED);
                         LogManager.logWarning(LogConstants.CTX_RUNTIME, ex, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
-                        if (ex instanceof RuntimeException) {
+                        if (ex instanceof RuntimeException || !retryLoad(vdb, model, this)) {
                             metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, cmr, vdbResources);
-                        } else {
-                            retryLoad(vdb, model, this);
                         }
                     }
                 }
@@ -332,7 +330,14 @@ public abstract class AbstractVDBDeployer {
 
     protected abstract void runMetadataJob(VDBMetaData vdb, ModelMetaData model, Runnable job) throws TranslatorException;
 
-    protected abstract void retryLoad(VDBMetaData vdb, final ModelMetaData model, Runnable job);
+    /**
+     * Return true if we can retry the load
+     * @param vdb
+     * @param model
+     * @param job
+     * @return
+     */
+    protected abstract boolean retryLoad(VDBMetaData vdb, final ModelMetaData model, Runnable job);
 
     protected abstract MetadataFactory getCachedMetadataFactory(final VDBMetaData vdb, final ModelMetaData model);
 

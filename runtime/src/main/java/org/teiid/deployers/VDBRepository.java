@@ -316,13 +316,14 @@ public class VDBRepository implements Serializable{
             return;
         }
         VDBMetaData metadataAwareVDB = v.getVDB();
-        if (v.getOriginalVDB().getStatus() == Status.FAILED) {
-            if (v.getOriginalVDB() != metadataAwareVDB && metadataAwareVDB.getStatus() == Status.LOADING) {
-                metadataAwareVDB.setStatus(Status.FAILED);
-            }
-            return;
-        }
         synchronized (metadataAwareVDB) {
+            if (v.getOriginalVDB().getStatus() == Status.FAILED) {
+                if (v.getOriginalVDB() != metadataAwareVDB && metadataAwareVDB.getStatus() == Status.LOADING) {
+                    metadataAwareVDB.setStatus(Status.FAILED);
+                }
+                notifyFinished(name, version, v);
+                return;
+            }
             try {
                 try {
                     v.metadataLoadFinished(allowEnv);
