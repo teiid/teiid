@@ -388,7 +388,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
     }
 
     @Override
-    protected void retryLoad(VDBMetaData v, ModelMetaData model,
+    protected boolean retryLoad(VDBMetaData v, ModelMetaData model,
             Runnable job) {
         VDBStatusChecker marked = model.removeAttachment(VDBStatusChecker.class);
 
@@ -398,5 +398,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
             //defer the load to the status checker if/when a source is available/redeployed
             model.addAttachment(Runnable.class, wrap(job));
         }
+        return true;
     }
 }

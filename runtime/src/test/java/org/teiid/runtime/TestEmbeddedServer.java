@@ -1463,6 +1463,35 @@ public class TestEmbeddedServer {
         assertEquals(org.teiid.adminapi.VDB.Status.ACTIVE, future.get(5, TimeUnit.SECONDS));
     }
 
+    @Test public void testAsyncDeployError() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        CompletableFuture<org.teiid.adminapi.VDB.Status> future = new CompletableFuture<>();
+        Thread t = Thread.currentThread();
+        es.getVDBRepository().addListener(new VDBLifeCycleListener() {
+            @Override
+            public void finishedDeployment(String name, CompositeVDB vdb) {
+                if (Thread.currentThread() == t) {
+                    future.completeExceptionally(new AssertionError("Same thread"));
+                } else {
+                    future.complete(vdb.getVDB().getStatus());
+                }
+            }
+        });
+        es.addMetadataRepository("CUSTOM", new MetadataRepository<Object, Object>() {
+
+            @Override
+            public void loadMetadata(MetadataFactory factory,
+                    ExecutionFactory<Object, Object> executionFactory,
+                    Object connectionFactory, String text)
+                    throws TranslatorException {
+                throw new TranslatorException();
+            }
+
+        });
+        es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><property name=\"async-load\" value=\"true\"></property><model type=\"VIRTUAL\" name=\"test\"><metadata type=\"CUSTOM\"><![CDATA[CREATE view x as select 1;]]> </metadata></model></vdb>".getBytes()));
+        assertEquals(org.teiid.adminapi.VDB.Status.FAILED, future.get(5, TimeUnit.SECONDS));
+    }
+
     @Test public void testQueryTimeout() throws Exception {
         es.start(new EmbeddedConfiguration());
         es.addTranslator("foo", new ExecutionFactory() {
