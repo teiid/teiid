@@ -461,7 +461,8 @@ public class Base64
     }   // end decode
 
     public static String encodeUrlSafe(byte[] data) {
-        byte[] encode = encodeBytes(data).getBytes(Charset.forName("UFT-8")); //$NON-NLS-1$
+        Charset charset = Charset.forName(PREFERRED_ENCODING);
+        byte[] encode = encodeBytes(data).getBytes(charset);
         for (int i = 0; i < encode.length; i++) {
             if (encode[i] == '+') {
                 encode[i] = '-';
@@ -469,7 +470,7 @@ public class Base64
                 encode[i] = '_';
             }
         }
-        return new String(encode, Charset.forName("UFT-8")); //$NON-NLS-1$
+        return new String(encode, charset);
     }
 
     public static byte[] decodeUrlSafe(CharSequence data) {
