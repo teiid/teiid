@@ -8,16 +8,16 @@
         <artifact name="${org.infinispan:infinispan-client-hotrod}"/>
         <artifact name="${org.infinispan:infinispan-remote-query-client}"/>
         <artifact name="${org.infinispan:infinispan-query-dsl}"/>
-        <artifact name="${org.infinispan.protostream:protostream}"/>
     </resources>
 
     <dependencies>
         <module name="javax.api"/>
-        <module name="com.google.protobuf" optional="true"/>
-        <module name="com.squareup"/>
-        <module name="org.apache.commons.pool"/>
+        <module name="com.google.code.gson"/>
+        <module name="io.netty"/>
+        <module name="io.reactivex.rxjava2.rxjava"/>
+        <module name="javax.transaction.api"/>
         <module name="org.infinispan.commons" slot="teiid"/>
-        <module name="org.apache.commons.cli"/>
+        <module name="org.wildfly.security.elytron"/>
         <module name="org.jboss.logging"/>
     </dependencies>
 </module>

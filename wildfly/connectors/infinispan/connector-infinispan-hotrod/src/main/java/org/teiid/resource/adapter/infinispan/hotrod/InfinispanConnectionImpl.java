@@ -19,12 +19,10 @@
 package org.teiid.resource.adapter.infinispan.hotrod;
 
 
-import java.util.EnumSet;
 import java.util.Map;
 
 import javax.resource.ResourceException;
 
-import org.infinispan.client.hotrod.AdminFlag;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.api.BasicCache;
@@ -38,14 +36,13 @@ import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionF
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
 
-
 public class InfinispanConnectionImpl extends BasicConnection implements InfinispanConnection {
     private RemoteCacheManager cacheManager;
     private String cacheName;
 
     private BasicCache<?, ?> defaultCache;
     private SerializationContext ctx;
-    private ThreadAwareMarshallerProvider marshallerProvider = new ThreadAwareMarshallerProvider();
+    private SimpleMarshallerProvider marshallerProvider = new SimpleMarshallerProvider();
     private InfinispanConnectionFactory icf;
     private RemoteCacheManager scriptManager;
     private String cacheTemplate;
@@ -57,13 +54,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
         this.ctx = ctx;
         this.ctx.registerMarshallerProvider(this.marshallerProvider);
         this.icf = icf;
+        this.scriptManager = scriptManager;
+        this.cacheTemplate = cacheTemplate;
+
         try {
-            this.defaultCache = this.cacheManager.getCache(this.cacheName);
+            this.defaultCache = getCache(cacheName, true);
         } catch (Throwable t) {
             throw new ResourceException(t);
         }
-        this.scriptManager = scriptManager;
-        this.cacheTemplate = cacheTemplate;
     }
 
     @Override
@@ -87,7 +85,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     public <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException{
         RemoteCache<Object, Object> cache = cacheManager.getCache(cacheName);
         if (cache == null && createIfNotExists) {
-            cacheManager.administration().createCache(cacheName, this.cacheTemplate, EnumSet.of(AdminFlag.PERSISTENT));
+            cacheManager.administration().createCache(cacheName, this.cacheTemplate);
             cache = cacheManager.getCache(cacheName);
         }
         return (BasicCache<K,V>)cache;
@@ -95,45 +93,39 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
     @Override
     public void registerMarshaller(BaseMarshaller<InfinispanDocument> marshaller) throws TranslatorException {
-        ThreadAwareMarshallerProvider.setMarsheller(marshaller);
+    	marshallerProvider.setMarsheller(marshaller);
     }
 
     @Override
     public void unRegisterMarshaller(BaseMarshaller<InfinispanDocument> marshaller) throws TranslatorException {
-        ThreadAwareMarshallerProvider.setMarsheller(null);
+    	marshallerProvider.setMarsheller(null);
     }
 
-    /**
-     * The reason for thread aware marshaller is due to fact the serialization context is JVM wide, so if some other
-     * connection is also trying to register a marshaller for same object, they should not conflict.
-     */
-    static class ThreadAwareMarshallerProvider implements MarshallerProvider {
+    static class SimpleMarshallerProvider implements MarshallerProvider {
 
-        private static ThreadLocal<BaseMarshaller<?>> context = new ThreadLocal<BaseMarshaller<?>>() {
-            @Override
-            protected BaseMarshaller<?> initialValue() {
-                return null;
-            }
-        };
+    	 private BaseMarshaller<?> marshaller;
 
-        public static void setMarsheller(BaseMarshaller<?> marshaller) {
-            context.set(marshaller);
+        public void setMarsheller(BaseMarshaller<?> marshaller) throws TranslatorException {
+        	if (this.marshaller == null) {
+        		this.marshaller = marshaller;
+        	} else {
+        		if (marshaller == null) {
+        			this.marshaller = null;
+        		} else if (!this.marshaller.getTypeName().contentEquals(marshaller.getTypeName())) {
+        			throw new TranslatorException("Already a marshaller present, connection can not be shared");
+        		}
+        	}
         }
 
         @Override
         public BaseMarshaller<?> getMarshaller(String typeName) {
-            BaseMarshaller<?> m = context.get();
-            if (m != null && typeName.equals(m.getTypeName())) {
-                return context.get();
-            }
-            return null;
+        	return this.marshaller;
         }
 
         @Override
         public BaseMarshaller<?> getMarshaller(Class<?> javaClass) {
-            BaseMarshaller<?> m = context.get();
-            if (m != null && javaClass.isAssignableFrom(InfinispanDocument.class)) {
-                return context.get();
+            if (javaClass.isAssignableFrom(InfinispanDocument.class)) {
+            	return this.marshaller;
             }
             return null;
         }

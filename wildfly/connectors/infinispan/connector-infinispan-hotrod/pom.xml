@@ -59,6 +59,11 @@
 			<artifactId>infinispan-remote-query-server</artifactId>
 		</dependency>
         <!-- test dependencies -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>        
 		<dependency>
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-server-hotrod</artifactId>

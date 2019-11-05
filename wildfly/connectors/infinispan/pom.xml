@@ -33,7 +33,12 @@
 				<version>${project.version}</version>
 				<type>test-jar</type>
 			</dependency>
-
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${version.com.fasterxml.jackson.core.jackson-databind.test}</version>
+                <scope>test</scope>
+            </dependency>
 		</dependencies>
 	</dependencyManagement>
 

@@ -27,8 +27,8 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.commons.marshall.jboss.GenericJBossMarshaller;
+import org.infinispan.client.hotrod.marshall.MarshallerUtil;
+import org.infinispan.commons.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
@@ -112,7 +112,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                 ctx.registerProtoFiles(fds);
                 */
                 this.cacheManager.start();
-                this.ctx = ProtoStreamMarshaller.getSerializationContext(this.cacheManager);
+                this.ctx = MarshallerUtil.getSerializationContext(this.cacheManager);
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
@@ -122,7 +122,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             try {
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
-                builder.marshaller(new GenericJBossMarshaller());
+                //builder.marshaller(new GenericJBossMarshaller());
                 handleSecurity(builder);
 
                 // note this object is expensive, so there needs to only one

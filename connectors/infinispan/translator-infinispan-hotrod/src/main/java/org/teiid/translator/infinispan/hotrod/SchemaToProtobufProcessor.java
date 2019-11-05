@@ -136,12 +136,12 @@ public class SchemaToProtobufProcessor {
 
         boolean array = column.getJavaType().isArray();
         String type = getType(column, array);
+        boolean needId = isPartOfPrimaryKey(column) || isPartOfUniqueKey(column);
 
         if (column.getAnnotation() != null) {
             buffer.append("/* ").append(column.getAnnotation().replace('\n', ' ')).append(" */").append(NL);
             addTab();
         } else {
-            boolean needId = isPartOfPrimaryKey(column) || isPartOfUniqueKey(column);
             boolean needType =  ProtobufDataManager.shouldPreserveType(type, column.getRuntimeType());
 
             if (needId || needType) {
@@ -170,7 +170,7 @@ public class SchemaToProtobufProcessor {
             }
         }
 
-        if (column.getNullType().equals(NullType.No_Nulls)) {
+        if (column.getNullType().equals(NullType.No_Nulls) || needId) {
             buffer.append("required ");
         } else if (array) {
             buffer.append("repeated ");

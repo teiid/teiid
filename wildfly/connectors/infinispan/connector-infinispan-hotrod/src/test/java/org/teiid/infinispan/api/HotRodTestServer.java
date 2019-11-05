@@ -40,13 +40,15 @@ public class HotRodTestServer {
         ConfigurationBuilder c = getConfigurationBuilder();
                 //new ConfigurationBuilder();
         GlobalConfigurationBuilder gc = GlobalConfigurationBuilder.defaultClusteredBuilder().nonClusteredDefault();
+        gc.defaultCacheName("default");
+
         GlobalConfiguration config = gc.build();
         this.defaultCacheManager = new DefaultCacheManager(config, c.build(config));
-        this.defaultCacheManager.defineConfiguration("default", getConfigurationBuilder().build());
+        this.defaultCacheManager.defineConfiguration("bar", getConfigurationBuilder().build());
 
         this.defaultCacheManager.defineConfiguration("foo", getConfigurationBuilder().build());
 
-        this.defaultCacheManager.startCaches("default", "foo", ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+        this.defaultCacheManager.startCaches("bar", "foo", ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
         this.defaultCacheManager.getCache();
 
         HotRodServerConfigurationBuilder builder = new HotRodServerConfigurationBuilder();
@@ -58,8 +60,8 @@ public class HotRodTestServer {
 
     protected ConfigurationBuilder getConfigurationBuilder() {
         ConfigurationBuilder builder = new ConfigurationBuilder();
-        builder.indexing().index(Index.ALL).addProperty("default.directory_provider", "ram")
-                .addProperty("lucene_version", "LUCENE_CURRENT");
+//        builder.indexing().index(Index.ALL).addProperty("default.directory_provider", "ram")
+//                .addProperty("lucene_version", "LUCENE_CURRENT");
         return builder;
     }
 
