@@ -5580,7 +5580,7 @@ void dropDataWrapper(DatabaseStore dbStore) :
 /*
 name=create role 
 description=Defines data role for the database
-example=[source,sql]\n----\nCREATE DATA ROLE lowly WITH FOREIGN ROLE 'role'\n----\n
+example=[source,sql]\n----\nCREATE ROLE lowly WITH FOREIGN ROLE "role"\n----\n
 */
 void createRole(DatabaseStore dbStore) :
 {
