@@ -309,6 +309,33 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
 
+    @Test public void testXmlTableXmlArray() throws Exception {
+        String doc = "'[\n" +
+                "    {\n" +
+                "        \"at\": \"ABC\",\n" +
+                "        \"values\": [\n" +
+                "            [\n" +
+                "                \"v1-value1\",\n" +
+                "                \"v1-value2\",\n" +
+                "                \"v1-value3\"\n" +
+                "            ],\n" +
+                "             [\n" +
+                "                \"v2-value1\",\n" +
+                "                \"v2-value2\",\n" +
+                "             ]\n" +
+                "        ]\n" +
+                "    }\n" +
+                "]'";
+        String sql = "SELECT A.\"values\"[2] FROM XMLTABLE('/response/response' PASSING JSONTOXML('response', "+doc+") COLUMNS at string PATH 'at/text()', \"values\" xml[] PATH 'values') AS A;"; //$NON-NLS-1$
+
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("<values><values>v2-value1</values><values>v2-value2</values></values>"),
+        };
+
+        process(sql, expected);
+    }
+
+
     @Test public void testXmlTable() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"; //$NON-NLS-1$
 

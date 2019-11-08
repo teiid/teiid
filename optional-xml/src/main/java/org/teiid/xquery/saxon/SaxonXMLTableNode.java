@@ -333,19 +333,18 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
                         continue;
                     }
                     if (proColumn.getSymbol().getType() == DataTypeManager.DefaultDataClasses.XML) {
-                        SequenceIterator pushBack = new PushBackSequenceIterator(pathIter, colItem);
-                        XMLType value = this.saxonXQueryExpression.createXMLType(pushBack, this.getBufferManager(), false, getContext());
-                        tuple.add(value);
+                        tuple.add(asXml(pathIter, colItem));
                         continue;
                     }
                     if (proColumn.getSymbol().getType().isArray()) {
                         ArrayList<Object> vals = new ArrayList<Object>();
-                        vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.saxonXQueryExpression.getConfig(), getContext()));
+                        Class<?> componentType = proColumn.getSymbol().getType().getComponentType();
+                        vals.add(getValueOrXml(colItem, componentType));
                         Item next = null;
                         while ((next = pathIter.next()) != null) {
-                            vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.saxonXQueryExpression.getConfig(), getContext()));
+                            vals.add(getValueOrXml(next, componentType));
                         }
-                        Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
+                        Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(componentType, vals.size())));
                         tuple.add(value);
                         continue;
                     } else if (pathIter.next() != null) {
@@ -360,6 +359,23 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
         }
         item = null;
         return tuple;
+    }
+
+    private Object getValueOrXml(Item colItem, Class<?> componentType)
+            throws XPathException, ValidationException,
+            TeiidComponentException, TeiidProcessingException {
+        if (componentType == DataTypeManager.DefaultDataClasses.XML) {
+            SequenceIterator iter = colItem.iterate();
+            return asXml(iter, iter.next());
+        }
+        return getValue(componentType, colItem, this.saxonXQueryExpression.getConfig(), getContext());
+    }
+
+    private XMLType asXml(final SequenceIterator pathIter,
+            Item colItem) throws XPathException, TeiidComponentException,
+            TeiidProcessingException {
+        SequenceIterator pushBack = new PushBackSequenceIterator(pathIter, colItem);
+        return this.saxonXQueryExpression.createXMLType(pushBack, this.getBufferManager(), false, getContext());
     }
 
     public static Object getValue(Class<?> type,
