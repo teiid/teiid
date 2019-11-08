@@ -75,12 +75,12 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
         if (policyDecider != null && policyDecider.validateCommand(commandContext)) {
             if (ignoreUnathorizedInAsterisk(command, commandContext)) {
                 Query query = (Query)command;
-                HashMap<String, LanguageObject> map = null;
+                HashMap<AbstractMetadataRecord, LanguageObject> map = null;
                 for (Expression ex : query.getSelect().getSymbols()) {
                     if (ex instanceof MultipleElementSymbol) {
                         MultipleElementSymbol mes = (MultipleElementSymbol)ex;
                         if (map == null) {
-                            map = new HashMap<String, LanguageObject>();
+                            map = new HashMap<AbstractMetadataRecord, LanguageObject>();
                         }
                         for (Iterator<ElementSymbol> iter = mes.getElementSymbols().iterator(); iter.hasNext();) {
                             ElementSymbol es = iter.next();
@@ -89,8 +89,8 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
                                 continue;
                             }
                             map.clear();
-                            AuthorizationValidationVisitor.addToNameMap(metadataObject, es, map, commandContext.getMetadata());
-                            Set<String> results = this.policyDecider.getInaccessibleResources(PermissionType.READ, map.keySet(), Context.QUERY, commandContext);
+                            AuthorizationValidationVisitor.addToMap(metadataObject, es, map, commandContext.getMetadata());
+                            Set<AbstractMetadataRecord> results = this.policyDecider.getInaccessibleResources(PermissionType.READ, map.keySet(), Context.QUERY, commandContext);
                             if (!results.isEmpty()) {
                                 iter.remove(); //remove from the select
                                 modified = true;
@@ -165,7 +165,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
         if (record instanceof FunctionMethod || record instanceof Procedure) {
             action = PermissionType.EXECUTE;
         }
-        HashSet<String> resources = new HashSet<String>(2);
+        HashSet<AbstractMetadataRecord> resources = new HashSet<AbstractMetadataRecord>(2);
 
         boolean result = false;
         if (record instanceof Schema) {
@@ -190,13 +190,13 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
     }
 
     private boolean isAccessibleInternal(AbstractMetadataRecord record,
-            CommandContext commandContext, HashSet<String> resources, PermissionType action) {
+            CommandContext commandContext, HashSet<AbstractMetadataRecord> resources, PermissionType action) {
         Boolean result = commandContext.isAccessible(record);
         if (result != null) {
             return result;
         }
         resources.clear();
-        resources.add(record.getFullName());
+        resources.add(record);
         return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
     }
 

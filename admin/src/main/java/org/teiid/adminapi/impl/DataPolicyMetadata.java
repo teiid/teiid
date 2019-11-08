@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -34,6 +35,59 @@ import org.teiid.core.TeiidRuntimeException;
 
 
 public class DataPolicyMetadata implements DataPolicy, Serializable {
+
+    public static class ResourceKey implements Comparable<ResourceKey> {
+        private String name;
+        private ResourceType type;
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name.toLowerCase(), type);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof ResourceKey)) {
+                return false;
+            }
+            ResourceKey other = (ResourceKey)obj;
+            return name.equalsIgnoreCase(other.name)
+                    && Objects.equals(type, other.type);
+        }
+
+        static ResourceKey of(String name, ResourceType type) {
+            ResourceKey key = new ResourceKey();
+            key.name = name;
+            key.type = type==null?ResourceType.DATABASE:type;
+            return key;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public ResourceType getType() {
+            return type;
+        }
+
+        @Override
+        public int compareTo(ResourceKey other) {
+            int result = String.CASE_INSENSITIVE_ORDER.compare(name, other.name);
+            if (result == 0) {
+                return type.compareTo(other.type);
+            }
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return type + " " + name; //$NON-NLS-1$
+        }
+    }
+
     private static final long serialVersionUID = -4119646357275977190L;
 
     protected String name;
@@ -41,7 +95,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     protected boolean anyAuthenticated;
     protected Boolean allowCreateTemporaryTables;
 
-    protected Map<String, PermissionMetaData> permissions = new TreeMap<String, PermissionMetaData>(String.CASE_INSENSITIVE_ORDER);
+    protected Map<ResourceKey, PermissionMetaData> permissions = new TreeMap<ResourceKey, PermissionMetaData>();
     protected Map<String, PermissionMetaData> languagePermissions = new HashMap<String, PermissionMetaData>(2);
 
     protected List<String> mappedRoleNames = new CopyOnWriteArrayList<String>();
@@ -77,8 +131,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         return result;
     }
 
-    public Map<String, PermissionMetaData> getPermissionMap() {
-        return permissions;
+    public PermissionMetaData getPermissionMetadata(String resourceName, ResourceType type) {
+        PermissionMetaData result = this.permissions.get(ResourceKey.of(resourceName, type));
+        if (result == null && type != ResourceType.DATABASE) {
+            //legacy compatibility
+            result = this.permissions.get(ResourceKey.of(resourceName, ResourceType.DATABASE));
+        }
+        return result;
     }
 
     public boolean hasRowSecurity(String resourceName) {
@@ -103,7 +162,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         if (permission.getAllowLanguage() != null) {
             previous = this.languagePermissions.put(permission.getResourceName(), permission);
         } else {
-            previous = permissions.put(permission.getResourceName().toLowerCase(), permission);
+            previous = permissions.put(ResourceKey.of(permission.getResourceName(), permission.getResourceType()), permission);
         }
         if (permission.getCondition() != null) {
             this.hasRowPermissions.add(permission.getResourceName());
@@ -156,12 +215,16 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         this.mappedRoleNames.remove(mappedName);
     }
 
-    public Boolean allows(String resourceName, DataPolicy.PermissionType type) {
+    public Boolean allows(String resourceName, ResourceType resourceType, DataPolicy.PermissionType type) {
         PermissionMetaData p = null;
         if (type == PermissionType.LANGUAGE) {
             p = this.languagePermissions.get(resourceName);
         } else {
-            p = this.permissions.get(resourceName);
+            p = this.permissions.get(ResourceKey.of(resourceName, resourceType));
+            if (p == null && resourceType != ResourceType.DATABASE) {
+                //legacy compatibility
+                p = this.permissions.get(ResourceKey.of(resourceName, ResourceType.DATABASE));
+            }
         }
         if (p != null) {
             return p.allows(type);
@@ -503,8 +566,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         clone.mappedRoleNames = this.mappedRoleNames; //direct reference to preserve updates
         clone.name = this.name;
         clone.grantAll = this.grantAll;
-        clone.permissions = new TreeMap<String, PermissionMetaData>(String.CASE_INSENSITIVE_ORDER);
-        clone.permissions.putAll(this.permissions);
+        clone.permissions = new TreeMap<>(this.permissions);
         return clone;
     }
 

@@ -78,9 +78,7 @@ public class RuleApplySecurity implements OptimizerRule {
                     if (command == null) {
                         continue; //proc relational, will instead apply at the proc level
                     }
-                    if (cols == null) {
-                        cols = (List)command.getProjectedSymbols();
-                    }
+                    cols = (List)command.getProjectedSymbols();
                 } else if (command != null && !command.returnsResultSet()) {
                     continue; //should be handled in the planner
                 }
@@ -91,7 +89,7 @@ public class RuleApplySecurity implements OptimizerRule {
                 //apply masks first
                 List<? extends Expression> masked = ColumnMaskingHelper.maskColumns(cols, group, metadata, context);
                 Map<ElementSymbol, Expression> mapping = null;
-                //TODO: we don't actually allow window function masks yet becuase they won't pass
+                //TODO: we don't actually allow window function masks yet because they won't pass
                 //validation.  but if we do, we need to check for them here
                 List<WindowFunction> windowFunctions = new ArrayList<WindowFunction>(2);
                 for (int i = 0; i < masked.size(); i++) {

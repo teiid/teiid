@@ -33,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
+import org.teiid.adminapi.DataPolicy.ResourceType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -74,7 +75,7 @@ public class TestAuthorizationValidationVisitor {
         exampleAuthSvc2 = exampleAuthSvc2();
     }
 
-    static PermissionMetaData addResource(PermissionType type, boolean flag, String resource) {
+    static PermissionMetaData createPermission(PermissionType type, boolean flag, String resource, ResourceType resourceType) {
         PermissionMetaData p = new PermissionMetaData();
         p.setResourceName(resource);
         switch(type) {
@@ -99,10 +100,12 @@ public class TestAuthorizationValidationVisitor {
         case LANGUAGE:
             p.setAllowLanguage(flag);
         }
+        p.setResourceType(resourceType);
         return p;
     }
-    static PermissionMetaData addResource(PermissionType type, String resource) {
-        return addResource(type, true, resource);
+
+    static PermissionMetaData createPermission(PermissionType type, String resource) {
+        return createPermission(type, true, resource, ResourceType.DATABASE);
     }
 
     private static DataPolicyMetadata exampleAuthSvc1() {
@@ -110,46 +113,46 @@ public class TestAuthorizationValidationVisitor {
         svc.setName("test"); //$NON-NLS-1$
 
         // pm1.g1
-        svc.addPermission(addResource(PermissionType.DELETE, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(PermissionType.DELETE, "pm1.g1")); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g1.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, false, "pm1.g1.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1.g1.e1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, false, "pm1.g1.e2", ResourceType.COLUMN)); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e3")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g1.e4")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g1.e1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g1.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g1.e3")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g1.e4")); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, false, "pm1.g1.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e3")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g1.e4")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, false, "pm1.g1.e1", ResourceType.COLUMN)); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g1.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g1.e3")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g1.e4")); //$NON-NLS-1$
 
-        svc.addPermission(addResource(PermissionType.EXECUTE, "pm1.sp1"));
+        svc.addPermission(createPermission(PermissionType.EXECUTE, "pm1.sp1"));
 
         // pm1.g2
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, false, "pm1.g2.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2.e2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2.e3")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2.e4")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, false, "pm1.g2.e1", ResourceType.COLUMN)); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g2.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g2.e3")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g2.e4")); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, false, "pm1.g2.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2.e2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2.e3")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.UPDATE, "pm1.g2.e4")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, false, "pm1.g2.e1", ResourceType.COLUMN)); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g2.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g2.e3")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.UPDATE, "pm1.g2.e4")); //$NON-NLS-1$
 
         // pm1.g4
-        svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.DELETE, "pm1.g4.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.DELETE, "pm1.g4")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.DELETE, "pm1.g4.e1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.DELETE, "pm1.g4.e2")); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.sq1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.xyz")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1.sq1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1.xyz")); //$NON-NLS-1$
         svc.setAllowCreateTemporaryTables(true);
         return svc;
     }
@@ -159,19 +162,19 @@ public class TestAuthorizationValidationVisitor {
         DataPolicyMetadata svc = new DataPolicyMetadata();
         svc.setName("test"); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g2")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1.g1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm2.g1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm1.g2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1.g2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1.g1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm2.g1")); //$NON-NLS-1$
 
         // pm2.g2
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm2.g2.e1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm2.g2.e1")); //$NON-NLS-1$
 
         // pm3.g2
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e1")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "pm3.g2.e2")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm3.g2.e1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "pm3.g2.e2")); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "xmltest.doc1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "xmltest.doc1")); //$NON-NLS-1$
 
         svc.setAllowCreateTemporaryTables(false);
         return svc;
@@ -180,8 +183,8 @@ public class TestAuthorizationValidationVisitor {
     private DataPolicyMetadata examplePolicyBQT() {
         DataPolicyMetadata svc = new DataPolicyMetadata();
         svc.setName("test"); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.ALTER, "VQT.SmallA_2589")); //$NON-NLS-1$
-        svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "bqt1")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.ALTER, "VQT.SmallA_2589")); //$NON-NLS-1$
+        svc.addPermission(createPermission(DataPolicy.PermissionType.CREATE, "bqt1")); //$NON-NLS-1$
         svc.setAllowCreateTemporaryTables(true);
         return svc;
     }
@@ -259,15 +262,15 @@ public class TestAuthorizationValidationVisitor {
         DataPolicyMetadata svc = new DataPolicyMetadata();
         svc.setName("test"); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
-        PermissionMetaData p = addResource(DataPolicy.PermissionType.READ, "pm1.g1");
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
+        PermissionMetaData p = createPermission(DataPolicy.PermissionType.READ, "pm1.g1");
         p.setAllowRead(false);
         svc.addPermission(p); //$NON-NLS-1$
 
         DataPolicyMetadata svc1 = new DataPolicyMetadata();
         svc1.setName("test1"); //$NON-NLS-1$
 
-        svc1.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
+        svc1.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
 
         helpTest("SELECT e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), svc, svc1); //$NON-NLS-1$
 
@@ -382,7 +385,7 @@ public class TestAuthorizationValidationVisitor {
     @Test public void testObjectTable() throws Exception {
         helpTest("select * from objecttable(language 'javascript' 'teiid_context' columns x string 'teiid_row.userName') as x", RealMetadataFactory.exampleBQTCached(), new String[] {"OBJECTTABLE(LANGUAGE 'javascript' 'teiid_context' COLUMNS x string 'teiid_row.userName') AS x"}, RealMetadataFactory.exampleBQTVDB(), exampleAuthSvc1); //$NON-NLS-1$ //$NON-NLS-2$
         DataPolicyMetadata policy = exampleAuthSvc1();
-        policy.addPermission(addResource(PermissionType.LANGUAGE, "javascript"));
+        policy.addPermission(createPermission(PermissionType.LANGUAGE, "javascript"));
         helpTest("select * from objecttable(language 'javascript' 'teiid_context' columns x string 'teiid_row.userName') as x", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), policy); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -415,8 +418,8 @@ public class TestAuthorizationValidationVisitor {
         DataPolicyMetadata svc = new DataPolicyMetadata();
         svc.setName("test"); //$NON-NLS-1$
 
-        svc.addPermission(addResource(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
-        PermissionMetaData p = addResource(DataPolicy.PermissionType.READ, "pm1.g1.e1");
+        svc.addPermission(createPermission(DataPolicy.PermissionType.READ, "pm1")); //$NON-NLS-1$
+        PermissionMetaData p = createPermission(DataPolicy.PermissionType.READ, "pm1.g1.e1");
         p.setAllowRead(false);
         svc.addPermission(p); //$NON-NLS-1$
 
@@ -437,7 +440,7 @@ public class TestAuthorizationValidationVisitor {
 
         assertEquals(3, command.getProjectedSymbols().size());
 
-        p = addResource(DataPolicy.PermissionType.READ, "pm1.g1");
+        p = createPermission(DataPolicy.PermissionType.READ, "pm1.g1");
         p.setAllowRead(false);
         svc.addPermission(p); //$NON-NLS-1$
 
@@ -469,5 +472,9 @@ public class TestAuthorizationValidationVisitor {
         sql = "select e1 from pm2.g1";
 
         helpTest(sql, RealMetadataFactory.example1Cached(), new String[] {"pm2.g1.e1", "pm2.g1"}, RealMetadataFactory.example1VDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testNameConflict() throws Exception {
+        helpTest("SELECT * FROM pm1.\"g1.e1\"", RealMetadataFactory.fromDDL("create foreign table \"g1.e1\" (col string)", "x", "pm1"), new String[] {"pm1.g1.e1", "pm1.g1.e1.col"}, RealMetadataFactory.example1VDB(), exampleAuthSvc2); //$NON-NLS-1$
     }
 }
