@@ -65,13 +65,14 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
     @Override
     public void visit(Create obj) {
-        validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.CREATE);
+        //eventually may need to check scheam level permissions proactively
+        validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), obj.getTable(), Context.CREATE);
     }
 
     @Override
     public void visit(DynamicCommand obj) {
         if (obj.getIntoGroup() != null) {
-            validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), false, obj.getIntoGroup(), Context.CREATE);
+            validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), obj.getIntoGroup(), Context.CREATE);
         }
     }
 
@@ -96,16 +97,27 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         if (objectTable.getScriptingLanguage() != null) {
             language = objectTable.getScriptingLanguage();
         }
-        Map<String, LanguageObject> map = new HashMap<String, LanguageObject>();
-        map.put(language, objectTable);
-        validateEntitlements(PermissionType.LANGUAGE, Context.QUERY, map);
+
+        String[] resources = new String[] {language};
+
+        logRequest(resources, Context.QUERY);
+
+        boolean result = decider.isLanguageAllowed(language, commandContext);
+
+        logResult(resources, Context.QUERY, result);
+
+        if (!result) {
+            handleValidationError(
+                    QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "LANGUAGE"), //$NON-NLS-1$  //$NON-NLS-2$
+                    Arrays.asList(objectTable));
+        }
     }
 
-    private void validateTemp(DataPolicy.PermissionType action, String resource, boolean schema, LanguageObject object, Context context) {
-        Set<String> resources = Collections.singleton(resource);
+    private void validateTemp(DataPolicy.PermissionType action, String resource, LanguageObject object, Context context) {
+        String[] resources = new String[] {resource};
         logRequest(resources, context);
 
-        boolean allowed = decider.isTempAccessible(action, schema?resource:null, context, commandContext);
+        boolean allowed = decider.isTempAccessible(action, null, context, commandContext);
 
         logResult(resources, context, allowed);
         if (!allowed) {
@@ -115,17 +127,22 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         }
     }
 
-    private void logRequest(Set<String> resources, Context context) {
+    private void logRequest(Set<AbstractMetadataRecord> resources, Context context) {
+        logRequest(resources.stream().map(r -> r.getFullName()).toArray(String[]::new), context);
+    }
+
+    private void logRequest(String[] resources, Context context) {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
             // Audit - request
-            AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
+            AuditMessage msg = new AuditMessage(context.name(),
+                    "getInaccessibleResources-request", resources, commandContext); //$NON-NLS-1$
             LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
         }
     }
 
     @Override
     public void visit(Drop obj) {
-        validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.DROP);
+        validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), obj.getTable(), Context.DROP);
     }
 
     public void visit(Delete obj) {
@@ -165,8 +182,8 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         } else {
             String schema = obj.getFunctionDescriptor().getSchema();
             if (schema != null && !isSystemSchema(schema)) {
-                Map<String, Function> map = new HashMap<String, Function>();
-                map.put(obj.getFunctionDescriptor().getFullName(), obj);
+                Map<AbstractMetadataRecord, Function> map = new HashMap<AbstractMetadataRecord, Function>();
+                map.put(obj.getFunctionDescriptor().getMethod(), obj);
                 validateEntitlements(PermissionType.EXECUTE, Context.FUNCTION, map);
             }
         }
@@ -280,7 +297,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * @param auditContext The {@link Context} to use when resource auditing is done.
      */
     protected void validateEntitlements(Collection<? extends LanguageObject> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
-        Map<String, LanguageObject> nameToSymbolMap = new LinkedHashMap<String, LanguageObject>();
+        Map<AbstractMetadataRecord, LanguageObject> recordToSymbolMap = new LinkedHashMap<AbstractMetadataRecord, LanguageObject>();
         for (LanguageObject symbol : symbols) {
             try {
                 Object metadataID = null;
@@ -294,16 +311,16 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     metadataID = group.getMetadataID();
                     if (metadataID instanceof TempMetadataID) {
                         if (group.isProcedure()) {
-                            Map<String, LanguageObject> procMap = new LinkedHashMap<String, LanguageObject>();
-                            addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap, getMetadata());
+                            Map<AbstractMetadataRecord, LanguageObject> procMap = new LinkedHashMap<AbstractMetadataRecord, LanguageObject>();
+                            addToMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap, getMetadata());
                             validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
                         } else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
-                            validateTemp(actionCode, group.getNonCorrelationName(), false, group, auditContext);
+                            validateTemp(actionCode, group.getNonCorrelationName(), group, auditContext);
                         }
                         continue;
                     }
                 }
-                addToNameMap(metadataID, symbol, nameToSymbolMap, getMetadata());
+                addToMap(metadataID, symbol, recordToSymbolMap, getMetadata());
             } catch(QueryMetadataException e) {
                 handleException(e);
             } catch(TeiidComponentException e) {
@@ -311,11 +328,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             }
         }
 
-        validateEntitlements(actionCode, auditContext, nameToSymbolMap);
+        validateEntitlements(actionCode, auditContext, recordToSymbolMap);
     }
 
-    static void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
-        String fullName = metadata.getFullName(metadataID);
+    static void addToMap(Object metadataID, LanguageObject symbol, Map<AbstractMetadataRecord, LanguageObject> recordToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         Object modelId = metadata.getModelID(metadataID);
         String modelName = metadata.getFullName(modelId);
         if (!isSystemSchema(modelName)) {
@@ -328,29 +344,33 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     group = (GroupSymbol)symbol;
                 }
                 if (group != null && group.isTempGroupSymbol() && !group.isGlobalTable()) {
-                    fullName = modelName + AbstractMetadataRecord.NAME_DELIM_CHAR + modelId;
+                    //use the interface to get the non-temp version of the table
+                    metadataID = metadata.getGroupIDForElementID(metadataID);
                 }
             }
-            nameToSymbolMap.put(fullName, symbol);
+            if (metadataID instanceof AbstractMetadataRecord) {
+                recordToSymbolMap.put((AbstractMetadataRecord)metadataID, symbol);
+            }
         }
     }
 
     static private boolean isSystemSchema(String modelName) {
-        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
+        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName)
+        || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
     }
 
     private void validateEntitlements(DataPolicy.PermissionType actionCode,
-            Context auditContext, Map<String, ? extends LanguageObject> nameToSymbolMap) {
-        if (nameToSymbolMap.isEmpty()) {
+            Context auditContext, Map<AbstractMetadataRecord, ? extends LanguageObject> recordToSymbolMap) {
+        if (recordToSymbolMap.isEmpty()) {
             return;
         }
-        Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
+        Collection<AbstractMetadataRecord> inaccessibleResources = getInaccessibleResources(actionCode, recordToSymbolMap, auditContext);
         if(inaccessibleResources.isEmpty()) {
             return;
         }
         List<LanguageObject> inaccessibleSymbols = new ArrayList<LanguageObject>(inaccessibleResources.size());
-        for (String name : inaccessibleResources) {
-            inaccessibleSymbols.add(nameToSymbolMap.get(name));
+        for (AbstractMetadataRecord record : inaccessibleResources) {
+            inaccessibleSymbols.add(recordToSymbolMap.get(record));
         }
 
         // CASE 2362 - do not include the names of the elements for which the user
@@ -364,23 +384,27 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     /**
      * Out of the resources specified, return the subset for which the specified not have authorization to access.
      */
-    public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
-        logRequest(resources, context);
+    public Set<AbstractMetadataRecord> getInaccessibleResources(DataPolicy.PermissionType action, Map<AbstractMetadataRecord, ? extends LanguageObject> resources, Context context) {
+        logRequest(resources.keySet(), context);
 
-        Set<String> results = decider.getInaccessibleResources(action, resources, context, commandContext);
+        Set<AbstractMetadataRecord> results = decider.getInaccessibleResources(action, resources.keySet(), context, commandContext);
 
-        logResult(resources, context, results.isEmpty());
+        logResult(resources.keySet(), context, results.isEmpty());
         return results;
     }
 
-    private void logResult(Set<String> resources, Context context,
+    private void logResult(Set<AbstractMetadataRecord> resources, Context context, boolean granted) {
+        logResult(resources.stream().map(r -> r.getFullName()).toArray(String[]::new), context, granted);
+    }
+
+    private void logResult(String[] resources, Context context,
             boolean granted) {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
             if (granted) {
-                AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
+                AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", resources, commandContext); //$NON-NLS-1$
                 LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
             } else {
-                AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
+                AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", resources, commandContext); //$NON-NLS-1$
                 LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
             }
         }

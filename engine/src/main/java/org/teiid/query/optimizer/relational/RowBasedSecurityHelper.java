@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.ResourceType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -126,7 +127,7 @@ public class RowBasedSecurityHelper {
         String fullName = metadata.getFullName(metadataID);
         for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
             DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
-            PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
+            PermissionMetaData pmd = dpm.getPermissionMetadata(fullName, ResourceType.TABLE);
             if (pmd == null) {
                 continue;
             }

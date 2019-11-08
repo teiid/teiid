@@ -539,6 +539,16 @@ public class TestDDLStringVisitor {
         Grant.Permission permission4 = new Grant.Permission();
         permission4.setAllowTemporyTables(true);
 
+        Grant.Permission permission5 = new Grant.Permission();
+        permission5.setAllowDelete(true);
+        permission5.setResourceName("schema.tableName.col");
+        permission5.setResourceType(ResourceType.COLUMN);
+
+        Grant.Permission permission6 = new Grant.Permission();
+        permission6.setAllowSelect(true);
+        permission6.setResourceName("schema.tableName.col");
+        permission6.setResourceType(ResourceType.TABLE);
+
         Grant g = new Grant();
         g.setRole(role.getName());
         g.addPermission(permission);
@@ -547,6 +557,8 @@ public class TestDDLStringVisitor {
         Grant g2 = new Grant();
         g2.setRole(role.getName());
         g2.addPermission(permission2);
+        g2.addPermission(permission5);
+        g2.addPermission(permission6);
 
         Grant g3 = new Grant();
         g3.setRole("uber");
@@ -568,12 +580,18 @@ public class TestDDLStringVisitor {
                 "CREATE DATABASE foo VERSION '2';\n" +
                 "USE DATABASE foo VERSION '2';\n" +
                 "\n" +
-                "--############ Roles ############\n"+
-                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n\n" +
-                "CREATE ROLE uber;\n\n\n" +
-                "--############ Grants ############\n"+
+                "--############ Roles ############\n" +
+                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n" +
+                "\n" +
+                "CREATE ROLE uber;\n" +
+                "\n" +
+                "\n" +
+                "--############ Grants ############\n" +
                 "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" +
-                "GRANT TEMPORARY TABLE TO admin;\n\n" +
+                "GRANT TEMPORARY TABLE TO admin;\n" +
+                "GRANT DELETE ON COLUMN \"schema.tableName.col\" TO admin;\n" +
+                "GRANT SELECT ON TABLE \"schema.tableName.col\" TO admin;\n" +
+                "\n" +
                 "GRANT ALL PRIVILEGES TO uber;\n" +
                 "GRANT TEMPORARY TABLE TO uber;\n" +
                 "\n" +

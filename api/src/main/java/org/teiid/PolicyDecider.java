@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
+import org.teiid.metadata.AbstractMetadataRecord;
 
 /**
  * A policy decider that reports authorization decisions for further action.
@@ -40,7 +41,6 @@ public interface PolicyDecider {
 
     /**
      * Returns the set of resources not allowed to be accessed by the current user.
-     * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
      * @param action if context is METADATA, then action execute means a procedure or function, and read some other resource
      * @param resources
      * @param context in which the action is performed.
@@ -48,21 +48,29 @@ public interface PolicyDecider {
      * @param commandContext
      * @return the set of inaccessible resources, never null
      */
-    Set<String> getInaccessibleResources(PermissionType action,
-            Set<String> resources, Context context,
+    Set<AbstractMetadataRecord> getInaccessibleResources(PermissionType action,
+            Set<AbstractMetadataRecord> resources, Context context,
             CommandContext commandContext);
 
+
     /**
-     * Checks if the given temp table is accessible.  Typically as long as temp tables can be created, all operations are allowed.
-     * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
+     * Returns true if the given language is allowed
+     * @param language
+     * @param commandContext
+     * @return
+     */
+    boolean isLanguageAllowed(String language, CommandContext commandContext);
+
+    /**
+     * Checks if the temp table are accessible.  Typically as long as temp tables can be created, all operations are allowed.
      * @param action
-     * @param resource
+     * @param resource will be null for general temp access
      * @param context in which the action is performed.
      *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
      * @param commandContext
      * @return true if the access is allowed, otherwise false
      */
-    boolean isTempAccessible(PermissionType action, String resource,
+    boolean isTempAccessible(PermissionType action, AbstractMetadataRecord resource,
             Context context, CommandContext commandContext);
 
     /**

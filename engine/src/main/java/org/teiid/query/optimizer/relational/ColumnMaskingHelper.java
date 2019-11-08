@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.ResourceType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -89,7 +90,7 @@ public class ColumnMaskingHelper {
         Collection<GroupSymbol> groups = Arrays.asList(unaliased);
         for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
             DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
-            PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
+            PermissionMetaData pmd = dpm.getPermissionMetadata(fullName, ResourceType.COLUMN);
             if (pmd == null) {
                 continue;
             }
