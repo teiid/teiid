@@ -21,6 +21,8 @@ import static org.teiid.query.metadata.MaterializationMetadataRepository.*;
 
 import java.util.*;
 
+import org.teiid.adminapi.DataPolicy.DataPermission;
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
@@ -113,8 +115,64 @@ public class MetadataValidator {
             new ResolveQueryPlans().execute(vdb, store, report, this);
             new MinimalMetadata().execute(vdb, store, report, this);
             new MatViewPropertiesValidator().execute(vdb, store, report, this);
+            new RoleValidator().execute(vdb, store, report, this);
         }
         return report;
+    }
+
+    static class RoleValidator implements MetadataRule {
+        @Override
+        public void execute(VDBMetaData vdb, MetadataStore vdbStore,
+                ValidatorReport report, MetadataValidator metadataValidator) {
+            Map<String, DataPolicyMetadata> policies = vdb.getDataPolicyMap();
+            if (policies.isEmpty()) {
+                return;
+            }
+            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+            metadata = new TempMetadataAdapter(metadata.getDesignTimeMetadata(), new TempMetadataStore());
+            try {
+                for (DataPolicyMetadata policy : policies.values()) {
+                    for (DataPermission permission : policy.getPermissions()) {
+                        if (permission.getResourceType() == null) {
+                            continue;
+                        }
+                        try {
+                            switch (permission.getResourceType()) {
+                            case LANGUAGE:
+                            case DATABASE:
+                                //no validation
+                                break;
+                            case SCHEMA:
+                                metadata.getModelID(permission.getResourceName());
+                                break;
+                            case TABLE:
+                                metadata.getGroupID(permission.getResourceName());
+                                break;
+                            case COLUMN:
+                                metadata.getElementID(permission.getResourceName());
+                                break;
+                            case PROCEDURE:
+                                metadata.getStoredProcedureInfoForProcedure(permission.getResourceName());
+                                break;
+                            case FUNCTION:
+                                if (!metadata.getFunctionLibrary().userFunctionExists(permission.getResourceName())) {
+                                    metadataValidator.log(report, null, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31301, permission.getResourceName(), permission.getResourceType()));
+                                }
+                                break;
+                            default:
+                                break;
+                            }
+                        } catch (QueryMetadataException e) {
+                            metadataValidator.log(report, null, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31301, permission.getResourceName(), permission.getResourceType()));
+                        }
+                    }
+                }
+            } catch (TeiidComponentException e) {
+                String message = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31300, e.getMessage());
+                LogManager.logError(LogConstants.CTX_DQP, e, message);
+                metadataValidator.log(report, null, message);
+            }
+        }
     }
 
     // At minimum the model must have table/view, procedure or function
@@ -568,11 +626,13 @@ public class MetadataValidator {
     }
 
     public void log(ValidatorReport report, ModelMetaData model, Severity severity, String msg, AbstractMetadataRecord object) {
-        Message message = model.addRuntimeMessage(severity, msg);
-        if (object != null && object.getParent() instanceof Schema) {
-            FullyQualifiedName fqn = new FullyQualifiedName();
-            fqn.append(Schema.getChildType(object.getClass()), object.getIdentifier());
-            message.setPath(fqn.toString());
+        if (model != null) {
+            Message message = model.addRuntimeMessage(severity, msg);
+            if (object != null && object.getParent() instanceof Schema) {
+                FullyQualifiedName fqn = new FullyQualifiedName();
+                fqn.append(Schema.getChildType(object.getClass()), object.getIdentifier());
+                message.setPath(fqn.toString());
+            }
         }
         int messageLevel = MessageLevel.WARNING;
         if (severity == Severity.ERROR) {

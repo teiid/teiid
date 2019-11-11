@@ -664,4 +664,17 @@ public class FunctionLibrary {
         }
         return result;
     }
+
+    public boolean userFunctionExists(String resourceName) {
+        String[] parts = resourceName.split("\\.", 2); //$NON-NLS-1$
+        if (parts.length < 0) {
+            return false;
+        }
+        for (FunctionTree tree : userFunctions) {
+            if (parts[0].equalsIgnoreCase(tree.getSchemaName())) {
+                return tree.hasFunctionWithName(parts[1]);
+            }
+        }
+        return false;
+    }
 }

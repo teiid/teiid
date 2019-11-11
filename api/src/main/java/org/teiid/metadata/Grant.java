@@ -59,6 +59,11 @@ public class Grant extends AbstractMetadataRecord {
         private EnumSet<Privilege> privileges = EnumSet.noneOf(Privilege.class);
         private EnumSet<Privilege> revokePrivileges = EnumSet.noneOf(Privilege.class);
 
+        /**
+         * The {@link org.teiid.adminapi.DataPolicy.ResourceType}, never null.  Will default
+         * to DATABASE
+         * @return
+         */
         public Database.ResourceType getResourceType() {
             if (resourceType == null) {
                 return ResourceType.DATABASE;
