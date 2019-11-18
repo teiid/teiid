@@ -14,6 +14,5 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core"/>    
         <module name="org.jboss.teiid.client"/>
-        <module name="org.jboss.teiid.admin"/>
     </dependencies>
 </module>

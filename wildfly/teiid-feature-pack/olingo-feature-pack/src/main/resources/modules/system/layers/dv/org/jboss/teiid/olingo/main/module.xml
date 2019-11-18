@@ -15,7 +15,6 @@
         <module name="org.apache.olingo.server"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.client" />
-        <module name="org.jboss.teiid.admin"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid"/>
     </dependencies>

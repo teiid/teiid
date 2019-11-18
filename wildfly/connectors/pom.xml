@@ -43,11 +43,6 @@
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
-      <artifactId>teiid-admin</artifactId>
-      <scope>test</scope>
-    </dependency>    
-    <dependency>
-      <groupId>org.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <scope>test</scope>
     </dependency>    

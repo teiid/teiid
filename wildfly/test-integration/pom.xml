@@ -61,10 +61,6 @@
 			<type>test-jar</type>
 		</dependency>
         <dependency>
-            <groupId>org.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-        </dependency>
-        <dependency>
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-runtime</artifactId>
 		</dependency>

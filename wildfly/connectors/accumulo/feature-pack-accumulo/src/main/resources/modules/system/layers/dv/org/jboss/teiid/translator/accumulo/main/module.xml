@@ -14,7 +14,6 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-        <module name="org.jboss.teiid.admin" />
         <module name="org.jboss.teiid" />
         <module name="org.apache.accumulo" />
         <module name="org.apache.hadoop.common" />

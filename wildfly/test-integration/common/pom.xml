@@ -119,12 +119,6 @@
         </dependency>
         
         <dependency>
-            <groupId>org.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-file</artifactId>
             <scope>test</scope>

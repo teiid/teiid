@@ -1335,17 +1335,6 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid</groupId>
-                <artifactId>teiid-admin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
-                <artifactId>teiid-admin</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid</groupId>
                 <artifactId>teiid-client</artifactId>
                 <type>test-jar</type>
                 <version>${project.version}</version>
@@ -1876,7 +1865,6 @@
 		<module>common-core</module>
 		<module>api</module>
 		<module>client</module>
-		<module>admin</module>
 		<module>data-quality</module>
 		<module>engine</module>
 		<module>optional-geo</module>
