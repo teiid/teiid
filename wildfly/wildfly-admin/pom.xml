@@ -23,11 +23,11 @@
 		</dependency>
         <dependency>
             <groupId>org.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
+            <artifactId>teiid-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
+            <artifactId>teiid-api</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

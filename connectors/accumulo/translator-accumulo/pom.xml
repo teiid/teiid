@@ -34,10 +34,6 @@
 			<artifactId>teiid-engine</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-admin</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.accumulo</groupId>
 			<artifactId>accumulo-core</artifactId>
 		</dependency>

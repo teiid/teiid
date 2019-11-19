@@ -32,11 +32,6 @@
         </dependency>
                 
 		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-admin</artifactId>
-		</dependency>
-		
-		<dependency>
 			<groupId>org.ow2.asm</groupId>
 			<artifactId>asm</artifactId>
 		</dependency>

@@ -42,11 +42,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-admin</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>org.teiid.wildfly</groupId>
 			<artifactId>teiid-wildfly-admin</artifactId>
 		</dependency>
