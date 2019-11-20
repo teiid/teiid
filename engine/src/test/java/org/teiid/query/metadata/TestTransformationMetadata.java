@@ -39,7 +39,6 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestTransformationMetadata {
@@ -65,8 +64,7 @@ public class TestTransformationMetadata {
         assertEquals("x.y", spi.getProcedureCallableName());
     }
 
-    private TransformationMetadata exampleTransformationMetadata()
-            throws TranslatorException {
+    private TransformationMetadata exampleTransformationMetadata() {
         Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
         Datatype dt = new Datatype();
         dt.setName(DataTypeManager.DefaultDataTypes.STRING);
@@ -82,7 +80,6 @@ public class TestTransformationMetadata {
         mf1.addProcedure("y"); //$NON-NLS-1$
 
         Table table = mf1.addTable("doc");
-        table.setSchemaPaths(Arrays.asList("../../x.xsd"));
         table.setResourcePath("/a/b/doc.xmi");
 
         HashMap<String, VDBResources.Resource> resources = new HashMap<String, VDBResources.Resource>();
@@ -135,7 +132,7 @@ public class TestTransformationMetadata {
         vdb.addModel(model2);
 
         TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
-        Collection result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
+        Collection<String> result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
         assertEquals(2, result.size());
 
         RealMetadataFactory.buildWorkContext(tm, vdb);
@@ -144,6 +141,15 @@ public class TestTransformationMetadata {
 
         tm = new TransformationMetadata(vdb, cms, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
         result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
+        assertEquals(1, result.size());
+
+        TransformationMetadata designTime = tm.getDesignTimeMetadata();
+        result = designTime.getGroupsForPartialName("y"); //$NON-NLS-1$
+        assertEquals(2, result.size());
+
+        vdb.addProperty("hidden-qualified", "true");
+        designTime = tm.getDesignTimeMetadata();
+        result = designTime.getGroupsForPartialName("y"); //$NON-NLS-1$
         assertEquals(1, result.size());
     }
 

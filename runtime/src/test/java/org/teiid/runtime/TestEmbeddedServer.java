@@ -2951,4 +2951,26 @@ public class TestEmbeddedServer {
         assertEquals("[2,3]", rs.getString(1));
     }
 
+    /**
+     * should fail validation as the hidden view still requires qualification
+     * @throws Exception
+     */
+    @Test(expected = VirtualDatabaseException.class) public void testHiddenAlwaysQualified() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        es.start(ec);
+        es.deployVDB(new ByteArrayInputStream(("<vdb name=\"hidden\" version=\"1\">"
+                + "<property name=\"hidden-qualified\" value=\"true\"/>"
+                + "<model visible=\"false\" type=\"VIRTUAL\" name=\"x\">"
+                + "         <metadata type=\"DDL\"><![CDATA["
+                + "        CREATE VIEW TestView (c1 integer) AS SELECT 1;"
+                + "       ]]>"
+                + "</metadata></model>"
+                + "<model visible=\"true\" type=\"VIRTUAL\" name=\"y\">"
+                + "         <metadata type=\"DDL\"><![CDATA["
+                + "        CREATE VIEW TestView2 (c1 integer) AS select * from testview;"
+                + "       ]]>"
+                + "</metadata></model>"
+                + "</vdb>").getBytes()));
+    }
+
 }

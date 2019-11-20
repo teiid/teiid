@@ -141,6 +141,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private boolean useOutputNames = true;
     private boolean hiddenResolvable = true;
     private boolean designTime = false;
+    private boolean hiddenQualified = true;
 
     /*
      * TODO: move caching to jboss cache structure
@@ -264,7 +265,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         Collection<String> filteredResult = new ArrayList<String>(matches.size());
         for (Table table : matches) {
-            if (designTime || vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
+            if (!hiddenQualified || vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
                 filteredResult.add(table.getFullName());
             }
         }
@@ -425,7 +426,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         for (StoredProcedureInfo storedProcedureInfo : results) {
             Schema schema = (Schema)storedProcedureInfo.getModelID();
-            if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || designTime || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
+            if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || !hiddenQualified || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
                 if (result != null) {
                      throw new QueryMetadataException(QueryPlugin.Event.TEIID30358, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30358, name));
                 }
@@ -1012,6 +1013,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         tm.vdbEntries = this.vdbEntries;
         tm.vdbMetaData = this.vdbMetaData;
         tm.designTime = true;
+        tm.hiddenQualified = (this.vdbMetaData != null && Boolean.valueOf(
+                this.vdbMetaData.getPropertyValue("hidden-qualified"))); //$NON-NLS-1$
         return tm;
     }
 

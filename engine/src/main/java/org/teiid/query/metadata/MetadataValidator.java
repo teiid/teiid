@@ -656,7 +656,7 @@ public class MetadataValidator {
                 Procedure p = (Procedure)record;
                 Command command = parser.parseProcedure(p.getQueryPlan(), false);
                 validateNoReferences(command, report, model, p);
-                QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
+                QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata.getDesignTimeMetadata(), false);
                 resolverReport =  Validator.validate(command, metadata);
                 determineDependencies(p, command);
             } else if (record instanceof Table) {
@@ -669,7 +669,7 @@ public class MetadataValidator {
                 if (t.isVirtual()) {
                     QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
                     validateNoReferences(command, report, model, t);
-                    QueryResolver.resolveCommand(command, metadata);
+                    QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
                     resolverReport =  Validator.validate(command, metadata);
                     if (!resolverReport.hasItems()) {
                         List<Expression> symbols = command.getProjectedSymbols();
