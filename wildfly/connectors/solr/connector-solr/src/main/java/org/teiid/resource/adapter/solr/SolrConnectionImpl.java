@@ -42,18 +42,18 @@ import org.teiid.translator.solr.SolrConnection;
 
 public class SolrConnectionImpl extends BasicConnection implements SolrConnection {
 
-	private HttpSolrClient server;
-	private String coreName;
+    private HttpSolrClient server;
+    private String coreName;
 
-	public SolrConnectionImpl(SolrManagedConnectionFactory config) {
-		String url = config.getUrl();
-		if (!url.endsWith("/")) { //$NON-NLS-1$
-			url = config.getUrl()+"/"; //$NON-NLS-1$
-		}
-		ModifiableSolrParams params = new ModifiableSolrParams();
-		String userName = config.getAuthUserName();
-		String password = config.getAuthPassword();
-		// if security-domain is specified and caller identity is used; then use
+    public SolrConnectionImpl(SolrManagedConnectionFactory config) {
+        String url = config.getUrl();
+        if (!url.endsWith("/")) { //$NON-NLS-1$
+            url = config.getUrl()+"/"; //$NON-NLS-1$
+        }
+        ModifiableSolrParams params = new ModifiableSolrParams();
+        String userName = config.getAuthUserName();
+        String password = config.getAuthPassword();
+        // if security-domain is specified and caller identity is used; then use
         // credentials from subject
         Subject subject = ConnectionContext.getSubject();
         if (subject != null) {
@@ -61,90 +61,90 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
             password = ConnectionContext.getPassword(subject, config, userName, password);
         }
         if (userName != null) {
-    		params.set(HttpClientUtil.PROP_BASIC_AUTH_USER, userName);
-    		params.set(HttpClientUtil.PROP_BASIC_AUTH_PASS, password);
+            params.set(HttpClientUtil.PROP_BASIC_AUTH_USER, userName);
+            params.set(HttpClientUtil.PROP_BASIC_AUTH_PASS, password);
         }
-		url = url + config.getCoreName();
-		this.server = new Builder().withInvariantParams(params).build();
+        String baseUrl = url + config.getCoreName();
+        this.server = new Builder(baseUrl).withInvariantParams(params).build();
 
-		if (config.getSoTimeout() != null) {
-			this.server.setSoTimeout(config.getSoTimeout());
-		}
-		if (config.getConnTimeout() != null) {
-			this.server.setConnectionTimeout(config.getConnTimeout());
-		}
-		if (config.getMaxConns() != null) {
-			this.server.setMaxTotalConnections(config.getMaxConns());
-		}
-		if (config.getAllowCompression() != null) {
-			this.server.setAllowCompression(config.getAllowCompression());
-		}
-		if (config.getMaxRetries() != null) {
-		    ((DefaultHttpClient)this.server.getHttpClient()).setHttpRequestRetryHandler(new SolrHttpRequestRetryHandler(config.getMaxRetries()));
-		}
-		this.coreName = config.getCoreName();
-	}
+        if (config.getSoTimeout() != null) {
+            this.server.setSoTimeout(config.getSoTimeout());
+        }
+        if (config.getConnTimeout() != null) {
+            this.server.setConnectionTimeout(config.getConnTimeout());
+        }
+        if (config.getMaxConns() != null) {
+            this.server.setMaxTotalConnections(config.getMaxConns());
+        }
+        if (config.getAllowCompression() != null) {
+            this.server.setAllowCompression(config.getAllowCompression());
+        }
+        if (config.getMaxRetries() != null) {
+            ((DefaultHttpClient)this.server.getHttpClient()).setHttpRequestRetryHandler(new SolrHttpRequestRetryHandler(config.getMaxRetries()));
+        }
+        this.coreName = config.getCoreName();
+    }
 
-	@Override
-	public void close() throws ResourceException {
-		if (this.server != null) {
-			try {
-				this.server.close();
-			} catch (IOException e) {
-				throw new ResourceException(e);
-			}
-		}
-	}
+    @Override
+    public void close() throws ResourceException {
+        if (this.server != null) {
+            try {
+                this.server.close();
+            } catch (IOException e) {
+                throw new ResourceException(e);
+            }
+        }
+    }
 
-	@Override
-	public boolean isAlive() {
-		try {
-			this.server.ping();
-		} catch (SolrServerException e) {
-			return false;
-		} catch (IOException e) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean isAlive() {
+        try {
+            this.server.ping();
+        } catch (SolrServerException e) {
+            return false;
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
 
-	@Override
-	public QueryResponse query(SolrQuery params) throws TranslatorException {
-		try {
-			return server.query(params);
-		} catch (SolrServerException e) {
-			throw new TranslatorException(e);
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    @Override
+    public QueryResponse query(SolrQuery params) throws TranslatorException {
+        try {
+            return server.query(params);
+        } catch (SolrServerException e) {
+            throw new TranslatorException(e);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
-	@Override
-	public UpdateResponse update(UpdateRequest request) throws TranslatorException {
-		try {
-			request.setCommitWithin(-1);
-			request.setAction(UpdateRequest.ACTION.COMMIT, false, false );
-			return request.process(this.server);
-		} catch (SolrServerException e) {
-			throw new TranslatorException(e);
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    @Override
+    public UpdateResponse update(UpdateRequest request) throws TranslatorException {
+        try {
+            request.setCommitWithin(-1);
+            request.setAction(UpdateRequest.ACTION.COMMIT, false, false );
+            return request.process(this.server);
+        } catch (SolrServerException e) {
+            throw new TranslatorException(e);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
-	@Override
-	public LukeResponse metadata(LukeRequest request) throws TranslatorException {
-		try {
-			return request.process(this.server);
-		} catch (SolrServerException e) {
-			throw new TranslatorException(e);
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    @Override
+    public LukeResponse metadata(LukeRequest request) throws TranslatorException {
+        try {
+            return request.process(this.server);
+        } catch (SolrServerException e) {
+            throw new TranslatorException(e);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
-	@Override
-	public String getCoreName() {
-		return this.coreName;
-	}
+    @Override
+    public String getCoreName() {
+        return this.coreName;
+    }
 }
