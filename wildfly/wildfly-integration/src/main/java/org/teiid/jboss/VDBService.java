@@ -338,7 +338,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
     private void save() throws AdminProcessingException {
         try {
             ObjectSerializer os = getSerializer();
-            VDBMetadataParser.marshell(this.vdb, os.getVdbXmlOutputStream(this.vdb));
+            VDBMetadataParser.marshall(this.vdb, os.getVdbXmlOutputStream(this.vdb));
         } catch (IOException e) {
              throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50048, e);
         } catch (XMLStreamException e) {

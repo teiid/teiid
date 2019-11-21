@@ -190,6 +190,9 @@ public class SQLConstants {
         static final String YAML = "YAML"; //$NON-NLS-1$
         static final String ANALYZE = "ANALYZE"; //$NON-NLS-1$
         static final String TEXT = "TEXT"; //$NON-NLS-1$
+
+        //fdw
+        static final String HANDLER = "HANDLER"; //$NON-NLS-1$
     }
 
     public interface Reserved {

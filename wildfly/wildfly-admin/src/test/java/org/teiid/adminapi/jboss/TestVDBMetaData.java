@@ -43,7 +43,7 @@ public class TestVDBMetaData {
         VDBMetaData vdb = TestVDBUtility.buildVDB();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        VDBMetadataParser.marshell(vdb, out);
+        VDBMetadataParser.marshall(vdb, out);
 
         //System.out.println(new String(out.toByteArray()));
 

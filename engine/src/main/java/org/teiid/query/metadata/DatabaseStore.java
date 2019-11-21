@@ -339,10 +339,11 @@ public abstract class DatabaseStore {
     }
 
     private boolean verifyDataWrapperExists(String dataWrapperName) {
-        if (this.currentDatabase.getDataWrapper(dataWrapperName) == null) {
+        //we'll let this be a deploy time validation
+        /*if (this.currentDatabase.getDataWrapper(dataWrapperName) == null) {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31247,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31247, dataWrapperName));
-        }
+        }*/
         return true;
     }
 

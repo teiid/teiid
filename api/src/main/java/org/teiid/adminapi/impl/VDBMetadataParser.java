@@ -457,7 +457,12 @@ public class VDBMetadataParser {
         }
     }
 
+    @Deprecated
     public static void marshell(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
+        marshall(vdb, out);
+    }
+
+    public static void marshall(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
         VDBMetadataParser parser = new VDBMetadataParser();
         parser.writeVDB(vdb, out);
     }

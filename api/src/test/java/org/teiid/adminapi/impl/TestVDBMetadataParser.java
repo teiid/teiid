@@ -45,7 +45,7 @@ public class TestVDBMetadataParser {
         assertNotNull(metadata.getModel("model-one"));
         metadata.setImportedModels(Collections.singleton("model-one"));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        VDBMetadataParser.marshell(metadata, baos);
+        VDBMetadataParser.marshall(metadata, baos);
         baos.close();
         VDBMetaData parsed = VDBMetadataParser.unmarshall(new ByteArrayInputStream(baos.toByteArray()));
         assertNull(parsed.getModel("model-one"));

@@ -210,7 +210,7 @@ public class TestDDLMetadataStore {
         Admin admin = es.getAdmin();
         VDBMetaData vdb = (VDBMetaData)admin.getVDB("empty", "2");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        VDBMetadataParser.marshell(vdb, out);
+        VDBMetadataParser.marshall(vdb, out);
 
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "first-vdb.xml"));
