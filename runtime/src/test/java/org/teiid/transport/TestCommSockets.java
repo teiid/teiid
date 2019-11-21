@@ -350,4 +350,8 @@ public class TestCommSockets {
         future.get(19, TimeUnit.SECONDS);
     }
 
+    @Test public void testSocketConfig() throws Exception {
+        assertEquals(240001l, SocketServerConnectionFactory.getInstance().getSynchronousTtl());
+    }
+
 }
