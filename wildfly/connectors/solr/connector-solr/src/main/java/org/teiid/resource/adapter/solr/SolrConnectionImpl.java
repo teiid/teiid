@@ -64,8 +64,8 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
             params.set(HttpClientUtil.PROP_BASIC_AUTH_USER, userName);
             params.set(HttpClientUtil.PROP_BASIC_AUTH_PASS, password);
         }
-        url = url + config.getCoreName();
-        this.server = new Builder().withInvariantParams(params).build();
+        String baseUrl = url + config.getCoreName();
+        this.server = new Builder(baseUrl).withInvariantParams(params).build();
 
         if (config.getSoTimeout() != null) {
             this.server.setSoTimeout(config.getSoTimeout());
