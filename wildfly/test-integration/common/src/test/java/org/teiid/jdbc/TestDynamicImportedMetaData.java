@@ -117,7 +117,7 @@ public class TestDynamicImportedMetaData {
         importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
         importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         MetadataFactory mf = getMetadata(importProperties, conn);
-        Procedure p = mf.asMetadataStore().getSchemas().get("TEST").getProcedures().get("VDB.SYS.GETXMLSCHEMAS");
+        Procedure p = mf.asMetadataStore().getSchemas().get("TEST").getProcedures().get("VDB.SYS.ARRAYITERATE");
         assertEquals(1, p.getResultSet().getColumns().size());
     }
 

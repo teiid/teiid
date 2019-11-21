@@ -329,47 +329,6 @@ public class TestPropertiesUtils {
         LIST_ABC = Collections.unmodifiableList(tempList);
     }
 
-    @Test public void testNestedProperties() throws Exception {
-        System.setProperty("testdirectory", "c:/metamatrix/testdirectory"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        Properties p = new Properties(System.getProperties());
-        p.setProperty("key1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty("key2", "${key1}/value2"); //$NON-NLS-1$ //$NON-NLS-2$
-        p.put("key3", new Integer(-234)); //$NON-NLS-1$
-        p.setProperty("key4", "${key2}/value4"); //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty("key5", "${testdirectory}/testdata"); //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty("key7", "anotherdir/${testdirectory}/${key1}"); //$NON-NLS-1$ //$NON-NLS-2$
-        int currentSize = p.size();
-
-        Properties m = PropertiesUtils.resolveNestedProperties(p);
-        assertEquals("value1/value2", m.getProperty("key2")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(new Integer(-234), m.get("key3")); //$NON-NLS-1$
-        assertEquals("value1/value2/value4", m.getProperty("key4")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("c:/metamatrix/testdirectory/testdata", m.getProperty("key5")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("anotherdir/c:/metamatrix/testdirectory/value1", m.getProperty("key7")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertTrue(p == m); // no cloning.
-        assertTrue(currentSize == m.size());
-
-        p.setProperty("key6", "${foo}"); //$NON-NLS-1$ //$NON-NLS-2$
-
-        try {
-            m = PropertiesUtils.resolveNestedProperties(p);
-            fail("must have failed to resovle as {foo} does not exist"); //$NON-NLS-1$
-        } catch(RuntimeException e) {
-            // pass
-        }
-
-
-        // JIRA:  TEIID-909 - The resolveNestedProperties logic goes in a loop when the key is also in the  value as ${key}.
-        Properties dups = new Properties();
-        dups.setProperty("usethis", "${usethis}");
-
-        dups = PropertiesUtils.resolveNestedProperties(dups);
-
-
-
-    }
-
     @Test public void testGetInvalidInt() {
         Properties p = new Properties();
         p.setProperty("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$

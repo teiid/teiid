@@ -249,9 +249,6 @@ CREATE FOREIGN TABLE VirtualDatabases (
 	PRIMARY KEY (Name, Version)
 );
 
-CREATE FOREIGN PROCEDURE getXMLSchemas(IN document string NOT NULL) RETURNS TABLE (schema xml)
-OPTIONS (UPDATECOUNT 0);
-
 CREATE VIEW spatial_ref_sys (
     srid integer primary key,
     auth_name string(256),

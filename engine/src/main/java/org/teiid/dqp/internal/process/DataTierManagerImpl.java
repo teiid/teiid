@@ -224,7 +224,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     }
 
     private enum SystemProcs {
-        GETXMLSCHEMAS,
         ARRAYITERATE
     }
 
@@ -1609,9 +1608,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         }
         final SystemProcs sysTable = SystemProcs.valueOf(proc.getProcedureCallableName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
         switch (sysTable) {
-        case GETXMLSCHEMAS:
-            //no rows -deprecated
-            break;
         case ARRAYITERATE:
             Object array = ((Constant)proc.getParameter(1).getExpression()).getValue();
             if (array != null) {
