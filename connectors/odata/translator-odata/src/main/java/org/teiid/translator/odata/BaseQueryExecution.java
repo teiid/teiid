@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import org.odata4j.core.ODataConstants;
@@ -223,8 +224,8 @@ public class BaseQueryExecution {
 
     protected Map<String, List<String>> getDefaultHeaders() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
-        headers.put("Accept", Arrays.asList(FormatType.ATOM.getAcceptableMediaTypes())); //$NON-NLS-1$
-        headers.put("Content-Type", Arrays.asList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
+        headers.put("Accept", Arrays.asList(MediaType.APPLICATION_ATOM_XML, MediaType.APPLICATION_XML)); //$NON-NLS-1$
+        headers.put("Content-Type", Arrays.asList(MediaType.APPLICATION_XML)); //$NON-NLS-1$
         return headers;
     }
 
