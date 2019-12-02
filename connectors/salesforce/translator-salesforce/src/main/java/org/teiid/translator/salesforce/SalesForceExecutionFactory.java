@@ -59,7 +59,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     private static final String SALESFORCE = "salesforce"; //$NON-NLS-1$
     private static final String EXCLUDES = "excludes";//$NON-NLS-1$
     private static final String INCLUDES = "includes";//$NON-NLS-1$
-    private boolean auditModelFields = false;
     private int maxInsertBatchSize = 2048;
     private boolean supportsGroupBy = true;
 
@@ -71,15 +70,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
         setSupportsInnerJoins(true);
         setTransactionSupport(TransactionSupport.NONE);
         setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-    }
-
-    @TranslatorProperty(display="Model Audit Fields", advanced=true)
-    public boolean isModelAuditFields() {
-        return this.auditModelFields;
-    }
-
-    public void setModelAuditFields(boolean modelAuditFields) {
-        this.auditModelFields = modelAuditFields;
     }
 
     @Override
@@ -125,14 +115,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     @Override
     public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
          return new DirectQueryExecution(arguments.subList(1, arguments.size()), command, connection, metadata, executionContext, (String)arguments.get(0).getArgumentValue().getValue(), true);
-    }
-
-    @Override
-    public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
-        if (metadataFactory.getModelProperties().getProperty("importer.modelAuditFields") == null) { //$NON-NLS-1$
-            metadataFactory.getModelProperties().setProperty("importer.modelAuditFields", String.valueOf(this.auditModelFields)); //$NON-NLS-1$
-        }
-        super.getMetadata(metadataFactory, connection);
     }
 
     @Override
