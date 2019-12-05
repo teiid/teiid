@@ -151,7 +151,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 
     public OioOjbectChannelFactory(Properties props) {
         this.props = props;
-        PropertiesUtils.setBeanProperties(this, props, "org.teiid.sockets"); //$NON-NLS-1$
+        PropertiesUtils.setBeanProperties(this, props, "org.teiid.sockets", true); //$NON-NLS-1$
     }
 
     @Override

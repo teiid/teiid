@@ -62,7 +62,7 @@ public class DQPConfiguration{
     private Properties properties;
 
     public DQPConfiguration() {
-        properties = PropertiesUtils.getCombinedProperties();
+        properties = PropertiesUtils.getDefaultProperties();
     }
 
     public int getMaxActivePlans() {

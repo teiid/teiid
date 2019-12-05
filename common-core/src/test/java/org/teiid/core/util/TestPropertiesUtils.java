@@ -422,15 +422,15 @@ public class TestPropertiesUtils {
         Properties p = new Properties();
         p.setProperty("org.teiid.val", "100"); //$NON-NLS-1$ //$NON-NLS-2$
         MyBean test = new MyBean();
-        PropertiesUtils.setBeanProperties(test, p, "org.teiid", true);
+        PropertiesUtils.setBeanProperties(test, p, "org.teiid");
         assertEquals(100, test.getVal());
     }
 
-    @Test public void testCombinedProperties() {
+    @Test public void testSystemProperty() {
         String old = System.setProperty("org.teiid.val", "200");
         try {
             MyBean test = new MyBean();
-            PropertiesUtils.setBeanProperties(test, PropertiesUtils.getCombinedProperties(), "org.teiid", true);
+            PropertiesUtils.setBeanProperties(test, System.getProperties(), "org.teiid");
             assertEquals(200, test.getVal());
         } finally {
             if (old != null) {
@@ -440,4 +440,11 @@ public class TestPropertiesUtils {
             }
         }
     }
+
+    @Test public void testGetEnvValue() {
+        Map<String, String> env = new HashMap<>();
+        env.put("ORG_TEIID_SOME_LONG_VAL", "val");
+        assertEquals("val", PropertiesUtils.getValue("org.teiid.someLongVal", Collections.EMPTY_MAP, env));
+    }
+
 }

@@ -294,13 +294,8 @@ public final class PropertiesUtils {
         setBeanProperties(bean, props, prefix, false);
     }
 
-    public static void setBeanProperties(Object bean, Properties props, String prefix, boolean caseSensitive) {
-        // Move all prop names to lower case so we can use reflection to get
-        // method names and look them up in the connection props.
-        Map<?, ?> map = props;
-        if (!caseSensitive) {
-            map = caseInsensitiveProps(props);
-        }
+    public static void setBeanProperties(Object bean, Properties props, String prefix, boolean includeEnv) {
+        Map<String, String> map = caseInsensitiveProps(props);
         final Method[] methods = bean.getClass().getMethods();
         for (int i = 0; i < methods.length; i++) {
             final Method method = methods[i];
@@ -312,13 +307,14 @@ public final class PropertiesUtils {
             // Get the property name
             String propertyName = methodName.substring(3);    // remove the "set"
             if (prefix != null) {
-                if (caseSensitive) {
-                    propertyName = prefix + "." + Character.toLowerCase(propertyName.charAt(0)) + propertyName.substring(1, propertyName.length()); //$NON-NLS-1$
-                } else {
-                    propertyName = prefix + "." + propertyName; //$NON-NLS-1$
-                }
+                propertyName = prefix + "." + propertyName; //$NON-NLS-1$
             }
-            Object propertyValue = map.get(propertyName);
+            String propertyValue = null;
+            if (includeEnv) {
+                propertyValue = getValue(propertyName, map, System.getenv());
+            } else {
+                propertyValue = map.get(propertyName);
+            }
             if (propertyValue != null || map.containsKey(propertyName)) {
                 setProperty(bean, propertyValue, method, propertyName);
             }
@@ -355,17 +351,15 @@ public final class PropertiesUtils {
         return argType;
     }
 
-    private static TreeMap<String, String> caseInsensitiveProps(final Properties connectionProps) {
-        final TreeMap<String, String> caseInsensitive = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-        final Enumeration<?> itr = connectionProps.propertyNames();
+    private static Map<String, String> caseInsensitiveProps(final Properties props) {
+        TreeMap<String, String> newProps = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        final Enumeration<?> itr = props.propertyNames();
         while ( itr.hasMoreElements() ) {
             final String name = (String) itr.nextElement();
-            String propValue = connectionProps.getProperty(name);
-            if (propValue != null || connectionProps.containsKey(name)) {
-                caseInsensitive.put(name, propValue);
-            }
+            String propValue = props.getProperty(name);
+            newProps.put(name, propValue);
         }
-        return caseInsensitive;
+        return newProps;
     }
 
     /**
@@ -386,14 +380,9 @@ public final class PropertiesUtils {
      * @return
      */
     public static <T> T getHierarchicalProperty(String key, T defaultValue, Class<T> clazz) {
-        String stringVal = System.getenv(key);
-        if(stringVal != null) {
-            stringVal = stringVal.trim();
-            if (stringVal.length() != 0) {
-                return StringUtil.valueOf(stringVal, clazz);
-            }
-        }
-        stringVal = System.getProperty(key);
+        Map sysProps = System.getProperties();
+        Map<String, String> env = System.getenv();
+        String stringVal = getValue(key, sysProps, env);
         if(stringVal != null) {
             stringVal = stringVal.trim();
             if (stringVal.length() != 0) {
@@ -403,10 +392,28 @@ public final class PropertiesUtils {
         return defaultValue;
     }
 
-    public static Properties getCombinedProperties() {
+    static String getValue(String key, Map sysProps,
+            Map<String, String> env) {
+        Object val = sysProps.get(key);
+        String stringVal = null;
+        if (val instanceof String) {
+            stringVal = val.toString();
+        } else {
+            stringVal = env.get(key);
+            if (stringVal == null) {
+                //convert to upper snake case
+                String newKey = key.replaceAll("[.-]", "_"); //$NON-NLS-1$ //$NON-NLS-2$
+                newKey = newKey.replaceAll("([A-Z]|[a-z]+)([A-Z])", "$1_$2"); //$NON-NLS-1$ //$NON-NLS-2$
+                newKey = newKey.replaceAll("([A-Z]|[a-z]+)([A-Z])", "$1_$2"); //$NON-NLS-1$ //$NON-NLS-2$
+                stringVal = env.get(newKey.toUpperCase());
+            }
+        }
+        return stringVal;
+    }
+
+    public static Properties getDefaultProperties() {
         Properties properties = new Properties();
         properties.putAll(System.getProperties());
-        properties.putAll(System.getenv());
         return properties;
     }
 

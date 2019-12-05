@@ -55,7 +55,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
     public static synchronized SocketServerConnectionFactory getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new SocketServerConnectionFactory();
-            Properties props = PropertiesUtils.getCombinedProperties();
+            Properties props = PropertiesUtils.getDefaultProperties();
             InputStream is = SocketServerConnectionFactory.class.getResourceAsStream("/teiid-client-settings.properties"); //$NON-NLS-1$
             if (is != null) {
                 Properties newProps = new Properties();
@@ -70,6 +70,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
                     }
                 }
                 newProps.putAll(props);
+                props = newProps;
             }
             INSTANCE.initialize(props);
         }
@@ -81,7 +82,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
     }
 
     public void initialize(Properties info) {
-        PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets"); //$NON-NLS-1$
+        PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets", true); //$NON-NLS-1$
         this.channelFactory = new OioOjbectChannelFactory(info);
     }
 
