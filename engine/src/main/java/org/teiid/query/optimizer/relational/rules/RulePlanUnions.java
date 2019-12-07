@@ -44,8 +44,8 @@ import org.teiid.query.util.CommandContext;
  *  Organizes union branches so that push down is possible.  This does not check to actually ensure that push down will happen.
  */
 public class RulePlanUnions implements OptimizerRule {
-    
-    /** 
+
+    /**
      * @see org.teiid.query.optimizer.relational.OptimizerRule#execute(org.teiid.query.optimizer.relational.plantree.PlanNode, org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.optimizer.capabilities.CapabilitiesFinder, org.teiid.query.optimizer.relational.RuleStack, org.teiid.query.analysis.AnalysisRecord, org.teiid.query.util.CommandContext)
      */
     public PlanNode execute(PlanNode plan,
@@ -56,13 +56,13 @@ public class RulePlanUnions implements OptimizerRule {
                             CommandContext context) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
-        
+
         optimizeUnions(plan, metadata, capabilitiesFinder);
-        
+
         return plan;
     }
 
-    /** 
+    /**
      * @param plan
      * @param metadata
      * @param capabilitiesFinder
@@ -76,52 +76,52 @@ public class RulePlanUnions implements OptimizerRule {
         //look for all union branches and their sources
         for (PlanNode unionNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SET_OP, NodeConstants.Types.SET_OP | NodeConstants.Types.ACCESS)) {
             List<PlanNode> accessNodes = NodeEditor.findAllNodes(unionNode, NodeConstants.Types.ACCESS);
-            
+
             Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
-            
+
             //check to see if this union is already to the same source
             if (id != null) {
                 continue;
             }
-            
+
             //a linked hashmap is used so that the first entry is logically the first branch
             Map<Object, List<PlanNode>> sourceNodes = new LinkedHashMap<Object, List<PlanNode>>();
-            
+
             boolean all = unionNode.hasBooleanProperty(NodeConstants.Info.USE_ALL);
             Operation op = (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION);
-            
+
             collectUnionSources(metadata, capabilitiesFinder, unionNode, sourceNodes, all, op);
-            
+
             if (sourceNodes.size() == 1) {
                 continue;
             }
-            
+
             //rebuild unions based upon the source map
             boolean shouldRebuild = false;
-            
+
             for (Map.Entry<Object, List<PlanNode>> entry : sourceNodes.entrySet()) {
-                if (entry.getKey() != null 
-                		&& entry.getValue().size() > 1 
-            			&& CapabilitiesUtil.supportsSetOp(entry.getKey(), (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capabilitiesFinder)) {
-            		shouldRebuild = true;
-            		break;
-            	}
+                if (entry.getKey() != null
+                        && entry.getValue().size() > 1
+                        && CapabilitiesUtil.supportsSetOp(entry.getKey(), (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capabilitiesFinder)) {
+                    shouldRebuild = true;
+                    break;
+                }
             }
-            
+
             if (!shouldRebuild) {
                 continue;
             }
-            
+
             List<PlanNode> sourceUnions = new LinkedList<PlanNode>();
-            
+
             for (Map.Entry<Object, List<PlanNode>> entry : sourceNodes.entrySet()) {
                 List<PlanNode> sources = entry.getValue();
-                
+
                 sourceUnions.add(buildUnionTree(unionNode, sources));
             }
-            
+
             PlanNode tempRoot = buildUnionTree(unionNode, sourceUnions);
-            
+
             unionNode.removeAllChildren();
             unionNode.addChildren(tempRoot.removeAllChildren());
         }
@@ -129,9 +129,9 @@ public class RulePlanUnions implements OptimizerRule {
 
     static PlanNode buildUnionTree(PlanNode rootUnionNode,
                                 List<PlanNode> sources) {
-        
+
         PlanNode root = null;
-        
+
         for (PlanNode source : sources) {
             if (root == null) {
                 root = source;
@@ -144,7 +144,7 @@ public class RulePlanUnions implements OptimizerRule {
                 root = union;
             }
         }
-        
+
         return root;
     }
 
@@ -159,15 +159,15 @@ public class RulePlanUnions implements OptimizerRule {
                                                  TeiidComponentException {
         for (PlanNode child : unionNode.getChildren()) {
             if (child.getType() == NodeConstants.Types.SET_OP) {
-            	if (!all && Operation.UNION == child.getProperty(NodeConstants.Info.SET_OPERATION)) {
-            		//allow the parent to handle the dup removal
-            		child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
-            	}
+                if (!all && Operation.UNION == child.getProperty(NodeConstants.Info.SET_OPERATION)) {
+                    //allow the parent to handle the dup removal
+                    child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
+                }
                 if ((!all || child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT) { //keep collecting sources
                     List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
-                    
+
                     Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
-                    
+
                     if (id != null) {
                         buildModelMap(metadata, capabilitiesFinder, sourceNodes, child, id);
                     } else {
@@ -178,9 +178,9 @@ public class RulePlanUnions implements OptimizerRule {
                 }
             } else {  //this must be a source, see if it has a consistent access node
                 List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
-                
+
                 Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
-                
+
                 buildModelMap(metadata, capabilitiesFinder, sourceNodes, child, id);
 
                 if (id == null) {
@@ -191,35 +191,35 @@ public class RulePlanUnions implements OptimizerRule {
         }
     }
 
-    private Object getModelId(QueryMetadataInterface metadata,
+    static Object getModelId(QueryMetadataInterface metadata,
                             List<PlanNode> accessNodes, CapabilitiesFinder capFinder) throws QueryMetadataException,
                                              TeiidComponentException {
         Object modelID = null;
-        
+
         for (PlanNode accessNode : accessNodes) {
-        
+
             Object accessModelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
-            
+
             if (accessModelID == null) {
                 return null;
             }
-            
+
             if(modelID == null) {
                 modelID = accessModelID;
-            } 
-            
+            }
+
             if(! CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder)) {
                 return null;
             }
         }
-        
+
         return modelID;
     }
-    
+
     /**
      * Builds a mapping of models to access nodes.  The ordering of access nodes will be stable
      * and the model key takes into account whether the same connector is used.
-     *  
+     *
      * @param metadata
      * @param capFinder
      * @param accessMap
@@ -235,24 +235,24 @@ public class RulePlanUnions implements OptimizerRule {
                                    Object accessModelID) throws QueryMetadataException,
                                                         TeiidComponentException {
         List<PlanNode> accessNodes = accessMap.get(accessModelID);
-        
+
         if (accessNodes == null) {
-	        for (Map.Entry<Object, List<PlanNode>> entry : accessMap.entrySet() ) {
-	            if (accessModelID == entry.getKey() || CapabilitiesUtil.isSameConnector(accessModelID, entry.getKey(), metadata, capFinder)) {
-	                accessNodes = entry.getValue();
-	                break;
-	            }
-	        }
-	        
-	        if (accessNodes == null) {
-	            accessNodes = new ArrayList<PlanNode>();
-	            accessMap.put(accessModelID, accessNodes);
-	        }
+            for (Map.Entry<Object, List<PlanNode>> entry : accessMap.entrySet() ) {
+                if (accessModelID == entry.getKey() || CapabilitiesUtil.isSameConnector(accessModelID, entry.getKey(), metadata, capFinder)) {
+                    accessNodes = entry.getValue();
+                    break;
+                }
+            }
+
+            if (accessNodes == null) {
+                accessNodes = new ArrayList<PlanNode>();
+                accessMap.put(accessModelID, accessNodes);
+            }
         }
         accessNodes.add(node);
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#toString()
      */
     public String toString() {
