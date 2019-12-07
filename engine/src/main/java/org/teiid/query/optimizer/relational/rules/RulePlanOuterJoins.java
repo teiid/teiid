@@ -285,6 +285,10 @@ public class RulePlanOuterJoins implements OptimizerRule {
         if (join.getFirstChild().getType() != NodeConstants.Types.JOIN || !(join.getFirstChild().getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER || join.getFirstChild().getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER)) {
             return false;
         }
+        if (RulePlanUnions.getModelId(metadata, NodeEditor.findAllNodes(join, NodeConstants.Types.ACCESS), capabilitiesFinder) != null) {
+            //already grouped, we can't further optimize here
+            return false;
+        }
         PlanNode childJoin = null;
         PlanNode left = join.getFirstChild();
         PlanNode right = join.getLastChild();

@@ -191,7 +191,7 @@ public class RulePlanUnions implements OptimizerRule {
         }
     }
 
-    private Object getModelId(QueryMetadataInterface metadata,
+    static Object getModelId(QueryMetadataInterface metadata,
                             List<PlanNode> accessNodes, CapabilitiesFinder capFinder) throws QueryMetadataException,
                                              TeiidComponentException {
         Object modelID = null;

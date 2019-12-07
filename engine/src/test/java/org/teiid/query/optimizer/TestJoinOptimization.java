@@ -1601,7 +1601,7 @@ public class TestJoinOptimization {
         RealMetadataFactory.setCardinality("pm1.g2", 1, tm);
         RealMetadataFactory.setCardinality("pm1.g3", 1, tm);
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_2.e2, g_0.e2, g_3.e1, g_3.e3 FROM (pm1.g3 AS g_0 CROSS JOIN pm1.g1 AS g_1) INNER JOIN (pm1.g2 AS g_2 LEFT OUTER JOIN pm1.g4 AS g_3 ON g_2.e4 = g_3.e4) ON g_1.e1 = g_2.e1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.e2, g_1.e2, g_3.e1, g_3.e3 FROM (pm1.g2 AS g_0 INNER JOIN (pm1.g3 AS g_1 CROSS JOIN pm1.g1 AS g_2) ON g_2.e1 = g_0.e1) LEFT OUTER JOIN pm1.g4 AS g_3 ON g_0.e4 = g_3.e4"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
@@ -1696,5 +1696,51 @@ public class TestJoinOptimization {
                      "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0",
                      "SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
       }
+
+    @Test
+    public void testNonTerminatingLeftOuterJoinOptimization() throws Exception {
+        String sql = "SELECT c._COMPTE,\n" +
+                "       u.CalculatedField,\n" +
+                "       CH_4.CH4__VALEUR,\n" +
+                "       ch_41.CH41__VALEUR,\n" +
+                "       ch_5.CH5__VALEUR\n" +
+                "  FROM pm1.c\n" +
+                "  LEFT JOIN pm2.u\n" +
+                "    ON CAST(u.BAAFREP_AFAINB AS STRING) = c._USERNAME\n" +
+                "  LEFT JOIN (SELECT ch._COMPTE AS CH4__COMPTE,\n" +
+                "                    ch._VALEUR AS CH4__VALEUR\n" +
+                "               FROM pm1.ch\n" +
+                "              WHERE ch._NUMCHAMPS = 4) CH_4\n" +
+                "    ON c._COMPTE = CH_4.CH4__COMPTE\n" +
+                "  LEFT JOIN (SELECT ch._COMPTE AS CH41__COMPTE,\n" +
+                "                    ch._VALEUR AS CH41__VALEUR\n" +
+                "               FROM pm1.ch\n" +
+                "              WHERE ch._NUMCHAMPS = 41) ch_41\n" +
+                "    ON c._COMPTE = ch_41.CH41__COMPTE\n" +
+                "  LEFT JOIN (SELECT ch._COMPTE AS CH5__COMPTE,\n" +
+                "                    ch._VALEUR AS CH5__VALEUR\n" +
+                "               FROM pm1.ch\n" +
+                "              WHERE ch._NUMCHAMPS = 5) ch_5\n" +
+                "    ON c._COMPTE = ch_5.CH5__COMPTE LIMIT 0, 10";
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.fromDDL("x",
+                new RealMetadataFactory.DDLHolder("pm1",
+                        "create foreign table c (_COMPTE long, _USERNAME string); "
+                                + "create foreign table ch (_VALEUR string, _COMPTE long, _NUMCHAMPS long);"),
+                new RealMetadataFactory.DDLHolder("pm2",
+                        "create foreign table u (BAAFREP_AFAINB long, FREP_AFAINB string, CalculatedField6 long, CalculatedField long); "
+                                + "create foreign table cl (CHAMPSFCP__COMPTE long, CHAMPSFCP__VALEUR long)")),
+                new String[] {
+                        "SELECT g_0.\"_COMPTE\" AS c_0, g_0.\"_VALEUR\" AS c_1 FROM pm1.ch AS g_0 WHERE (g_0.\"_NUMCHAMPS\" = 5) AND (g_0.\"_COMPTE\" IN (<dependent values>)) ORDER BY c_0",
+                        "SELECT g_0.\"_COMPTE\" AS c_0, g_0.\"_USERNAME\" AS c_1, g_1.\"_VALEUR\" AS c_2 FROM pm1.c AS g_0 LEFT OUTER JOIN pm1.ch AS g_1 ON g_0.\"_COMPTE\" = g_1.\"_COMPTE\" AND g_1.\"_NUMCHAMPS\" = 4 ORDER BY c_0",
+                        "SELECT g_0.BAAFREP_AFAINB AS c_0, g_0.CalculatedField AS c_1, convert(g_0.BAAFREP_AFAINB, STRING) AS c_2 FROM pm2.u AS g_0 WHERE convert(g_0.BAAFREP_AFAINB, STRING) IN (<dependent values>) ORDER BY c_2",
+                        "SELECT g_0.\"_COMPTE\" AS c_0, g_0.\"_VALEUR\" AS c_1 FROM pm1.ch AS g_0 WHERE (g_0.\"_NUMCHAMPS\" = 41) AND (g_0.\"_COMPTE\" IN (<dependent values>)) ORDER BY c_0" }, //$NON-NLS-1$
+                new DefaultCapabilitiesFinder(caps),
+                ComparisonMode.EXACT_COMMAND_STRING);
+
+    }
 
 }
