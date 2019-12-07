@@ -70,6 +70,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
                     }
                 }
                 newProps.putAll(props);
+                props = newProps;
             }
             INSTANCE.initialize(props);
         }
