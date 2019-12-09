@@ -1042,12 +1042,34 @@
                 		<groupId>io.netty</groupId>
                 		<artifactId>netty-codec-http</artifactId>
                 	</exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>                  	
                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.olingo</groupId>
                 <artifactId>odata-server-core-ext</artifactId>
                 <version>${version.org.apache.olingo}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>                
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.olingo</groupId>
@@ -1058,6 +1080,28 @@
                 <groupId>org.apache.olingo</groupId>
                 <artifactId>odata-client-core</artifactId>
                 <version>${version.org.apache.olingo}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.dataformat</groupId>
+                        <artifactId>jackson-dataformat-xml</artifactId>
+                    </exclusion>
+                    <exclusion>
+			            <groupId>com.fasterxml</groupId>
+			            <artifactId>aalto-xml</artifactId>                    
+                    </exclusion>                                         
+                </exclusions>                
             </dependency>
             <dependency>
                 <groupId>org.apache.phoenix</groupId>
