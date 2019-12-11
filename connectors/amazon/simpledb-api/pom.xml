@@ -3,7 +3,7 @@
 	<parent>
 	<groupId>org.teiid.connectors</groupId>
 	<artifactId>amazon</artifactId>
-        <version>13.0.1-SNAPSHOT</version>
+        <version>13.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>simpledb-api</artifactId>	
 	<name>SimpleDB API</name>
