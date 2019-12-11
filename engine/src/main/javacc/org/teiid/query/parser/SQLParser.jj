@@ -5490,7 +5490,7 @@ void dropSchema(DatabaseStore dbStore) :
 /*
 name=set schema
 description=set the schema for subsequent ddl statements 
-example=[source,sql]\n----\SET SCHEMA foo \n----\n
+example=[source,sql]\n----\nSET SCHEMA foo\n----\n
 */
 void useSchema(DatabaseStore dbStore) :
 {
