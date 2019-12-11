@@ -233,6 +233,7 @@
 		<id>release</id>
 		<modules>
 			<module>build</module>
+			<module>wildfly</module>
 		</modules>
 	</profile>
 
@@ -240,6 +241,7 @@
 		<id>final-release</id>
 		<modules>
 			<module>build</module>
+			<module>wildfly</module>
 		</modules>
 		<properties>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
