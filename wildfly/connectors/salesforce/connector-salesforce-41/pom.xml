@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.wildfly.connectors</groupId>
 		<artifactId>salesforce</artifactId>
-		<version>13.0.0-SNAPSHOT</version>
+		<version>13.1.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>connector-salesforce-41</artifactId>
 	<name>Salesforce Resource Adapter API 41</name>
