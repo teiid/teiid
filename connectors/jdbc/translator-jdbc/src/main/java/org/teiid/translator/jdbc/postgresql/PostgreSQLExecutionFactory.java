@@ -798,7 +798,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsArrayAgg() {
-        return getVersion().compareTo(EIGHT_4) >= 0;
+        return false;
+        //return getVersion().compareTo(EIGHT_4) >= 0;
     }
 
     @Override
@@ -843,6 +844,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsArrayType() {
         return true;
+    }
+
+    @Override
+    public boolean supportsSelectExpressionArrayType() {
+        return false;
     }
 
     @Override
