@@ -74,109 +74,109 @@ import org.teiid.util.Version;
 
 
 
-/** 
+/**
  * Translator class for PostgreSQL.  Updated to expect a 8.0+ jdbc client
  * @since 4.3
  */
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
-    
+
     public static String POSTGRESQL = "postgresql"; //$NON-NLS-1$
-	
-	static final String UUID_TYPE = "uuid"; //$NON-NLS-1$
+
+    static final String UUID_TYPE = "uuid"; //$NON-NLS-1$
     private static final String INTEGER_TYPE = "integer"; //$NON-NLS-1$
 
-	private static final class NonIntegralNumberToBoolean extends
-			FunctionModifier {
-		@Override
-		public List<?> translate(Function function) {
-			return Arrays.asList(function.getParameters().get(0), " <> 0"); //$NON-NLS-1$
-		}
-	}
+    private static final class NonIntegralNumberToBoolean extends
+            FunctionModifier {
+        @Override
+        public List<?> translate(Function function) {
+            return Arrays.asList(function.getParameters().get(0), " <> 0"); //$NON-NLS-1$
+        }
+    }
 
-	private final class PostgreSQLFormatFunctionModifier extends
-			OracleFormatFunctionModifier {
-		private PostgreSQLFormatFunctionModifier(String prefix, boolean parse) {
-			super(prefix, parse);
-		}
+    private final class PostgreSQLFormatFunctionModifier extends
+            OracleFormatFunctionModifier {
+        private PostgreSQLFormatFunctionModifier(String prefix, boolean parse) {
+            super(prefix, parse);
+        }
 
-		protected Object convertToken(String group) {
-			Object result = PostgreSQLExecutionFactory.this.convertToken(group);
-			if (result == null) {
-				return super.convertToken(group);
-			}
-			return result;
-		}
-	}
+        protected Object convertToken(String group) {
+            Object result = PostgreSQLExecutionFactory.this.convertToken(group);
+            if (result == null) {
+                return super.convertToken(group);
+            }
+            return result;
+        }
+    }
 
-	public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
-	public static final Version EIGHT_1 = Version.getVersion("8.1"); //$NON-NLS-1$
-	public static final Version EIGHT_2 = Version.getVersion("8.2"); //$NON-NLS-1$
-	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
-	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
-	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
-	public static final Version NINE_3 = Version.getVersion("9.3"); //$NON-NLS-1$
-	public static final Version NINE_4 = Version.getVersion("9.4"); //$NON-NLS-1$
-	protected OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
-	
-	//postgis versions
-	public static final Version ONE_3 = Version.getVersion("1.3"); //$NON-NLS-1$
-	public static final Version ONE_4 = Version.getVersion("1.4"); //$NON-NLS-1$
-	public static final Version ONE_5 = Version.getVersion("1.5"); //$NON-NLS-1$
-	public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
-	
-	private Version postGisVersion = Version.DEFAULT_VERSION;
-	private boolean projSupported = false;
+    public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
+    public static final Version EIGHT_1 = Version.getVersion("8.1"); //$NON-NLS-1$
+    public static final Version EIGHT_2 = Version.getVersion("8.2"); //$NON-NLS-1$
+    public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
+    public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
+    public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+    public static final Version NINE_3 = Version.getVersion("9.3"); //$NON-NLS-1$
+    public static final Version NINE_4 = Version.getVersion("9.4"); //$NON-NLS-1$
+    protected OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
+
+    //postgis versions
+    public static final Version ONE_3 = Version.getVersion("1.3"); //$NON-NLS-1$
+    public static final Version ONE_4 = Version.getVersion("1.4"); //$NON-NLS-1$
+    public static final Version ONE_5 = Version.getVersion("1.5"); //$NON-NLS-1$
+    public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
+
+    private Version postGisVersion = Version.DEFAULT_VERSION;
+    private boolean projSupported = false;
 
     protected ConvertModifier convertModifier;
-    
-	public PostgreSQLExecutionFactory() {
-		setMaxDependentInPredicates(1);
-		setMaxInCriteriaSize(Short.MAX_VALUE - 50); //set a value that is safely smaller than the max in case there are other parameters
-	}
-	
-	/**
-	 * Convert to a new parsing token or return null if not possible
-	 * @param group
-	 * @return
-	 */
-    public Object convertToken(String group) {
-    	switch (group.charAt(0)) {
-		case 'Z':
-			return "TZ"; //$NON-NLS-1$
-		case 'S':
-			if (group.length() > 3) {
-				return "US"; //$NON-NLS-1$
-			}
-			return "MS"; //$NON-NLS-1$
-		}
-		return null;
-	}
 
-	public void start() throws TranslatorException {
+    public PostgreSQLExecutionFactory() {
+        setMaxDependentInPredicates(1);
+        setMaxInCriteriaSize(Short.MAX_VALUE - 50); //set a value that is safely smaller than the max in case there are other parameters
+    }
+
+    /**
+     * Convert to a new parsing token or return null if not possible
+     * @param group
+     * @return
+     */
+    public Object convertToken(String group) {
+        switch (group.charAt(0)) {
+        case 'Z':
+            return "TZ"; //$NON-NLS-1$
+        case 'S':
+            if (group.length() > 3) {
+                return "US"; //$NON-NLS-1$
+            }
+            return "MS"; //$NON-NLS-1$
+        }
+        return null;
+    }
+
+    public void start() throws TranslatorException {
         //TODO: all of the functions (except for convert) can be handled through just the escape syntax
         super.start();
-        
-        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("log")); //$NON-NLS-1$ 
-        
-        registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("&")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("~")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("|")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("#")); //$NON-NLS-1$ 
-        
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
+
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("log")); //$NON-NLS-1$
+
+        registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("&")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("~")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("|")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("#")); //$NON-NLS-1$
+
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new FunctionModifier() {
-			
-			@Override
-			public List<?> translate(Function function) {
-			    List<Object> parts = new ArrayList<Object>();
-				parts.add("substring("); //$NON-NLS-1$
-				parts.add(function.getParameters().get(0));
-				parts.add(" from "); //$NON-NLS-1$
-				Expression index = function.getParameters().get(1);
+
+            @Override
+            public List<?> translate(Function function) {
+                List<Object> parts = new ArrayList<Object>();
+                parts.add("substring("); //$NON-NLS-1$
+                parts.add(function.getParameters().get(0));
+                parts.add(" from "); //$NON-NLS-1$
+                Expression index = function.getParameters().get(1);
                 if (!(index instanceof Literal)) {
                     parts.add("case sign("); //$NON-NLS-1$
                     parts.add(index);
@@ -190,187 +190,187 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
                 } else {
                     parts.add(index);
                 }
-				if (function.getParameters().size() > 2) {
-					parts.add(" for "); //$NON-NLS-1$
-					parts.add(function.getParameters().get(2));
-				}
-				parts.add(")"); //$NON-NLS-1$
-				return parts;
-			}
-		});  
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
-        
-        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier(INTEGER_TYPE)); 
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier(INTEGER_TYPE)); 
+                if (function.getParameters().size() > 2) {
+                    parts.add(" for "); //$NON-NLS-1$
+                    parts.add(function.getParameters().get(2));
+                }
+                parts.add(")"); //$NON-NLS-1$
+                return parts;
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
+
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier(INTEGER_TYPE));
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
-        
-		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, parseModifier);
+
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, parseModifier);
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new PostgreSQLFormatFunctionModifier("TO_CHAR(", false)); //$NON-NLS-1$
-        
-        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$ 
+
+        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$
 
         //specific to 8.2 client or later
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
-        
+
         registerFunctionModifier(SourceSystemFunctions.ARRAY_GET, new FunctionModifier() {
-			
-			@Override
-			public List<?> translate(Function function) {
-			    //TODO: doesn't work for all array expressions
-				return Arrays.asList(function.getParameters().get(0), '[', function.getParameters().get(1), ']');
-			}
-		});
+
+            @Override
+            public List<?> translate(Function function) {
+                //TODO: doesn't work for all array expressions
+                return Arrays.asList(function.getParameters().get(0), '[', function.getParameters().get(1), ']');
+            }
+        });
         registerFunctionModifier(SourceSystemFunctions.ARRAY_LENGTH, new FunctionModifier() {
-			
-			@Override
-			public List<?> translate(Function function) {
-				if (function.getParameters().size() == 1) {
-					function.getParameters().add(new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER));
-				}
-				return null;
-			}
-		});
+
+            @Override
+            public List<?> translate(Function function) {
+                if (function.getParameters().size() == 1) {
+                    function.getParameters().add(new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER));
+                }
+                return null;
+            }
+        });
         registerFunctionModifier(SourceSystemFunctions.ROUND, new FunctionModifier() {
-			
-			@Override
-			public List<?> translate(Function function) {
-				if (function.getParameters().size() > 1) {
-					Expression ex = function.getParameters().get(0);
-					if (ex.getType() == TypeFacility.RUNTIME_TYPES.DOUBLE || ex.getType() == TypeFacility.RUNTIME_TYPES.FLOAT) {
-						if (function.getParameters().get(1) instanceof Literal && Integer.valueOf(0).equals(((Literal)function.getParameters().get(1)).getValue())) {
-							function.getParameters().remove(1);
-						} else {
-							function.getParameters().set(0, new Function(SourceSystemFunctions.CONVERT, Arrays.asList(ex, new Literal("bigdecimal", TypeFacility.RUNTIME_TYPES.STRING)), TypeFacility.RUNTIME_TYPES.BIG_DECIMAL)); //$NON-NLS-1$
-						}
-					}
-				}
-				return null;
-			}
-		});
-                
+
+            @Override
+            public List<?> translate(Function function) {
+                if (function.getParameters().size() > 1) {
+                    Expression ex = function.getParameters().get(0);
+                    if (ex.getType() == TypeFacility.RUNTIME_TYPES.DOUBLE || ex.getType() == TypeFacility.RUNTIME_TYPES.FLOAT) {
+                        if (function.getParameters().get(1) instanceof Literal && Integer.valueOf(0).equals(((Literal)function.getParameters().get(1)).getValue())) {
+                            function.getParameters().remove(1);
+                        } else {
+                            function.getParameters().set(0, new Function(SourceSystemFunctions.CONVERT, Arrays.asList(ex, new Literal("bigdecimal", TypeFacility.RUNTIME_TYPES.STRING)), TypeFacility.RUNTIME_TYPES.BIG_DECIMAL)); //$NON-NLS-1$
+                        }
+                    }
+                }
+                return null;
+            }
+        });
+
         convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping(INTEGER_TYPE, FunctionModifier.INTEGER); 
-    	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("float8", FunctionModifier.DOUBLE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("numeric(38)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("geography", FunctionModifier.GEOGRAPHY); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("json", FunctionModifier.JSON); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
-    	convertModifier.addConvert(FunctionModifier.FLOAT, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
-    	convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList(function.getParameters().get(0), " + TIMESTAMP '1970-01-01'"); //$NON-NLS-1$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("cast(date_trunc('second', ", function.getParameters().get(0), ") AS time)"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.US")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		});
-    	convertModifier.addSourceConversion(new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				((Literal)function.getParameters().get(1)).setValue(INTEGER_TYPE); 
-				return null;
-			}
-		}, FunctionModifier.BOOLEAN);
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier); 
-    	
+        convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
+        convertModifier.addTypeMapping(INTEGER_TYPE, FunctionModifier.INTEGER);
+        convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+        convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("float8", FunctionModifier.DOUBLE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("numeric(38)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convertModifier.addTypeMapping("geography", FunctionModifier.GEOGRAPHY); //$NON-NLS-1$
+        convertModifier.addTypeMapping("geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
+        convertModifier.addTypeMapping("json", FunctionModifier.JSON); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
+        convertModifier.addConvert(FunctionModifier.FLOAT, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
+        convertModifier.addConvert(FunctionModifier.BIGDECIMAL, FunctionModifier.BOOLEAN, new NonIntegralNumberToBoolean());
+        convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList(function.getParameters().get(0), " + TIMESTAMP '1970-01-01'"); //$NON-NLS-1$
+            }
+        });
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(date_trunc('second', ", function.getParameters().get(0), ") AS time)"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
+        convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.US")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                Expression stringValue = function.getParameters().get(0);
+                return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+        convertModifier.addSourceConversion(new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                ((Literal)function.getParameters().get(1)).setValue(INTEGER_TYPE);
+                return null;
+            }
+        }, FunctionModifier.BOOLEAN);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+
         //standard function form of several predicates
         addPushDownFunction(POSTGRESQL, "ilike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ilike $2)"); //$NON-NLS-1$ //$NON-NLS-2$
         addPushDownFunction(POSTGRESQL, "rlike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ~ $2)"); //$NON-NLS-1$ //$NON-NLS-2$
         addPushDownFunction(POSTGRESQL, "iregexp", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ~* $2)"); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-    
+    }
+
     @Override
     public void initCapabilities(Connection connection)
-    		throws TranslatorException {
-    	super.initCapabilities(connection);
-    	if (getVersion().compareTo(NINE_0) <= 0) {
-	        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+            throws TranslatorException {
+        super.initCapabilities(connection);
+        if (getVersion().compareTo(NINE_0) <= 0) {
+            registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         }
-    	if (this.postGisVersion.compareTo(Version.DEFAULT_VERSION) != 0 || connection == null) {
-    		return;
-    	}
-    	Statement s = null;
-    	ResultSet rs = null;
-    	try {
-    	    s = connection.createStatement();
-    	    rs = s.executeQuery("SELECT 1 FROM pg_catalog.pg_proc where lower(proname) = 'postgis_full_version'"); //$NON-NLS-1$
-	    	if (!rs.next()) {
-	    	    //no such function breakout
-	    	    return;
-	    	}
-	    	rs.close();
-    	    rs = s.executeQuery("SELECT PostGIS_Full_Version()"); //$NON-NLS-1$
-	    	rs.next();
-	    	String versionInfo = rs.getString(1);
-	    	if (versionInfo != null) {
-	    		if (versionInfo.contains("PROJ=")) { //$NON-NLS-1$
-	    			projSupported = true;
-	    		}
-	    		int index = versionInfo.indexOf("POSTGIS="); //$NON-NLS-1$
-	    		if (index > -1) {
-	    			String version = versionInfo.substring(index+9, versionInfo.indexOf('"', index+9));
-	    	    	this.setPostGisVersion(version);
-	    		}
-	    	}
-    	} catch (SQLException e) {
-    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not determine PostGIS version"); //$NON-NLS-1$
-    	} finally {
-    		try {
-    			if (rs != null) {
-    				rs.close();
-    			}
-    		} catch (SQLException e) {
-    			
-    		}
-    		try {
-    			if (s != null) {
-    				s.close();
-    			}
-    		} catch (SQLException e) {
-    			
-    		}
-    	}
+        if (this.postGisVersion.compareTo(Version.DEFAULT_VERSION) != 0 || connection == null) {
+            return;
+        }
+        Statement s = null;
+        ResultSet rs = null;
+        try {
+            s = connection.createStatement();
+            rs = s.executeQuery("SELECT 1 FROM pg_catalog.pg_proc where lower(proname) = 'postgis_full_version'"); //$NON-NLS-1$
+            if (!rs.next()) {
+                //no such function breakout
+                return;
+            }
+            rs.close();
+            rs = s.executeQuery("SELECT PostGIS_Full_Version()"); //$NON-NLS-1$
+            rs.next();
+            String versionInfo = rs.getString(1);
+            if (versionInfo != null) {
+                if (versionInfo.contains("PROJ=")) { //$NON-NLS-1$
+                    projSupported = true;
+                }
+                int index = versionInfo.indexOf("POSTGIS="); //$NON-NLS-1$
+                if (index > -1) {
+                    String version = versionInfo.substring(index+9, versionInfo.indexOf('"', index+9));
+                    this.setPostGisVersion(version);
+                }
+            }
+        } catch (SQLException e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not determine PostGIS version"); //$NON-NLS-1$
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+            } catch (SQLException e) {
+
+            }
+            try {
+                if (s != null) {
+                    s.close();
+                }
+            } catch (SQLException e) {
+
+            }
+        }
     }
-    
-    
+
+
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
@@ -388,52 +388,52 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public String translateLiteralTime(Time timeValue) {
         return "TIME '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$ 
+        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public int getTimestampNanoPrecision() {
-    	return 6;
+        return 6;
     }
-    
+
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
-    	if (limit.getRowOffset() > 0) {
-    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
-    	}
+        if (limit.getRowOffset() > 0) {
+            return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$
+        }
         return null;
     }
 
     /**
-     * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as 
+     * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as
      * bool_and(BooleanValue)
      * @see org.teiid.language.visitor.LanguageObjectVisitor#visit(org.teiid.language.AggregateFunction)
      * @since 4.3
      */
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof AggregateFunction) {
-    		AggregateFunction agg = (AggregateFunction)obj;
-    		if (agg.getParameters().size() == 1 && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
-            	if (agg.getName().equalsIgnoreCase(NonReserved.MIN)) {
-            		agg.setName("bool_and"); //$NON-NLS-1$
-            	} else if (agg.getName().equalsIgnoreCase(NonReserved.MAX)) {
-            		agg.setName("bool_or"); //$NON-NLS-1$
-            	}
+        if (obj instanceof AggregateFunction) {
+            AggregateFunction agg = (AggregateFunction)obj;
+            if (agg.getParameters().size() == 1 && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+                if (agg.getName().equalsIgnoreCase(NonReserved.MIN)) {
+                    agg.setName("bool_and"); //$NON-NLS-1$
+                } else if (agg.getName().equalsIgnoreCase(NonReserved.MAX)) {
+                    agg.setName("bool_or"); //$NON-NLS-1$
+                }
             }
-    	} else if (obj instanceof Like) {
-    		Like like = (Like)obj;
-    		if (like.getMode() == MatchMode.REGEX) {
-    			return Arrays.asList(like.getLeftExpression(), like.isNegated()?" !~ ":" ~ ", like.getRightExpression()); //$NON-NLS-1$ //$NON-NLS-2$
-    		} else if (like.getEscapeCharacter() == null) {
-    			return addDefaultEscape(like); 
-    		}
-    	}
-    	return super.translate(obj, context);
+        } else if (obj instanceof Like) {
+            Like like = (Like)obj;
+            if (like.getMode() == MatchMode.REGEX) {
+                return Arrays.asList(like.getLeftExpression(), like.isNegated()?" !~ ":" ~ ", like.getRightExpression()); //$NON-NLS-1$ //$NON-NLS-2$
+            } else if (like.getEscapeCharacter() == null) {
+                return addDefaultEscape(like);
+            }
+        }
+        return super.translate(obj, context);
     }
 
     /**
@@ -441,26 +441,26 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
      * @param like
      * @return
      */
-	public static List<Object> addDefaultEscape(Like like) {
-		return Arrays.asList(like.getLeftExpression(), 
-				like.isNegated()?" NOT ":" ", like.getMode()==MatchMode.LIKE?"LIKE ":"SIMILAR TO ", like.getRightExpression(), " ESCAPE ''"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-	}
-    
+    public static List<Object> addDefaultEscape(Like like) {
+        return Arrays.asList(like.getLeftExpression(),
+                like.isNegated()?" NOT ":" ", like.getMode()==MatchMode.LIKE?"LIKE ":"SIMILAR TO ", like.getRightExpression(), " ESCAPE ''"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    }
+
     @Override
     public NullOrder getDefaultNullOrder() {
-    	return NullOrder.HIGH;
+        return NullOrder.HIGH;
     }
-    
+
     @Override
     public boolean supportsOrderByNullOrdering() {
-    	return getVersion().compareTo(EIGHT_4) >= 0;
+        return getVersion().compareTo(EIGHT_4) >= 0;
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
-    
+
         supportedFunctions.add("ABS"); //$NON-NLS-1$
         supportedFunctions.add("ACOS"); //$NON-NLS-1$
         supportedFunctions.add("ASIN"); //$NON-NLS-1$
@@ -494,7 +494,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("SIN"); //$NON-NLS-1$
         supportedFunctions.add("SQRT"); //$NON-NLS-1$
         supportedFunctions.add("TAN"); //$NON-NLS-1$
-        
+
         supportedFunctions.add(SourceSystemFunctions.ASCII);
         supportedFunctions.add("CHR"); //$NON-NLS-1$
         supportedFunctions.add("CHAR"); //$NON-NLS-1$
@@ -512,7 +512,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         if (getVersion().compareTo(NINE_0) > 0) {
-        	supportedFunctions.add("RIGHT"); //$NON-NLS-1$
+            supportedFunctions.add("RIGHT"); //$NON-NLS-1$
         }
         supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
@@ -520,7 +520,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
         supportedFunctions.add("UPPER"); //$NON-NLS-1$
-        
+
         // These are executed within the server and never pushed down
 //        supportedFunctions.add("CURDATE"); //$NON-NLS-1$
 //        supportedFunctions.add("CURTIME"); //$NON-NLS-1$
@@ -544,19 +544,19 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         if (this.getVersion().compareTo(EIGHT_2) >= 0) {
-        	supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
-        	
-        	//only year and day match our expectations
-        	//supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+            supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
+
+            //only year and day match our expectations
+            //supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         }
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
-        
+
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL"); //$NON-NLS-1$
-        
+
         // Additional functions
 //        // Math
 //        supportedFunctions.add("%"); //$NON-NLS-1$
@@ -573,7 +573,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("~"); //$NON-NLS-1$
 //        supportedFunctions.add("<<"); //$NON-NLS-1$
 //        supportedFunctions.add(">>"); //$NON-NLS-1$
-//        
+//
 //        supportedFunctions.add("CBRT"); //$NON-NLS-1$
 //        supportedFunctions.add("CEIL"); //$NON-NLS-1$
 //        supportedFunctions.add("LN"); //$NON-NLS-1$
@@ -582,7 +582,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("SETSEED"); //$NON-NLS-1$
 //        supportedFunctions.add("TRUNC"); //$NON-NLS-1$
 //        supportedFunctions.add("WIDTH_BUCKET"); //$NON-NLS-1$
-//        
+//
 //        // String
 //        supportedFunctions.add("BIT_LENGTH"); //$NON-NLS-1$
 //        supportedFunctions.add("BTRIM"); //$NON-NLS-1$
@@ -601,19 +601,19 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("TO_ASCII"); //$NON-NLS-1$
 //        supportedFunctions.add("TO_HEX"); //$NON-NLS-1$
 //        supportedFunctions.add("TRANSLATE"); //$NON-NLS-1$
-//        
+//
 //        // Bit operations
 //        supportedFunctions.add("GET_BIT"); //$NON-NLS-1$
 //        supportedFunctions.add("GET_BYTE"); //$NON-NLS-1$
 //        supportedFunctions.add("SET_BIT"); //$NON-NLS-1$
 //        supportedFunctions.add("SET_BYTE"); //$NON-NLS-1$
-//        
+//
 //        // Formatting
 //        supportedFunctions.add("TO_CHAR"); //$NON-NLS-1$
 //        supportedFunctions.add("TO_DATE"); //$NON-NLS-1$
 //        supportedFunctions.add("TO_TIMESTAMP"); //$NON-NLS-1$
 //        supportedFunctions.add("TO_NUMBER"); //$NON-NLS-1$
-//        
+//
 //        // Date / Time
 //        supportedFunctions.add("AGE"); //$NON-NLS-1$
 //        supportedFunctions.add("CURRENT_DATE"); //$NON-NLS-1$            // no ()
@@ -627,13 +627,13 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("LOCALTIME"); //$NON-NLS-1$               // no ()
 //        supportedFunctions.add("LOCALTIMESTAMP"); //$NON-NLS-1$          // no ()
 //        supportedFunctions.add("TIMEOFDAY"); //$NON-NLS-1$
-//        
+//
 //        // Conditional
           supportedFunctions.add("COALESCE"); //$NON-NLS-1$
 //        supportedFunctions.add("NULLIF"); //$NON-NLS-1$
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("LEAST"); //$NON-NLS-1$
-//        
+//
 //        // Network Addresses
 ////        supportedFunctions.add("BROADCAST"); //$NON-NLS-1$
 ////        supportedFunctions.add("HOST"); //$NON-NLS-1$
@@ -646,10 +646,10 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 ////        supportedFunctions.add("ABBREV"); //$NON-NLS-1$
 ////        supportedFunctions.add("FAMILY"); //$NON-NLS-1$
 ////        supportedFunctions.add("TRUNC"); //$NON-NLS-1$
-//        
+//
 //        // Set generator
 //        supportedFunctions.add("GENERATE_SERIES"); //$NON-NLS-1$
-//        
+//
 //        // Information
 //        supportedFunctions.add("CURRENT_DATABASE"); //$NON-NLS-1$
 //        supportedFunctions.add("CURRENT_SCHEMA"); //$NON-NLS-1$
@@ -662,28 +662,28 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("SESSION_USER"); //$NON-NLS-1$           // no ()
 //        supportedFunctions.add("USER"); //$NON-NLS-1$                   // no ()
 //        supportedFunctions.add("VERSION"); //$NON-NLS-1$
-//        
+//
         supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
         supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
-        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
-        
+
         if (this.postGisVersion.compareTo(ONE_3) >= 0) {
-        	supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
-        	supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
-        	supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
-        	supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
-        	supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
-        	supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
-        	supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
-        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
-        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
-        	supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
-        	supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
-        	supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
-        	supportedFunctions.add(SourceSystemFunctions.ST_SRID);
-        	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
-        	supportedFunctions.add(SourceSystemFunctions.ST_HASARC);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASBINARY);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
+            supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+            supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+            supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+            supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMTEXT);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMWKB);
+            supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+            supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+            supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
+            supportedFunctions.add(SourceSystemFunctions.ST_SRID);
+            supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+            supportedFunctions.add(SourceSystemFunctions.ST_HASARC);
             supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFY);
             supportedFunctions.add(SourceSystemFunctions.ST_FORCE_2D);
             supportedFunctions.add(SourceSystemFunctions.ST_ENVELOPE);
@@ -734,28 +734,28 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY);
         }
         if (this.postGisVersion.compareTo(ONE_4) >= 0) {
-        	supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);
-        	supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
-        	supportedFunctions.add(SourceSystemFunctions.ST_CURVETOLINE);
-        	supportedFunctions.add(SourceSystemFunctions.ST_Z);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
+            supportedFunctions.add(SourceSystemFunctions.ST_CURVETOLINE);
+            supportedFunctions.add(SourceSystemFunctions.ST_Z);
         }
         if (this.postGisVersion.compareTo(ONE_5) >= 0) {
-        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGML);
-        	supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGML);
+            supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
         }
         if (this.postGisVersion.compareTo(TWO_0) >= 0) {
-        	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGEOJSON);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGEOJSON);
         }
         if (this.projSupported) {
-        	supportedFunctions.add(SourceSystemFunctions.ST_TRANSFORM);
-        	supportedFunctions.add(SourceSystemFunctions.ST_ASKML);
+            supportedFunctions.add(SourceSystemFunctions.ST_TRANSFORM);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASKML);
         }
         supportedFunctions.add("pg_catalog.encode"); //$NON-NLS-1$
         return supportedFunctions;
     }
-    
-    /** 
-     * This is true only after Postgre version 7.1 
+
+    /**
+     * This is true only after Postgre version 7.1
      * However, since version 7 was released in 2000 we'll assume a post 7 instance.
      */
     public boolean supportsInlineViews() {
@@ -770,158 +770,164 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowOffset() {
         return true;
     }
-    
+
     @Override
     public boolean supportsExcept() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIntersect() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return getVersion().compareTo(EIGHT_2) >= 0;
+        return getVersion().compareTo(EIGHT_2) >= 0;
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
-    	return getVersion().compareTo(EIGHT_4) >= 0;
+        return getVersion().compareTo(EIGHT_4) >= 0;
     }
-    
+
     @Override
     public boolean supportsRecursiveCommonTableExpressions() {
-    	return supportsCommonTableExpressions();
+        return supportsCommonTableExpressions();
     }
-    
+
     @Override
     public boolean supportsArrayAgg() {
-    	return getVersion().compareTo(EIGHT_4) >= 0;
+        return false;
+        //return getVersion().compareTo(EIGHT_4) >= 0;
     }
-    
+
     @Override
     public boolean supportsElementaryOlapOperations() {
-    	return getVersion().compareTo(EIGHT_4) >= 0;
+        return getVersion().compareTo(EIGHT_4) >= 0;
     }
-    
+
     @Override
     public boolean supportsAdvancedOlapOperations() {
         return getVersion().compareTo(NINE_4) >= 0;
     }
-    
+
     @Override
     public boolean supportsWindowDistinctAggregates() {
-    	return false;
+        return false;
     }
-    
+
     @Override
     public boolean supportsSimilarTo() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean supportsLikeRegex() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean supportsOnlyFormatLiterals() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean supportsFormatLiteral(String literal,
-    		org.teiid.translator.ExecutionFactory.Format format) {
-    	if (format == Format.NUMBER) {
-    		return false;
-    	}
-    	return parseModifier.supportsLiteral(literal);
+            org.teiid.translator.ExecutionFactory.Format format) {
+        if (format == Format.NUMBER) {
+            return false;
+        }
+        return parseModifier.supportsLiteral(literal);
     }
-    
+
     @Override
     public boolean supportsArrayType() {
-    	return true;
+        return true;
     }
-    
-	@Override
-	protected boolean usesDatabaseVersion() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsStringAgg() {
-		return getVersion().compareTo(NINE_0) >= 0;
-	}
-	
+
+    @Override
+    public boolean supportsSelectExpressionArrayType() {
+        return false;
+    }
+
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsStringAgg() {
+        return getVersion().compareTo(NINE_0) >= 0;
+    }
+
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
-		if (getVersion().compareTo(EIGHT_2) >= 0) {
-			return "org.hibernate.dialect.PostgreSQL82Dialect"; //$NON-NLS-1$	
-		}
-		return "org.hibernate.dialect.PostgreSQL81Dialect"; //$NON-NLS-1$
+        if (getVersion().compareTo(EIGHT_2) >= 0) {
+            return "org.hibernate.dialect.PostgreSQL82Dialect"; //$NON-NLS-1$
+        }
+        return "org.hibernate.dialect.PostgreSQL81Dialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public String getCreateTemporaryTablePostfix(boolean inTransaction) {
-    	if (!inTransaction) {
-    		return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
-    	}
-    	return super.getCreateTemporaryTablePostfix(inTransaction);
+        if (!inTransaction) {
+            return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
+        }
+        return super.getCreateTemporaryTablePostfix(inTransaction);
     }
-    
+
     /**
      * pg needs to collect stats for effective planning
      */
     @Override
     public void loadedTemporaryTable(String tableName,
-    		ExecutionContext context, Connection connection) throws SQLException {
-    	Statement s = connection.createStatement();
-    	try {
-    		s.execute("ANALYZE " + tableName); //$NON-NLS-1$
-    	} finally {
-    		try {
-    			s.close();
-    		} catch (SQLException e) {
-    			
-    		}
-    	}
+            ExecutionContext context, Connection connection) throws SQLException {
+        Statement s = connection.createStatement();
+        try {
+            s.execute("ANALYZE " + tableName); //$NON-NLS-1$
+        } finally {
+            try {
+                s.close();
+            } catch (SQLException e) {
+
+            }
+        }
     }
-    
+
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	return new PostgreSQLConversionVisitor(this);
+        return new PostgreSQLConversionVisitor(this);
     }
-    
+
     public void setPostGisVersion(String postGisVersion) {
-		this.postGisVersion = Version.getVersion(postGisVersion);
-	}
-    
+        this.postGisVersion = Version.getVersion(postGisVersion);
+    }
+
     @TranslatorProperty(display="PostGIS Version", description="The version of the PostGIS extension.",advanced=true)
     public String getPostGisVersion() {
-		return postGisVersion.toString();
-	}
-    
+        return postGisVersion.toString();
+    }
+
     @TranslatorProperty(display="Proj support enabled", description="If PostGIS Proj support is enabled for ST_TRANSFORM",advanced=true)
     public boolean isProjSupported() {
-		return projSupported;
-	}
-    
+        return projSupported;
+    }
+
     public void setProjSupported(boolean projSupported) {
-		this.projSupported = projSupported;
-	}
-    
+        this.projSupported = projSupported;
+    }
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	return new PostgreSQLMetadataProcessor();
+        return new PostgreSQLMetadataProcessor();
     }
-    
+
     @Override
     public Expression translateGeometrySelect(Expression expr) {
         return new Function(SourceSystemFunctions.ST_ASEWKB, Arrays.asList(expr), TypeFacility.RUNTIME_TYPES.VARBINARY);
@@ -931,59 +937,59 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public Expression translateGeographySelect(Expression expr) {
         return new Function(SourceSystemFunctions.ST_ASEWKB, Arrays.asList(
                 new Function("CAST", //$NON-NLS-1$
-                        Arrays.asList(expr, new Literal("geometry", TypeFacility.RUNTIME_TYPES.STRING)), //$NON-NLS-1$ 
-                        TypeFacility.RUNTIME_TYPES.GEOMETRY)),   
-                TypeFacility.RUNTIME_TYPES.VARBINARY); 
+                        Arrays.asList(expr, new Literal("geometry", TypeFacility.RUNTIME_TYPES.STRING)), //$NON-NLS-1$
+                        TypeFacility.RUNTIME_TYPES.GEOMETRY)),
+                TypeFacility.RUNTIME_TYPES.VARBINARY);
     }
-    
+
     @Override
     public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
         //geometry strategy includes the srid
         final byte[] bytes = results.getBytes(paramIndex);
         if (bytes != null) {
             return new GeometryInputSource() {
-            	@Override
-            	public InputStream getEwkb() throws Exception {
-            		return new ByteArrayInputStream(bytes);
-            	}
-			};
+                @Override
+                public InputStream getEwkb() throws Exception {
+                    return new ByteArrayInputStream(bytes);
+                }
+            };
         }
         return null;
     }
-    
+
     @Override
     public Object retrieveGeographyValue(ResultSet results, int paramIndex)
             throws SQLException {
         return retrieveGeometryValue(results, paramIndex);
         /*//geography for now only includes the wkb
-        //to include the srid 
+        //to include the srid
         final byte[] bytes = results.getBytes(paramIndex);
         if (bytes != null) {
             return new GeographyType(bytes);
         }
         return null;*/
     }
-    
+
     @Override
     public boolean useStreamsForLobs() {
-    	return true; //lob bindings require a transaction
+        return true; //lob bindings require a transaction
     }
-    
+
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
-    	return "E'\\\\x" + obj + '\''; //$NON-NLS-1$ 
+        return "E'\\\\x" + obj + '\''; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsLateralJoin() {
-    	return getVersion().compareTo(NINE_3) >= 0;
+        return getVersion().compareTo(NINE_3) >= 0;
     }
-    
+
     @Override
     public void bindValue(PreparedStatement stmt, Object param,
             Class<?> paramType, int i) throws SQLException {
-        if (param == null && (paramType == TypeFacility.RUNTIME_TYPES.BLOB 
-                || paramType == TypeFacility.RUNTIME_TYPES.GEOMETRY 
+        if (param == null && (paramType == TypeFacility.RUNTIME_TYPES.BLOB
+                || paramType == TypeFacility.RUNTIME_TYPES.GEOMETRY
                 || paramType == TypeFacility.RUNTIME_TYPES.GEOGRAPHY)) {
             //the blob sql type causes a failure with nulls
             paramType = TypeFacility.RUNTIME_TYPES.VARBINARY;
@@ -999,7 +1005,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             }
             Object[] values = new Object[array.getExpressions().size()];
             for (int j = 0; j < values.length; j++) {
-                Expression ex = array.getExpressions().get(j); 
+                Expression ex = array.getExpressions().get(j);
                 values[j] = ((Literal)ex).getValue();
             }
             java.sql.Array value = c.createArrayOf(nativeType, values);
@@ -1008,22 +1014,22 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         }
         super.bindValue(stmt, param, paramType, i);
     }
-    
+
     @Override
     public boolean supportsIsDistinctCriteria() {
         return true;
     }
-    
+
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
     }
-    
+
     @Override
     public boolean supportsGeographyType() {
         return this.postGisVersion.compareTo(ONE_5) >= 0;
     }
-    
+
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
             Class<?> expectedType) throws SQLException {
@@ -1032,7 +1038,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         }
         return super.retrieveValue(results, parameterIndex, expectedType);
     }
-    
+
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
             Class<?> expectedType) throws SQLException {
@@ -1041,11 +1047,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         }
         return super.retrieveValue(results, columnIndex, expectedType);
     }
-    
+
     @Override
     public int getMaxProjectedColumns() {
         //in practice this could be lower depending on the block size, so it may need to be settable
         return 1600;
     }
-    
+
 }
