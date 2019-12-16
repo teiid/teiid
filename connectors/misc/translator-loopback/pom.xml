@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
-        <version>13.0.1</version>
+        <version>13.0.2-SNAPSHOT</version>
     </parent>
     <artifactId>translator-loopback</artifactId>
     <name>Loopback Translator</name>
