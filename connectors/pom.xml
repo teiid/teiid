@@ -65,12 +65,6 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>accumulo</module>
-                <module>cassandra</module>
-                <module>couchbase</module>
-                <module>amazon</module>
-                <module>solr</module>
-                <module>ldap</module>
                 <module>infinispan</module>
                 <module>sandbox</module>
             </modules>
@@ -88,6 +82,12 @@
      <module>salesforce</module>
      <module>odata</module>
      <module>openapi</module>
+     <module>accumulo</module>
+     <module>cassandra</module>
+     <module>couchbase</module>
+     <module>amazon</module>
+     <module>solr</module>
+     <module>ldap</module>
      <module>misc</module>
   </modules>
 </project>
