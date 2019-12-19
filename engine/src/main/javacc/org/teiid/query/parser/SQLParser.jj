@@ -2660,7 +2660,7 @@ ArrayTable arrayTable(ParseInfo info) :
 /*
 name=json table
 description=The JSONTABLE table function creates tabular results from JSON.  It can be used as a nested table reference.
-example=[source,sql]\n----\JSONTABLE (col1, '$..book', false COLUMNS x STRING) AS y\n----\n
+example=[source,sql]\n----\nJSONTABLE (col1, '$..book', false COLUMNS x STRING) AS y\n----\n
 */
 JsonTable jsonTable(ParseInfo info) :
 {
@@ -2702,7 +2702,7 @@ JsonTable jsonTable(ParseInfo info) :
 /*
 name=json table column
 description=json table column.
-example=[source,sql]\n----\col FOR ORDINALITY\n----\n
+example=[source,sql]\n----\ncol FOR ORDINALITY\n----\n
 */
 JsonTable.JsonColumn jsonColumn(ParseInfo info):
 {
@@ -4322,7 +4322,7 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 /*
 name=ARRAY expression constructor
 description=Creates and array of the given expressions.
-example=[source,sql]\n----\ARRAY[1,2]\n----\n
+example=[source,sql]\n----\nARRAY[1,2]\n----\n
 */
 Expression arrayExpression(ParseInfo info) :
 {
@@ -5473,7 +5473,7 @@ void createSchema(DatabaseStore dbStore) :
 /*
 name=drop schema
 description=drop a schema in database
-example=[source,sql]\n----\DROP SCHEMA foo \n----\n
+example=[source,sql]\n----\nDROP SCHEMA foo \n----\n
 */
 void dropSchema(DatabaseStore dbStore) :
 {
@@ -5816,7 +5816,7 @@ void createServer(DatabaseStore dbStore) :
 /*
 name=drop server
 description=Defines dropping connection to foreign source
-example=[source,sql]\n----\DROP SERVER server_name\n----\n
+example=[source,sql]\n----\nDROP SERVER server_name\n----\n
 */
 void dropServer(DatabaseStore dbStore) :
 {
@@ -6648,7 +6648,7 @@ void alterAddColumn(String objectName, Database.ResourceType type, DatabaseStore
 /*
 name=DROP column
 description=alters table and adds a column
-example=[source,sql]\n----\DROP COLUMN bar\n----\n
+example=[source,sql]\n----\nDROP COLUMN bar\n----\n
 */
 void alterDropColumn(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
 {
