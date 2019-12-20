@@ -230,7 +230,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
         }
 
         if (endpoint == null) {
-            endpoint = "https://s3.amazonaws.com/"+bucket+"/"+name;
+            endpoint = "https://"+bucket+".s3.amazonaws.com/"+name;
         }
 
         if (accessKey == null) {
