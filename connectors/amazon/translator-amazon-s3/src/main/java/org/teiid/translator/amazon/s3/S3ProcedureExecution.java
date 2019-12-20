@@ -426,7 +426,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 
     @SuppressWarnings("rawtypes")
     private String getHeader(String name) {
-        ArrayList list = (ArrayList)execution.getResponseHeader(name);
+        List list = (List)execution.getResponseHeader(name);
         return (list == null || list.isEmpty()) ? null:(String)list.get(0);
     }
 
