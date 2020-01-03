@@ -65,7 +65,6 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>infinispan</module>
                 <module>sandbox</module>
             </modules>
         </profile>
@@ -88,6 +87,7 @@
      <module>amazon</module>
      <module>solr</module>
      <module>ldap</module>
+     <module>infinispan</module>
      <module>misc</module>
   </modules>
 </project>
