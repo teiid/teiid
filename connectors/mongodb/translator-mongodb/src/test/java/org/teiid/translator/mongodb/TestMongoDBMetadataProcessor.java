@@ -133,6 +133,39 @@ public class TestMongoDBMetadataProcessor {
         assertEquals(expected, metadataDDL.replace("\t", "    "));
     }
 
+    @Test
+    public void testTableWithoutColumns() throws TranslatorException {
+        MongoDBMetadataProcessor mp = new MongoDBMetadataProcessor();
+
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MongoDBConnection conn = Mockito.mock(MongoDBConnection.class);
+        DBCollection tableDBCollection = Mockito.mock(DBCollection.class);
+        LinkedHashSet<String> tables = new LinkedHashSet<String>();
+        tables.add("table");
+
+        DB db = Mockito.mock(DB.class);
+
+        //no id, nor other real column
+        BasicDBObject row = new BasicDBObject();
+        row.append("col", new BasicDBObject());
+
+        Mockito.stub(db.getCollectionNames()).toReturn(tables);
+        Mockito.stub(db.getCollection(Mockito.eq("table"))).toReturn(tableDBCollection);
+
+        DBCursor tableCursor = Mockito.mock(DBCursor.class);
+        Mockito.when(tableCursor.hasNext()).thenReturn(true).thenReturn(false);
+        Mockito.when(tableCursor.next()).thenReturn(row);
+        Mockito.when(tableDBCollection.find()).thenReturn(tableCursor);
+
+        Mockito.stub(conn.getDatabase()).toReturn(db);
+
+        mp.process(mf, conn);
+
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        String expected = "";
+        assertEquals(expected, metadataDDL);
+    }
+
     private MetadataFactory processExampleMetadata(MongoDBMetadataProcessor mp)
             throws TranslatorException {
         MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
