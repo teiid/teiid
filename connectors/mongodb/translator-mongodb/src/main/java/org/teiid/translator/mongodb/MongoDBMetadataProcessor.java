@@ -127,13 +127,17 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 }
             }
         }
+
+        //prevent the creation of tables without columns
+        for (Table table : new HashSet<Table>(metadataFactory.getSchema().getTables().values())) {
+            if (table.isPhysical() && (table.getColumns() == null || table.getColumns().isEmpty())) {
+                metadataFactory.getSchema().removeTable(table.getName());
+            }
+        }
     }
 
     private Table addTable(MetadataFactory metadataFactory, String tableName, BasicDBObject row, Table parent) {
-        Table table = null;
-        if (metadataFactory.getSchema().getTable(tableName) != null) {
-            table = metadataFactory.getSchema().getTable(tableName);
-        }
+        Table table = metadataFactory.getSchema().getTable(tableName);
         Set<String> keys = row.keySet();
         if (keys != null && !keys.isEmpty()) {
             if (table == null) {
@@ -254,34 +258,32 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
         MergeDetails.Association association = MergeDetails.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
         childTable.setProperty(ASSOSIATION, null);
+        KeyRecord record = table.getPrimaryKey();
+        if (record == null) {
+            return;
+        }
         if (association == MergeDetails.Association.ONE) {
-            KeyRecord record = table.getPrimaryKey();
-            if (record != null) {
-                ArrayList<String> pkColumns = new ArrayList<String>();
-                for (Column column:record.getColumns()) {
-                    Column c = metadataFactory.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
-                    if (c == null) {
-                        c = metadataFactory.addColumn(column.getName(), column.getRuntimeType(), childTable);
-                    }
-                    pkColumns.add(c.getName());
+            ArrayList<String> pkColumns = new ArrayList<String>();
+            for (Column column:record.getColumns()) {
+                Column c = childTable.getColumnByName(column.getName());
+                if (c == null) {
+                    c = metadataFactory.addColumn(column.getName(), column.getRuntimeType(), childTable);
                 }
-                metadataFactory.addPrimaryKey("PK0", pkColumns, childTable); //$NON-NLS-1$
-                metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
+                pkColumns.add(c.getName());
             }
+            metadataFactory.addPrimaryKey("PK0", pkColumns, childTable); //$NON-NLS-1$
+            metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
         }
         else {
-            KeyRecord record = table.getPrimaryKey();
-            if (record != null) {
-                ArrayList<String> pkColumns = new ArrayList<String>();
-                for (Column column:record.getColumns()) {
-                    Column c = metadataFactory.getSchema().getTable(childTable.getName()).getColumnByName(table.getName()+"_"+column.getName()); //$NON-NLS-1$
-                    if (c == null) {
-                        c = metadataFactory.addColumn(table.getName()+"_"+column.getName(), column.getRuntimeType(), childTable); //$NON-NLS-1$
-                    }
-                    pkColumns.add(c.getName());
+            ArrayList<String> pkColumns = new ArrayList<String>();
+            for (Column column:record.getColumns()) {
+                Column c = childTable.getColumnByName(table.getName()+"_"+column.getName()); //$NON-NLS-1$
+                if (c == null) {
+                    c = metadataFactory.addColumn(table.getName()+"_"+column.getName(), column.getRuntimeType(), childTable); //$NON-NLS-1$
                 }
-                metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
+                pkColumns.add(c.getName());
             }
+            metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
         }
     }
 
