@@ -35,7 +35,7 @@ import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 public class NioZipFileSystem {
 
     /**
-     * Get the root {@link VirtualFile} for the given url.
+     * Get the root {@link VirtualFile} for the given JAR url.
      * Any previous filesystem for this url will be closed.
      * The returned file will be used to auto close the filesystem.
      * It should be strongly held until the filesystem is no longer needed.
@@ -48,6 +48,20 @@ public class NioZipFileSystem {
     public static NioVirtualFile mount(URL url) throws IOException, URISyntaxException {
         URI uri = new URI("jar:" + url.toURI().toString()); //$NON-NLS-1$
 
+        return mount(uri);
+    }
+
+    /**
+     * Get the root {@link VirtualFile} for the given uri.
+     * Any previous filesystem for this url will be closed.
+     * The returned file will be used to auto close the filesystem.
+     * It should be strongly held until the filesystem is no longer needed.
+     *
+     * @param uri
+     * @return
+     * @throws IOException
+     */
+    public static NioVirtualFile mount(URI uri) throws IOException {
         synchronized (NioZipFileSystem.class) {
             try {
                 FileSystem zipfs = FileSystems.getFileSystem(uri);
