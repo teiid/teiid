@@ -230,7 +230,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
         }
 
         if (endpoint == null) {
-            endpoint = "https://s3.amazonaws.com/"+bucket+"/"+name;
+            endpoint = "https://"+bucket+".s3.amazonaws.com/"+name;
         }
 
         if (accessKey == null) {
@@ -426,7 +426,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 
     @SuppressWarnings("rawtypes")
     private String getHeader(String name) {
-        ArrayList list = (ArrayList)execution.getResponseHeader(name);
+        List list = (List)execution.getResponseHeader(name);
         return (list == null || list.isEmpty()) ? null:(String)list.get(0);
     }
 
