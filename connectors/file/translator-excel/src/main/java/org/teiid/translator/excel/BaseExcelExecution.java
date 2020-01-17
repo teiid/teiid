@@ -98,7 +98,7 @@ public class BaseExcelExecution implements Execution {
     }
 
     private Iterator<Row> readXLSFile(VirtualFile xlsFile) throws TranslatorException {
-        try (InputStream xlsFileStream = xlsFile.openInputStream(true)) {
+        try (InputStream xlsFileStream = xlsFile.openInputStream(false)) {
             String extension = ExcelMetadataProcessor.getFileExtension(xlsFile);
             if (extension.equalsIgnoreCase("xls")) { //$NON-NLS-1$
                 workbook = new HSSFWorkbook(xlsFileStream);
