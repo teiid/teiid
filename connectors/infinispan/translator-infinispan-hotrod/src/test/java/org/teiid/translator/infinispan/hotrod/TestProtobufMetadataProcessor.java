@@ -53,8 +53,16 @@ public class TestProtobufMetadataProcessor {
     }
 
     public static MetadataFactory protoMatadata(String protoFile) throws TranslatorException {
+        return protoMatadata(protoFile, false);
+    }
+
+    public static MetadataFactory protoMatadata(String protoFile, boolean useClasspath) throws TranslatorException {
         ProtobufMetadataProcessor processor = new ProtobufMetadataProcessor();
-        processor.setProtoFilePath(UnitTestUtil.getTestDataPath() + "/"+protoFile);
+        if (useClasspath) {
+            processor.setProtoFilePath(protoFile);
+        } else {
+            processor.setProtoFilePath(UnitTestUtil.getTestDataPath() + "/"+protoFile);
+        }
 
         Properties props = new Properties();
         MetadataFactory mf = new MetadataFactory("proto", 1, "model",
@@ -65,7 +73,16 @@ public class TestProtobufMetadataProcessor {
 
     @Test
     public void testMetadataProcessor() throws Exception {
-        MetadataFactory mf = protoMatadata("tables.proto");
+        MetadataFactory mf = protoMatadata("tables.proto", false);
+        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        System.out.println(ddl);
+        //ObjectConverterUtil.write(new StringReader(ddl), UnitTestUtil.getTestDataFile("tables.ddl"));
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.ddl")), ddl);
+    }
+
+    @Test
+    public void testMetadataProcessorClasspath() throws Exception {
+        MetadataFactory mf = protoMatadata("tables.proto", true);
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         System.out.println(ddl);
         //ObjectConverterUtil.write(new StringReader(ddl), UnitTestUtil.getTestDataFile("tables.ddl"));

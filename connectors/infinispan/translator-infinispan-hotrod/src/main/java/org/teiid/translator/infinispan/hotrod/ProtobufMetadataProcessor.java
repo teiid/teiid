@@ -20,6 +20,7 @@ package org.teiid.translator.infinispan.hotrod;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -138,14 +139,24 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         String protoContents = null;
         if( protobufFile != null &&  !protobufFile.isEmpty()) {
             File f = new File(protobufFile);
-            if(!f.exists() || !f.isFile()) {
-                throw new TranslatorException(InfinispanPlugin.Event.TEIID25000,
-                        InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25000, protobufFile));
-            }
-            try {
-                protoContents = ObjectConverterUtil.convertFileToString(f);
-            } catch (IOException e) {
-                throw new TranslatorException(e);
+            if(f.exists() && f.isFile()) {
+                try {
+                    protoContents = ObjectConverterUtil.convertFileToString(f);
+                } catch (IOException e) {
+                    throw new TranslatorException(e);
+                }
+            } else {
+                InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(protobufFile);
+                if (in != null) {
+                    try {
+                        protoContents = ObjectConverterUtil.convertToString(in);
+                    } catch (IOException e) {
+                        throw new TranslatorException(e);
+                    }
+                } else {
+                    throw new TranslatorException(InfinispanPlugin.Event.TEIID25000,
+                            InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25000, protobufFile));
+                }
             }
             this.protoResource = new ProtobufResource(this.protobufName != null ? this.protobufName : protobufFile,
                     protoContents);
