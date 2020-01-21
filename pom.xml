@@ -134,7 +134,7 @@
 
         
         <!-- Infinispan Translator -->
-        <version.org.infinispan>10.0.1.Final</version.org.infinispan>
+        <version.org.infinispan>10.1.1.Final</version.org.infinispan>
         <version.protostream>4.3.0.Final</version.protostream>
         
         <!--  Data Quality -->
@@ -1662,7 +1662,7 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
-                <version>9.4.14.Final</version>
+                <version>10.1.1.Final</version>
                 <exclusions>
 		            <exclusion>
 		                <groupId>org.jboss.spec.javax.transaction</groupId>
@@ -1673,7 +1673,7 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-commons</artifactId>
-                <version>9.4.14.Final</version>       
+                <version>10.1.1.Final</version>       
             </dependency>  
             
             <dependency>
