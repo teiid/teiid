@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.resource.api.ConnectionFactory;
-
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.ProtobufResource;
@@ -35,6 +33,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
@@ -69,8 +68,15 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     }
 
     @Override
-    public void start() throws TranslatorException {
-        super.start();
+    public void initCapabilities(InfinispanConnection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+
+        TransactionSupport transactionSupport = connection.getTransactionSupport();
+        if (transactionSupport != TransactionSupport.NONE) {
+            supportsBulkUpdates = true;
+            setTransactionSupport(transactionSupport);
+        }
     }
 
     @Override

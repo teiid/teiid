@@ -19,5 +19,6 @@
         <module name="com.squareup"/> 				
         <module name="org.infinispan.client.hotrod" slot="teiid"/>
         <module name="org.infinispan.commons" slot="teiid"/>
+        <module name="org.infinispan.core" slot="teiid"/>
     </dependencies>
 </module>

@@ -208,7 +208,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
                 this.updateCount++;
             } else {
 
-                boolean putAll = false;
+                boolean putAll = upsert;
                 if (this.executionContext.getSourceHint() != null) {
                     putAll = this.executionContext.getSourceHint().indexOf("use-putall") != -1;
                 }
@@ -222,13 +222,13 @@ public class InfinispanUpdateExecution implements UpdateExecution {
                     if (rows.isEmpty()) {
                         break;
                     }
+                    BulkInsert bi = null;
                     if (putAll) {
-                        BulkInsert bi = new UsePutAll(cache);
-                        bi.run(rows, false);
+                        bi = new UsePutAll(cache);
                     } else {
-                        BulkInsert bi = new OneAtATime(cache);
-                        bi.run(rows, upsert);
+                        bi = new OneAtATime(cache);
                     }
+                    bi.run(rows, upsert);
                     this.updateCount+=rows.size();
                 }
             }

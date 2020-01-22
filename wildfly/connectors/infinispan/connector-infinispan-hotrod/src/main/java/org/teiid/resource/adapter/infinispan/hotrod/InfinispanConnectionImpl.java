@@ -23,22 +23,24 @@ import java.util.Map;
 
 import javax.resource.ResourceException;
 
-import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.TransactionMode;
 import org.infinispan.commons.api.BasicCache;
+import org.infinispan.commons.configuration.XMLStringConfiguration;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContext.MarshallerProvider;
+import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.InfinispanDocument;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory.InfinispanConnectionFactory;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.translator.TranslatorException;
 
 public class InfinispanConnectionImpl extends BasicConnection implements InfinispanConnection {
     private RemoteCacheManager cacheManager;
-    private String cacheName;
 
     private BasicCache<?, ?> defaultCache;
     private SerializationContext ctx;
@@ -50,7 +52,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     public InfinispanConnectionImpl(RemoteCacheManager manager, RemoteCacheManager scriptManager, String cacheName,
             SerializationContext ctx, InfinispanConnectionFactory icf, String cacheTemplate) throws ResourceException {
         this.cacheManager = manager;
-        this.cacheName = cacheName;
         this.ctx = ctx;
         this.ctx.registerMarshallerProvider(this.marshallerProvider);
         this.icf = icf;
@@ -66,7 +67,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
     @Override
     public void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException {
-        this.icf.registerProtobufFile(protobuf);
+        this.icf.registerProtobufFile(protobuf, getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME, false));
     }
 
     @Override
@@ -83,12 +84,45 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
     @Override
     public <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException{
-        RemoteCache<Object, Object> cache = cacheManager.getCache(cacheName);
-        if (cache == null && createIfNotExists) {
-            cacheManager.administration().createCache(cacheName, this.cacheTemplate);
-            cache = cacheManager.getCache(cacheName);
+        if (ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME.equals(cacheName)) {
+            //special handling for protobuf - don't create, and it can't be transactional
+            return cacheManager.getCache(cacheName, TransactionMode.NONE);
         }
-        return (BasicCache<K,V>)cache;
+
+        TransactionMode transactionMode = icf.getTransactionMode();
+        //check to see if the cache exists (required for in-vm testin).
+        //We don't want to do this when transactional -
+        //the ispn client will throw an exception if the cache does not exist.  while
+        //we could just catch it, they still log a warning/error
+        if (transactionMode == null || transactionMode != TransactionMode.NONE) {
+            BasicCache<K, V> result = cacheName == null?cacheManager.getCache():cacheManager.getCache(cacheName);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        if (createIfNotExists) {
+            if (cacheName == null) {
+                throw new TranslatorException("A default cache name is required to implicitly create the default cache."); //$NON-NLS-1$
+            }
+            if (cacheTemplate == null && transactionMode != null
+                    && transactionMode != TransactionMode.NONE) {
+                //there doesn't seem to be a default transactional template, so
+                //here's one - TODO externalize
+                return cacheManager.administration().getOrCreateCache(cacheName, new XMLStringConfiguration(
+                        "<infinispan><cache-container>" +
+                        "  <distributed-cache-configuration name=\""+cacheName+"\">" +
+                        "    <locking isolation=\"REPEATABLE_READ\"/>" +
+                        "    <transaction locking=\"PESSIMISTIC\" mode=\""+transactionMode+"\" />" +
+                        "  </distributed-cache-configuration>" +
+                        "</cache-container></infinispan>"));
+            }
+
+
+            return cacheManager.administration().getOrCreateCache(cacheName, cacheTemplate);
+        }
+
+        return null;
     }
 
     @Override
@@ -136,12 +170,23 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
         return scriptManager.getCache().execute(scriptName, params);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void registerScript(String scriptName, String script) {
-        RemoteCache cache = scriptManager.getCache("___script_cache");
-        if (cache.get(scriptName) == null) {
-            cache.put(scriptName, script);
+    public TransactionSupport getTransactionSupport() {
+        TransactionMode mode = icf.getTransactionMode();
+        if (mode == null) {
+            return TransactionSupport.NONE;
+        }
+        switch (mode) {
+        case FULL_XA:
+        case NON_DURABLE_XA:
+            return TransactionSupport.XA;
+        case NON_XA:
+            return TransactionSupport.LOCAL;
+        case NONE:
+            return TransactionSupport.NONE;
+        default:
+            throw new IllegalArgumentException();
         }
     }
+
 }
