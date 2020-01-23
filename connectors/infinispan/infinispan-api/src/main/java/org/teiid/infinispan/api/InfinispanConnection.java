@@ -27,7 +27,7 @@ import org.teiid.translator.TranslatorException;
 
 public interface InfinispanConnection extends Connection {
 
-    <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException;
+    <K, V> BasicCache<K, V> getCache(String cacheName) throws TranslatorException;
 
     <K, V> BasicCache<K, V> getCache() throws TranslatorException;
 

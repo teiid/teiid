@@ -59,7 +59,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
         this.cacheTemplate = cacheTemplate;
 
         try {
-            this.defaultCache = getCache(cacheName, true);
+            this.defaultCache = getCache(cacheName);
         } catch (Throwable t) {
             throw new ResourceException(t);
         }
@@ -67,7 +67,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
     @Override
     public void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException {
-        this.icf.registerProtobufFile(protobuf, getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME, false));
+        this.icf.registerProtobufFile(protobuf, getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     }
 
     @Override
-    public <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException{
+    public <K, V> BasicCache<K, V> getCache(String cacheName) throws TranslatorException{
         if (ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME.equals(cacheName)) {
             //special handling for protobuf - don't create, and it can't be transactional
             return cacheManager.getCache(cacheName, TransactionMode.NONE);
@@ -94,35 +94,31 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
         //We don't want to do this when transactional -
         //the ispn client will throw an exception if the cache does not exist.  while
         //we could just catch it, they still log a warning/error
-        if (transactionMode == null || transactionMode != TransactionMode.NONE) {
+        if (transactionMode == null || transactionMode == TransactionMode.NONE) {
             BasicCache<K, V> result = cacheName == null?cacheManager.getCache():cacheManager.getCache(cacheName);
             if (result != null) {
                 return result;
             }
         }
 
-        if (createIfNotExists) {
-            if (cacheName == null) {
-                throw new TranslatorException("A default cache name is required to implicitly create the default cache."); //$NON-NLS-1$
-            }
-            if (cacheTemplate == null && transactionMode != null
-                    && transactionMode != TransactionMode.NONE) {
-                //there doesn't seem to be a default transactional template, so
-                //here's one - TODO externalize
-                return cacheManager.administration().getOrCreateCache(cacheName, new XMLStringConfiguration(
-                        "<infinispan><cache-container>" +
-                        "  <distributed-cache-configuration name=\""+cacheName+"\">" +
-                        "    <locking isolation=\"REPEATABLE_READ\"/>" +
-                        "    <transaction locking=\"PESSIMISTIC\" mode=\""+transactionMode+"\" />" +
-                        "  </distributed-cache-configuration>" +
-                        "</cache-container></infinispan>"));
-            }
-
-
-            return cacheManager.administration().getOrCreateCache(cacheName, cacheTemplate);
+        if (cacheName == null) {
+            throw new TranslatorException("A default cache name is required to get a transactional cache or implicitly create the default cache."); //$NON-NLS-1$
+        }
+        if (cacheTemplate == null && transactionMode != null
+                && transactionMode != TransactionMode.NONE) {
+            //there doesn't seem to be a default transactional template, so
+            //here's one - TODO externalize
+            return cacheManager.administration().getOrCreateCache(cacheName, new XMLStringConfiguration(
+                    "<infinispan><cache-container>" +
+                    "  <distributed-cache-configuration name=\""+cacheName+"\">" +
+                    "    <locking isolation=\"REPEATABLE_READ\"/>" +
+                    "    <transaction locking=\"PESSIMISTIC\" mode=\""+transactionMode+"\" />" +
+                    "  </distributed-cache-configuration>" +
+                    "</cache-container></infinispan>"));
         }
 
-        return null;
+
+        return cacheManager.administration().getOrCreateCache(cacheName, cacheTemplate);
     }
 
     @Override
