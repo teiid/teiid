@@ -21,11 +21,6 @@
   <name>Runtime Engine</name>
   <description>Teiid Runtime Engine</description>
       
-  <properties>
-      <!--  duplicate features.xml in infinispan jars  -->
-      <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
-  </properties>    
-      
   <dependencies>
     <dependency>
       <groupId>org.teiid</groupId>
@@ -120,14 +115,9 @@
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
-      <artifactId>cache-infinispan</artifactId>
+      <artifactId>cache-caffeine</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.infinispan</groupId>
-      <artifactId>infinispan-core</artifactId>
-      <scope>test</scope>
-    </dependency>    
   </dependencies>
   
   <build>
