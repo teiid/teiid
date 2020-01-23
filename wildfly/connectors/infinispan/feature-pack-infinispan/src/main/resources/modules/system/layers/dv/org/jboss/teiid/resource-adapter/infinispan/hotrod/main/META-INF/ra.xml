@@ -43,6 +43,12 @@
                <config-property-name>CacheName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>default</config-property-value>
+            </config-property>
+            
+            <config-property>
+                <description>{$display:"Transaction Mode",$description:"Transaction Mode",$required:"false"}</description>
+               <config-property-name>TransactionMode</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
             </config-property> 
                                    
             <config-property>
