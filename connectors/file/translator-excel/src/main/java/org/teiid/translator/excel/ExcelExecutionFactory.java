@@ -18,14 +18,13 @@
 
 package org.teiid.translator.excel;
 
-import org.teiid.resource.api.ConnectionFactory;
-
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
@@ -47,7 +46,7 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, VirtualFileConnection connection)
             throws TranslatorException {
-        ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
+        ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection, this.isImmutable());
         if (formatStrings) {
             ex.setDataFormatter(new DataFormatter()); //assume default locale
         }
@@ -58,7 +57,7 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
     public ExcelUpdateExecution createUpdateExecution(Command command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             VirtualFileConnection connection) throws TranslatorException {
-        ExcelUpdateExecution ex = new ExcelUpdateExecution(command, executionContext, metadata, connection);
+        ExcelUpdateExecution ex = new ExcelUpdateExecution(command, executionContext, metadata, connection, this.isImmutable());
         if (formatStrings) {
             ex.setDataFormatter(new DataFormatter()); //assume default locale
         }
