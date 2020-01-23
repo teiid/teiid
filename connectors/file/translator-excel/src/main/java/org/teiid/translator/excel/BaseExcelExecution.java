@@ -65,6 +65,7 @@ public class BaseExcelExecution implements Execution {
     @SuppressWarnings("unused")
     protected RuntimeMetadata metadata;
     protected VirtualFileConnection connection;
+    protected boolean immutable;
 
     // Execution state
     protected Iterator<Row> rowIterator;
@@ -77,10 +78,11 @@ public class BaseExcelExecution implements Execution {
     protected Workbook workbook;
 
     public BaseExcelExecution(ExecutionContext executionContext,
-            RuntimeMetadata metadata, VirtualFileConnection connection) {
+            RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) {
         this.executionContext = executionContext;
         this.metadata = metadata;
         this.connection = connection;
+        this.immutable = immutable;
     }
 
     public void visit(LanguageObject command) throws TranslatorException {
@@ -98,35 +100,40 @@ public class BaseExcelExecution implements Execution {
     }
 
     private Iterator<Row> readXLSFile(VirtualFile xlsFile) throws TranslatorException {
-        try (InputStream xlsFileStream = xlsFile.openInputStream(true)) {
-            String extension = ExcelMetadataProcessor.getFileExtension(xlsFile);
-            if (extension.equalsIgnoreCase("xls")) { //$NON-NLS-1$
-                workbook = new HSSFWorkbook(xlsFileStream);
-            }
-            else if (extension.equalsIgnoreCase("xlsx")) { //$NON-NLS-1$
-                workbook = new XSSFWorkbook(xlsFileStream);
-            }
-            else {
-                throw new TranslatorException(ExcelPlugin.Event.TEIID23000, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23000));
-            }
-            Sheet sheet = workbook.getSheet(this.visitor.getSheetName());
-            this.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-            Iterator<Row> rowIter = sheet.iterator();
-
-            // skip up to the first data row
-            if (this.visitor.getFirstDataRowNumber() > 0 && rowIter != null) {
-                while(rowIter.hasNext()) {
-                    Row row = rowIter.next();
-                    if (row.getRowNum() >= this.visitor.getFirstDataRowNumber()) {
-                        this.currentRow = row;
-                        break;
-                    }
-                }
-            }
-            return rowIter;
+        try (InputStream xlsFileStream = xlsFile.openInputStream(!immutable)) {
+            return readXLSFile(xlsFile, xlsFileStream);
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
+    }
+
+    private Iterator<Row> readXLSFile(VirtualFile xlsFile,
+            InputStream xlsFileStream) throws IOException, TranslatorException {
+        String extension = ExcelMetadataProcessor.getFileExtension(xlsFile);
+        if (extension.equalsIgnoreCase("xls")) { //$NON-NLS-1$
+            workbook = new HSSFWorkbook(xlsFileStream);
+        }
+        else if (extension.equalsIgnoreCase("xlsx")) { //$NON-NLS-1$
+            workbook = new XSSFWorkbook(xlsFileStream);
+        }
+        else {
+            throw new TranslatorException(ExcelPlugin.Event.TEIID23000, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23000));
+        }
+        Sheet sheet = workbook.getSheet(this.visitor.getSheetName());
+        this.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+        Iterator<Row> rowIter = sheet.iterator();
+
+        // skip up to the first data row
+        if (this.visitor.getFirstDataRowNumber() > 0 && rowIter != null) {
+            while(rowIter.hasNext()) {
+                Row row = rowIter.next();
+                if (row.getRowNum() >= this.visitor.getFirstDataRowNumber()) {
+                    this.currentRow = row;
+                    break;
+                }
+            }
+        }
+        return rowIter;
     }
 
     public Row nextRow() throws TranslatorException, DataNotAvailableException {

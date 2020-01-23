@@ -38,9 +38,9 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
     private Class<?>[] expectedColumnTypes;
 
     public ExcelExecution(Select query, ExecutionContext executionContext,
-            RuntimeMetadata metadata, VirtualFileConnection connection)
+            RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable)
             throws TranslatorException {
-        super(executionContext, metadata, connection);
+        super(executionContext, metadata, connection, immutable);
         this.expectedColumnTypes = query.getColumnTypes();
         visit(query);
     }

@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.PathMatcher;
@@ -71,7 +72,11 @@ public class JavaVirtualFile implements VirtualFile {
     public InputStream openInputStream(boolean lock) throws IOException {
         FileInputStream fis = new FileInputStream(f);
         if (lock) {
-            fis.getChannel().tryLock(0, Long.MAX_VALUE, true);
+            try {
+                fis.getChannel().tryLock(0, Long.MAX_VALUE, true);
+            } catch (OverlappingFileLockException e) {
+                fis.getChannel().lock(); //try a blocking exclusive lock instead
+            }
         }
         return fis;
     }

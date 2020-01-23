@@ -52,8 +52,8 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
     private boolean modified;
 
     public ExcelUpdateExecution(LanguageObject command, ExecutionContext executionContext,
-            RuntimeMetadata metadata, VirtualFileConnection connection) throws TranslatorException {
-        super(executionContext, metadata, connection);
+            RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) throws TranslatorException {
+        super(executionContext, metadata, connection, immutable);
         visit(command);
         this.command = command;
     }
