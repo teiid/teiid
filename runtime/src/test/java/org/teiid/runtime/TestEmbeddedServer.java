@@ -47,17 +47,9 @@ import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import javax.transaction.*;
+import javax.transaction.xa.XAResource;
 
-import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -234,8 +226,85 @@ public class TestEmbeddedServer {
     }
 
     public static final class MockTransactionManager implements TransactionManager {
+        private class MockTransaction implements Transaction {
+            int status = Status.STATUS_ACTIVE;
+            private List<Synchronization> synchronizations = new ArrayList<>();
+            boolean addedSynchronization;
+
+            @Override
+            public void setRollbackOnly()
+                    throws IllegalStateException, SystemException {
+                if (status == Status.STATUS_ACTIVE
+                        || status == Status.STATUS_MARKED_ROLLBACK
+                        || status == Status.STATUS_ROLLEDBACK) {
+                    status = Status.STATUS_MARKED_ROLLBACK;
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SystemException {
+                if (status == Status.STATUS_COMMITTED) {
+                    throw new IllegalStateException();
+                }
+                for (Synchronization synchronization : synchronizations) {
+                    synchronization.beforeCompletion();
+                }
+                status = Status.STATUS_ROLLEDBACK;
+                for (Synchronization synchronization : synchronizations) {
+                    synchronization.afterCompletion(status);
+                }
+                synchronizations.clear();
+            }
+
+            @Override
+            public void registerSynchronization(Synchronization sync)
+                    throws RollbackException, IllegalStateException, SystemException {
+                this.synchronizations.add(sync);
+                addedSynchronization = true;
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return status;
+            }
+
+            @Override
+            public boolean enlistResource(XAResource xaRes)
+                    throws RollbackException, IllegalStateException, SystemException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean delistResource(XAResource xaRes, int flag)
+                    throws IllegalStateException, SystemException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void commit() throws RollbackException, HeuristicMixedException,
+                    HeuristicRollbackException, SecurityException,
+                    IllegalStateException, SystemException {
+                if (status == Status.STATUS_ACTIVE) {
+                    for (Synchronization synchronization : synchronizations) {
+                        synchronization.beforeCompletion();
+                    }
+                    status = Status.STATUS_COMMITTED;
+                    for (Synchronization synchronization : synchronizations) {
+                        synchronization.afterCompletion(status);
+                    }
+                    synchronizations.clear();
+                } else if (status == Status.STATUS_MARKED_ROLLBACK || status == Status.STATUS_ROLLEDBACK) {
+                    throw new RollbackException();
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+        }
+
         ThreadLocal<Transaction> txns = new ThreadLocal<Transaction>();
-        List<Transaction> txnHistory = new ArrayList<Transaction>();
+        List<MockTransaction> txnHistory = new ArrayList<>();
 
         @Override
         public Transaction suspend() throws SystemException {
@@ -306,7 +375,7 @@ public class TestEmbeddedServer {
         @Override
         public void begin() throws NotSupportedException, SystemException {
             checkNull(true);
-            Transaction t = Mockito.mock(Transaction.class);
+            MockTransaction t = new MockTransaction();
             txnHistory.add(t);
             txns.set(t);
         }
@@ -782,15 +851,15 @@ public class TestEmbeddedServer {
         s.execute("select 1");
         c.setAutoCommit(true);
         assertEquals(1, tm.txnHistory.size());
-        Transaction txn = tm.txnHistory.remove(0);
-        Mockito.verify(txn).commit();
+        MockTransactionManager.MockTransaction txn = tm.txnHistory.remove(0);
+        assertEquals(Status.STATUS_COMMITTED, txn.status);
 
         //should be an auto-commit txn (could also force with autoCommitTxn=true)
         s.execute("call proc ()");
 
         assertEquals(1, tm.txnHistory.size());
         txn = tm.txnHistory.remove(0);
-        Mockito.verify(txn).commit();
+        assertEquals(Status.STATUS_COMMITTED, txn.status);
 
         //no txn needed
         s.execute("call proc0()");
@@ -802,7 +871,7 @@ public class TestEmbeddedServer {
 
         assertEquals(1, tm.txnHistory.size());
         txn = tm.txnHistory.remove(0);
-        Mockito.verify(txn).commit();
+        assertEquals(Status.STATUS_COMMITTED, txn.status);
 
         s.execute("set autoCommitTxn on");
         s.execute("set noexec on");
@@ -815,7 +884,7 @@ public class TestEmbeddedServer {
         //verify that the block txn was committed because the exception was caught
         assertEquals(1, tm.txnHistory.size());
         txn = tm.txnHistory.remove(0);
-        Mockito.verify(txn).rollback();
+        assertEquals(Status.STATUS_ROLLEDBACK, txn.status);
 
         //test detection
         tm.txnHistory.clear();
@@ -827,7 +896,7 @@ public class TestEmbeddedServer {
         } catch (TeiidSQLException e) {
         }
         txn = tm.txnHistory.remove(0);
-        Mockito.verify(txn, Mockito.times(0)).commit();
+        assertEquals(Status.STATUS_ACTIVE, txn.status);
 
         tm.commit();
         c.setAutoCommit(true);
@@ -837,7 +906,7 @@ public class TestEmbeddedServer {
         s.execute("call proc3(0)");
         assertEquals(2, tm.txnHistory.size());
         txn = tm.txnHistory.remove(0);
-        Mockito.verify(txn, Mockito.times(0)).registerSynchronization((Synchronization) Mockito.any());
+        assertFalse(txn.addedSynchronization);
     }
 
     @Test public void testTransactionWithCatchBlocks() throws Exception {
@@ -863,7 +932,7 @@ public class TestEmbeddedServer {
                 "end;";
 
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
-        DummyTransactionManager tm = new DummyTransactionManager();
+        MockTransactionManager tm = new MockTransactionManager();
         ec.setTransactionManager(tm);
         ec.setUseDisk(false);
         es.start(ec);
