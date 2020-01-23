@@ -392,7 +392,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
                 if (infinispanConfig != null) {
                     throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40168, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40168));
                 }
-                LogManager.logInfo(LogConstants.CTX_DQP, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40169) + ": " + t.getMessage());
+
+                try {
+                    cacheFactory = (CacheFactory)ReflectionHelper.create("org.teiid.cache.caffeine.CaffeineCacheFactory", null, Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+                } catch (TeiidException e) {
+                }
+                if (cacheFactory == null) {
+                    LogManager.logInfo(LogConstants.CTX_DQP, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40169) + ": " + t.getMessage());
+                }
             }
 
             if (cacheFactory == null) {
