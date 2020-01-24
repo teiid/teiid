@@ -90,7 +90,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
         }
 
         TransactionMode transactionMode = icf.getTransactionMode();
-        //check to see if the cache exists (required for in-vm testin).
+        //check to see if the cache exists (required for in-vm testing).
         //We don't want to do this when transactional -
         //the ispn client will throw an exception if the cache does not exist.  while
         //we could just catch it, they still log a warning/error

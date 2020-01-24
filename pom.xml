@@ -1715,6 +1715,12 @@
                <version>${version.caffeine}</version>
            </dependency>
            <dependency>
+	           <groupId>org.checkerframework</groupId>
+	           <artifactId>checker-qual</artifactId>
+	           <version>${version.org.checkerframework}</version>
+           </dependency>
+           
+           <dependency>
                <groupId>javax.annotation</groupId>
                <artifactId>javax.annotation-api</artifactId>
                <version>1.3.2</version>
