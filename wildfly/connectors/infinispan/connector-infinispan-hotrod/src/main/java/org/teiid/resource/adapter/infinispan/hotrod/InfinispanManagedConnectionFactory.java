@@ -18,23 +18,20 @@
 package org.teiid.resource.adapter.infinispan.hotrod;
 
 import java.io.IOException;
-import java.util.Map;
 
 import javax.resource.ResourceException;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.AuthenticationConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.configuration.TransactionMode;
 import org.infinispan.client.hotrod.marshall.MarshallerUtil;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
-import org.infinispan.transaction.lookup.WildflyTransactionManagerLookup;
 import org.teiid.core.BundleUtil;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.resource.spi.BasicConnectionFactory;
@@ -48,9 +45,9 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
     private String remoteServerList;
     private String cacheName;
-    private String transactionMode;
 
     // security
+    private final static String[] saslAllowed = {"CRAM-MD5", "DIGEST-MD5", "PLAIN"};
     private String saslMechanism;
     private String userName;
     private String password;
@@ -79,14 +76,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         this.cacheName = cacheName;
     }
 
-    public String getTransactionMode() {
-        return transactionMode;
-    }
-
-    public void setTransactionMode(String transactionMode) {
-        this.transactionMode = transactionMode;
-    }
-
     @Override
     public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
             throws ResourceException {
@@ -98,14 +87,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         private RemoteCacheManager cacheManager;
         private RemoteCacheManager scriptCacheManager;
         private SerializationContext ctx;
-        private TransactionMode mode;
 
         public InfinispanConnectionFactory() throws ResourceException {
             buildCacheManager();
             buildScriptCacheManager();
-            if (transactionMode != null) {
-                mode = TransactionMode.valueOf(transactionMode);
-            }
         }
 
         private void buildCacheManager() throws ResourceException {
@@ -113,12 +98,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
                 builder.marshaller(new ProtoStreamMarshaller());
-
-                if (transactionMode != null) {
-                    builder.transaction()
-                        .transactionMode(TransactionMode.valueOf(transactionMode))
-                        .transactionManagerLookup(new WildflyTransactionManagerLookup());
-                }
 
                 handleSecurity(builder);
 
@@ -156,7 +135,22 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         }
 
         public void handleSecurity(ConfigurationBuilder builder) throws ResourceException {
-            if (saslMechanism != null && saslMechanism.equals("EXTERNAL")) {
+            if (saslMechanism != null && supportedSasl(saslMechanism)) {
+                if (userName == null) {
+                    throw new ResourceException(UTIL.getString("no_user"));
+                }
+                if (password == null) {
+                    throw new ResourceException(UTIL.getString("no_pass"));
+                }
+                if (authenticationRealm == null) {
+                    throw new ResourceException(UTIL.getString("no_realm"));
+                }
+                if (authenticationServerName == null) {
+                    throw new ResourceException(UTIL.getString("no_auth_server"));
+                }
+                builder.security().authentication().enable().saslMechanism(saslMechanism).username(userName)
+                        .realm(authenticationRealm).password(password).serverName(authenticationServerName);
+            } else if (saslMechanism != null && saslMechanism.equals("EXTERNAL")) {
 
                 if (keyStoreFileName == null || keyStoreFileName.isEmpty()) {
                     throw new ResourceException(UTIL.getString("no_keystore"));
@@ -184,43 +178,40 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                         .ssl().enable().keyStoreFileName(keyStoreFileName)
                         .keyStorePassword(keyStorePassword.toCharArray()).trustStoreFileName(trustStoreFileName)
                         .trustStorePassword(trustStorePassword.toCharArray());
-            } else if (saslMechanism != null || userName != null) {
-                if (userName == null) {
-                    throw new ResourceException(UTIL.getString("no_user"));
-                }
-                if (password == null) {
-                    throw new ResourceException(UTIL.getString("no_pass"));
-                }
-                if (authenticationRealm == null) {
-                    throw new ResourceException(UTIL.getString("no_realm"));
-                }
-                if (authenticationServerName == null) {
-                    throw new ResourceException(UTIL.getString("no_auth_server"));
-                }
-                AuthenticationConfigurationBuilder authBuilder = builder.security().authentication().enable().saslMechanism(saslMechanism).username(userName)
-                        .realm(authenticationRealm).password(password).serverName(authenticationServerName);
-                if (saslMechanism != null) {
-                    authBuilder.saslMechanism(saslMechanism);
-                }
             }
         }
 
-        public void registerProtobufFile(ProtobufResource protobuf, Map<String, String> metadataCache) throws TranslatorException {
-            try {
-                // client side
-                this.ctx.registerProtoFiles(FileDescriptorSource.fromString(protobuf.getIdentifier(), protobuf.getContents()));
+        private boolean supportedSasl(String saslMechanism) {
+            for (String supported : saslAllowed) {
+                if (supported.equals(saslMechanism)) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
-                // server side
-                if (metadataCache != null) {
-                    metadataCache.put(protobuf.getIdentifier(), protobuf.getContents());
-                    String errors = metadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
-                    // ispn removes leading '/' in a string in the results
-                    String protoSchemaIdent = (protobuf.getIdentifier().startsWith("/"))
-                            ? protobuf.getIdentifier().substring(1)
-                            : protobuf.getIdentifier();
-                    if (errors != null && isProtoSchemaInErrors(protoSchemaIdent, errors)) {
-                       throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("proto_error", errors));
+        public void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException {
+            try {
+                if (protobuf != null) {
+                    // client side
+                    this.ctx.registerProtoFiles(FileDescriptorSource.fromString(protobuf.getIdentifier(), protobuf.getContents()));
+
+                    // server side
+                    RemoteCache<String, String> metadataCache = this.cacheManager
+                            .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+                    if (metadataCache != null) {
+                        metadataCache.put(protobuf.getIdentifier(), protobuf.getContents());
+                        String errors = metadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
+                        // ispn removes leading '/' in a string in the results
+                        String protoSchemaIdent = (protobuf.getIdentifier().startsWith("/"))
+                                ? protobuf.getIdentifier().substring(1)
+                                : protobuf.getIdentifier();
+                        if (errors != null && isProtoSchemaInErrors(protoSchemaIdent, errors)) {
+                           throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("proto_error", errors));
+                        }
                     }
+                } else {
+                    throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("no_protobuf"));
                 }
             } catch(Throwable t) {
                 throw new TranslatorException(t);
@@ -240,14 +231,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         public InfinispanConnectionImpl getConnection() throws ResourceException {
             return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.ctx, this,
                     cacheTemplate);
-        }
-
-        public InfinispanManagedConnectionFactory getConfig() {
-            return InfinispanManagedConnectionFactory.this;
-        }
-
-        public TransactionMode getTransactionMode() {
-            return mode;
         }
     }
 

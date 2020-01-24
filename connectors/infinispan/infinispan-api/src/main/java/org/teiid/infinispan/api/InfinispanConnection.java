@@ -22,7 +22,6 @@ import java.util.Map;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.protostream.BaseMarshaller;
 import org.teiid.resource.api.Connection;
-import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.translator.TranslatorException;
 
 public interface InfinispanConnection extends Connection {
@@ -37,7 +36,7 @@ public interface InfinispanConnection extends Connection {
 
     void unRegisterMarshaller(BaseMarshaller<InfinispanDocument> marshller) throws TranslatorException;
 
-    <T> T execute(String scriptName, Map<String, ?> params);
+    void registerScript(String scriptName, String script);
 
-    TransactionSupport getTransactionSupport();
+    <T> T execute(String scriptName, Map<String, ?> params);
 }
