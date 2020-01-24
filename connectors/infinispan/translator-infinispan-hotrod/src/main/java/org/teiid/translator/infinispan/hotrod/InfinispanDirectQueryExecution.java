@@ -96,7 +96,7 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
         tableName = getAliasName(context, aliasCache, tableName);
         Table table = metadata.getTable(tableName);
         String cacheName = ProtobufMetadataProcessor.getCacheName(table);
-        BasicCache<Object, Object> cache = connection.getCache(cacheName);
+        BasicCache<Object, Object> cache = connection.getCache(cacheName, false);
         if (cache == null) {
             throw new TranslatorException(InfinispanPlugin.Event.TEIID25014,
                     InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25014, tableName));
@@ -132,7 +132,8 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
     }
 
     static BasicCache<String, String> getAliasCache(InfinispanConnection connection) throws TranslatorException {
-        BasicCache<String, String> cache = connection.getCache(InfinispanExecutionFactory.TEIID_ALIAS_NAMING_CACHE);
+        BasicCache<String, String> cache = connection.getCache(InfinispanExecutionFactory.TEIID_ALIAS_NAMING_CACHE,
+                true);
         if (cache == null) {
             throw new TranslatorException(InfinispanPlugin.Event.TEIID25014, InfinispanPlugin.Util
                     .gs(InfinispanPlugin.Event.TEIID25014, InfinispanExecutionFactory.TEIID_ALIAS_NAMING_CACHE));

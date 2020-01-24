@@ -165,7 +165,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             // Read from cache
             boolean added = false;
             BasicCache<Object, Object> metadataCache = connection
-                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+                    .getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME, false);
             for (Object key : metadataCache.keySet()) {
                 if (!this.protobufName.equalsIgnoreCase((String)key)) {
                     continue;

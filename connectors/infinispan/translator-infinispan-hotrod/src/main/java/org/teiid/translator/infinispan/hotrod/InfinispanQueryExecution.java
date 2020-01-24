@@ -152,7 +152,7 @@ public class InfinispanQueryExecution implements ResultSetExecution {
         RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
         String cacheName = table.getProperty(ProtobufMetadataProcessor.CACHE, false);
         if (cacheName != null && !cacheName.equals(connection.getCache().getName())) {
-            cache = (RemoteCache<Object, Object>)connection.getCache(cacheName);
+            cache = (RemoteCache<Object, Object>)connection.getCache(cacheName, true);
             if (cache == null) {
                 throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020, cacheName));
             }
