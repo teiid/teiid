@@ -15,13 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.translator.infinispan.hotrod;
+package org.teiid.infinispan.api;
 
 import java.util.TreeMap;
 
-import org.teiid.infinispan.api.DocumentFilter;
-import org.teiid.infinispan.api.TableWireFormat;
-import org.teiid.infinispan.api.TeiidTableMarsheller;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
@@ -126,13 +123,7 @@ public class MarshallerBuilder {
         return nis;
     }
 
-    public static TeiidTableMarsheller getMarshaller(Table table, RuntimeMetadata metadata) throws TranslatorException {
-        return new TeiidTableMarsheller(ProtobufMetadataProcessor.getMessageName(table), getWireMap(table, metadata));
-    }
-
-    public static TeiidTableMarsheller getMarshaller(Table table, RuntimeMetadata metadata, DocumentFilter filter)
-            throws TranslatorException {
-        return new TeiidTableMarsheller(ProtobufMetadataProcessor.getMessageName(table), getWireMap(table, metadata),
-                filter);
+    public static TeiidTableMarshaller getMarshaller(Table table, RuntimeMetadata metadata) throws TranslatorException {
+        return new TeiidTableMarshaller(ProtobufMetadataProcessor.getMessageName(table), getWireMap(table, metadata));
     }
 }

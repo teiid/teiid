@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.teiid.language.SQLConstants.Reserved.HAVING;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;

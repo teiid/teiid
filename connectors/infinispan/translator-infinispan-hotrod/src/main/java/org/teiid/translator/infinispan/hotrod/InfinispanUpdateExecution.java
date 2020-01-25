@@ -29,7 +29,9 @@ import org.teiid.infinispan.api.DocumentFilter;
 import org.teiid.infinispan.api.DocumentFilter.Action;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.InfinispanDocument;
-import org.teiid.infinispan.api.TeiidTableMarsheller;
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
@@ -58,7 +60,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
     private boolean useAliasCache;
 
     public InfinispanUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata,
-            InfinispanConnection connection, boolean useAliasCache) throws TranslatorException {
+            InfinispanConnection connection, boolean useAliasCache) {
         this.command = command;
         this.executionContext = executionContext;
         this.metadata = metadata;
@@ -83,102 +85,101 @@ public class InfinispanUpdateExecution implements UpdateExecution {
             throw visitor.exceptions.get(0);
         }
 
-        TeiidTableMarsheller marshaller = null;
-        try {
-            Table table = visitor.getParentTable();
+        Table table = visitor.getParentTable();
 
-            Column pkColumn = visitor.getPrimaryKey();
-            if (pkColumn == null) {
-                throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, table.getName()));
-            }
-
-            final String PK = MarshallerBuilder.getDocumentAttributeName(pkColumn, false, this.metadata);
-
-            DocumentFilter docFilter = null;
-            if (visitor.isNestedOperation() && visitor.getWhereClause() != null) {
-                Action action = Action.ALWAYSADD;
-                if (command instanceof Delete) {
-                    action = Action.REMOVE;
-                }
-                SQLStringVisitor ssv = new SQLStringVisitor() {
-
-                    @Override
-                    public void visit(ColumnReference obj) {
-                        String groupName = null;
-                        NamedTable group = obj.getTable();
-                        if(group.getCorrelationName() != null) {
-                            groupName = group.getCorrelationName();
-                        } else {
-                            Table groupID = group.getMetadataObject();
-                            if (groupID.getFullName().equals(visitor.getParentTable().getFullName())) {
-                                groupName = visitor.getParentNamedTable().getCorrelationName();
-                            } else {
-                                groupName = visitor.getQueryNamedTable().getCorrelationName();
-                            }
-                        }
-                        buffer.append(groupName).append(Tokens.DOT).append(getName(obj.getMetadataObject()));
-                    }
-
-                    @Override
-                    public String getName(AbstractMetadataRecord object) {
-                        return object.getName();
-                    }
-                };
-                ssv.append(visitor.getWhereClause());
-
-                docFilter = new ComplexDocumentFilter(visitor.getParentNamedTable(), visitor.getQueryNamedTable(),
-                        this.metadata, ssv.toString(), action);
-            }
-
-            marshaller = MarshallerBuilder.getMarshaller(table, this.metadata, docFilter);
-            this.connection.registerMarshaller(marshaller);
-
-            // if the message in defined in different cache than the default, switch it out now.
-            final RemoteCache<Object, Object> cache = InfinispanQueryExecution.getCache(table, connection);
-
-            if (visitor.getOperationType() == OperationType.DELETE) {
-                paginateDeleteResults(cache, visitor.getDeleteQuery(), new Task() {
-                    @Override
-                    public void run(Object row) throws TranslatorException {
-                        if (visitor.isNestedOperation()) {
-                            String childName = ProtobufMetadataProcessor.getMessageName(visitor.getQueryTable());
-                            InfinispanDocument document = (InfinispanDocument)row;
-                            cache.replace(document.getProperties().get(PK), document);
-                            // false below means count that not matched, i.e. deleted count
-                            updateCount = updateCount + document.getUpdateCount(childName, false);
-                        } else {
-                            Object key = ((Object[])row)[0];
-                            cache.remove(key);
-                            updateCount++;
-                        }
-                    }
-                }, this.executionContext.getBatchSize());
-            } else if (visitor.getOperationType() == OperationType.UPDATE) {
-                paginateUpdateResults(cache, visitor.getUpdateQuery(), new Task() {
-                    @Override
-                    public void run(Object row) throws TranslatorException {
-                        InfinispanDocument previous = (InfinispanDocument)row;
-                        Object key = previous.getProperties().get(PK);
-                        int count = previous.merge(visitor.getInsertPayload());
-                        cache.replace(key, previous);
-                        updateCount = updateCount + count;
-                    }
-                }, this.executionContext.getBatchSize());
-            } else if (visitor.getOperationType() == OperationType.INSERT) {
-                performInsert(visitor, table, cache, false, marshaller);
-            } else if (visitor.getOperationType() == OperationType.UPSERT) {
-                performInsert(visitor, table, cache, true, marshaller);
-            }
-        } finally {
-            if (marshaller != null) {
-                this.connection.unRegisterMarshaller(marshaller);
-            }
+        Column pkColumn = visitor.getPrimaryKey();
+        if (pkColumn == null) {
+            throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, table.getName()));
         }
+
+        final String PK = MarshallerBuilder.getDocumentAttributeName(pkColumn, false, this.metadata);
+
+        DocumentFilter docFilter = createDocumentFilter(visitor);
+
+        this.connection.registerMarshaller(table, this.metadata);
+
+        // if the message in defined in different cache than the default, switch it out now.
+        final RemoteCache<Object, Object> cache = InfinispanQueryExecution.getCache(table, connection);
+
+        if (visitor.getOperationType() == OperationType.DELETE) {
+            paginateDeleteResults(cache, visitor.getDeleteQuery(), new Task() {
+                @Override
+                public void run(Object row) throws TranslatorException {
+                    if (visitor.isNestedOperation()) {
+                        String childName = ProtobufMetadataProcessor.getMessageName(visitor.getQueryTable());
+                        InfinispanDocument document = (InfinispanDocument)row;
+                        InfinispanResponse.applyFilter(document, docFilter);
+                        cache.replace(document.getProperties().get(PK), document);
+                        // false below means count that not matched, i.e. deleted count
+                        updateCount = updateCount + document.getUpdateCount(childName, false);
+                    } else {
+                        Object key = ((Object[])row)[0];
+                        cache.remove(key);
+                        updateCount++;
+                    }
+                }
+            }, this.executionContext.getBatchSize());
+        } else if (visitor.getOperationType() == OperationType.UPDATE) {
+            paginateUpdateResults(cache, visitor.getUpdateQuery(), new Task() {
+                @Override
+                public void run(Object row) throws TranslatorException {
+                    InfinispanDocument previous = (InfinispanDocument)row;
+                    InfinispanResponse.applyFilter(previous, docFilter);
+                    Object key = previous.getProperties().get(PK);
+                    int count = previous.merge(visitor.getInsertPayload());
+                    cache.replace(key, previous);
+                    updateCount = updateCount + count;
+                }
+            }, this.executionContext.getBatchSize());
+        } else if (visitor.getOperationType() == OperationType.INSERT) {
+            performInsert(visitor, table, cache, false);
+        } else if (visitor.getOperationType() == OperationType.UPSERT) {
+            performInsert(visitor, table, cache, true);
+        }
+    }
+
+    private DocumentFilter createDocumentFilter(
+            final InfinispanUpdateVisitor visitor) throws TranslatorException {
+        if (!visitor.isNestedOperation() || visitor.getWhereClause() == null) {
+            return null;
+        }
+        Action action = Action.ALWAYSADD;
+        if (command instanceof Delete) {
+            action = Action.REMOVE;
+        }
+        SQLStringVisitor ssv = new SQLStringVisitor() {
+
+            @Override
+            public void visit(ColumnReference obj) {
+                String groupName = null;
+                NamedTable group = obj.getTable();
+                if(group.getCorrelationName() != null) {
+                    groupName = group.getCorrelationName();
+                } else {
+                    Table groupID = group.getMetadataObject();
+                    if (groupID.getFullName().equals(visitor.getParentTable().getFullName())) {
+                        groupName = visitor.getParentNamedTable().getCorrelationName();
+                    } else {
+                        groupName = visitor.getQueryNamedTable().getCorrelationName();
+                    }
+                }
+                buffer.append(groupName).append(Tokens.DOT).append(getName(obj.getMetadataObject()));
+            }
+
+            @Override
+            public String getName(AbstractMetadataRecord object) {
+                return object.getName();
+            }
+        };
+        ssv.append(visitor.getWhereClause());
+
+        return new ComplexDocumentFilter(visitor.getParentNamedTable(), visitor.getQueryNamedTable(),
+                this.metadata, ssv.toString(), action);
     }
 
     @SuppressWarnings("unchecked")
     private void performInsert(final InfinispanUpdateVisitor visitor, Table table,
-            final RemoteCache<Object, Object> cache, boolean upsert, TeiidTableMarsheller marshaller)
+            final RemoteCache<Object, Object> cache, boolean upsert)
             throws TranslatorException {
         Insert insert = (Insert)this.command;
         if (visitor.isNestedOperation()) {
@@ -263,10 +264,10 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 
     /*
     private class ExecutionBasedBulkInsert implements BulkInsert {
-        private TeiidTableMarsheller marshaller;
+        private TeiidTableMarshaller marshaller;
         private InfinispanConnection connection;
 
-        public ExecutionBasedBulkInsert(InfinispanConnection connection, TeiidTableMarsheller marshaller)
+        public ExecutionBasedBulkInsert(InfinispanConnection connection, TeiidTableMarshaller marshaller)
                 throws TranslatorException {
             this.marshaller = marshaller;
             this.connection = connection;
@@ -339,33 +340,27 @@ public class InfinispanUpdateExecution implements UpdateExecution {
      * pagination for delete does not need to use the offset, because when a delete is done, the subsequent query does not include
      * the previously removed objects.
      */
-       static void paginateDeleteResults(RemoteCache<Object, Object> cache, String queryStr, Task task, int batchSize)
-                throws TranslatorException {
+       static void paginateDeleteResults(RemoteCache<Object, Object> cache, String queryStr, Task task, int batchSize) throws TranslatorException {
 
             if (cache.isEmpty()) return;
 
             QueryFactory qf = Search.getQueryFactory(cache);
             Query query = qf.create(queryStr);
 
-            try {
-                int offset = 0;
-                while (true) {
-                    query.startOffset(offset);
-                    query.maxResults(batchSize);
+            int offset = 0;
+            while (true) {
+                query.startOffset(offset);
+                query.maxResults(batchSize);
 
-                    List<Object> values = query.list();
+                List<Object> values = query.list();
 
-                    if (values == null || values.isEmpty()) {
-                        break;
-                    }
-                    for (Object doc : values) {
-                        task.run(doc);
-                    }
+                if (values == null || values.isEmpty()) {
+                    break;
                 }
-            } catch (Throwable e) {
-                e.printStackTrace();
+                for (Object doc : values) {
+                    task.run(doc);
+                }
             }
-
         }
 
         /*

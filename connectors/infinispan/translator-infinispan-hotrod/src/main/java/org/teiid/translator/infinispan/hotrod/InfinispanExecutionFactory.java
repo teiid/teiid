@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;

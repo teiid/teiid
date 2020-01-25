@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
 
 import org.infinispan.commons.api.BasicCache;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;

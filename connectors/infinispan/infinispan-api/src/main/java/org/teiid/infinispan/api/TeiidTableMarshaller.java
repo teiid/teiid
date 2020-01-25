@@ -30,24 +30,16 @@ import org.infinispan.protostream.RawProtoStreamWriter;
 import org.infinispan.protostream.RawProtobufMarshaller;
 import org.infinispan.protostream.impl.ByteArrayOutputStreamEx;
 import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
-import org.teiid.infinispan.api.DocumentFilter.Action;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.document.Document;
 
-public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDocument>, Serializable {
+public class TeiidTableMarshaller implements RawProtobufMarshaller<InfinispanDocument>, Serializable {
     private static final long serialVersionUID = 6540991524742624955L;
     private String documentName;
     private TreeMap<Integer, TableWireFormat> wireMap = new TreeMap<>();
-    private DocumentFilter docFilter;
 
-    public TeiidTableMarsheller(String docName, TreeMap<Integer, TableWireFormat> wireMap) {
-        this(docName, wireMap, null);
-    }
-
-    public TeiidTableMarsheller(String docName, TreeMap<Integer, TableWireFormat> wireMap, DocumentFilter filter) {
+    public TeiidTableMarshaller(String docName, TreeMap<Integer, TableWireFormat> wireMap) {
         this.documentName= docName;
         this.wireMap = wireMap;
-        this.docFilter = filter;
     }
 
     @Override
@@ -59,7 +51,7 @@ public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDoc
     @Override
     public InfinispanDocument readFrom(ImmutableSerializationContext ctx, RawProtoStreamReader in) throws IOException {
         InfinispanDocument row = new InfinispanDocument(this.documentName, this.wireMap, null);
-        readDocument(in, row, this.wireMap, this.docFilter);
+        readDocument(in, row, this.wireMap);
         return row;
     }
 
@@ -248,7 +240,7 @@ public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDoc
     }
 
     static void readDocument(RawProtoStreamReader in, InfinispanDocument document,
-            TreeMap<Integer, TableWireFormat> columnMap, DocumentFilter filter) throws IOException {
+            TreeMap<Integer, TableWireFormat> columnMap) throws IOException {
 
         while (true) {
             int tag = in.readTag();
@@ -264,34 +256,8 @@ public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDoc
                 InfinispanDocument child = new InfinispanDocument(twf.getAttributeName(), twf.getNestedWireMap(), document);
                 int length = in.readRawVarint32();
                 int oldLimit = in.pushLimit(length);
-                readDocument(in, child, twf.getNestedWireMap(), filter);
-                try {
-                    if (filter == null) {
-                        document.addChildDocument(twf.getAttributeName(), child);
-                        document.incrementUpdateCount(twf.getAttributeName(), true);
-                    } else {
-                        boolean matched = filter.matches(document.getProperties(), child.getProperties());
-                        if (matched) {
-                            if (filter.action() == Action.ADD) { // SELECT
-                                document.addChildDocument(twf.getAttributeName(), child);
-                            } else if (filter.action() == Action.REMOVE) { // DELETE
-                                // no op, ie removed.
-                            } else {
-                                // UPDATE
-                                document.addChildDocument(twf.getAttributeName(), child);
-                            }
-                        } else {
-                            if (filter.action() == Action.ALWAYSADD || filter.action() == Action.REMOVE) {
-                                document.addChildDocument(twf.getAttributeName(), child);
-                            }
-                        }
-                        // keep track all the adds and removed based on this filter
-                        child.setMatched(matched);
-                        document.incrementUpdateCount(twf.getAttributeName(), matched);
-                    }
-                } catch (TranslatorException e) {
-                    throw new IOException(e.getCause());
-                }
+                readDocument(in, child, twf.getNestedWireMap());
+                document.addChildDocument(twf.getAttributeName(), child);
                 in.checkLastTagWas(0);
                 in.popLimit(oldLimit);
                 continue;
@@ -353,4 +319,5 @@ public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDoc
     public Class getJavaClass() {
         return InfinispanDocument.class;
     }
+
 }

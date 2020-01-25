@@ -30,13 +30,16 @@ import org.infinispan.client.hotrod.configuration.AuthenticationConfigurationBui
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
 import org.infinispan.client.hotrod.marshall.MarshallerUtil;
+import org.infinispan.commons.io.ByteBuffer;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.transaction.lookup.WildflyTransactionManagerLookup;
 import org.teiid.core.BundleUtil;
+import org.teiid.infinispan.api.InfinispanDocument;
 import org.teiid.infinispan.api.ProtobufResource;
+import org.teiid.infinispan.api.TeiidMarshallerProvider;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
@@ -99,6 +102,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         private RemoteCacheManager scriptCacheManager;
         private SerializationContext ctx;
         private TransactionMode mode;
+        private TeiidMarshallerProvider teiidMarshallerProvider = new TeiidMarshallerProvider();
 
         public InfinispanConnectionFactory() throws ResourceException {
             buildCacheManager();
@@ -112,7 +116,21 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             try {
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
-                builder.marshaller(new ProtoStreamMarshaller());
+                builder.marshaller(new ProtoStreamMarshaller() {
+                    @Override
+                    protected ByteBuffer objectToBuffer(Object o,
+                            int estimatedSize)
+                            throws IOException, InterruptedException {
+                        try {
+                            if (o instanceof InfinispanDocument) {
+                                TeiidMarshallerProvider.setCurrentDocument((InfinispanDocument)o);
+                            }
+                            return super.objectToBuffer(o, estimatedSize);
+                        } finally {
+                            TeiidMarshallerProvider.setCurrentDocument(null);
+                        }
+                    }
+                });
 
                 if (transactionMode != null) {
                     builder.transaction()
@@ -134,6 +152,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                 */
                 this.cacheManager.start();
                 this.ctx = MarshallerUtil.getSerializationContext(this.cacheManager);
+                this.ctx.registerMarshallerProvider(teiidMarshallerProvider);
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
@@ -238,7 +257,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
         @Override
         public InfinispanConnectionImpl getConnection() throws ResourceException {
-            return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.ctx, this,
+            return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.teiidMarshallerProvider, this,
                     cacheTemplate);
         }
 

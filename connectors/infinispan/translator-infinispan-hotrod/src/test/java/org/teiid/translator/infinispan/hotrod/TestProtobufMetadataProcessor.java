@@ -26,6 +26,8 @@ import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.TableWireFormat;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.function.FunctionTree;
