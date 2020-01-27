@@ -163,6 +163,15 @@ public class TestHotrodExecution {
         assertArrayEquals(new Object[] {new Integer(4), "two-two"}, exec.next().toArray());
         assertNull(exec.next());
 
+        //TEIID-5888
+        //command = UTILITY.parseCommand("SELECT g2.e1, g4.e1, g4.e2 FROM G2 g2 JOIN G4 g4 "
+        //        + "ON g2.e1 = g4.G2_e1 WHERE g2.e2 = 'two'");
+        //exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
+        //exec.execute();
+
+        //assertArrayEquals(new Object[] {new Integer(2), new Integer(3), "two"}, exec.next().toArray());
+        //assertNull(exec.next());
+
         command = UTILITY.parseCommand("SELECT g2.e1, g4.e1, g4.e2 FROM G2 g2 JOIN G4 g4 "
                 + "ON g2.e1 = g4.G2_e1 WHERE g2.e2 = 'two'");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
@@ -177,6 +186,8 @@ public class TestHotrodExecution {
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
 
+        assertArrayEquals(new int[] {2}, update.getUpdateCounts());
+
         command = UTILITY.parseCommand("SELECT e1, e2, g3_e1, g3_e2 FROM G2 ORDER BY e1");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
@@ -189,6 +200,9 @@ public class TestHotrodExecution {
         command = UTILITY.parseCommand("UPDATE G4 SET e2 = 'two-2' WHERE e2 = 'two-two' OR e2 = 'one-one'");
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
+
+        //TEIID-5888
+        //assertArrayEquals(new int[] {2}, update.getUpdateCounts());
 
         command = UTILITY.parseCommand("SELECT e1, e2 FROM G4");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
@@ -205,6 +219,8 @@ public class TestHotrodExecution {
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
 
+        assertArrayEquals(new int[] {2}, update.getUpdateCounts());
+
         command = UTILITY.parseCommand("SELECT e1, e2 FROM G4");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
@@ -216,6 +232,8 @@ public class TestHotrodExecution {
         command = UTILITY.parseCommand("DELETE FROM G4 where e2 = 'two' AND G2_e1 = 2");
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
+
+        assertArrayEquals(new int[] {0}, update.getUpdateCounts());
 
         command = UTILITY.parseCommand("SELECT e1, e2 FROM G4");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
@@ -229,6 +247,8 @@ public class TestHotrodExecution {
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
 
+        assertArrayEquals(new int[] {1}, update.getUpdateCounts());
+
         command = UTILITY.parseCommand("SELECT * FROM G2");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
@@ -240,6 +260,8 @@ public class TestHotrodExecution {
         command = UTILITY.parseCommand("UPSERT INTO G2 (e1, e2, g3_e1, g3_e2) values (1, 'one', 1, 'one')");
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
+
+        assertArrayEquals(new int[] {1}, update.getUpdateCounts());
 
         command = UTILITY.parseCommand("SELECT * FROM G2 order by e1");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
@@ -253,6 +275,8 @@ public class TestHotrodExecution {
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
 
+        assertArrayEquals(new int[] {1}, update.getUpdateCounts());
+
         command = UTILITY.parseCommand("SELECT * FROM G2");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
@@ -265,6 +289,8 @@ public class TestHotrodExecution {
         command = UTILITY.parseCommand("UPSERT INTO G4 (e1, e2, G2_e1) values (5, 'upsert', 2)");
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
+
+        assertArrayEquals(new int[] {1}, update.getUpdateCounts());
 
         command = UTILITY.parseCommand("SELECT e1, e2 FROM G4");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
@@ -292,13 +318,15 @@ public class TestHotrodExecution {
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
 
+        assertArrayEquals(new int[] {1}, update.getUpdateCounts());
+
         command = UTILITY.parseCommand("SELECT e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18 FROM G5");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
 
         List<?> results = exec.next();
-        assertEquals(new Integer(512), (Integer)results.get(0));
-        assertEquals("one", (String)results.get(1));
+        assertEquals(new Integer(512), results.get(0));
+        assertEquals("one", results.get(1));
         //assertEquals(512.34, (double)results.get(2));
         //assertEquals(512.25, (float)results.get(3));
         assertEquals(new Short("256"), results.get(4));
@@ -335,11 +363,15 @@ public class TestHotrodExecution {
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
 
+        assertArrayEquals(new int[] {0}, update.getUpdateCounts());
+
         int rows = 12000;
         for (int i=0; i < rows; i++) {
             command = UTILITY.parseCommand("INSERT INTO G2 (e1, e2, g3_e1, g3_e2) values (" + i +", 'row" + i +"', 1, 'one')");
             update = EF.createUpdateExecution(command,EC, METADATA, connection);
             update.execute();
+
+            assertArrayEquals(new int[] {1}, update.getUpdateCounts());
         }
 
         Thread.sleep(5000);
@@ -360,6 +392,8 @@ public class TestHotrodExecution {
         command = UTILITY.parseCommand("DELETE FROM G2");
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
+
+        assertArrayEquals(new int[] {rows}, update.getUpdateCounts());
 
         command = UTILITY.parseCommand("SELECT count(*) as cnt FROM G2");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);

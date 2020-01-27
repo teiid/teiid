@@ -27,13 +27,13 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.TransactionMode;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.configuration.XMLStringConfiguration;
-import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.SerializationContext.MarshallerProvider;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.infinispan.api.InfinispanConnection;
-import org.teiid.infinispan.api.InfinispanDocument;
 import org.teiid.infinispan.api.ProtobufResource;
+import org.teiid.infinispan.api.TeiidMarshallerProvider;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory.InfinispanConnectionFactory;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.ExecutionFactory.TransactionSupport;
@@ -43,17 +43,15 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     private RemoteCacheManager cacheManager;
 
     private BasicCache<?, ?> defaultCache;
-    private SerializationContext ctx;
-    private SimpleMarshallerProvider marshallerProvider = new SimpleMarshallerProvider();
+    private TeiidMarshallerProvider ctx;
     private InfinispanConnectionFactory icf;
     private RemoteCacheManager scriptManager;
     private String cacheTemplate;
 
     public InfinispanConnectionImpl(RemoteCacheManager manager, RemoteCacheManager scriptManager, String cacheName,
-            SerializationContext ctx, InfinispanConnectionFactory icf, String cacheTemplate) throws ResourceException {
+            TeiidMarshallerProvider ctx, InfinispanConnectionFactory icf, String cacheTemplate) throws ResourceException {
         this.cacheManager = manager;
         this.ctx = ctx;
-        this.ctx.registerMarshallerProvider(this.marshallerProvider);
         this.icf = icf;
         this.scriptManager = scriptManager;
         this.cacheTemplate = cacheTemplate;
@@ -72,9 +70,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
     @Override
     public void close() throws ResourceException {
-        // do not want to close on per cache basis
-        // TODO: what needs to be done here?
-        this.ctx.unregisterMarshallerProvider(this.marshallerProvider);
     }
 
     @Override
@@ -122,43 +117,9 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     }
 
     @Override
-    public void registerMarshaller(BaseMarshaller<InfinispanDocument> marshaller) throws TranslatorException {
-    	marshallerProvider.setMarsheller(marshaller);
-    }
-
-    @Override
-    public void unRegisterMarshaller(BaseMarshaller<InfinispanDocument> marshaller) throws TranslatorException {
-    	marshallerProvider.setMarsheller(null);
-    }
-
-    static class SimpleMarshallerProvider implements MarshallerProvider {
-
-    	 private BaseMarshaller<?> marshaller;
-
-        public void setMarsheller(BaseMarshaller<?> marshaller) throws TranslatorException {
-        	if (this.marshaller == null) {
-        		this.marshaller = marshaller;
-        	} else {
-        		if (marshaller == null) {
-        			this.marshaller = null;
-        		} else if (!this.marshaller.getTypeName().contentEquals(marshaller.getTypeName())) {
-        			throw new TranslatorException("Already a marshaller present, connection can not be shared");
-        		}
-        	}
-        }
-
-        @Override
-        public BaseMarshaller<?> getMarshaller(String typeName) {
-        	return this.marshaller;
-        }
-
-        @Override
-        public BaseMarshaller<?> getMarshaller(Class<?> javaClass) {
-            if (javaClass.isAssignableFrom(InfinispanDocument.class)) {
-            	return this.marshaller;
-            }
-            return null;
-        }
+    public void registerMarshaller(Table table, RuntimeMetadata metadata)
+            throws TranslatorException {
+        ctx.registerMarshaller(table, metadata);
     }
 
     @Override

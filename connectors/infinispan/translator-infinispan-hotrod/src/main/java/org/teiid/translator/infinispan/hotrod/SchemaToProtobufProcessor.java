@@ -17,8 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.teiid.language.SQLConstants.Tokens.SEMICOLON;
-import static org.teiid.language.SQLConstants.Tokens.SPACE;
+import static org.teiid.language.SQLConstants.Tokens.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.TreeMap;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.ProtobufDataManager;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;

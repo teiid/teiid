@@ -22,12 +22,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.api.BasicCache;
 import org.teiid.infinispan.api.DocumentFilter;
-import org.teiid.infinispan.api.InfinispanConnection;
-import org.teiid.infinispan.api.TeiidTableMarsheller;
 import org.teiid.infinispan.api.DocumentFilter.Action;
+import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -52,12 +52,11 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     private RuntimeMetadata metadata;
     private ExecutionContext executionContext;
     private InfinispanResponse results;
-    private TeiidTableMarsheller marshaller;
     private boolean useAliasCache;
 
     public InfinispanQueryExecution(InfinispanExecutionFactory translator, QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection,
-            boolean useAliasCache) throws TranslatorException {
+            boolean useAliasCache) {
         this.command = (Select)command;
         this.connection = connection;
         this.metadata = metadata;
@@ -67,42 +66,37 @@ public class InfinispanQueryExecution implements ResultSetExecution {
 
     @Override
     public void execute() throws TranslatorException {
-        try {
-            if (useAliasCache) {
-                useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
-            }
-
-            final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
-            visitor.append(this.command);
-            Table table = visitor.getParentTable();
-
-            String queryStr = visitor.getQuery();
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SourceQuery:", queryStr);
-
-            DocumentFilter docFilter = null;
-            if (queryStr.startsWith("FROM ") && ((Select)command).getWhere() != null) {
-                SQLStringVisitor ssv = new SQLStringVisitor() {
-                    @Override
-                    public String getName(AbstractMetadataRecord object) {
-                        return object.getName();
-                    }
-                };
-                ssv.append(((Select)command).getWhere());
-                docFilter = new ComplexDocumentFilter(visitor.getParentNamedTable(), visitor.getQueryNamedTable(),
-                        this.metadata, ssv.toString(), Action.ADD);
-            }
-
-            this.marshaller = MarshallerBuilder.getMarshaller(table, this.metadata, docFilter);
-            this.connection.registerMarshaller(this.marshaller);
-
-            // if the message in defined in different cache than the default, switch it out now.
-            RemoteCache<Object, Object> cache =  getCache(table, connection);
-            results = new InfinispanResponse(cache, queryStr, this.executionContext.getBatchSize(),
-                    visitor.getRowLimit(), visitor.getRowOffset(), visitor.getProjectedDocumentAttributes(),
-                    visitor.getDocumentNode());
-        } finally {
-            this.connection.unRegisterMarshaller(this.marshaller);
+        if (useAliasCache) {
+            useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
         }
+
+        final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
+        visitor.append(this.command);
+        Table table = visitor.getParentTable();
+
+        String queryStr = visitor.getQuery();
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SourceQuery:", queryStr);
+
+        DocumentFilter docFilter = null;
+        if (queryStr.startsWith("FROM ") && command.getWhere() != null) {
+            SQLStringVisitor ssv = new SQLStringVisitor() {
+                @Override
+                public String getName(AbstractMetadataRecord object) {
+                    return object.getName();
+                }
+            };
+            ssv.append(command.getWhere());
+            docFilter = new ComplexDocumentFilter(visitor.getParentNamedTable(), visitor.getQueryNamedTable(),
+                    this.metadata, ssv.toString(), Action.ADD);
+        }
+
+        this.connection.registerMarshaller(table, this.metadata);
+
+        // if the message in defined in different cache than the default, switch it out now.
+        RemoteCache<Object, Object> cache =  getCache(table, connection);
+        results = new InfinispanResponse(cache, queryStr, this.executionContext.getBatchSize(),
+                visitor.getRowLimit(), visitor.getRowOffset(), visitor.getProjectedDocumentAttributes(),
+                visitor.getDocumentNode(), docFilter);
     }
 
     static void useModifiedGroups(InfinispanConnection connection, ExecutionContext context, RuntimeMetadata metadata,
@@ -130,13 +124,9 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         try {
-            this.connection.registerMarshaller(this.marshaller);
             return results.getNextRow();
         } catch(IOException e) {
             throw new TranslatorException(e);
-        }
-        finally {
-            this.connection.unRegisterMarshaller(this.marshaller);
         }
     }
 

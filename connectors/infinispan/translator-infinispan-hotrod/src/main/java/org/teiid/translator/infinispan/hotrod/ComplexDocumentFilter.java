@@ -27,6 +27,8 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.infinispan.api.DocumentFilter;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.NamedTable;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;

@@ -17,10 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -39,8 +36,10 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.infinispan.api.InfinispanDocument;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.TableWireFormat;
-import org.teiid.infinispan.api.TeiidTableMarsheller;
+import org.teiid.infinispan.api.TeiidTableMarshaller;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
@@ -84,7 +83,7 @@ public class TestTeiidTableMarsheller {
     public void testReadSimple() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G1");
 
-        TeiidTableMarsheller g1ReadMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller g1ReadMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -121,7 +120,7 @@ public class TestTeiidTableMarsheller {
     public void testWriteSimple() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G1");
 
-        TeiidTableMarsheller g1WriteMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller g1WriteMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -277,7 +276,7 @@ public class TestTeiidTableMarsheller {
     public void testReadComplex() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G2");
 
-        TeiidTableMarsheller readMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller readMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -315,7 +314,7 @@ public class TestTeiidTableMarsheller {
     public void testWriteComplex() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G2");
 
-        TeiidTableMarsheller writeMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller writeMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 

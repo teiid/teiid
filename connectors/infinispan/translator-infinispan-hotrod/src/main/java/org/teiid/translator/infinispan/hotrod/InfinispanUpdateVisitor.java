@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.teiid.infinispan.api.InfinispanDocument;
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.TableWireFormat;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Condition;

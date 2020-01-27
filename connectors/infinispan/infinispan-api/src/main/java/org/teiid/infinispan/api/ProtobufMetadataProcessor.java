@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.translator.infinispan.hotrod;
+package org.teiid.infinispan.api;
 
 
 import java.io.File;
@@ -30,9 +30,6 @@ import java.util.StringTokenizer;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.infinispan.api.InfinispanConnection;
-import org.teiid.infinispan.api.ProtobufDataManager;
-import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -194,7 +191,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
     }
 
     @SuppressWarnings(value = "unchecked")
-    static <T> List<T> filter(List<? super TypeElement> input, Class<T> ofType) {
+    public static <T> List<T> filter(List<? super TypeElement> input, Class<T> ofType) {
        List<T> ts = new LinkedList<>();
        for (Object elem : input) {
           if (ofType.isAssignableFrom(elem.getClass())) {
@@ -530,59 +527,59 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         this.protoResource = resource;
     }
 
-    static String getPseudo(Column column) {
+    public static String getPseudo(Column column) {
         return column.getProperty(PSEUDO, false);
     }
 
-    static boolean isPseudo(Column column) {
+    public static boolean isPseudo(Column column) {
         return (column.getProperty(PSEUDO, false) != null);
     }
 
-    static String getMessageName(Table table) {
+    public static String getMessageName(Table table) {
         if (table.getNameInSource() != null) {
             return table.getNameInSource();
         }
         return table.getName();
     }
 
-    static String getMessageName(Column column) {
+    public static String getMessageName(Column column) {
         return column.getProperty(MESSAGE_NAME, false);
     }
 
-    static String getMerge(Table table) {
+    public static String getMerge(Table table) {
         return table.getProperty(MERGE, false);
     }
 
-    static int getTag(Column column) {
+    public static int getTag(Column column) {
         if (column.getProperty(TAG, false) != null) {
             return Integer.parseInt(column.getProperty(TAG, false));
         }
         return -1;
     }
 
-    static int getParentTag(Column column) {
+    public static int getParentTag(Column column) {
         if (column.getProperty(PARENT_TAG, false) != null) {
             return Integer.parseInt(column.getProperty(PARENT_TAG, false));
         }
         return -1;
     }
 
-    static int getParentTag(Table table) {
+    public static int getParentTag(Table table) {
         if (table.getProperty(PARENT_TAG, false) != null) {
             return Integer.parseInt(table.getProperty(PARENT_TAG, false));
         }
         return -1;
     }
 
-    static String getParentColumnName(Column column) {
+    public static String getParentColumnName(Column column) {
         return column.getProperty(PARENT_COLUMN_NAME, false);
     }
 
-    static String getParentColumnName(Table table) {
+    public static String getParentColumnName(Table table) {
         return table.getProperty(PARENT_COLUMN_NAME, false);
     }
 
-    static String getCacheName(Table table) {
+    public static String getCacheName(Table table) {
         return table.getProperty(CACHE, false);
     }
 }
