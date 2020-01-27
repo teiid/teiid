@@ -1693,6 +1693,24 @@ public class TestDDLParser {
         assertEquals(NullType.No_Nulls, db.getMetadataStore().getDatatypes().get("NNINT").getNullType());
     }
 
+    @Test
+    public void testCreateDomainNonReserved() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN text AS string;";
+
+        Database db = helpParse(ddl);
+        assertEquals(NullType.Nullable, db.getMetadataStore().getDatatypes().get("text").getNullType());
+    }
+
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testCreateDomainEffectivelyReserved() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN exception AS integer not null;";
+
+        Database db = helpParse(ddl);
+        assertEquals(NullType.No_Nulls, db.getMetadataStore().getDatatypes().get("NNINT").getNullType());
+    }
+
     @Test(expected=org.teiid.metadata.ParseException.class)
     public void testCreateInvalidDomain() throws Exception {
         String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
