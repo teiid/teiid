@@ -49,7 +49,6 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name = "infinispan-hotrod", description = "The Infinispan Translator Using Protobuf & Hotrod")
 public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFactory, InfinispanConnection>{
     public static final int MAX_SET_SIZE = 1024;
-    public static final String TEIID_ALIAS_NAMING_CACHE = PropertiesUtils.getHierarchicalProperty("org.teiid.aliasCacheName", "teiid-alias-naming-cache"); //$NON-NLS-1$ //$NON-NLS-2$
 
     private boolean supportsCompareCriteriaOrdered = true;
     private boolean supportsUpsert = true;
@@ -84,8 +83,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public ResultSetExecution createResultSetExecution(QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
-        return new InfinispanQueryExecution(this, command, executionContext, metadata, connection,
-                supportsDirectQueryProcedure());
+        return new InfinispanQueryExecution(this, command, executionContext, metadata, connection);
     }
 
     @Override
@@ -93,7 +91,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
         return new InfinispanUpdateExecution(command, executionContext, metadata,
-                connection, supportsDirectQueryProcedure());
+                connection);
     }
 
     @Override
