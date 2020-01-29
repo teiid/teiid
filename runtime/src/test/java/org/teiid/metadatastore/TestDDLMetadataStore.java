@@ -23,12 +23,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.security.Identity;
+import java.security.Principal;
+import java.security.acl.Group;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -37,8 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.security.SimpleGroup;
-import org.jboss.security.SimplePrincipal;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -144,6 +146,42 @@ public class TestDDLMetadataStore {
         }
     }
 
+    private static class SimplePrincipal extends Identity {
+        private SimplePrincipal(String name) {
+            super(name);
+        }
+    }
+
+    private static class SimpleGroup extends SimplePrincipal implements Group {
+        private HashSet<Principal> members = new HashSet<>();
+
+        private SimpleGroup(String name) {
+            super(name);
+        }
+
+        @Override
+        public boolean addMember(Principal user) {
+            return members.add(user);
+        }
+
+        @Override
+        public boolean isMember(Principal member) {
+            return members.contains(member);
+        }
+
+        @Override
+        public Enumeration<? extends Principal> members() {
+            return Collections.enumeration(members);
+        }
+
+        @Override
+        public boolean removeMember(Principal user) {
+            return members.remove(user);
+        }
+    }
+
+
+
     public static class ThreadLocalSecurityHelper implements SecurityHelper {
 
         private static ThreadLocal<Subject> threadLocalContext = new ThreadLocal<Subject>();
@@ -170,7 +208,7 @@ public class TestDDLMetadataStore {
                 String baseUserName, Credentials credentials,
                 String applicationName) throws LoginException {
             Subject subject = new Subject();
-            subject.getPrincipals().add(new SimpleGroup("superuser"));
+            subject.getPrincipals().add(new SimplePrincipal("superuser"));
 
             SimpleGroup rolesGroup = new SimpleGroup("Roles");
             rolesGroup.addMember(new SimplePrincipal("superuser"));
