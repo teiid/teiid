@@ -17,36 +17,17 @@
  */
 package org.teiid.resource.adapter.infinispan.hotrod;
 
-import java.io.IOException;
-import java.util.Map;
-
 import javax.resource.ResourceException;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.UnsupportedCallbackException;
 
-import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.AuthenticationConfigurationBuilder;
-import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.configuration.TransactionMode;
-import org.infinispan.client.hotrod.marshall.MarshallerUtil;
-import org.infinispan.commons.io.ByteBuffer;
-import org.infinispan.commons.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.FileDescriptorSource;
-import org.infinispan.protostream.SerializationContext;
-import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.transaction.lookup.WildflyTransactionManagerLookup;
-import org.teiid.core.BundleUtil;
-import org.teiid.infinispan.api.InfinispanDocument;
-import org.teiid.infinispan.api.ProtobufResource;
-import org.teiid.infinispan.api.TeiidMarshallerProvider;
+import org.teiid.infinispan.api.InfinispanConfiguration;
+import org.teiid.infinispan.api.InfinispanConnectionFactory;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 
 
-public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFactory {
-    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(InfinispanManagedConnectionFactory.class);
+public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFactory implements InfinispanConfiguration {
     private static final long serialVersionUID = -4791974803005018658L;
 
     private String remoteServerList;
@@ -57,8 +38,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     private String saslMechanism;
     private String userName;
     private String password;
-    private String authenticationRealm;
-    private String authenticationServerName;
+    private String authenticationRealm = "default";
+    private String authenticationServerName = "infinispan";
     private String cacheTemplate;
 
     private String trustStoreFileName = System.getProperty("javax.net.ssl.trustStore");
@@ -93,180 +74,23 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     @Override
     public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
             throws ResourceException {
-        return new InfinispanConnectionFactory();
-    }
+        try {
+            return new BasicConnectionFactory<InfinispanConnectionImpl>() {
+                private static final long serialVersionUID = 273357440758948926L;
+                InfinispanConnectionFactory icf = new InfinispanConnectionFactory(InfinispanManagedConnectionFactory.this, new WildflyTransactionManagerLookup());
 
-    class InfinispanConnectionFactory extends BasicConnectionFactory<InfinispanConnectionImpl> {
-        private static final long serialVersionUID = 1064143496037686580L;
-        private RemoteCacheManager cacheManager;
-        private RemoteCacheManager scriptCacheManager;
-        private SerializationContext ctx;
-        private TransactionMode mode;
-        private TeiidMarshallerProvider teiidMarshallerProvider = new TeiidMarshallerProvider();
-
-        public InfinispanConnectionFactory() throws ResourceException {
-            buildCacheManager();
-            buildScriptCacheManager();
-            if (transactionMode != null) {
-                mode = TransactionMode.valueOf(transactionMode);
-            }
-        }
-
-        private void buildCacheManager() throws ResourceException {
-            try {
-                ConfigurationBuilder builder = new ConfigurationBuilder();
-                builder.addServers(remoteServerList);
-                builder.marshaller(new ProtoStreamMarshaller() {
-                    @Override
-                    protected ByteBuffer objectToBuffer(Object o,
-                            int estimatedSize)
-                            throws IOException, InterruptedException {
-                        try {
-                            if (o instanceof InfinispanDocument) {
-                                TeiidMarshallerProvider.setCurrentDocument((InfinispanDocument)o);
-                            }
-                            return super.objectToBuffer(o, estimatedSize);
-                        } finally {
-                            TeiidMarshallerProvider.setCurrentDocument(null);
-                        }
-                    }
-                });
-
-                if (transactionMode != null) {
-                    builder.transaction()
-                        .transactionMode(TransactionMode.valueOf(transactionMode))
-                        .transactionManagerLookup(new WildflyTransactionManagerLookup());
-                }
-
-                handleSecurity(builder);
-
-                // note this object is expensive, so there needs to only one
-                // instance for the JVM, in this case one per RA instance.
-                this.cacheManager = new RemoteCacheManager(builder.build());
-
-                // register default marshellers
-                /*
-                SerializationContext ctx = ProtoStreamMarshaller.getSerializationContext(this.cacheManager);
-                FileDescriptorSource fds = new FileDescriptorSource();
-                ctx.registerProtoFiles(fds);
-                */
-                this.cacheManager.start();
-                this.ctx = MarshallerUtil.getSerializationContext(this.cacheManager);
-                this.ctx.registerMarshallerProvider(teiidMarshallerProvider);
-            } catch (Throwable e) {
-                throw new ResourceException(e);
-            }
-        }
-
-        private void buildScriptCacheManager() throws ResourceException {
-            try {
-                ConfigurationBuilder builder = new ConfigurationBuilder();
-                builder.addServers(remoteServerList);
-                //builder.marshaller(new GenericJBossMarshaller());
-                handleSecurity(builder);
-
-                // note this object is expensive, so there needs to only one
-                // instance for the JVM, in this case one per RA instance.
-                this.scriptCacheManager = new RemoteCacheManager(builder.build());
-                this.scriptCacheManager.start();
-            } catch (Throwable e) {
-                throw new ResourceException(e);
-            }
-        }
-
-        public void handleSecurity(ConfigurationBuilder builder) throws ResourceException {
-            if (saslMechanism != null && saslMechanism.equals("EXTERNAL")) {
-
-                if (keyStoreFileName == null || keyStoreFileName.isEmpty()) {
-                    throw new ResourceException(UTIL.getString("no_keystore"));
-                }
-
-                if (keyStorePassword == null) {
-                    throw new ResourceException(UTIL.getString("no_keystore_pass"));
-                }
-
-                if (trustStoreFileName == null &&  trustStorePassword.isEmpty()) {
-                    throw new ResourceException(UTIL.getString("no_truststore"));
-                }
-
-                if (trustStorePassword == null) {
-                    throw new ResourceException(UTIL.getString("no_truststore_pass"));
-                }
-
-                CallbackHandler callback = new CallbackHandler() {
-                    @Override
-                    public void handle(Callback[] callbacks)
-                            throws IOException, UnsupportedCallbackException {
-                    }
-                };
-                builder.security().authentication().enable().saslMechanism("EXTERNAL").callbackHandler(callback)
-                        .ssl().enable().keyStoreFileName(keyStoreFileName)
-                        .keyStorePassword(keyStorePassword.toCharArray()).trustStoreFileName(trustStoreFileName)
-                        .trustStorePassword(trustStorePassword.toCharArray());
-            } else if (saslMechanism != null || userName != null) {
-                if (userName == null) {
-                    throw new ResourceException(UTIL.getString("no_user"));
-                }
-                if (password == null) {
-                    throw new ResourceException(UTIL.getString("no_pass"));
-                }
-                if (authenticationRealm == null) {
-                    throw new ResourceException(UTIL.getString("no_realm"));
-                }
-                if (authenticationServerName == null) {
-                    throw new ResourceException(UTIL.getString("no_auth_server"));
-                }
-                AuthenticationConfigurationBuilder authBuilder = builder.security().authentication().enable().saslMechanism(saslMechanism).username(userName)
-                        .realm(authenticationRealm).password(password).serverName(authenticationServerName);
-                if (saslMechanism != null) {
-                    authBuilder.saslMechanism(saslMechanism);
-                }
-            }
-        }
-
-        public void registerProtobufFile(ProtobufResource protobuf, Map<String, String> metadataCache) throws TranslatorException {
-            try {
-                // client side
-                this.ctx.registerProtoFiles(FileDescriptorSource.fromString(protobuf.getIdentifier(), protobuf.getContents()));
-
-                // server side
-                if (metadataCache != null) {
-                    metadataCache.put(protobuf.getIdentifier(), protobuf.getContents());
-                    String errors = metadataCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
-                    // ispn removes leading '/' in a string in the results
-                    String protoSchemaIdent = (protobuf.getIdentifier().startsWith("/"))
-                            ? protobuf.getIdentifier().substring(1)
-                            : protobuf.getIdentifier();
-                    if (errors != null && isProtoSchemaInErrors(protoSchemaIdent, errors)) {
-                       throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("proto_error", errors));
+                @Override
+                public InfinispanConnectionImpl getConnection()
+                        throws ResourceException {
+                    try {
+                        return new InfinispanConnectionImpl(icf.getConnection());
+                    } catch (TranslatorException e) {
+                        throw new ResourceException(e);
                     }
                 }
-            } catch(Throwable t) {
-                throw new TranslatorException(t);
-            }
-        }
-
-        private boolean isProtoSchemaInErrors(String ident, String errors) {
-            for (String s : errors.split("\n")) {
-                if (s.trim().startsWith(ident)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public InfinispanConnectionImpl getConnection() throws ResourceException {
-            return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.teiidMarshallerProvider, this,
-                    cacheTemplate);
-        }
-
-        public InfinispanManagedConnectionFactory getConfig() {
-            return InfinispanManagedConnectionFactory.this;
-        }
-
-        public TransactionMode getTransactionMode() {
-            return mode;
+            };
+        } catch (TranslatorException e) {
+            throw new ResourceException(e);
         }
     }
 
@@ -443,6 +267,11 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             if (other.userName != null)
                 return false;
         } else if (!userName.equals(other.userName))
+            return false;
+        if (transactionMode == null) {
+            if (other.transactionMode != null)
+                return false;
+        } else if (!transactionMode.equals(other.transactionMode))
             return false;
         return true;
     }
