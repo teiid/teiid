@@ -20,7 +20,9 @@
   <artifactId>teiid-runtime</artifactId>
   <name>Runtime Engine</name>
   <description>Teiid Runtime Engine</description>
-      
+  <properties>
+	    <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.teiid</groupId>
