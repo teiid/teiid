@@ -266,7 +266,7 @@ public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDoc
                 int oldLimit = in.pushLimit(length);
                 readDocument(in, child, twf.getNestedWireMap(), filter);
                 try {
-                    if (filter == null) {
+                    if (filter == null || !filter.getChildName().equals(child.getSimpleName())) {
                         document.addChildDocument(twf.getAttributeName(), child);
                         document.incrementUpdateCount(twf.getAttributeName(), true);
                     } else {

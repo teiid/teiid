@@ -163,6 +163,15 @@ public class TestHotrodExecution {
         assertArrayEquals(new Object[] {new Integer(4), "two-two"}, exec.next().toArray());
         assertNull(exec.next());
 
+        //TEIID-5888
+        command = UTILITY.parseCommand("SELECT g2.e1, g4.e1, g4.e2 FROM G2 g2 JOIN G4 g4 "
+                + "ON g2.e1 = g4.G2_e1 WHERE g4.e2 = 'two'");
+        exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
+        exec.execute();
+
+        assertArrayEquals(new Object[] {new Integer(2), new Integer(3), "two"}, exec.next().toArray());
+        assertNull(exec.next());
+
         command = UTILITY.parseCommand("SELECT g2.e1, g4.e1, g4.e2 FROM G2 g2 JOIN G4 g4 "
                 + "ON g2.e1 = g4.G2_e1 WHERE g2.e2 = 'two'");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
@@ -189,6 +198,9 @@ public class TestHotrodExecution {
         command = UTILITY.parseCommand("UPDATE G4 SET e2 = 'two-2' WHERE e2 = 'two-two' OR e2 = 'one-one'");
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
         update.execute();
+
+        //TEIID-5888
+        assertArrayEquals(new int[] {2}, update.getUpdateCounts());
 
         command = UTILITY.parseCommand("SELECT e1, e2 FROM G4");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);

@@ -298,4 +298,9 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean setSupportsBulkUpdate(boolean supports) {
         return supportsBulkUpdates = supports;
     }
+
+    @Override
+    public int getMaxFromGroups() {
+        return 2;
+    }
 }
