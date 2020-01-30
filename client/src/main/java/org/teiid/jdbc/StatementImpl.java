@@ -60,6 +60,9 @@ import org.teiid.net.TeiidURL;
 
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
+
+    public static final String NEWINSTANCE = "NEWINSTANCE"; //$NON-NLS-1$
+
     private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
     static EnhancedTimer cancellationTimer = new EnhancedTimer("Teiid Statement Timeout"); //$NON-NLS-1$
@@ -470,7 +473,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
                     this.getMMConnection().changeUser(value, this.getMMConnection().getPassword());
                 } else if (key.equalsIgnoreCase(TeiidURL.CONNECTION.PASSWORD)) {
                     this.getMMConnection().setPassword(value);
-                } else if (ExecutionProperties.NEWINSTANCE.equalsIgnoreCase(key)) {
+                } else if (NEWINSTANCE.equalsIgnoreCase(key)) {
                     //no op - url based load-balancing removed
                 } else {
                     this.driverConnection.setExecutionProperty(key, value);

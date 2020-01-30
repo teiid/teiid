@@ -31,6 +31,26 @@ import org.teiid.client.RequestMessage;
  */
 public interface ExecutionProperties {
 
+    public interface Values {
+        /** XML results format:  XML results displayed as a formatted tree */
+        public static final String XML_TREE_FORMAT = "Tree"; //$NON-NLS-1$
+
+        /** XML results format:  XML results displayed in compact form */
+        public static final String XML_COMPACT_FORMAT = "Compact"; //$NON-NLS-1$
+
+        /**
+         * Transaction auto wrap constant - checks if a command
+         * requires a transaction and will be automatically wrap it.
+         */
+        String TXN_WRAP_DETECT = RequestMessage.TXN_WRAP_DETECT;
+
+        /** Transaction auto wrap constant - never wrap a command execution in a transaction */
+        String TXN_WRAP_OFF = RequestMessage.TXN_WRAP_OFF;
+
+        /** Transaction auto wrap constant - always wrap commands in a transaction. */
+        String TXN_WRAP_ON = RequestMessage.TXN_WRAP_ON;
+    }
+
     /** Execution property name for XML format */
     public static final String PROP_XML_FORMAT = "XMLFormat"; //$NON-NLS-1$
 
@@ -42,24 +62,6 @@ public interface ExecutionProperties {
 
     /** Execution property name for partial results mode */
     public static final String PROP_PARTIAL_RESULTS_MODE = "partialResultsMode"; //$NON-NLS-1$
-
-    /** XML results format:  XML results displayed as a formatted tree */
-    public static final String XML_TREE_FORMAT = "Tree"; //$NON-NLS-1$
-
-    /** XML results format:  XML results displayed in compact form */
-    public static final String XML_COMPACT_FORMAT = "Compact"; //$NON-NLS-1$
-
-    /** Transaction auto wrap constant - never wrap a command execution in a transaction */
-    public static final String TXN_WRAP_OFF = RequestMessage.TXN_WRAP_OFF;
-
-    /** Transaction auto wrap constant - always wrap commands in a transaction. */
-    public static final String TXN_WRAP_ON = RequestMessage.TXN_WRAP_ON;
-
-    /**
-     * Transaction auto wrap constant - checks if a command
-     * requires a transaction and will be automatically wrap it.
-     */
-    public static final String TXN_WRAP_DETECT = RequestMessage.TXN_WRAP_DETECT;
 
     /**
      * Whether to use result set cache if it is available
@@ -95,8 +97,6 @@ public interface ExecutionProperties {
      * Can be one of ON|OFF
      */
     public static final String NOEXEC = "NOEXEC"; //$NON-NLS-1$
-
-    public static final String NEWINSTANCE = "NEWINSTANCE"; //$NON-NLS-1$
 
     public static final String QUERYTIMEOUT = "QUERYTIMEOUT"; //$NON-NLS-1$
 
