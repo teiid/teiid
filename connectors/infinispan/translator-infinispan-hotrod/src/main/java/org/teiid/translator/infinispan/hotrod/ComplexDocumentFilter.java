@@ -47,6 +47,7 @@ public class ComplexDocumentFilter implements DocumentFilter {
     private RuntimeMetadata metadata;
     private Map<ElementSymbol, Integer> elementMap = new HashMap<>();
     private Action action;
+    private String childName;
 
     public ComplexDocumentFilter(NamedTable parentTable, NamedTable childTable, RuntimeMetadata metadata, String filter,
             Action action) throws TranslatorException {
@@ -54,6 +55,7 @@ public class ComplexDocumentFilter implements DocumentFilter {
         this.childTable = childTable;
         this.metadata = metadata;
         this.action = action;
+        this.childName = ProtobufMetadataProcessor.getMessageName(childTable.getMetadataObject());
 
         int i = 0;
         for (Column column : parentTable.getMetadataObject().getColumns()) {
@@ -108,4 +110,10 @@ public class ComplexDocumentFilter implements DocumentFilter {
     public Action action() {
         return this.action;
     }
+
+    @Override
+    public String getChildName() {
+        return this.childName;
+    }
+
 }

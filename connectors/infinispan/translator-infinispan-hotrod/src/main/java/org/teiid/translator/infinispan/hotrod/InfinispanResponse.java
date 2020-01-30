@@ -128,7 +128,8 @@ public class InfinispanResponse {
         for (Map.Entry<String, List<Document>> entry : document.getChildren().entrySet()) {
             for (Iterator<Document> iter = entry.getValue().iterator(); iter.hasNext();) {
                 InfinispanDocument child = (InfinispanDocument)iter.next();
-                if (filter != null) {
+                if (filter != null &&
+                        filter.getChildName().equals(child.getSimpleName())) {
                     applyFilter(child, filter);
                     boolean matched = filter.matches(document.getProperties(), child.getProperties());
                     if (matched) {
