@@ -172,4 +172,8 @@ public class Document {
     public Document getParent() {
         return this.parent;
     }
+
+    public String getSimpleName() {
+        return name;
+    }
 }

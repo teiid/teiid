@@ -38,4 +38,6 @@ public interface DocumentFilter {
      * when matches what is action to take with child document.
      */
     Action action();
+
+    String getChildName();
 }

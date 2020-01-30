@@ -20,8 +20,8 @@ package org.teiid.infinispan.api;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.translator.document.Document;
@@ -99,9 +99,10 @@ public class InfinispanDocument extends Document {
     }
 
     public int merge(InfinispanDocument updates) {
-        int updated = 1;
+        int updated = 0;
         for (Entry<String, Object> entry:updates.getProperties().entrySet()) {
             addProperty(entry.getKey(), entry.getValue());
+            updated = 1;
         }
 
         // update children if any
