@@ -29,6 +29,7 @@ import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
 import org.teiid.client.RequestMessage;
+import org.teiid.jdbc.ExecutionProperties.Values;
 import org.teiid.net.TeiidURL;
 
 /**
@@ -159,19 +160,19 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * Transaction auto wrap constant - never wrap a command execution in a transaction
      * and allow multi-source updates to occur outside of a transaction.
      */
-    public static final String TXN_WRAP_OFF = ExecutionProperties.TXN_WRAP_OFF;
+    public static final String TXN_WRAP_OFF = Values.TXN_WRAP_OFF;
 
     /**
      * Transaction auto wrap constant - always wrap every non-transactional command
      * execution in a transaction.
      */
-    public static final String TXN_WRAP_ON = ExecutionProperties.TXN_WRAP_ON;
+    public static final String TXN_WRAP_ON = Values.TXN_WRAP_ON;
 
     /**
      * Transaction auto wrap constant - checks if a command
      * requires a transaction and will be automatically wrap it.
      */
-    public static final String TXN_WRAP_AUTO = ExecutionProperties.TXN_WRAP_DETECT;
+    public static final String TXN_WRAP_AUTO = Values.TXN_WRAP_DETECT;
 
     /**
      * String to hold additional properties that are not represented with an explicit getter/setter

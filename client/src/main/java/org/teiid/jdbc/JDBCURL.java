@@ -19,6 +19,7 @@
 package org.teiid.jdbc;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -49,19 +50,28 @@ public class JDBCURL {
 
     private static Map<String, String> buildProps() {
         Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-        for (String key : new String[] {ExecutionProperties.PROP_TXN_AUTO_WRAP,
-                ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
-                ExecutionProperties.RESULT_SET_CACHE_MODE,
-                ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
-                ExecutionProperties.SQL_OPTION_SHOWPLAN,
-                ExecutionProperties.NOEXEC,
-                ExecutionProperties.PROP_FETCH_SIZE,
-                LocalProfile.USE_CALLING_THREAD,
-                ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
-                ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS}) {
+        Set<String> keys = extractFieldNames(ExecutionProperties.class);
+        for (String key : keys) {
             result.put(key, key);
         }
+        result.put(LocalProfile.USE_CALLING_THREAD, LocalProfile.USE_CALLING_THREAD);
         return result;
+    }
+
+    private static Set<String> extractFieldNames(Class<?> clazz) throws AssertionError {
+        HashSet<String> result = new HashSet<String>();
+        Field[] fields = clazz.getDeclaredFields();
+         for (Field field : fields) {
+             if (field.getType() == String.class) {
+                try {
+                    if (!result.add((String)field.get(null))) {
+                        throw new AssertionError("Duplicate value for " + field.getName()); //$NON-NLS-1$
+                    }
+                } catch (Exception e) {
+                }
+             }
+         }
+         return Collections.unmodifiableSet(result);
     }
 
     public static final Map<String, String> KNOWN_PROPERTIES = getKnownProperties();
