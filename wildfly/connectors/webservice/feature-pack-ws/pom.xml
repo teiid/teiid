@@ -4,7 +4,7 @@
 	<parent>
         <groupId>org.teiid.wildfly.connectors</groupId>
 		<artifactId>webservice</artifactId>
-		<version>13.0.2</version>
+		<version>13.0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>feature-pack-ws</artifactId>
 	<name>Teiid Webservice Feature Pack</name>
