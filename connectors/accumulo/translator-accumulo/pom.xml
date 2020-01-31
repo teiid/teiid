@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>accumulo</artifactId>
-		<version>13.0.2-SNAPSHOT</version>
+		<version>13.0.2</version>
 	</parent>
 	<artifactId>translator-accumulo</artifactId>
 	<name>Accumulo translator</name>
