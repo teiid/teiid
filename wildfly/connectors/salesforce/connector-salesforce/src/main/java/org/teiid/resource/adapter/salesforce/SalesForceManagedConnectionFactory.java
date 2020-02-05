@@ -229,20 +229,25 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
     }
 
     public void checkVersion() {
+        String apiVersion = url.substring(url.lastIndexOf('/') + 1, url.length());
+        String javaApiVersion = getJavaApiVersion();
+        if (javaApiVersion != null && !javaApiVersion.equals(apiVersion)) {
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13009, apiVersion, javaApiVersion));
+        }
+    }
+
+    public static String getJavaApiVersion() {
         try {
-            String apiVersion = url.substring(url.lastIndexOf('/') + 1, url.length());
             Field f = Connector.class.getDeclaredField("END_POINT"); //$NON-NLS-1$
             f.setAccessible(true);
             if(f.isAccessible()){
                 String endPoint = (String) f.get(null);
-                String javaApiVersion = endPoint.substring(endPoint.lastIndexOf('/') + 1, endPoint.length());
-                if (!javaApiVersion.equals(apiVersion)) {
-                    LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13009, apiVersion, javaApiVersion));
-                }
+                return endPoint.substring(endPoint.lastIndexOf('/') + 1, endPoint.length());
             }
         } catch (Exception e) {
 
         }
+        return null;
     }
 
 }
