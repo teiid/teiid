@@ -212,6 +212,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier(INTEGER_TYPE));
         registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier(INTEGER_TYPE));
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier(INTEGER_TYPE));
+        registerFunctionModifier(SourceSystemFunctions.EPOCH, new ExtractFunctionModifier(null));
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
 
@@ -543,6 +544,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.EPOCH);
         if (this.getVersion().compareTo(EIGHT_2) >= 0) {
             supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
 

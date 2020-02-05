@@ -136,6 +136,7 @@ public class SourceSystemFunctions {
     public static final String NOW = "now"; //$NON-NLS-1$
     public static final String PARSETIMESTAMP = "parsetimestamp"; //$NON-NLS-1$
     public static final String QUARTER = "quarter"; //$NON-NLS-1$
+    public static final String EPOCH = "epoch"; //$NON-NLS-1$
     public static final String SECOND = "second"; //$NON-NLS-1$
     public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$
     public static final String TIMESTAMPCREATE = "timestampcreate"; //$NON-NLS-1$
@@ -144,6 +145,7 @@ public class SourceSystemFunctions {
     public static final String YEAR = "year"; //$NON-NLS-1$
     public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
     public static final String UNIX_TIMESTAMP = "unix_timestamp"; //$NON-NLS-1$
+    public static final String TO_MILLIS = "to_millis"; //$NON-NLS-1$
 
     //system functions
     public static final String IFNULL = "ifnull"; //$NON-NLS-1$

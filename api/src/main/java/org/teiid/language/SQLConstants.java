@@ -193,6 +193,9 @@ public class SQLConstants {
 
         //fdw
         static final String HANDLER = "HANDLER"; //$NON-NLS-1$
+
+        static final String EPOCH = "EPOCH"; //$NON-NLS-1$
+        static final String QUARTER = "QUARTER"; //$NON-NLS-1$
     }
 
     public interface Reserved {

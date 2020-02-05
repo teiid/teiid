@@ -637,6 +637,20 @@ public final class FunctionMethods {
         return Integer.valueOf(month/3 + 1);
     }
 
+    @TeiidFunction(category=FunctionCategoryConstants.DATETIME, nullOnNull=true, pushdown=PushDown.CAN_PUSHDOWN)
+    public static Object epoch(Timestamp date) {
+        long time = date.getTime();
+        double result = time / 1000.0;
+        int nanos = date.getNanos();
+        if (nanos > 0) {
+            //add in only the micro
+            nanos = nanos/1000;
+            nanos = nanos%1000;
+            result += nanos / 1000000.0;
+        }
+        return result;
+    }
+
     @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
      public static String from_unixtime(long count) throws FunctionExecutionException {
         if (count > Long.MAX_VALUE/1000 || count < Long.MIN_VALUE/1000) {

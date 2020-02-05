@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -39,6 +40,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.parser.QueryParser;
@@ -410,6 +412,21 @@ public class TestExpressionEvaluator {
     @Test public void testExtract1() throws Exception {
         Expression ex = TestFunctionResolving.getExpression("extract(day from cast('2011-01-01' as date))");
         assertEquals(1, Evaluator.evaluate(ex));
+    }
+
+    @Test public void testExtract2() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("extract(quarter from cast('2011-04-01' as date))");
+        assertEquals(2, Evaluator.evaluate(ex));
+    }
+
+    @Test public void testExtract3() throws Exception {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+        try {
+            Expression ex = TestFunctionResolving.getExpression("extract(epoch from cast('2011-04-01 11:11:11.1234567' as timestamp))");
+            assertEquals(1301670671.123456, Evaluator.evaluate(ex));
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
     }
 
     @Test public void testSimilarTo() throws Exception {

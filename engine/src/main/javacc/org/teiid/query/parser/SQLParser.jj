@@ -538,6 +538,8 @@ TOKEN : /* NonReserved words */
 |   <FORMAT: "format">
 |   <YAML: "yaml">
 |   <HANDLER: "handler">
+|   <EPOCH: "epoch">
+|   <QUARTER: "quarter">
 }
 /*
 name=all in group identifier
@@ -658,7 +660,7 @@ Token basicNonReserved() :
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
      |<DOMAIN>|<USAGE>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>
-     |<EXPLAIN>|<ANALYZE>|<TEXT>|<FORMAT>|<YAML>)
+     |<EXPLAIN>|<ANALYZE>|<TEXT>|<FORMAT>|<YAML>|<EPOCH>|<QUARTER>)
     {
         return getToken(0);
     }   
@@ -4593,7 +4595,9 @@ Expression function(ParseInfo info) :
 	    funcToken = <DAY> |
 	    funcToken = <HOUR> |
 	    funcToken = <MINUTE> |
-	    funcToken = <SECOND>)
+	    funcToken = <SECOND> |
+	    funcToken = <QUARTER> |
+	    funcToken = <EPOCH>)
 	   <FROM> expression = expression(info)
 	   {
 	   	  if (funcToken.image.equalsIgnoreCase("DAY")) {
