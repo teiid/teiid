@@ -49,6 +49,11 @@
 			<artifactId>force-partner-api</artifactId>
             <scope>runtime</scope>
 		</dependency>
+		<dependency>
+            <groupId>com.force.api</groupId>
+            <artifactId>force-wsc</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 	</dependencies>
 
 	<build>
