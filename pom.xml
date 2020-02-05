@@ -971,6 +971,11 @@
             </dependency>
 
             <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>2.8.5</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
                 <version>${version.accumulo}</version>
@@ -1170,9 +1175,20 @@
                 <version>2.9.0</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-queryparser</artifactId>
+                <version>7.1.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.arrahtec</groupId>
                 <artifactId>osdq-core</artifactId>
                 <version>${version.org.arrahtec}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.lucene</groupId>
+                        <artifactId>lucene-analyzers-common</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
