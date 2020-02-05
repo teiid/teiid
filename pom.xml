@@ -65,7 +65,7 @@
         <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <version.com.fasterxml.jackson.core>2.9.10</version.com.fasterxml.jackson.core>
         <version.com.fasterxml.jackson.dataformat>2.9.10</version.com.fasterxml.jackson.dataformat>
-        <version.com.fasterxml.jackson.core.jackson-databind>2.9.10.1</version.com.fasterxml.jackson.core.jackson-databind>
+        <version.com.fasterxml.jackson.core.jackson-databind>2.9.10.2</version.com.fasterxml.jackson.core.jackson-databind>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.com.force.api.41>45.1.0</version.com.force.api.41>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
