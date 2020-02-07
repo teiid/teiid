@@ -23,8 +23,6 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.resource.api.ConnectionFactory;
-
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -32,9 +30,9 @@ import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
@@ -63,9 +61,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     private boolean supportsGroupBy = true;
 
     public SalesForceExecutionFactory() {
-        // http://jira.jboss.org/jira/browse/JBEDSP-306
-        // Salesforce supports ORDER BY, but not on all column types
-        setSupportsOrderBy(false);
+        setSupportsOrderBy(true);
         setSupportsOuterJoins(true);
         setSupportsInnerJoins(true);
         setTransactionSupport(TransactionSupport.NONE);

@@ -377,7 +377,6 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
             case textarea:
                 column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
                 column.setNativeType(sfTypeName);
-                column.setSearchType(SearchType.Unsearchable);
                 break;
             case _int:
                 column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.INTEGER, table);
@@ -410,6 +409,13 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                     LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13001, sfTypeName));
                 }
                 continue;
+            }
+
+            if (!field.getFilterable()) {
+                column.setSearchType(SearchType.Unsearchable);
+                //corner case for teiid, it may be sortable
+            } else if (!field.getSortable()) {
+                column.setSearchType(SearchType.Equality_Only);
             }
 
             if (!column.getName().equals(field.getName())) {
