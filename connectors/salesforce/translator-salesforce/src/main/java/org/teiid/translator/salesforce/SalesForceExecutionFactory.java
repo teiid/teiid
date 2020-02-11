@@ -259,4 +259,14 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
         return true;
     }
 
+    @Override
+    public boolean supportsSelfJoins() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsAliasedTable() {
+        return true;
+    }
+
 }

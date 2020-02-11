@@ -18,6 +18,8 @@
 
 package org.teiid.language;
 
+import java.util.Objects;
+
 import org.teiid.language.visitor.LanguageObjectVisitor;
 import org.teiid.metadata.Table;
 
@@ -68,6 +70,30 @@ public class NamedTable extends BaseLanguageObject implements MetadataReference<
 
     public void setCorrelationName(String context) {
         this.correlationName = context;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof NamedTable)) {
+            return false;
+        }
+        NamedTable other = (NamedTable) obj;
+        if (!Objects.equals(this.metadataObject, other.metadataObject)) {
+            return false;
+        }
+        if (!Objects.equals(this.name, other.name)) {
+            return false;
+        }
+        if (this.correlationName != null && !this.correlationName.equalsIgnoreCase(other.correlationName)) {
+            return false;
+        }
+        return true;
     }
 
 }

@@ -79,8 +79,28 @@ public class TestQueryExecutionImpl {
         assertNull(qei.next());
     }
 
-    @Test public void testJoin() throws Exception {
+    @Test public void testJoinChildToParent() throws Exception {
         Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryResult qr = new QueryResult();
+        SObject so = new SObject();
+        so.setType("Account");
+        so.addField("Name", "account name");
+        SObject so1 = new SObject();
+        so1.setType("Contact");
+        so1.addField("Id", "contact id");
+        so1.addField("Account", so);
+        qr.setRecords(new SObject[] {so1});
+        qr.setDone(true);
+        Mockito.stub(sfc.query("SELECT Account.Name, Contact.Id FROM Contact WHERE Contact.AccountId != NULL", 0, false)).toReturn(qr);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertEquals(Arrays.asList("account name", "contact id"), qei.next());
+        assertNull(qei.next());
+    }
+
+    @Test public void testJoinParentToChild() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account left outer join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
         SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
         QueryResult qr = new QueryResult();
         SObject so = new SObject();
@@ -92,10 +112,35 @@ public class TestQueryExecutionImpl {
         so.addField("Contacts", so1);
         qr.setRecords(new SObject[] {so});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Account.Name, Contact.Id FROM Contact WHERE Contact.AccountId != NULL", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Account.Name, (SELECT Contact.Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "contact id"), qei.next());
+        assertNull(qei.next());
+    }
+
+    @Test public void testJoinParentToChildSelf() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select a1.Name, a2.Id from Account a1 left outer join Account a2 on a1.Id = a2.ParentId"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryResult qr = new QueryResult();
+        SObject so = new SObject();
+        so.setType("Account");
+        so.addField("Name", "account name");
+        SObject so1 = new SObject();
+        so1.setType("Account");
+        so1.addField("Id", "account id1");
+        so.addField("ChildAccounts", so1);
+        SObject so2 = new SObject();
+        so2.setType("Account");
+        so2.addField("Id", "account id2");
+        so.addField("ChildAccounts", so2);
+        qr.setRecords(new SObject[] {so});
+        qr.setDone(true);
+        Mockito.stub(sfc.query("SELECT Account.Name, (SELECT Account.Id FROM ChildAccounts) FROM Account", 0, false)).toReturn(qr);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertEquals(Arrays.asList("account name", "account id1"), qei.next());
+        assertEquals(Arrays.asList("account name", "account id2"), qei.next());
         assertNull(qei.next());
     }
 

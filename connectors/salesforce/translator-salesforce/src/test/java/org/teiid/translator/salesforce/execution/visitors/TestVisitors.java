@@ -374,4 +374,26 @@ public class TestVisitors {
         helpTest(sql, source);
     }
 
+    @Test public void testSelfJoin() throws Exception {
+        String sql = "select a1.id from Account a1 inner join account a2 on a1.parentid = a2.id where a2.name = 'x'";
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit((Select)translationUtility.parseCommand(sql));
+        assertEquals("SELECT Account.Id FROM Account WHERE (Parent.Name = 'x') AND (Account.ParentId != NULL)", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
+    @Test public void testSelfJoinOuterChildToParent() throws Exception {
+        String sql = "select a2.id, a1.id from Account a1 left outer join account a2 on a1.parentid = a2.id where a2.name = 'x'";
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit((Select)translationUtility.parseCommand(sql));
+        assertEquals("SELECT Parent.Id, Account.Id FROM Account WHERE Parent.Name = 'x'", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
+    //dubious
+    @Test public void testSelfJoinOuterParentToChild() throws Exception {
+        String sql = "select a2.name, a1.name from Account a2 left outer join account a1 on a1.parentid = a2.id where a2.name = 'x'";
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit((Select)translationUtility.parseCommand(sql));
+        assertEquals("SELECT Account.Name, (SELECT Account.Name FROM ChildAccounts) FROM Account WHERE Account.Name = 'x'", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
 }
