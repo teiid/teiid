@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.teiid.language.*;
 import org.teiid.language.AndOr.Operator;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
@@ -88,13 +87,6 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
             // get the name in source
             Expression expression = symbol.getExpression();
             selectSymbolIndexToElement.put(index, expression);
-            if (expression instanceof ColumnReference) {
-                Column element = ((ColumnReference) expression).getMetadataObject();
-                String nameInSource = element.getSourceName();
-                if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
-                    idIndex = index;
-                }
-            }
         }
     }
 
@@ -118,11 +110,11 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     @Override
     public void visit(NamedTable obj) {
         try {
-            table = obj.getMetadataObject();
-            String supportsQuery = table.getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
-            objectSupportsRetrieve = Boolean.valueOf(table.getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_RETRIEVE, true));
+            table = obj;
+            String supportsQuery = table.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
+            objectSupportsRetrieve = Boolean.valueOf(table.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_RETRIEVE, true));
             if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
-                throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
+                throw new TranslatorException(table.getMetadataObject().getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
             }
             loadColumnMetadata(obj);
         } catch (TranslatorException ce) {
@@ -154,7 +146,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
         result.append(SPACE);
 
         result.append(FROM).append(SPACE);
-        result.append(table.getSourceName()).append(SPACE);
+        result.append(table.getMetadataObject().getSourceName()).append(SPACE);
         addCriteriaString(result);
         appendGroupByHaving(result);
         //result.append(orderByClause).append(SPACE);
@@ -192,15 +184,6 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     public Expression getSelectSymbolMetadata(int index) {
         return selectSymbolIndexToElement.get(index);
     }
-
-    /**
-     * Returns the index of the ID column.
-     * @return the index of the ID column, -1 if there is no ID column.
-     */
-    public int getIdIndex() {
-        return idIndex;
-    }
-
 
     public boolean getQueryAll() {
         return queryAll;

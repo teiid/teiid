@@ -31,7 +31,6 @@ import org.teiid.language.Comparison.Operator;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesForcePlugin;
@@ -68,7 +67,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected List<String> criteriaBuffer = new ArrayList<String>();
     protected boolean hasCriteria;
     protected List<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-    protected Table table;
+    protected NamedTable table;
     boolean onlyIDCriteria;
     protected boolean queryAll = Boolean.FALSE;
 
@@ -362,12 +361,12 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     }
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
-        table = group.getMetadataObject();
-        String supportsQuery = table.getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
+        table = group;
+        String supportsQuery = table.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
         if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
-            throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new TranslatorException(table.getMetadataObject().getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        List<Column> columnIds = table.getColumns();
+        List<Column> columnIds = table.getMetadataObject().getColumns();
         for (Column element : columnIds) {
             // influences queryAll behavior
             if (element.getSourceName().equals("IsDeleted")) { //$NON-NLS-1$
@@ -429,7 +428,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 
     @Override
     public String getTableName() {
-        return table.getSourceName();
+        return table.getMetadataObject().getSourceName();
     }
 
     protected void addCriteriaString(StringBuilder result) {
