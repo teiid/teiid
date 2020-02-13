@@ -27,6 +27,8 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -45,6 +47,10 @@ import org.teiid.infinispan.api.HotRodTestServer;
 import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.language.Command;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Parameter;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
@@ -69,6 +75,7 @@ public class TestHotrodExecution {
 
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
         EF = new InfinispanExecutionFactory();
+        EF.setSupportsBulkUpdate(true);
         TransformationMetadata tm = TestProtobufMetadataProcessor.getTransformationMetadata(mf, EF);
         //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         //System.out.println(ddl);
@@ -329,6 +336,22 @@ public class TestHotrodExecution {
         assertEquals("<a>foo</a>", ObjectConverterUtil.convertToString(((SQLXML)results.get(16)).getCharacterStream()));
         assertNull(exec.next());
 
+        command = UTILITY.parseCommand("UPSERT INTO G2 (e1) values (3)");
+        Insert insert = (Insert)command;
+        Parameter param = new Parameter();
+        param.setType(Integer.class);
+        param.setValueIndex(0);
+        ExpressionValueSource evs = new ExpressionValueSource(Arrays.asList((Expression)param));
+        insert.setValueSource(evs);
+        List<List<?>> vals = new ArrayList<List<?>>();
+        for (int i = 0; i < 3; i++) {
+            vals.add(Arrays.asList(i));
+        }
+        insert.setParameterValues(vals.iterator());
+        update = EF.createUpdateExecution(command,EC, METADATA, connection);
+        update.execute();
+        assertTrue(EF.returnsSingleUpdateCount());
+        assertArrayEquals(new int[] {3}, update.getUpdateCounts());
     }
 
     // TEIID-5165 - test large cache delete

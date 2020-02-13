@@ -43,7 +43,6 @@ import org.teiid.translator.TranslatorException;
 
 public class InfinispanUpdateVisitor extends IckleConversionVisitor {
     protected enum OperationType {INSERT, UPDATE, DELETE, UPSERT};
-    protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private OperationType operationType;
     private InfinispanDocument insertPayload;
     private Map<String, Object> updatePayload = new HashMap<>();
@@ -97,12 +96,9 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
     Map<Object, InfinispanDocument> getBulkInsertPayload(Insert obj, int batchSize, Iterator<? extends List<Expression>> iter){
         Map<Object, InfinispanDocument> updates = new TreeMap<>();
         int count = 0;
-        while (iter.hasNext()) {
+        while (iter.hasNext() && count++ < batchSize) {
             InfinispanDocument doc = buildInsertPayload(obj, iter.next());
             updates.put(doc.getIdentifier(), doc);
-            if (count++ == batchSize) {
-                break;
-            }
         }
         return updates;
     }
@@ -255,13 +251,13 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
                     values.add(((Literal)exp).getValue());
                 }
                 else {
-                    this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003)));
+                    this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, expr.getClass())));
                 }
             }
             value = values;
         }
         else {
-            this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003)));
+            this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, expr.getClass())));
         }
         return value;
     }

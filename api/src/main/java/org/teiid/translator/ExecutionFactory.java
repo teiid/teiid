@@ -1331,8 +1331,8 @@ public class ExecutionFactory<F, C> {
     }
 
     /**
-     * True if the only a single value is returned for the update count.
-     * This overrides the default expectation of a update count array
+     * True if only a single value is returned for the update count.
+     * This overrides the default expectation of an update count array
      * for bulk/batch commands.  It is expected that every command
      * is successful.
      * @return

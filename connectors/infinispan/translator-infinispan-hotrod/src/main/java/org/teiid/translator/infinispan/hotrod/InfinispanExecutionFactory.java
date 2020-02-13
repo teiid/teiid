@@ -303,4 +303,9 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public int getMaxFromGroups() {
         return 2;
     }
+
+    @Override
+    public boolean returnsSingleUpdateCount() {
+        return true;
+    }
 }
