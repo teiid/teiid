@@ -29,24 +29,12 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
 import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BigIntegerType;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.CharacterType;
-import org.hibernate.type.ClobType;
-import org.hibernate.type.DateType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.ObjectType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TimeType;
-import org.hibernate.type.TimestampType;
+import org.hibernate.type.*;
 
 public class TeiidDialect extends Dialect {
     private static DoubleType DOUBLE = DoubleType.INSTANCE;
@@ -323,6 +311,11 @@ public class TeiidDialect extends Dialect {
             AfterUseAction.DROP,
             TempTableDdlTransactionHandling.NONE
         );
+    }
+
+    @Override
+    public NameQualifierSupport getNameQualifierSupport() {
+        return NameQualifierSupport.SCHEMA;
     }
 }
 
