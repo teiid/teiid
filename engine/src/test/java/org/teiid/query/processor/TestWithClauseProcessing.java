@@ -1293,7 +1293,7 @@ public class TestWithClauseProcessing {
         long reads = bm.getReadAttempts();
         helpProcess(plan, cc, dataManager, expected);
         reads = bm.getReadAttempts() - reads;
-        assertTrue(reads < 500000);
+        assertTrue(reads < 600000);
     }
 
     @Test public void testWithImplicitIndexingCompositeKey() throws Exception {
@@ -1527,6 +1527,14 @@ public class TestWithClauseProcessing {
         ProcessorPlan pp = TestProcessor.helpGetPlan(command, metadata, new DefaultCapabilitiesFinder(bsc), cc);
 
         TestProcessor.helpProcess(pp, cc, dataMgr, new List[] {Arrays.asList(BigDecimal.valueOf(2))});
+    }
+
+    public static void main(String[] args) throws Exception {
+        TestWithClauseProcessing twcp = new TestWithClauseProcessing();
+        for (int i = 0; i < 10000; i++) {
+            twcp.testWithImplicitIndexing();
+            System.out.println(i);
+        }
     }
 
 }
