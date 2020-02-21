@@ -53,6 +53,7 @@ public class PGCharsetConverter {
         mapCharset("SJIS", Charset.forName("windows-932")); //$NON-NLS-1$ //$NON-NLS-2$
         mapCharset("UHC", Charset.forName("windows-949")); //$NON-NLS-1$ //$NON-NLS-2$
         mapCharset("UTF8", Charset.forName("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+        mapCharset("utf-8", Charset.forName("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
         mapCharset("UNICODE", Charset.forName("UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
         mapCharset("WIN866", Charset.forName("cp866")); //$NON-NLS-1$ //$NON-NLS-2$
         mapCharset("WIN874", Charset.forName("cp874")); //$NON-NLS-1$ //$NON-NLS-2$

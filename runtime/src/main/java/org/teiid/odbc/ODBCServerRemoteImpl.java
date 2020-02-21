@@ -913,6 +913,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             if (modified.startsWith(PK_QUERY)) {
                 return PK_REPLACEMENT_QUERY + modified.substring(PK_QUERY.length());
             }
+
+            if (sql.equalsIgnoreCase("select version()")){ //$NON-NLS-1$
+                return "select version() as version"; //$NON-NLS-1$
+            }
         }
         else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$
             return "select 63"; //$NON-NLS-1$
