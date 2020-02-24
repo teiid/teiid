@@ -571,7 +571,7 @@ public class VDBMetadataParser {
             }
             if (permission.getCondition() != null) {
                 if (permission.getConstraint() != null) {
-                    writeElement(writer, Element.CONDITION, permission.getCondition(), new String[] {Element.CONSTRAINT.getLocalName(), String.valueOf(permission.getCondition())});
+                    writeElement(writer, Element.CONDITION, permission.getCondition(), new String[] {Element.CONSTRAINT.getLocalName(), String.valueOf(permission.getConstraint())});
                 } else {
                     writeElement(writer, Element.CONDITION, permission.getCondition());
                 }

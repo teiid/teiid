@@ -27,6 +27,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.ResourceType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -74,6 +75,7 @@ public class TestRowBasedSecurity {
         pmd3.setAllowDelete(true);
 
         PermissionMetaData pmd4 = new PermissionMetaData();
+        pmd4.setResourceType(ResourceType.PROCEDURE);
         pmd4.setResourceName("pm1.sp1");
         pmd4.setCondition("e1 = 'a'");
 

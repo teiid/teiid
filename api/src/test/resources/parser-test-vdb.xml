@@ -26,6 +26,7 @@
         <permission>
             <resource-name>myTable.T1</resource-name>
             <allow-read>true</allow-read>
+            <condition constraint="false">col1 = user()</condition>
         </permission>
         <permission>
             <resource-name>myTable.T2</resource-name>
@@ -35,7 +36,7 @@
             <allow-delete>true</allow-delete>
             <allow-execute>true</allow-execute>
             <allow-alter>true</allow-alter>
-            <condition constraint="false">col1 = user()</condition>
+            <condition constraint="true">col1 = user()</condition>
         </permission>
         <permission>
             <resource-name>myTable.T2.col1</resource-name>
