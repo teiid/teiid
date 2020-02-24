@@ -38,6 +38,13 @@ public class TestVDBMetadataParser {
         in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
         VDBMetaData vdb = VDBMetadataParser.unmarshall(in);
         TestVDBUtility.validateVDB(vdb);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        VDBMetadataParser.marshall(vdb, baos);
+        baos.close();
+        VDBMetaData parsed = VDBMetadataParser.unmarshall(new ByteArrayInputStream(baos.toByteArray()));
+
+        TestVDBUtility.validateVDB(parsed);
     }
 
     @Test public void testExcludeImported() throws Exception {

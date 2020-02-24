@@ -127,7 +127,7 @@ public class RowBasedSecurityHelper {
         String fullName = metadata.getFullName(metadataID);
         for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
             DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
-            PermissionMetaData pmd = dpm.getPermissionMetadata(fullName, ResourceType.TABLE);
+            PermissionMetaData pmd = dpm.getPermissionMetadata(fullName, group.isProcedure()?ResourceType.PROCEDURE:ResourceType.TABLE);
             if (pmd == null) {
                 continue;
             }

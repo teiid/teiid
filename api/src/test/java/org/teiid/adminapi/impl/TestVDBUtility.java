@@ -108,6 +108,7 @@ public class TestVDBUtility {
             if (p.getResourceName().equalsIgnoreCase("myTable.T1")) { //$NON-NLS-1$
                 assertTrue(p.getAllowRead());
                 assertNull(p.getAllowDelete());
+                assertFalse(p.getConstraint());
                 continue;
             }
             if (p.getResourceName().equalsIgnoreCase("myTable.T2.col1")) { //$NON-NLS-1$
@@ -118,7 +119,7 @@ public class TestVDBUtility {
             assertFalse(p.getAllowRead());
             assertTrue(p.getAllowDelete());
             assertEquals("col1 = user()", p.getCondition());
-            assertFalse(p.getConstraint());
+            assertTrue(p.getConstraint());
         }
         assertTrue(lang);
     }
@@ -180,6 +181,8 @@ public class TestVDBUtility {
         PermissionMetaData perm1 = new PermissionMetaData();
         perm1.setResourceName("myTable.T1"); //$NON-NLS-1$
         perm1.setAllowRead(true);
+        perm1.setCondition("col1 = user()");
+        perm1.setConstraint(false);
         roleOne.addPermission(perm1);
 
         PermissionMetaData perm2 = new PermissionMetaData();
@@ -187,7 +190,7 @@ public class TestVDBUtility {
         perm2.setAllowRead(false);
         perm2.setAllowDelete(true);
         perm2.setCondition("col1 = user()");
-        perm2.setConstraint(false);
+        perm2.setConstraint(true);
         roleOne.addPermission(perm2);
 
         PermissionMetaData perm3 = new PermissionMetaData();
