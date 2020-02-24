@@ -251,7 +251,7 @@ public class DDLStringVisitor {
     private void visit(Grant grant) {
 
         for (Permission permission : grant.getPermissions()) {
-            if (permission.getResourceType() == ResourceType.DATABASE) {
+            if (permission.getResourceType() == ResourceType.DATABASE && permission.getResourceName() == null) {
                 for (Privilege p : permission.getPrivileges()) {
                     appendGrant(grant, permission, EnumSet.of(p), false);
                 }
