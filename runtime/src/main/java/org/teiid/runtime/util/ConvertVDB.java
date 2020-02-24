@@ -149,6 +149,8 @@ public class ConvertVDB {
                 metadataStore.addSchema(schema);
             }
 
+            //TODO: attempt to parse schemas to obtain at least partial metadata
+
             Database db = DatabaseUtil.convert(metadata, metadataStore);
             DDLStringVisitor visitor = new DDLStringVisitor(null, null) {
 

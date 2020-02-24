@@ -32,6 +32,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.DataWrapper;
 import org.teiid.metadata.Database;
 import org.teiid.metadata.Database.ResourceType;
@@ -39,9 +40,11 @@ import org.teiid.metadata.Grant;
 import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Role;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Server;
+import org.teiid.metadata.Table;
 
 public class DatabaseUtil {
 
@@ -150,7 +153,7 @@ public class DatabaseUtil {
                     grant.setRole(role.getName());
                 }
 
-                Permission permission = convert(dp);
+                Permission permission = convert(dp, metadataStore);
                 grant.addPermission(permission);
             }
             db.addRole(role);
@@ -159,7 +162,7 @@ public class DatabaseUtil {
         return db;
     }
 
-    private static Permission convert(DataPermission dp) {
+    private static Permission convert(DataPermission dp, MetadataStore store) {
         Permission p = new Permission();
 
         p.setAllowAlter(dp.getAllowAlter());
@@ -170,24 +173,41 @@ public class DatabaseUtil {
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
 
-        if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
+        if (dp.getAllowLanguage() != null) {
             p.setAllowUsage(true);
             p.setResourceType(ResourceType.LANGUAGE);
         } else if (dp.getResourceType() != null) {
             p.setResourceType(ResourceType.valueOf(dp.getResourceType().name()));
         } else {
-            int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
+            List<String> parts = StringUtil.split(dp.getResourceName(), "."); //$NON-NLS-1$
 
-            if (dotCount == 0) {
+            if (parts.size() == 1) {
                 p.setResourceType(ResourceType.SCHEMA);
-            } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
-                // this may not be correct as it could be a function as well
-                p.setResourceType(ResourceType.PROCEDURE);
-            } else if (dotCount >= 2) {
-                // this may not be correct as it could be a table
-                p.setResourceType(ResourceType.COLUMN);
             } else {
-                p.setResourceType(ResourceType.TABLE);
+                if (dp.getMask() != null && parts.size() > 2) {
+                    p.setResourceType(ResourceType.COLUMN);
+                }
+                Schema s = store.getSchema(parts.get(0));
+                if (s != null) {
+                    if (parts.size() > 2) {
+                        ResourceType fullType = getType(s, StringUtil.join(parts.subList(1, parts.size()), ".")); //$NON-NLS-1$
+                        ResourceType type = getType(s, StringUtil.join(parts.subList(1, parts.size()-1), ".")); //$NON-NLS-1$
+                        if (fullType != null && type == null) {
+                            p.setResourceType(fullType);
+                        } else if (type != null && fullType == null) {
+                            if (type == ResourceType.TABLE) {
+                                p.setResourceType(ResourceType.COLUMN);
+                            }
+                        }
+                    } else {
+                        String name = parts.get(1);
+
+                        ResourceType type = getType(s, name);
+                        if (type != null) {
+                            p.setResourceType(type);
+                        }
+                    }
+                }
             }
         }
 
@@ -200,6 +220,22 @@ public class DatabaseUtil {
             p.setCondition(dp.getCondition(), dp.getConstraint());
         }
         return p;
+    }
+
+    private static ResourceType getType(Schema s, String name) {
+        Table t = s.getTable(name);
+        Procedure proc = s.getProcedure(name);
+        boolean hasFunction = s.getFunctions().values().stream().anyMatch(f->(name.equalsIgnoreCase(f.getName())));
+
+        if (t != null && proc == null && !hasFunction) {
+            return ResourceType.TABLE;
+        } else if (proc != null && t == null && !hasFunction) {
+            return ResourceType.PROCEDURE;
+        } else if (hasFunction && t == null && proc == null) {
+            return ResourceType.FUNCTION;
+        }
+
+        return null;
     }
 
     public static VDBMetaData convert(Database database) {

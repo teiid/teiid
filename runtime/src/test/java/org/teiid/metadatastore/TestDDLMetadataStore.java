@@ -319,8 +319,13 @@ public class TestDDLMetadataStore {
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.ddl"));
         assertEquals(expected, content);
 
-        //make sure the output is valid
-        es.getAdmin().deploy("portfolio-vdb.ddl", new ByteArrayInputStream(content.getBytes("UTF-8")));
+        //make sure the output is not valid
+        try {
+            es.getAdmin().deploy("portfolio-vdb.ddl", new ByteArrayInputStream(content.getBytes("UTF-8")));
+            fail();
+        } catch (AdminProcessingException e) {
+
+        }
     }
 
     @Test
