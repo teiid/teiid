@@ -43,6 +43,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.Policy;
+import org.teiid.metadata.Policy.Operation;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -115,7 +117,7 @@ public class RowBasedSecurityHelper {
     }
 
     public static Criteria getRowBasedFilters(QueryMetadataInterface metadata,
-            final GroupSymbol group, CommandContext cc, boolean constraintsOnly)
+            final GroupSymbol group, CommandContext cc, boolean constraintsOnly, Policy.Operation operation)
             throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         Map<String, DataPolicy> policies = cc.getAllowedDataPolicies();
         if (policies == null || policies.isEmpty()) {
@@ -128,25 +130,36 @@ public class RowBasedSecurityHelper {
         for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
             DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
             PermissionMetaData pmd = dpm.getPermissionMetadata(fullName, group.isProcedure()?ResourceType.PROCEDURE:ResourceType.TABLE);
-            if (pmd == null) {
-                continue;
+            Criteria filter = null;
+            boolean added = false;
+            if (pmd != null) {
+                String filterString = pmd.getCondition();
+                if (filterString != null && !(constraintsOnly && Boolean.FALSE.equals(pmd.getConstraint()))) {
+                    filter = resolveCondition(metadata, group, fullName,
+                            entry, pmd, filterString);
+                    added = true;
+                    if (crits == null) {
+                        crits = new ArrayList<Criteria>(2);
+                    }
+                    crits.add(filter);
+                }
             }
-            String filterString = pmd.getCondition();
-            if (filterString == null) {
-                continue;
+            Map<String, Policy> polices = dpm.getPolicies(group.isProcedure()?org.teiid.metadata.Database.ResourceType.PROCEDURE:org.teiid.metadata.Database.ResourceType.TABLE, fullName);
+            if (polices != null) {
+                for (Policy policy : polices.values()) {
+                    if (!policy.appliesTo(operation)) {
+                        continue;
+                    }
+                    if (crits == null) {
+                        crits = new ArrayList<Criteria>(2);
+                    }
+                    crits.add(resolveCondition(metadata, group, fullName, entry, policy.getCondition()));
+                    added = true;
+                }
             }
-            if (constraintsOnly && Boolean.FALSE.equals(pmd.getConstraint())) {
-                continue;
-            }
-            Criteria filter = resolveCondition(metadata, group, fullName,
-                    entry, pmd, filterString);
-            if (!dpm.isAnyAuthenticated()) {
+            if (added && !dpm.isAnyAuthenticated()) {
                 user = true;
             }
-            if (crits == null) {
-                crits = new ArrayList<Criteria>(2);
-            }
-            crits.add(filter);
         }
         if (crits == null || crits.isEmpty()) {
             return null;
@@ -178,34 +191,55 @@ public class RowBasedSecurityHelper {
             PermissionMetaData pmd, String filterString) throws QueryMetadataException {
         Criteria filter = (Criteria)pmd.getResolvedCondition();
         if (filter == null) {
-            try {
-                filter = QueryParser.getQueryParser().parseCriteria(filterString);
-                GroupSymbol gs = group;
-                if (group.getDefinition() != null) {
-                    gs = new GroupSymbol(fullName);
-                    gs.setMetadataID(group.getMetadataID());
-                }
-                Collection<GroupSymbol> groups = Arrays.asList(gs);
-                for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(filter)) {
-                    container.getCommand().pushNewResolvingContext(groups);
-                    QueryResolver.resolveCommand(container.getCommand(), metadata, false);
-                }
-                ResolverVisitor.resolveLanguageObject(filter, groups, metadata);
-                ValidatorReport report = Validator.validate(filter, metadata, new ValidationVisitor());
-                if (report.hasItems()) {
-                    ValidatorFailure firstFailure = report.getItems().iterator().next();
-                    throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName) + " " + firstFailure); //$NON-NLS-1$
-                }
-                pmd.setResolvedCondition(filter.clone());
-            } catch (QueryMetadataException e) {
-                throw e;
-            } catch (TeiidException e) {
-                throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName));
-            }
+            filter = resolveCondition(metadata, group, fullName, entry,
+                    filterString);
+            pmd.setResolvedCondition(filter.clone());
         } else {
             filter = (Criteria) filter.clone();
         }
         return filter;
+    }
+
+    static Criteria resolveCondition(Policy policy, QueryMetadataInterface metadata,
+            final GroupSymbol group, String fullName, Map.Entry<String, DataPolicy> entry, String filterString) throws TeiidComponentException {
+        Criteria filter = (Criteria)metadata.getFromMetadataCache(policy, ""); //$NON-NLS-1$
+        if (filter == null) {
+            filter = resolveCondition(metadata, group, fullName, entry,
+                    filterString);
+            metadata.addToMetadataCache(policy, "", filter.clone()); //$NON-NLS-1$
+        } else {
+            filter = (Criteria) filter.clone();
+        }
+        return filter;
+    }
+
+    private static Criteria resolveCondition(QueryMetadataInterface metadata,
+            final GroupSymbol group, String fullName,
+            Map.Entry<String, DataPolicy> entry, String filterString) throws QueryMetadataException {
+        try {
+            Criteria filter = QueryParser.getQueryParser().parseCriteria(filterString);
+            GroupSymbol gs = group;
+            if (group.getDefinition() != null) {
+                gs = new GroupSymbol(fullName);
+                gs.setMetadataID(group.getMetadataID());
+            }
+            Collection<GroupSymbol> groups = Arrays.asList(gs);
+            for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(filter)) {
+                container.getCommand().pushNewResolvingContext(groups);
+                QueryResolver.resolveCommand(container.getCommand(), metadata, false);
+            }
+            ResolverVisitor.resolveLanguageObject(filter, groups, metadata);
+            ValidatorReport report = Validator.validate(filter, metadata, new ValidationVisitor());
+            if (report.hasItems()) {
+                ValidatorFailure firstFailure = report.getItems().iterator().next();
+                throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName) + " " + firstFailure); //$NON-NLS-1$
+            }
+            return filter;
+        } catch (QueryMetadataException e) {
+            throw e;
+        } catch (TeiidException e) {
+            throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName));
+        }
     }
 
     public static Command checkUpdateRowBasedFilters(ProcedureContainer container, Command procedure, RelationalPlanner planner)
@@ -214,7 +248,13 @@ public class RowBasedSecurityHelper {
         if (container instanceof StoredProcedure) {
             return procedure;
         }
-        Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context, false);
+        Policy.Operation operation = Operation.UPDATE;
+        if (container.getType() == Command.TYPE_DELETE) {
+            operation = Operation.DELETE;
+        } else if (container.getType() == Command.TYPE_INSERT) {
+            operation = Operation.INSERT;
+        }
+        Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context, false, operation);
         if (filter == null) {
             return procedure;
         }
@@ -223,7 +263,7 @@ public class RowBasedSecurityHelper {
         if (procedure != null) {
             return procedure;
         }
-        filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context, true);
+        filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context, true, operation);
         if (filter == null) {
             return procedure;
         }

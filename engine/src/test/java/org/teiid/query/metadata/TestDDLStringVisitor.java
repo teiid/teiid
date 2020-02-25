@@ -521,55 +521,45 @@ public class TestDDLStringVisitor {
 
         Role role1 = new Role("uber");
 
-        Grant.Permission permission = new Grant.Permission();
+        Permission permission = new Permission();
         permission.setAllowAlter(true);
         permission.setAllowSelect(true);
         permission.setResourceName("schema.tableName");
         permission.setResourceType(ResourceType.TABLE);
 
-        Grant.Permission permission2 = new Grant.Permission();
+        Permission permission2 = new Permission();
         permission2.setAllowDelete(true);
         permission2.setResourceName("schema.tableName");
         permission2.setResourceType(ResourceType.TABLE);
 
-        Grant.Permission permission3 = new Grant.Permission();
+        Permission permission3 = new Permission();
         permission3.setAllowAllPrivileges(true);
         permission3.setAllowTemporyTables(true);
 
-        Grant.Permission permission4 = new Grant.Permission();
+        Permission permission4 = new Permission();
         permission4.setAllowTemporyTables(true);
 
-        Grant.Permission permission5 = new Grant.Permission();
+        Permission permission5 = new Permission();
         permission5.setAllowDelete(true);
         permission5.setResourceName("schema.tableName.col");
         permission5.setResourceType(ResourceType.COLUMN);
 
-        Grant.Permission permission6 = new Grant.Permission();
+        Permission permission6 = new Permission();
         permission6.setAllowSelect(true);
         permission6.setResourceName("schema.tableName.col");
         permission6.setResourceType(ResourceType.TABLE);
 
-        Grant g = new Grant();
-        g.setRole(role.getName());
-        g.addPermission(permission);
-        g.addPermission(permission4);
-
-        Grant g2 = new Grant();
-        g2.setRole(role.getName());
-        g2.addPermission(permission2);
-        g2.addPermission(permission5);
-        g2.addPermission(permission6);
-
-        Grant g3 = new Grant();
-        g3.setRole("uber");
-        g3.addPermission(permission3);
-
         db.addRole(role);
         db.addRole(role1);
-        db.addGrant(g);
-        db.addGrant(g2);
-        db.addGrant(g3);
 
+        db.addGrant(new Grant(role.getName(), permission));
+        db.addGrant(new Grant(role.getName(), permission4));
+
+        db.addGrant(new Grant(role.getName(), permission2));
+        db.addGrant(new Grant(role.getName(), permission5));
+        db.addGrant(new Grant(role.getName(), permission6));
+
+        db.addGrant(new Grant("uber", permission3));
 
         String expected = "\n" +
                 "/*\n" +

@@ -25,11 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 import java.util.function.Function;
 
 import org.teiid.CommandContext;
@@ -39,6 +39,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
@@ -46,6 +47,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.Policy.Operation;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -78,7 +80,7 @@ public class MetadataFactory extends NamespaceContainer {
     private transient Parser parser;
     private transient ModelMetaData model;
     private transient Map<String, ? extends VDBResource> vdbResources;
-    private Map<String, Grant> grants;
+    private Map<String, Role> roles = new LinkedHashMap<String, Role>();
 
     private String nameFormat;
 
@@ -661,9 +663,7 @@ public class MetadataFactory extends NamespaceContainer {
     public void mergeInto (MetadataStore store) {
         store.addSchema(this.schema);
         store.addDataTypes(this.dataTypes);
-        if (this.grants != null) {
-            store.addGrants(this.grants.values());
-        }
+        store.mergeRoles(this.roles.values());
     }
 
     public MetadataStore asMetadataStore() {
@@ -787,16 +787,14 @@ public class MetadataFactory extends NamespaceContainer {
      * @param allowExecute
      * @param condition
      * @param constraint
+     * @deprecated
      */
+    @Deprecated
     public void addPermission(String role, AbstractMetadataRecord resource, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
             Boolean allowDelete, Boolean allowExecute, String condition, Boolean constraint) {
-        Grant.Permission pmd = new Grant.Permission();
+        Permission pmd = new Permission();
         pmd.setResourceName(resource.getFullName());
-        if (resource instanceof Table) {
-            pmd.setResourceType(ResourceType.TABLE);
-        } else {
-            pmd.setResourceType(ResourceType.PROCEDURE);
-        }
+        pmd.setResourceType(getResourceType(resource));
         pmd.setAllowAlter(allowAlter);
         pmd.setAllowInsert(allowCreate);
         pmd.setAllowDelete(allowDelete);
@@ -805,6 +803,41 @@ public class MetadataFactory extends NamespaceContainer {
         pmd.setAllowUpdate(allowUpdate);
         pmd.setCondition(condition, constraint);
         addPermission(pmd, role);
+    }
+
+    /**
+     * Add a permission for a {@link Table} or {@link Procedure}
+     * @param role
+     * @param resource
+     * @param allowAlter
+     * @param allowCreate
+     * @param allowRead
+     * @param allowUpdate
+     * @param allowDelete
+     * @param allowExecute
+     */
+    public void addPermission(String role, AbstractMetadataRecord resource, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
+            Boolean allowDelete, Boolean allowExecute) {
+        Permission pmd = new Permission();
+        pmd.setResourceName(resource.getFullName());
+        pmd.setResourceType(getResourceType(resource));
+        pmd.setAllowAlter(allowAlter);
+        pmd.setAllowInsert(allowCreate);
+        pmd.setAllowDelete(allowDelete);
+        pmd.setAllowExecute(allowExecute);
+        pmd.setAllowSelect(allowRead);
+        pmd.setAllowUpdate(allowUpdate);
+        addPermission(pmd, role);
+    }
+
+    private ResourceType getResourceType(AbstractMetadataRecord resource) {
+        if (resource instanceof Table) {
+            return ResourceType.TABLE;
+        }
+        if (resource instanceof Procedure){
+            return ResourceType.PROCEDURE;
+        }
+        throw new IllegalArgumentException("A table or procedure is expected"); //$NON-NLS-1$
     }
 
     /**
@@ -819,7 +852,7 @@ public class MetadataFactory extends NamespaceContainer {
      */
     public void addSchemaPermission(String role, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
             Boolean allowDelete, Boolean allowExecute) {
-        Grant.Permission pmd = new Grant.Permission();
+        Permission pmd = new Permission();
         pmd.setResourceName(this.schema.getFullName());
         pmd.setResourceType(ResourceType.SCHEMA);
 
@@ -839,13 +872,15 @@ public class MetadataFactory extends NamespaceContainer {
      * @param allowCreate
      * @param allowRead
      * @param allowUpdate
-     * @param condition
+     * @param condition must be null
      * @param mask
      * @param order
+     * @deprecated
      */
+    @Deprecated
     public void addColumnPermission(String role, Column resource, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
             String condition, String mask, Integer order) {
-        Grant.Permission pmd = new Grant.Permission();
+        Permission pmd = new Permission();
         pmd.setResourceType(ResourceType.COLUMN);
 
         String resourceName = null;
@@ -858,23 +893,72 @@ public class MetadataFactory extends NamespaceContainer {
         pmd.setAllowInsert(allowCreate);
         pmd.setAllowSelect(allowRead);
         pmd.setAllowUpdate(allowUpdate);
+        if (condition != null) {
+            throw new IllegalArgumentException("Condition is not allowed"); //$NON-NLS-1$
+        }
         pmd.setCondition(condition, null);
         pmd.setMask(mask);
         pmd.setMaskOrder(order);
         addPermission(pmd, role);
     }
 
-    private void addPermission(Grant.Permission pmd, String role) {
-        if (this.grants == null) {
-            this.grants = new TreeMap<String, Grant>();
+    /**
+     * Add a permission for a {@link Column}
+     * @param role
+     * @param resource
+     * @param allowCreate
+     * @param allowRead
+     * @param allowUpdate
+     * @param mask
+     * @param order
+     */
+    public void addColumnPermission(String role, Column resource, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
+            String mask, Integer order) {
+        Permission pmd = new Permission();
+        pmd.setResourceType(ResourceType.COLUMN);
+
+        String resourceName = null;
+        if (resource.getParent() != null && resource.getParent().getParent() instanceof Procedure) {
+            resourceName = resource.getParent().getParent().getFullName() + '.' + resource.getName();
+        } else {
+            resourceName = resource.getFullName();
         }
-        Grant g = this.grants.get(role);
-        if (g == null) {
-            g = new Grant();
-            g.setRole(role);
-            this.grants.put(role, g);
+        pmd.setResourceName(resourceName);
+        pmd.setAllowInsert(allowCreate);
+        pmd.setAllowSelect(allowRead);
+        pmd.setAllowUpdate(allowUpdate);
+        pmd.setMask(mask);
+        pmd.setMaskOrder(order);
+        addPermission(pmd, role);
+    }
+
+    /**
+     * Add a policy for a {@link Table} or {@link Procedure}
+     * @param role
+     * @param resource
+     * @param condition
+     * @param operations
+     */
+    public void addPolicy(String role, String policyName, AbstractMetadataRecord resource, String condition, Policy.Operation... operations) {
+        Policy policy = new Policy();
+        ArgCheck.isNotNull(policyName, "policyName"); //$NON-NLS-1$
+        policy.setName(policyName);
+        policy.setResourceName(resource.getFullName());
+        policy.setResourceType(getResourceType(resource));
+        policy.setCondition(condition);
+
+        if (operations == null || operations.length == 0) {
+            policy.getOperations().add(Operation.ALL);
+        } else {
+            policy.getOperations().addAll(Arrays.asList(operations));
         }
-        g.addPermission(pmd);
+        Role r = this.roles.computeIfAbsent(role, (k)->{return new Role(k);});
+        r.addPolicy(policy);
+    }
+
+    private void addPermission(Permission pmd, String role) {
+        Role r = this.roles.computeIfAbsent(role, (k)->{return new Role(k);});
+        r.addGrant(pmd);
     }
 
     public void addFunction(FunctionMethod functionMethod) {

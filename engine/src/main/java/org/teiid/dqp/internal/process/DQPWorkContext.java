@@ -301,9 +301,11 @@ public class DQPWorkContext implements Serializable {
             } else {
                 allPolicies = metadata.getPolicies().values();
             }
-            for (DataPolicy policy : allPolicies) {
-                if (matchesPrincipal(userRoles, policy)) {
-                    this.policies.put(policy.getName(), policy);
+            if (allPolicies != null) {
+                for (DataPolicy policy : allPolicies) {
+                    if (matchesPrincipal(userRoles, policy)) {
+                        this.policies.put(policy.getName(), policy);
+                    }
                 }
             }
         }

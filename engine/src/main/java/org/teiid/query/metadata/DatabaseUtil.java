@@ -36,10 +36,9 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.DataWrapper;
 import org.teiid.metadata.Database;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant;
-import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Permission;
+import org.teiid.metadata.Permission.Privilege;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Role;
 import org.teiid.metadata.Schema;
@@ -124,40 +123,25 @@ public class DatabaseUtil {
                 role.setAnyAuthenticated(true);
             }
 
-            Grant grant = null;
             if (dpm.isGrantAll()) {
-                if (grant == null) {
-                    grant = new Grant();
-                    grant.setRole(role.getName());
-                }
                 Permission permission = new Permission();
                 permission.setAllowAllPrivileges(true);
                 permission.setResourceType(ResourceType.DATABASE);
-                grant.addPermission(permission);
+                role.addGrant(permission);
             }
 
             if (dpm.isAllowCreateTemporaryTables() != null && dpm.isAllowCreateTemporaryTables()) {
-                if (grant == null) {
-                    grant = new Grant();
-                    grant.setRole(role.getName());
-                }
                 Permission permission = new Permission();
                 permission.setAllowTemporyTables(true);
                 permission.setResourceType(ResourceType.DATABASE);
-                grant.addPermission(permission);
+                role.addGrant(permission);
             }
 
             for (DataPolicy.DataPermission dp: dpm.getPermissions()) {
-                if (grant == null) {
-                    grant = new Grant();
-                    grant.setRole(role.getName());
-                }
-
                 Permission permission = convert(dp, metadataStore);
-                grant.addPermission(permission);
+                role.addGrant(permission);
             }
             db.addRole(role);
-            db.addGrant(grant);
         }
         return db;
     }
@@ -300,21 +284,14 @@ public class DatabaseUtil {
     public static void copyDatabaseGrantsAndRoles(Database database,
             VDBMetaData vdb) {
         // roles
-        for (Grant grant:database.getGrants()) {
-            Role role = database.getRole(grant.getRole());
-            DataPolicyMetadata dpm = convert(grant, role);
-            vdb.addDataPolicy(dpm);
-        }
-
         for (Role role : database.getRoles()) {
-            if (vdb.getDataPolicyMap().get(role.getName()) == null) {
-                DataPolicyMetadata dpm = convert(null, role);
-                vdb.addDataPolicy(dpm);
-            }
+            //there will be placeholder roles from the structure parsing, we just simply replace them
+            DataPolicyMetadata dpm = convert(role, null);
+            vdb.addDataPolicy(dpm);
         }
     }
 
-    static PermissionMetaData convert(Permission from) {
+    public static PermissionMetaData convert(Permission from) {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
         pmd.setResourceType(DataPolicy.ResourceType.valueOf(from.getResourceType().name()));
@@ -334,35 +311,38 @@ public class DatabaseUtil {
         return pmd;
     }
 
-    static DataPolicyMetadata convert(Grant from, Role role) {
-        DataPolicyMetadata dpm = new DataPolicyMetadata();
-        dpm.setName(role.getName());
+    public static DataPolicyMetadata convert(Role role, DataPolicyMetadata dpm) {
+        if (dpm == null) {
+            dpm = new DataPolicyMetadata();
+            dpm.setName(role.getName());
 
-        if (from != null) {
-            for (Permission p : from.getPermissions()) {
-                if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
-                    dpm.setGrantAll(true);
-                    continue;
-                } else if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
-                    dpm.setAllowCreateTemporaryTables(true);
-                    continue;
-                }
+            dpm.setDescription(role.getAnnotation());
 
-                PermissionMetaData pmd = convert(p);
-                dpm.addPermission(pmd);
+            if (role.getMappedRoles() != null && !role.getMappedRoles().isEmpty()) {
+                dpm.setMappedRoleNames(role.getMappedRoles());
             }
-        }
-
-        dpm.setDescription(role.getAnnotation());
-
-        if (role.getMappedRoles() != null && !role.getMappedRoles().isEmpty()) {
-            dpm.setMappedRoleNames(role.getMappedRoles());
         }
 
         if (role.isAnyAuthenticated()) {
             dpm.setAnyAuthenticated(true);
         }
 
+        for (Permission grant:role.getGrants().values()) {
+            if (Boolean.TRUE.equals(grant.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
+                dpm.setGrantAll(true);
+                continue;
+            } else if (Boolean.TRUE.equals(grant.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
+                dpm.setAllowCreateTemporaryTables(true);
+                continue;
+            }
+
+            PermissionMetaData pmd = convert(grant);
+            dpm.addPermission(pmd);
+        }
+
+        dpm.addPolicies(role.getPolicies());
+
         return dpm;
     }
+
 }

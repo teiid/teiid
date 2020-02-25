@@ -34,10 +34,12 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Role;
 import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
@@ -132,7 +134,33 @@ public class CompositeVDB {
         metadata.setUseOutputNames(false);
         metadata.setWidenComparisonToString(WIDEN_COMPARISON_TO_STRING);
         metadata.setHiddenResolvable(HIDDEN_METADATA_RESOLVABLE);
+        processSourceRoles(metadata, compositeStore, vdb);
         return metadata;
+    }
+
+    /**
+     * source roles are stored on the metadatastore, which needs merged
+     * into the vdb - but we can't modify the existing roles
+     * as that would then show up in a vdb export
+     */
+    private static void processSourceRoles(TransformationMetadata metadata, MetadataStore store, VDBMetaData vdb) {
+        LinkedHashMap<String, DataPolicyMetadata> newPolicies = new LinkedHashMap<>();
+        for (DataPolicyMetadata policy : vdb.getDataPolicyMap().values()) {
+            policy = policy.clone();
+            newPolicies.put(policy.getName(), policy);
+        }
+        metadata.setPolicies(newPolicies);
+        if (store.getRoles() == null || store.getRoles().isEmpty() || vdb.getDataPolicyMap() == null) {
+            return;
+        }
+        for (Role role : store.getRoles()) {
+            DataPolicyMetadata dpm = newPolicies.get(role.getName());
+            if (dpm == null) {
+                LogManager.logDetail(LogConstants.CTX_RUNTIME, "Permission added to non-existant role", role.getName()); //$NON-NLS-1$
+                continue;
+            }
+            DatabaseUtil.convert(role, dpm);
+        }
     }
 
     public VDBMetaData getVDB() {
@@ -159,7 +187,6 @@ public class CompositeVDB {
         LinkedHashSet<VDBImport> seen = new LinkedHashSet<>(vdb.getVDBImports());
         Stack<VDBImport> toLoad = new Stack<VDBImport>();
         toLoad.addAll(seen);
-        int i = 1;
         while (!toLoad.isEmpty()) {
             VDBImport vdbImport = toLoad.pop();
             VDBKey key = new VDBKey(vdbImport.getName(), vdbImport.getVersion());

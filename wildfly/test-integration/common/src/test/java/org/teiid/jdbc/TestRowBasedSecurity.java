@@ -39,6 +39,7 @@ import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Policy.Operation;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
 import org.teiid.runtime.DoNothingSecurityHelper;
@@ -87,6 +88,7 @@ public class TestRowBasedSecurity {
                 t = metadataFactory.addTable("y");
                 col = metadataFactory.addColumn("col", TypeFacility.RUNTIME_NAMES.STRING, t);
                 metadataFactory.addColumn("col2", TypeFacility.RUNTIME_NAMES.STRING, t);
+                metadataFactory.addPolicy("z", "col policy", t, "col = 'e'", null, Operation.ALL);
                 metadataFactory.addPermission("z", t, null, null, null, null, null, null, "col = 'e'", null);
 
                 Table v = metadataFactory.addTable("v");

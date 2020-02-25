@@ -767,8 +767,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             } catch (XMLStreamException e) {
                 throw new VirtualDatabaseException(e);
             }
+            metadata.setXmlDeployment(true);
         }
-        metadata.setXmlDeployment(true);
         deployVDB(metadata, null);
     }
 

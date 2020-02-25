@@ -38,8 +38,8 @@ import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.Determinism;
-import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.Permission.Privilege;
+import org.teiid.metadata.Policy.Operation;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -202,12 +202,26 @@ public class DDLStringVisitor {
         }
 
         if (!database.getRoles().isEmpty()){
+            boolean hasPolicies = false;
             append(NEWLINE);
             append("--############ Grants ############");
             append(NEWLINE);
-            for (Grant grant:database.getGrants()) {
-                visit(grant);
+            for (Role role:database.getRoles()) {
+                visitGrants(role);
                 append(NEWLINE);
+                if (!role.getPolicies().isEmpty()) {
+                    hasPolicies = true;
+                }
+            }
+
+            if (hasPolicies) {
+                append(NEWLINE);
+                append("--############ Policies ############");
+                append(NEWLINE);
+                for (Role role:database.getRoles()) {
+                    visitPolicies(role);
+                    append(NEWLINE);
+                }
             }
         }
 
@@ -248,28 +262,63 @@ public class DDLStringVisitor {
         append(SEMICOLON);
     }
 
-    private void visit(Grant grant) {
-
-        for (Permission permission : grant.getPermissions()) {
-            if (permission.getResourceType() == ResourceType.DATABASE && permission.getResourceName() == null) {
-                for (Privilege p : permission.getPrivileges()) {
-                    appendGrant(grant, permission, EnumSet.of(p), false);
+    private void visitPolicies(Role r) {
+        for (Map<String, Policy> policies : r.getPolicies().values()) {
+            for (Policy p : policies.values()) {
+                append(CREATE).append(SPACE).append(POLICY).append(SPACE);
+                append(SQLStringVisitor.escapeSinglePart(p.getName())).append(SPACE);
+                append(ON).append(SPACE);
+                if (p.getResourceType() == ResourceType.PROCEDURE) {
+                    append(PROCEDURE).append(SPACE);
+                    append(new GroupSymbol(p.getResourceName())).append(SPACE);
+                    if (p.getOperations().contains(Operation.ALL)) {
+                        append(FOR).append(SPACE).append(ALL);
+                    }
+                } else {
+                    append(new GroupSymbol(p.getResourceName())).append(SPACE);
+                    if (p.getOperations().contains(Operation.ALL)) {
+                        append(FOR).append(SPACE).append(ALL).append(SPACE);
+                    } else if (!p.getOperations().isEmpty()) {
+                        append(FOR).append(SPACE);
+                        boolean first = true;
+                        for (Operation oper : p.getOperations()) {
+                            if (!first) {
+                                append(COMMA).append(SPACE);
+                            }
+                            append(oper.name());
+                            first = false;
+                        }
+                        append(SPACE);
+                    }
                 }
-                for (Privilege p : permission.getRevokePrivileges()) {
-                    appendGrant(grant, permission, EnumSet.of(p), true);
-                }
-                continue;
-            }
-            if (!permission.getPrivileges().isEmpty() || permission.getMask() != null || permission.getCondition() != null) {
-                appendGrant(grant, permission, permission.getPrivileges(), false);
-            }
-            if (!permission.getRevokePrivileges().isEmpty()) {
-                appendGrant(grant, permission, permission.getRevokePrivileges(), true);
+                append(TO).append(SPACE).append(r.getName()).append(SPACE);
+                append(USING).append(SPACE).append(LPAREN).append(p.getCondition()).append(RPAREN);
+                append(SEMICOLON).append(NEWLINE);
             }
         }
     }
 
-    private void appendGrant(Grant grant, Permission permission, EnumSet<Privilege> privileges, boolean revoke) {
+    private void visitGrants(Role r) {
+        for (Permission permission : r.getGrants().values()) {
+            if (permission.getResourceType() == ResourceType.DATABASE && permission.getResourceName() == null) {
+                for (Privilege p : permission.getPrivileges()) {
+                    appendGrant(r, permission, EnumSet.of(p), false);
+                }
+                for (Privilege p : permission.getRevokePrivileges()) {
+                    appendGrant(r, permission, EnumSet.of(p), true);
+                }
+                continue;
+            }
+            if (!permission.getPrivileges().isEmpty() || permission.getMask() != null || permission.getCondition() != null) {
+                appendGrant(r, permission, permission.getPrivileges(), false);
+            }
+            if (!permission.getRevokePrivileges().isEmpty()) {
+                appendGrant(r, permission, permission.getRevokePrivileges(), true);
+            }
+        }
+    }
+
+    private void appendGrant(Role role, Permission permission, EnumSet<Privilege> privileges, boolean revoke) {
         append(revoke?REVOKE:GRANT);
         boolean first = true;
         for (Privilege allowance:privileges) {
@@ -311,7 +360,7 @@ public class DDLStringVisitor {
             }
         }
 
-        append(SPACE).append(revoke?FROM:TO).append(SPACE).append(grant.getRole());
+        append(SPACE).append(revoke?FROM:TO).append(SPACE).append(role.getName());
         append(SEMICOLON).append(NEWLINE);
     }
 
