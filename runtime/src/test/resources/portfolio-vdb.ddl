@@ -104,8 +104,6 @@ SET SCHEMA Stocks;
          
 
 --############ Grants ############
-REVOKE SELECT ON SCHEMA Accounts FROM Prices;
-
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK 'null' TO ReadOnly;
 GRANT "Accounts.Customer" CONDITION 'state <> ''New York''' TO ReadOnly;
@@ -113,6 +111,8 @@ GRANT ON COLUMN "Accounts.Customer.SSN" MASK 'null' TO ReadOnly;
 GRANT SELECT ON SCHEMA MarketData TO ReadOnly;
 GRANT SELECT ON SCHEMA Stocks TO ReadOnly;
 GRANT ON COLUMN "Stocks.StockPrices.Price" MASK ORDER 1 'CASE WHEN hasRole(''Prices'') = true THEN Price END' TO ReadOnly;
+
+REVOKE SELECT ON SCHEMA Accounts FROM Prices;
 
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA Accounts TO ReadWrite;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK ORDER 1 'SSN' TO ReadWrite;

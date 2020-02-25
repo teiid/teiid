@@ -29,6 +29,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.metadata.Policy;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -139,7 +140,7 @@ public class RuleApplySecurity implements OptimizerRule {
                 }
 
                 //logically filters are applied below masking
-                Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, context, false);
+                Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, context, false, Policy.Operation.SELECT);
                 if (filter == null) {
                     continue;
                 }

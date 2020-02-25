@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.metadata.Policy;
 
 
 public class DataPolicyMetadata implements DataPolicy, Serializable {
@@ -106,6 +108,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
     private Set<String> schemas;
 
+    private Map<org.teiid.metadata.Role.ResourceKey, Map<String, Policy>> policies;
+
     @Override
     public String getName() {
         return name;
@@ -144,13 +148,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         return hasRowPermissions.contains(resourceName);
     }
 
-    public void setPermissions(List<DataPermission> permissions) {
-        this.permissions.clear();
-        for (DataPermission permission:permissions) {
-            addPermissionMetadata((PermissionMetaData)permission);
-        }
-    }
-
     public void addPermission(PermissionMetaData... perms) {
         for (PermissionMetaData permission:perms) {
             addPermissionMetadata(permission);
@@ -159,10 +156,11 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
     private void addPermissionMetadata(PermissionMetaData permission) {
         PermissionMetaData previous = null;
+        ResourceKey key = ResourceKey.of(permission.getResourceName(), permission.getResourceType());
         if (permission.getAllowLanguage() != null) {
             previous = this.languagePermissions.put(permission.getResourceName(), permission);
         } else {
-            previous = permissions.put(ResourceKey.of(permission.getResourceName(), permission.getResourceType()), permission);
+            previous = permissions.put(key, permission);
         }
         if (permission.getCondition() != null) {
             this.hasRowPermissions.add(permission.getResourceName());
@@ -364,6 +362,15 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
             return sb.toString();
         }
 
+        public PermissionMetaData clone() {
+            PermissionMetaData clone = new PermissionMetaData();
+            clone.bits = bits;
+            clone.bitsSet = bitsSet;
+            clone.resourceName = resourceName;
+            clone.resourceType = resourceType;
+            return clone;
+        }
+
         public Boolean allows(PermissionType type) {
             switch (type) {
             case ALTER:
@@ -382,6 +389,10 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
                 return getAllowDelete();
             case LANGUAGE:
                 return getAllowLanguage();
+            case DROP:
+                //not implemented
+            default:
+                break;
             }
             throw new AssertionError();
         }
@@ -527,6 +538,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
             }
             this.rowSecurityState.constraint = constraint;
         }
+
     }
 
     public Boolean isAllowCreateTemporaryTables() {
@@ -566,7 +578,14 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         clone.mappedRoleNames = this.mappedRoleNames; //direct reference to preserve updates
         clone.name = this.name;
         clone.grantAll = this.grantAll;
-        clone.permissions = new TreeMap<>(this.permissions);
+        clone.permissions = new TreeMap<>();
+        //create a full copy to prevent
+        for (PermissionMetaData perm : permissions.values()) {
+            clone.addPermissionMetadata(perm.clone());
+        }
+        if (policies != null) {
+            clone.policies = new LinkedHashMap<org.teiid.metadata.Role.ResourceKey, Map<String, Policy>>(policies);
+        }
         return clone;
     }
 
@@ -576,6 +595,26 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
     public void setSchemas(Set<String> schemas) {
         this.schemas = schemas;
+    }
+
+    public void addPolicies(
+            Map<org.teiid.metadata.Role.ResourceKey, Map<String, Policy>> policies) {
+        policies.keySet().stream().forEach((k)->hasRowPermissions.add(k.getName()));
+        if (this.policies == null) {
+            this.policies = new LinkedHashMap<>();
+        }
+        this.policies.putAll(policies);
+    }
+
+    public Map<org.teiid.metadata.Role.ResourceKey, Map<String, Policy>> getPolicies() {
+        return policies;
+    }
+
+    public Map<String, Policy> getPolicies(org.teiid.metadata.Database.ResourceType type, String name) {
+        if (this.policies == null) {
+            return null;
+        }
+        return policies.get(org.teiid.metadata.Role.ResourceKey.of(name, type));
     }
 
 }

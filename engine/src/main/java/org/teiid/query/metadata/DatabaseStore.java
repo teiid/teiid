@@ -29,7 +29,7 @@ import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.Permission.Privilege;
 import org.teiid.metadata.Table.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.parser.OptionsUtil;
@@ -93,7 +93,7 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.DATABASE, db);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.DATABASE, db);
 
         Database database = this.databases.get(vdbKey(db));
         if ( database != null) {
@@ -201,7 +201,7 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.SCHEMA, schema);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.SCHEMA, schema);
 
         verifyDatabaseExists();
         setUUID(this.currentDatabase.getName(), this.currentDatabase.getVersion(), schema);
@@ -228,7 +228,7 @@ public abstract class DatabaseStore {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31273,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31273, s.getName()));
         }
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.SCHEMA, s);
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.SCHEMA, s);
 
         this.currentDatabase.removeSchema(schemaName);
 
@@ -301,7 +301,7 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.DATAWRAPPER, wrapper);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.DATAWRAPPER, wrapper);
 
         verifyDatabaseExists();
         this.currentDatabase.addDataWrapper(wrapper);
@@ -314,7 +314,7 @@ public abstract class DatabaseStore {
         verifyDatabaseExists();
         verifyDataWrapperExists(wrapperName);
 
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.DATAWRAPPER, this.currentDatabase.getDataWrapper(wrapperName));
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.DATAWRAPPER, this.currentDatabase.getDataWrapper(wrapperName));
 
         for (Server s:this.currentDatabase.getServers()) {
             if (s.getDataWrapper().equalsIgnoreCase(wrapperName)) {
@@ -333,7 +333,7 @@ public abstract class DatabaseStore {
         verifyDatabaseExists();
         verifyDataWrapperExists(server.getDataWrapper());
 
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.SERVER, server);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.SERVER, server);
 
         this.currentDatabase.addServer(server);
     }
@@ -354,7 +354,7 @@ public abstract class DatabaseStore {
         }
         verifyDatabaseExists();
         verifyServerExists(serverName);
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.SERVER, this.currentDatabase.getServer(serverName));
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.SERVER, this.currentDatabase.getServer(serverName));
 
         for (Schema s : this.currentDatabase.getSchemas()) {
             for (Server server : s.getServers()) {
@@ -396,7 +396,7 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.TABLE, table);
 
         Schema s = getCurrentSchema();
         setUUID(s.getUUID(), table);
@@ -418,7 +418,7 @@ public abstract class DatabaseStore {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31238,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31238, table.getFullName()));
         }
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         table.setSelectTransformation(definition);
     }
 
@@ -427,7 +427,7 @@ public abstract class DatabaseStore {
             return;
         }
         Table table = (Table)getSchemaRecord(name, type);
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         Schema s = table.getParent();
         if (s.getTable(newName) != null) {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, newName));
@@ -442,7 +442,7 @@ public abstract class DatabaseStore {
             return;
         }
         Table table = (Table)getSchemaRecord(objectName, type);
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
 
         Column column = table.getColumnByName(childName);
         if (column == null) {
@@ -457,7 +457,7 @@ public abstract class DatabaseStore {
             return;
         }
         Table table = (Table)getSchemaRecord(tableName, ResourceType.TABLE);
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.TABLE, table);
 
         if (!(globalTemp ^ (table.getTableType() != Type.TemporaryTable))) {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31273,
@@ -476,7 +476,7 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.PROCEDURE, procedure);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.PROCEDURE, procedure);
 
         Schema s = getCurrentSchema();
         setUUID(s.getUUID(), procedure);
@@ -496,7 +496,7 @@ public abstract class DatabaseStore {
         }
         Procedure procedure = (Procedure)getSchemaRecord(procedureName, ResourceType.PROCEDURE);
 
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, procedure);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, procedure);
 
         if (!procedure.isVirtual()) {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31238,
@@ -517,7 +517,7 @@ public abstract class DatabaseStore {
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31273, procedure.getFullName()));
         }
 
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.PROCEDURE,
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.PROCEDURE,
                 procedure);
 
         Schema s = procedure.getParent();
@@ -528,7 +528,7 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.FUNCTION, function);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.FUNCTION, function);
 
         Schema s = getCurrentSchema();
 
@@ -546,7 +546,7 @@ public abstract class DatabaseStore {
             return;
         }
         FunctionMethod fm = verifyFunctionExists(functionName);
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.FUNCTION, fm);
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.FUNCTION, fm);
 
         Schema s = getCurrentSchema();
         s.removeFunctions(functionName);
@@ -561,7 +561,7 @@ public abstract class DatabaseStore {
         if (table == null) {
             throw new MetadataException(QueryPlugin.Util.getString("SQLParser.group_doesnot_exist", tableName)); //$NON-NLS-1$
         }
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         if (!table.isVirtual()) {
             if (!isAfter) {
                 throw new MetadataException(QueryPlugin.Util.getString("SQLParser.not_view", tableName)); //$NON-NLS-1$
@@ -603,7 +603,7 @@ public abstract class DatabaseStore {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31244,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31244, tableName));
         }
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
 
         switch(event) {
         case DELETE:
@@ -769,12 +769,7 @@ public abstract class DatabaseStore {
 
     protected Role verifyRoleExists(String roleName) {
         verifyDatabaseExists();
-        Role role = this.currentDatabase.getRole(roleName);
-        if (role == null) {
-            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31222,
-                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31222, roleName, this.currentDatabase.getName()));
-        }
-        return role;
+        return this.currentDatabase.findRole(roleName);
     }
 
     public void roleCreated(Role role) {
@@ -782,7 +777,7 @@ public abstract class DatabaseStore {
             return;
         }
         verifyDatabaseExists();
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.ROLE, role);
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.ROLE, role);
 
         this.currentDatabase.addRole(role);
     }
@@ -792,7 +787,7 @@ public abstract class DatabaseStore {
             return;
         }
         Role role = verifyRoleExists(roleName);
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.ROLE, role);
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.ROLE, role);
 
         this.currentDatabase.removeRole(roleName);
     }
@@ -803,13 +798,7 @@ public abstract class DatabaseStore {
         }
         verifyDatabaseExists();
         verifyRoleExists(grant.getRole());
-        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.GRANT, grant);
-
-        for (Grant.Permission p:grant.getPermissions()) {
-            if (p.getResourceType() == ResourceType.LANGUAGE) {
-                continue;
-            }
-        }
+        assertGrant(Permission.Privilege.CREATE, Database.ResourceType.GRANT, grant);
 
         this.currentDatabase.addGrant(grant);
     }
@@ -820,15 +809,31 @@ public abstract class DatabaseStore {
         }
         verifyDatabaseExists();
         verifyRoleExists(grant.getRole());
-        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.GRANT, grant);
-
-        for (Grant.Permission p:grant.getPermissions()) {
-            if (p.getResourceType() == ResourceType.LANGUAGE) {
-                continue;
-            }
-        }
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.GRANT, grant);
 
         this.currentDatabase.revokeGrant(grant);
+    }
+
+    public void policyCreated(String roleName, Policy policy) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        verifyDatabaseExists();
+        verifyRoleExists(roleName);
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.POLICY, policy);
+
+        this.currentDatabase.addPolicy(roleName, policy);
+    }
+
+    public void policyDropped(String roleName, Policy policy) {
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        verifyDatabaseExists();
+        verifyRoleExists(roleName);
+        assertGrant(Permission.Privilege.DROP, Database.ResourceType.POLICY, policy);
+
+        this.currentDatabase.removePolicy(roleName, policy);
     }
 
     public void renameBaseColumn(String objectName, Database.ResourceType type, String oldName, String newName) {
@@ -840,12 +845,12 @@ public abstract class DatabaseStore {
         switch (type) {
         case TABLE:
             Table table = (Table)getSchemaRecord(objectName, type);
-            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+            assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
             factory.renameColumn(oldName, newName, table);
             break;
         case PROCEDURE:
             Procedure proc = (Procedure)getSchemaRecord(objectName, type);
-            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, proc);
+            assertGrant(Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, proc);
             factory.renameParameter(oldName, newName, proc);
             break;
         default:
@@ -858,14 +863,14 @@ public abstract class DatabaseStore {
         BaseColumn column = null;
         if (type == Database.ResourceType.TABLE){
             Table table = (Table)getSchemaRecord(objectName, type);
-            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+            assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
             column = table.getColumnByName(childName);
             if (column == null){
                 throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_table_column_found", childName, table.getName())); //$NON-NLS-1$
             }
         } else {
             Procedure proc = (Procedure)getSchemaRecord(objectName, type);
-            assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, proc);
+            assertGrant(Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, proc);
             column = proc.getParameterByName(childName);
             if (column == null){
                 throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_proc_column_found", childName, proc.getName())); //$NON-NLS-1$
@@ -961,7 +966,7 @@ public abstract class DatabaseStore {
         }
 
         Table table = (Table)getSchemaRecord(objectName, type);
-        assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
+        assertGrant(Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         return table;
     }
 

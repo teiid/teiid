@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -33,8 +32,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.CompositeMetadataStore;
@@ -839,7 +837,7 @@ public class TestDDLParser {
 
                 CompositeMetadataStore store = new CompositeMetadataStore(database.getMetadataStore());
                 //grants are already stored on the VDBMetaData
-                store.getGrants().clear();
+                store.getRoles().clear();
                 return new TransformationMetadata(DatabaseUtil.convert(database), store, null,
                         null, null).getDesignTimeMetadata();
             }
@@ -1263,6 +1261,137 @@ public class TestDDLParser {
     }
 
     @Test
+    public void testPolicy() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"
+                + "CREATE SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
+                + "CREATE POLICY p ON test.G1 TO superuser USING (e1 =1);"
+                + "CREATE POLICY p1 ON test.G1 FOR SELECT TO superuser USING (true);";
+
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(0, r.getGrants().size());
+        assertEquals(1, r.getPolicies().size());
+        assertEquals("e1 = 1", r.getPolicies().values().iterator().next().get("p").getCondition());
+
+        assertEquals("\n" +
+                "/*\n" +
+                "###########################################\n" +
+                "# START DATABASE FOO\n" +
+                "###########################################\n" +
+                "*/\n" +
+                "CREATE DATABASE FOO VERSION '1';\n" +
+                "USE DATABASE FOO VERSION '1';\n" +
+                "\n" +
+                "--############ Servers ############\n" +
+                "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');\n" +
+                "\n" +
+                "\n" +
+                "--############ Schemas ############\n" +
+                "CREATE SCHEMA test SERVER pgsql;\n" +
+                "\n" +
+                "\n" +
+                "--############ Roles ############\n" +
+                "CREATE ROLE superuser WITH FOREIGN ROLE x y;\n" +
+                "\n" +
+                "\n" +
+                "--############ Schema:test ############\n" +
+                "SET SCHEMA test;\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE G1 (\n" +
+                "\te1 integer,\n" +
+                "\te2 string,\n" +
+                "\te3 date\n" +
+                ");\n" +
+                "--############ Grants ############\n" +
+                "\n" +
+                "\n" +
+                "--############ Policies ############\n" +
+                "CREATE POLICY p ON test.G1 TO superuser USING (e1 = 1);\n" +
+                "CREATE POLICY p1 ON test.G1 FOR SELECT TO superuser USING (TRUE);\n" +
+                "\n" +
+                "\n" +
+                "/*\n" +
+                "###########################################\n" +
+                "# END DATABASE FOO\n" +
+                "###########################################\n" +
+                "*/\n" +
+                "\n" +
+                "", DDLStringVisitor.getDDLString(db));
+    }
+
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testDuplicatePolicy() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"
+                + "CREATE SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
+                + "CREATE POLICY p ON test.G1 TO superuser USING (e1 =1);"
+                + "CREATE POLICY p ON test.G1 FOR SELECT TO superuser USING (true);";
+
+        helpParse(ddl);
+    }
+
+    @Test
+    public void testDropPolicy() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"
+                + "CREATE SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
+                + "CREATE POLICY p ON test.G1 TO superuser USING (e1 =1);"
+                + "DROP POLICY p ON test.G1 TO superuser";
+
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(0, r.getGrants().size());
+        assertEquals(1, r.getPolicies().size());
+        assertEquals(0, r.getPolicies().values().iterator().next().size());
+    }
+
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testDropMissingPolicy() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"
+                + "CREATE SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
+                + "DROP POLICY p1 ON test.G1 TO superuser";
+
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(0, r.getGrants().size());
+        assertEquals(1, r.getPolicies().size());
+        assertEquals("e1 = 1", r.getPolicies().values().iterator().next().get("p").getCondition());
+    }
+
+    @Test
     public void testGrant() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "USE DATABASE FOO ;"
@@ -1279,11 +1408,11 @@ public class TestDDLParser {
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
-        Collection<Grant> grants = db.getGrants();
-        assertEquals(1, grants.size());
-        Grant g = grants.iterator().next();
-        assertEquals(1, g.getPermissions().size());
-        Permission p = g.getPermissions().iterator().next();
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(1, r.getGrants().size());
+        Permission p = r.getGrants().values().iterator().next();
         assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertTrue(p.hasPrivilege(Privilege.INSERT));
         assertTrue(p.hasPrivilege(Privilege.DELETE));
@@ -1307,11 +1436,11 @@ public class TestDDLParser {
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
-        Collection<Grant> grants = db.getGrants();
-        assertEquals(1, grants.size());
-        Grant g = grants.iterator().next();
-        assertEquals(1, g.getPermissions().size());
-        Permission p = g.getPermissions().iterator().next();
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(1, r.getGrants().size());
+        Permission p = r.getGrants().values().iterator().next();
         assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
     }
 
@@ -1332,24 +1461,29 @@ public class TestDDLParser {
                 + "GRANT SELECT ON TABLE test.G1 CONDITION NOT CONSTRAINT 'foo<bar' TO someone;";
 
         Database db = helpParse(ddl);
-        Role role = db.getRole("superuser");
+        Role role = db.getRole("otheruser");
         assertNotNull(role);
-        Collection<Grant> grants = db.getGrants();
-        assertEquals(3, grants.size());
-        Iterator<Grant> iterator = grants.iterator();
-        Grant g = iterator.next();
-        assertEquals(1, g.getPermissions().size());
-        Permission p = g.getPermissions().iterator().next();
+        Collection<Permission> grants = role.getGrants().values();
+        assertEquals(1, grants.size());
+        Permission p = grants.iterator().next();
         assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertEquals("foo>bar", p.getCondition());
         assertNull(p.isConditionAConstraint());
-        g = iterator.next();
-        p = g.getPermissions().iterator().next();
+
+        role = db.getRole("someone");
+        assertNotNull(role);
+        grants = role.getGrants().values();
+        assertEquals(1, grants.size());
+        p = grants.iterator().next();
         assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertEquals("foo<bar", p.getCondition());
         assertFalse(p.isConditionAConstraint());
-        g = iterator.next();
-        p = g.getPermissions().iterator().next();
+
+        role = db.getRole("superuser");
+        assertNotNull(role);
+        grants = role.getGrants().values();
+        assertEquals(1, grants.size());
+        p = grants.iterator().next();
         assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertEquals("foo=bar", p.getCondition());
         assertTrue(p.isConditionAConstraint());
@@ -1373,11 +1507,11 @@ public class TestDDLParser {
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
-        Collection<Grant> grants = db.getGrants();
-        assertEquals(1, grants.size());
-        Grant g = grants.iterator().next();
-        assertEquals(1, g.getPermissions().size());
-        Permission p = g.getPermissions().iterator().next();
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(1, r.getGrants().size());
+        Permission p = r.getGrants().values().iterator().next();
         assertNull(p.hasPrivilege(Privilege.SELECT));
         assertTrue(p.hasPrivilege(Privilege.INSERT));
         assertTrue(p.hasPrivilege(Privilege.DELETE));
@@ -1403,9 +1537,10 @@ public class TestDDLParser {
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
-        Collection<Grant> grants = db.getGrants();
-        //revoke all privileges will only have an already granted all privileges
-        assertEquals(1, grants.size());
+        Collection<Role> roles = db.getRoles();
+        assertEquals(1, roles.size());
+        Role r = roles.iterator().next();
+        assertEquals(3, r.getGrants().size());
     }
 
     @Test

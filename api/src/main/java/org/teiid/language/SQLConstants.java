@@ -196,6 +196,9 @@ public class SQLConstants {
 
         static final String EPOCH = "EPOCH"; //$NON-NLS-1$
         static final String QUARTER = "QUARTER"; //$NON-NLS-1$
+
+        //policy
+        static final String POLICY = "POLICY"; //$NON-NLS-1$
     }
 
     public interface Reserved {

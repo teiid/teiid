@@ -31,7 +31,6 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
 import org.teiid.adminapi.impl.DataPolicyMetadata;
-import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -46,12 +45,9 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
@@ -167,11 +163,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             if (this.allowedLanguages == null) {
                 this.allowedLanguages = Collections.emptySet();
             }
-            for (DataPolicyMetadata policy : vdbMetadata.getDataPolicyMap().values()) {
-                policy = policy.clone();
-                policies.put(policy.getName(), policy);
-            }
-            processGrants(store, policies);
         } else {
             this.importedModels = Collections.emptySet();
         }
@@ -188,25 +179,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             this.functionLibrary = new FunctionLibrary(systemFunctions);
         } else {
             this.functionLibrary = new FunctionLibrary(systemFunctions, functionTrees.toArray(new FunctionTree[functionTrees.size()]));
-        }
-    }
-
-    private void processGrants(MetadataStore store, Map<String, DataPolicyMetadata> policies) {
-        if (store.getGrants() == null || store.getGrants().isEmpty() || policies == null) {
-            return;
-        }
-        for (Grant grant : store.getGrants()) {
-            DataPolicyMetadata dpm = policies.get(grant.getRole());
-            if (dpm != null) {
-                for (Permission p:grant.getPermissions()) {
-                    PermissionMetaData pmd = DatabaseUtil.convert(p);
-                    if (pmd != null) {
-                        dpm.addPermission(pmd);
-                    }
-                }
-            } else {
-                LogManager.logDetail(LogConstants.CTX_RUNTIME, "Permission added to non-existant role", grant.getRole()); //$NON-NLS-1$
-            }
         }
     }
 
@@ -1095,6 +1067,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     .collect(Collectors.toList());
         }
         return this.getMetadataStore().getSchemaList();
+    }
+
+    public void setPolicies(Map<String, DataPolicyMetadata> policies) {
+        this.policies = policies;
     }
 
     public Map<String, DataPolicyMetadata> getPolicies() {

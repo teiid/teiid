@@ -29,7 +29,8 @@ import org.teiid.metadata.BaseColumn.NullType;
 
 public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
-    public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE};
+    public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER,
+        DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE, POLICY};
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
     protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);
@@ -187,40 +188,47 @@ public class Database extends AbstractMetadataRecord {
         if ( r != null) {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60028,
                     DataPlugin.Util.gs(DataPlugin.Event.TEIID60028, role.getName()));
-        } else {
-            this.store.addRole(role);
         }
+        this.store.addRole(role);
     }
 
     public void removeRole(String roleName) {
+        Role r = findRole(roleName);
+        // make sure it is not used in any grants
+        if (!r.getGrants().isEmpty() || !r.getPolicies().isEmpty()) {
+            throw new MetadataException(DataPlugin.Event.TEIID60030,
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60030, roleName));
+        }
+        this.store.removeRole(roleName);
+    }
+
+    public Role findRole(String roleName) {
         Role r = this.store.getRole(roleName);
         if (r == null) {
             throw new MetadataException(DataPlugin.Event.TEIID60029,
                     DataPlugin.Util.gs(DataPlugin.Event.TEIID60029, roleName));
-        } else {
-            // make sure it is not used in any grants
-            for (Grant g:this.store.getGrants()) {
-                if (g.getRole().equalsIgnoreCase(roleName)) {
-                    throw new MetadataException(DataPlugin.Event.TEIID60030,
-                            DataPlugin.Util.gs(DataPlugin.Event.TEIID60030, roleName,
-                                    g.getPermissions().iterator().next().getResourceName(),
-                                    g.getPermissions().iterator().next().getResourceType().name()));
-                }
-            }
-            this.store.removeRole(roleName);
         }
+        return r;
     }
 
     public void addGrant(Grant grant) {
-        this.store.addGrant(grant);
+        Role r = findRole(grant.getRole());
+        r.addGrant(grant.getPermission());
     }
 
     public void revokeGrant(Grant grant) {
-        this.store.removeGrant(grant);
+        Role r = findRole(grant.getRole());
+        r.removeGrant(grant.getPermission());
     }
 
-    public Collection<Grant> getGrants(){
-        return this.store.getGrants();
+    public void addPolicy(String roleName, Policy policy) {
+        Role r = findRole(roleName);
+        r.addPolicy(policy);
+    }
+
+    public void removePolicy(String roleName, Policy policy) {
+        Role r = findRole(roleName);
+        r.removePolicy(policy);
     }
 
     /**

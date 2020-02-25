@@ -480,6 +480,7 @@ public abstract class AbstractVDBDeployer {
             } finally {
                 deploymentStore.stopEditing();
             }
+
             DatabaseUtil.copyDatabaseGrantsAndRoles(database, vdb);
         }
     }

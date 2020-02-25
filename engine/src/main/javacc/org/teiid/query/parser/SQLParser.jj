@@ -538,6 +538,7 @@ TOKEN : /* NonReserved words */
 |   <FORMAT: "format">
 |   <YAML: "yaml">
 |   <HANDLER: "handler">
+|   <POLICY: "policy">
 |   <EPOCH: "epoch">
 |   <QUARTER: "quarter">
 }
@@ -660,7 +661,7 @@ Token basicNonReserved() :
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
      |<DOMAIN>|<USAGE>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>
-     |<EXPLAIN>|<ANALYZE>|<TEXT>|<FORMAT>|<YAML>|<EPOCH>|<QUARTER>)
+     |<EXPLAIN>|<ANALYZE>|<TEXT>|<FORMAT>|<YAML>|<EPOCH>|<QUARTER>|<POLICY>)
     {
         return getToken(0);
     }   
@@ -5332,8 +5333,10 @@ void ddlStmt(DatabaseStore dbStore) :
 	 LOOKAHEAD(3)  createServer(dbStore) |
 	 LOOKAHEAD(3)  createRole(dbStore) |
 	 LOOKAHEAD(3)  dropRole(dbStore) |
-	 LOOKAHEAD(2)  grantOption(dbStore) |
-	 LOOKAHEAD(2)  revokeGrantOption(dbStore) | 
+	 LOOKAHEAD(2)  grant(dbStore) |
+	 LOOKAHEAD(2)  revokeGrant(dbStore) | 
+	 LOOKAHEAD(2)  createPolicy(dbStore, ParseInfo.DEFAULT_INSTANCE) |
+	 LOOKAHEAD(2)  dropPolicy(dbStore) |
 	 LOOKAHEAD(3)  dropServer(dbStore) |
 	 LOOKAHEAD(3)  dropTableView(dbStore) |
 	 LOOKAHEAD(2)  importSchema(dbStore) |
@@ -5651,11 +5654,86 @@ void dropRole(DatabaseStore dbStore) :
 }
 
 /*
-name=Create GRANT
+name=CREATE POLICY
+description=CREATE row level policy
+example=[source,sql]\n----\nCREATE POLICY pname ON tbl FOR SELECT,INSERT TO role USING col = user();\n----\n
+*/
+void createPolicy(DatabaseStore dbStore, ParseInfo info) :
+{
+    Database.ResourceType on= Database.ResourceType.TABLE;
+    Policy policy = new Policy();
+    String resource = null;
+    String policyName = null;
+    Expression condition = null;
+    String to = null;
+    Token operation = null;
+}
+{
+    <CREATE> <POLICY>
+    policyName = id(Boolean.TRUE)
+    <ON> ( 
+      (resource = id(null)
+       [ <FOR> (<ALL> 
+                | ((operation = <SELECT> | operation = <INSERT> | operation = <UPDATE> | operation = <DELETE>) 
+                   {policy.getOperations().add(Policy.Operation.valueOf(operation.image.toUpperCase()));} 
+                   (<COMMA> 
+                    (operation = <SELECT> | operation = <INSERT> | operation = <UPDATE> | operation = <DELETE>)
+                    {policy.getOperations().add(Policy.Operation.valueOf(operation.image.toUpperCase()));} )*)
+               ) 
+       ]
+      )
+      |
+      (<PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;}
+       [ <FOR> ( token = <ALL> ) {policy.getOperations().add(Policy.Operation.ALL);}] 
+      )
+    ) 
+    <TO>( to = id(null) )
+    <USING> <LPAREN> condition = booleanPrimary(info) <RPAREN>
+    {
+        policy.setName(policyName);
+        policy.setResourceName(resource);
+        policy.setResourceType(on);
+        policy.setCondition(condition.toString());
+        dbStore.policyCreated(to, policy);
+    } 
+}
+
+/*
+name=DROP POLICY
+description=DROP row level policy
+example=[source,sql]\n----\DROP POLICY pname ON tbl TO role\n----\n
+*/
+void dropPolicy(DatabaseStore dbStore) :
+{
+    Policy policy = new Policy();
+    Database.ResourceType on= Database.ResourceType.TABLE;
+    String resource = null;
+    String policyName = null;
+    String to = null;
+}
+{
+    <DROP> <POLICY>
+    policyName = id(Boolean.TRUE)
+    <ON> ( 
+      resource = id(null)
+      |
+      (<PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;})
+    ) 
+    <TO>( to = id(null) )
+    {
+      policy.setName(policyName);
+      policy.setResourceName(resource);
+      policy.setResourceType(on);
+      dbStore.policyDropped(to, policy);
+    }
+}
+
+/*
+name=GRANT
 description=Defines GRANT for a role
 example=[source,sql]\n----\nGRANT SELECT ON TABLE x.y TO role\n----\n
 */
-void grantOption(DatabaseStore dbStore) :
+void grant(DatabaseStore dbStore) :
 {
     Database.ResourceType on= null;
     Grant grant = new Grant();
@@ -5668,8 +5746,8 @@ void grantOption(DatabaseStore dbStore) :
         isConstraint = false;
     }
     String to = null;
-    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
-    Grant.Permission permission = new Grant.Permission();
+    ArrayList<Permission.Privilege> privileges = new ArrayList<Permission.Privilege>();
+    Permission permission = new Permission();
 }
 {
     <GRANT> 
@@ -5687,11 +5765,11 @@ void grantOption(DatabaseStore dbStore) :
        )
       ) 
       |
-      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      (<ALL> <PRIVILEGES> {privileges.add(Permission.Privilege.ALL_PRIVILEGES);})
       |
-      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      (<TEMPORARY> <TABLE> {privileges.add(Permission.Privilege.TEMPORARY_TABLE);}) 
       |
-      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+      (<USAGE> {privileges.add(Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
     )
     <TO>( to = id(null)
         {
@@ -5711,7 +5789,7 @@ void grantOption(DatabaseStore dbStore) :
                 permission.setCondition(condition, isConstraint);               
             }
             grant.setRole(to);
-            grant.addPermission(permission);
+            grant.setPermission(permission);
             dbStore.grantCreated(grant);
         } 
     )
@@ -5722,7 +5800,7 @@ name=Revoke GRANT
 description=Revokes GRANT for a role
 example=[source,sql]\n----\nREVOKE SELECT ON TABLE x.y TO role\n----\n
 */
-void revokeGrantOption(DatabaseStore dbStore) :
+void revokeGrant(DatabaseStore dbStore) :
 {
     Database.ResourceType on= null;
     Grant grant = new Grant();
@@ -5730,8 +5808,8 @@ void revokeGrantOption(DatabaseStore dbStore) :
     String mask = null;
     String condition = null;
     String to = null;
-    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
-    Grant.Permission permission = new Grant.Permission();
+    ArrayList<Permission.Privilege> privileges = new ArrayList<Permission.Privilege>();
+    Permission permission = new Permission();
 }
 {
     <REVOKE> 
@@ -5749,11 +5827,11 @@ void revokeGrantOption(DatabaseStore dbStore) :
        )
       ) 
       |
-      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      (<ALL> <PRIVILEGES> {privileges.add(Permission.Privilege.ALL_PRIVILEGES);})
       |
-      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      (<TEMPORARY> <TABLE> {privileges.add(Permission.Privilege.TEMPORARY_TABLE);}) 
       |
-      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+      (<USAGE> {privileges.add(Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
     )
     <FROM>( to = id(null)
         {
@@ -5770,7 +5848,7 @@ void revokeGrantOption(DatabaseStore dbStore) :
                 permission.setCondition(condition, null);               
             }
             grant.setRole(to);
-            grant.addPermission(permission);
+            grant.setPermission(permission);
             dbStore.grantRevoked(grant);
         } 
     )
@@ -7026,15 +7104,15 @@ void identifierList(List<String> strings) :
 /*
 name=grant type
 */
-void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
+void readGrantTypes(ArrayList<Permission.Privilege> privileges) :
 {
 }
 {        
-    <SELECT> {privileges.add(Grant.Permission.Privilege.SELECT);} |
-    <INSERT> {privileges.add(Grant.Permission.Privilege.INSERT);} |
-    <UPDATE> {privileges.add(Grant.Permission.Privilege.UPDATE);} |
-    <DELETE> {privileges.add(Grant.Permission.Privilege.DELETE);} |
-    <EXECUTE> {privileges.add(Grant.Permission.Privilege.EXECUTE);} |
-    <ALTER> {privileges.add(Grant.Permission.Privilege.ALTER);} |
-    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);}
+    <SELECT> {privileges.add(Permission.Privilege.SELECT);} |
+    <INSERT> {privileges.add(Permission.Privilege.INSERT);} |
+    <UPDATE> {privileges.add(Permission.Privilege.UPDATE);} |
+    <DELETE> {privileges.add(Permission.Privilege.DELETE);} |
+    <EXECUTE> {privileges.add(Permission.Privilege.EXECUTE);} |
+    <ALTER> {privileges.add(Permission.Privilege.ALTER);} |
+    <DROP> {privileges.add(Permission.Privilege.DROP);}
 }
