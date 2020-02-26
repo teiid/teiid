@@ -887,6 +887,7 @@ public class TestODBCSocketTransport {
         ResultSet rs = s.getResultSet();
         rs.next();
         assertEquals(PgCatalogMetadataStore.POSTGRESQL_VERSION, rs.getString(1));
+        assertEquals(PgCatalogMetadataStore.POSTGRESQL_VERSION, rs.getString("version"));
     }
 
     @Test public void testBooleanValues() throws Exception {

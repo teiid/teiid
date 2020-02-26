@@ -55,16 +55,8 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.Symbol;
-import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
@@ -132,27 +124,27 @@ public class MetaDataProcessor {
         }
 
         if(workItem != null) {
-            return getMetadataForCommand(workItem.getOriginalCommand());
+            return getMetadataForCommand(workItem.getOriginalCommand(), workContext);
         }
         return obtainMetadataForPreparedSql(preparedSql, workContext, allowDoubleQuotedVariable);
     }
 
     // For each projected symbol, construct a metadata map
-    private MetadataResult getMetadataForCommand(Command originalCommand) throws TeiidComponentException {
+    private MetadataResult getMetadataForCommand(Command originalCommand, DQPWorkContext workContext) throws TeiidComponentException {
         Map<Integer, Object>[] columnMetadata = null;
 
         switch(originalCommand.getType()) {
             case Command.TYPE_QUERY:
                 if(originalCommand instanceof Query) {
                     if (((Query)originalCommand).getInto() == null) {
-                        columnMetadata = createProjectedSymbolMetadata(originalCommand);
+                        columnMetadata = createProjectedSymbolMetadata(originalCommand, workContext);
                     }
                 } else {
-                    columnMetadata = createProjectedSymbolMetadata(originalCommand);
+                    columnMetadata = createProjectedSymbolMetadata(originalCommand, workContext);
                 }
                 break;
             case Command.TYPE_STORED_PROCEDURE:
-                columnMetadata = createProjectedSymbolMetadata(originalCommand);
+                columnMetadata = createProjectedSymbolMetadata(originalCommand, workContext);
                 break;
             case Command.TYPE_INSERT:
             case Command.TYPE_UPDATE:
@@ -162,7 +154,7 @@ public class MetaDataProcessor {
                 break;
             default:
                 if (originalCommand.returnsResultSet()) {
-                    columnMetadata = createProjectedSymbolMetadata(originalCommand);
+                    columnMetadata = createProjectedSymbolMetadata(originalCommand, workContext);
                 }
         }
 
@@ -201,7 +193,7 @@ public class MetaDataProcessor {
         MetaDataProcessor mdp = new MetaDataProcessor(null, null, empty, empty);
         mdp.metadata = metadata;
         mdp.useJDBCDefaultPrecision = false;
-        Map<Integer, Object>[] metadataMaps = mdp.createProjectedSymbolMetadata(originalCommand);
+        Map<Integer, Object>[] metadataMaps = mdp.createProjectedSymbolMetadata(originalCommand, null);
 
         for (int i = 0; i < columns.size(); i++) {
             Column column = columns.get(i);
@@ -219,7 +211,7 @@ public class MetaDataProcessor {
         }
     }
 
-    private Map<Integer, Object>[] createProjectedSymbolMetadata(Command originalCommand) throws TeiidComponentException {
+    private Map<Integer, Object>[] createProjectedSymbolMetadata(Command originalCommand, DQPWorkContext workContext) throws TeiidComponentException {
         Map<Integer, Object>[] columnMetadata;
         // Allow command to use temporary metadata
         TempMetadataStore tempMetadata = originalCommand.getTemporaryMetadata();
@@ -231,10 +223,15 @@ public class MetaDataProcessor {
         List<Expression> projectedSymbols = originalCommand.getProjectedSymbols();
         columnMetadata = new Map[projectedSymbols.size()];
 
+        boolean pgColumnNames = false;
+        if (workContext != null) {
+            pgColumnNames = Boolean.TRUE.equals(workContext.getSession().getSessionVariables().get("pg_column_names")); //$NON-NLS-1$
+        }
+
         Iterator<Expression> symbolIter = projectedSymbols.iterator();
         for(int i=0; symbolIter.hasNext(); i++) {
             Expression symbol = symbolIter.next();
-            String shortColumnName = Symbol.getShortName(Symbol.getOutputName(symbol));
+            String shortColumnName = getColumnName(pgColumnNames, symbol);
             symbol = SymbolMap.getExpression(symbol);
             try {
                 columnMetadata[i] = createColumnMetadata(shortColumnName, symbol);
@@ -248,7 +245,7 @@ public class MetaDataProcessor {
 
             //only redo the left if there are additional branches to consider
             if (!(setQuery.getLeftQuery() instanceof Query)) {
-                Map<Integer, Object>[] leftResult = createProjectedSymbolMetadata(setQuery.getLeftQuery());
+                Map<Integer, Object>[] leftResult = createProjectedSymbolMetadata(setQuery.getLeftQuery(), workContext);
                 for(int i=0; i < leftResult.length; i++) {
                     setCombinedMax(columnMetadata, leftResult, i, ResultsMetadataConstants.PRECISION);
                     setCombinedMax(columnMetadata, leftResult, i, ResultsMetadataConstants.SCALE);
@@ -257,7 +254,7 @@ public class MetaDataProcessor {
 
             //only use the right if we're a union
             if (setQuery.getOperation() == Operation.UNION) {
-                Map<Integer, Object>[] rightResult = createProjectedSymbolMetadata(setQuery.getRightQuery());
+                Map<Integer, Object>[] rightResult = createProjectedSymbolMetadata(setQuery.getRightQuery(), workContext);
 
                 for(int i=0; i < rightResult.length; i++) {
                     setCombinedMax(columnMetadata, rightResult, i, ResultsMetadataConstants.PRECISION);
@@ -268,6 +265,20 @@ public class MetaDataProcessor {
             return columnMetadata;
         }
         return columnMetadata;
+    }
+
+    public static String getColumnName(boolean pgColumnNames, Expression symbol) {
+        String name = Symbol.getOutputName(symbol);
+        //pg uses the actual symbol name, not the generated name
+        //we give to expression symbols
+        if (pgColumnNames && symbol instanceof ExpressionSymbol) {
+            Expression ex = ((ExpressionSymbol)symbol).getExpression();
+            if (ex instanceof NamedExpression) {
+                name = ((NamedExpression)ex).getName();
+            }
+        }
+
+        return Symbol.getShortName(name);
     }
 
     private void setCombinedMax(Map<Integer, Object>[] leftResult,
@@ -296,7 +307,7 @@ public class MetaDataProcessor {
                 QueryResolver.resolveCommand(command, this.metadata);
             }
         }
-        return getMetadataForCommand(command);
+        return getMetadataForCommand(command, workContext);
     }
 
     /**
