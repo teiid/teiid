@@ -324,7 +324,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             }
             StatementImpl s = this.connection.createStatement();
             try {
-                s.execute("select teiid_session_set('resolve_groupby_positional', true)"); //$NON-NLS-1$
+                s.execute("select teiid_session_set('resolve_groupby_positional', true), teiid_session_set('pg_column_names', true)"); //$NON-NLS-1$
             } finally {
                 s.close();
             }

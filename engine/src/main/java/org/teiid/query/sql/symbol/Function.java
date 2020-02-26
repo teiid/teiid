@@ -33,7 +33,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * an expression.  After resolution, a function should have a type and a function
  * descriptor.
  */
-public class Function implements Expression {
+public class Function implements NamedExpression {
 
     private String name;
     private Expression[] args;

@@ -24,7 +24,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
-public class WindowFunction implements LanguageObject, DerivedExpression {
+public class WindowFunction implements LanguageObject, DerivedExpression, NamedExpression {
 
     private AggregateSymbol function;
     private WindowSpecification windowSpecification;
@@ -85,6 +85,11 @@ public class WindowFunction implements LanguageObject, DerivedExpression {
     @Override
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
+    }
+
+    @Override
+    public String getName() {
+        return function.getName();
     }
 
 }

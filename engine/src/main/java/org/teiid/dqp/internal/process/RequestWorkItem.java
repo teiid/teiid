@@ -86,7 +86,6 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.GeneratedKeysImpl;
 import org.teiid.query.util.Options;
@@ -1102,10 +1101,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         String[] columnNames = new String[columnSymbols.size()];
         String[] dataTypes = new String[columnSymbols.size()];
 
+        boolean pgColumnNames = Boolean.TRUE.equals(this.dqpWorkContext.getSession().getSessionVariables().get("pg_column_names")); //$NON-NLS-1$
+
         byte clientSerializationVersion = this.dqpWorkContext.getClientVersion().getClientSerializationVersion();
         for(int i=0; i<columnSymbols.size(); i++) {
             Expression symbol = columnSymbols.get(i);
-            columnNames[i] = Symbol.getShortName(Symbol.getOutputName(symbol));
+            String name = MetaDataProcessor.getColumnName(pgColumnNames, symbol);
+            columnNames[i] = name;
             dataTypes[i] = DataTypeManager.getDataTypeName(symbol.getType());
             if (!this.dqpWorkContext.getSession().isEmbedded()) {
                 dataTypes[i] = BatchSerializer.getClientSafeType(dataTypes[i], clientSerializationVersion);
