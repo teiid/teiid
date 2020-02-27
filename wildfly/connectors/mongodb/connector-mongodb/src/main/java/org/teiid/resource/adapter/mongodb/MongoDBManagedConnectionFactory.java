@@ -17,31 +17,24 @@
  */
 package org.teiid.resource.adapter.mongodb;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.mongodb.MongoDBConfiguration;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
-import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
-import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
-public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFactory{
-    private static final String STANDARD_PREFIX = "mongodb://"; //$NON-NLS-1$
-    private static final String SEEDLIST_PREFIX = "mongodb+srv://"; //$NON-NLS-1$
-
+public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFactory implements MongoDBConfiguration {
     private static final long serialVersionUID = -4945630936957298180L;
 
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBManagedConnectionFactory.class);
 
-    public enum SecurityType {None, SCRAM_SHA_1, MONGODB_CR, Kerberos, X509};
     private String remoteServerList=null;
     private String username;
     private String password;
@@ -86,52 +79,12 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 
     }
 
-    private MongoCredential getCredential() {
-
-        MongoCredential credential = null;
-        if (this.securityType.equals(SecurityType.SCRAM_SHA_1.name())) {
-            credential = MongoCredential.createScramSha1Credential(this.username,
-                    (this.authDatabase == null) ? this.database: this.authDatabase,
-                    this.password.toCharArray());
-        }
-        else if (this.securityType.equals(SecurityType.MONGODB_CR.name())) {
-            credential = MongoCredential.createMongoCRCredential(this.username,
-                    (this.authDatabase == null) ? this.database: this.authDatabase,
-                    this.password.toCharArray());
-        }
-        else if (this.securityType.equals(SecurityType.Kerberos.name())) {
-            credential = MongoCredential.createGSSAPICredential(this.username);
-        }
-        else if (this.securityType.equals(SecurityType.X509.name())) {
-            credential = MongoCredential.createMongoX509Credential(this.username);
-        } else if (this.securityType.equals(SecurityType.None.name())) {
-            // skip
-        }
-        else if (this.username != null && this.password != null) {
-            // to support legacy pre-3.0 authentication
-            credential = MongoCredential.createMongoCRCredential(
-                    MongoDBManagedConnectionFactory.this.username,
-                    (this.authDatabase == null) ? this.database: this.authDatabase,
-                    this.password.toCharArray());
-        }
-        return credential;
-    }
-
-    private MongoClientOptions getOptions() {
-        //if options needed then use URL format
-        final MongoClientOptions.Builder builder = MongoClientOptions.builder();
-        if (getSsl()) {
-            builder.sslEnabled(true);
-        }
-        return builder.build();
-    }
-
     /**
      * Returns the <code>host:port[;host:port...]</code> list that identifies the remote servers
      * to include in this cluster;
      * @return <code>host:port[;host:port...]</code> list
      */
-   public String getRemoteServerList() {
+    public String getRemoteServerList() {
         return this.remoteServerList;
     }
 
@@ -193,25 +146,6 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 
     protected MongoClientURI getConnectionURI() {
         return new MongoClientURI(getRemoteServerList());
-    }
-
-    protected List<ServerAddress> getServers() {
-        String serverlist = getRemoteServerList();
-        if (!serverlist.startsWith(STANDARD_PREFIX) && !serverlist.startsWith(SEEDLIST_PREFIX)) {
-            List<ServerAddress> addresses = new ArrayList<ServerAddress>();
-            StringTokenizer st = new StringTokenizer(serverlist, ";"); //$NON-NLS-1$
-            while (st.hasMoreTokens()) {
-                String token = st.nextToken();
-                int idx = token.indexOf(':');
-                if (idx < 0) {
-                    addresses.add(new ServerAddress(token));
-                } else {
-                    addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
-                }
-            }
-            return addresses;
-        }
-        return null;
     }
 
     @Override
