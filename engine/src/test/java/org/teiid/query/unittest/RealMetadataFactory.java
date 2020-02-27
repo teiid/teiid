@@ -509,7 +509,7 @@ public class RealMetadataFactory {
                                       new String[] { "x", "y", "z" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
 
-        createKey(KeyRecord.Type.Primary, "pk", vGroup5, vElements5.subList(0, 1));
+        KeyRecord pk = createKey(KeyRecord.Type.Primary, "pk", vGroup5, vElements5.subList(0, 1));
         createKey(KeyRecord.Type.Index, "idx", vGroup5, vElements5.subList(1, 2));
 
         //no pk
@@ -531,6 +531,7 @@ public class RealMetadataFactory {
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
 
         createKey(KeyRecord.Type.Primary, "pk", vGroup7, vElements7.subList(1, 2));
+        createForeignKey("fk", vGroup7, vElements7.subList(0, 1), pk);
 
         Schema sp = createVirtualModel("sp", metadataStore); //$NON-NLS-1$
         ColumnSet<Procedure> rs = createResultSet("sp1.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$

@@ -491,17 +491,15 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         groupID = getActualMetadataId(groupID);
 
         if(groupID instanceof TempMetadataID) {
-            return Collections.EMPTY_LIST;
+            if(groupID instanceof TempMetadataID) {
+                List<TempMetadataID> result = ((TempMetadataID)groupID).getForeignKeys();
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
+            }
         }
         return this.actualMetadata.getForeignKeysInGroup(groupID);
-    }
-
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getElementIDsInIndex(java.lang.Object)
-     */
-    public List getElementIDsInIndex(Object index)
-        throws TeiidComponentException, QueryMetadataException {
-        return this.actualMetadata.getElementIDsInIndex(index);
     }
 
     public List getElementIDsInKey(Object keyID)
@@ -513,12 +511,24 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 
         if (keyID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)keyID;
-            if (id.getMetadataType() == Type.INDEX) {
+            if (id.getMetadataType() == Type.INDEX || id.getMetadataType() == Type.FOREIGN_KEY) {
                 return id.getElements();
             }
         }
 
         return this.actualMetadata.getElementIDsInKey(keyID);
+    }
+
+    @Override
+    public Object getPrimaryKeyIDForForeignKeyID(Object foreignKeyID)
+            throws TeiidComponentException, QueryMetadataException {
+        if (foreignKeyID instanceof TempMetadataID) {
+            TempMetadataID id = (TempMetadataID)foreignKeyID;
+            if (id.getMetadataType() == Type.FOREIGN_KEY) {
+                return id.getOriginalMetadataID();
+            }
+        }
+        return super.getPrimaryKeyIDForForeignKeyID(foreignKeyID);
     }
 
     public boolean groupSupports(Object groupID, int groupConstant)

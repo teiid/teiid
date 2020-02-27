@@ -99,11 +99,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
         return actualMetadata.getElementIDsInGroupID(groupID);
     }
 
-    public List getElementIDsInIndex(Object index)
-            throws TeiidComponentException, QueryMetadataException {
-        return actualMetadata.getElementIDsInIndex(index);
-    }
-
     public List getElementIDsInKey(Object key)
             throws TeiidComponentException, QueryMetadataException {
         return actualMetadata.getElementIDsInKey(key);

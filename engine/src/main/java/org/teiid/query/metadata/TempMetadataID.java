@@ -66,6 +66,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         int modCount;
         private LinkedHashMap<Expression, Integer> functionBasedExpressions;
         private Object model;
+        List<TempMetadataID> foreignKeys;
 
         public long getLastDataModification() {
             return lastDataModification;
@@ -125,7 +126,8 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         VIRTUAL,
         TEMP,
         SCALAR,
-        INDEX
+        INDEX,
+        FOREIGN_KEY
     }
 
     private String ID;      // never null, upper cased fully-qualified string
@@ -388,6 +390,10 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         return getTableData().indexes;
     }
 
+    public List<TempMetadataID> getForeignKeys() {
+        return getTableData().foreignKeys;
+    }
+
     public void addIndex(Object originalMetadataId, List<TempMetadataID> index) {
         if (this.getTableData().indexes == null) {
             this.getTableData().indexes = new LinkedList<TempMetadataID>();
@@ -396,6 +402,16 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         id.getTableData().elements = index;
         id.setOriginalMetadataID(originalMetadataId);
         this.getTableData().indexes.add(id);
+    }
+
+    public void addForeignKey(Object originalMetadataId, Object pk, List<TempMetadataID> cols) {
+        if (this.getTableData().foreignKeys == null) {
+            this.getTableData().foreignKeys = new LinkedList<TempMetadataID>();
+        }
+        TempMetadataID id = new TempMetadataID(ID, Collections.EMPTY_LIST, Type.FOREIGN_KEY);
+        id.getTableData().elements = cols;
+        id.setOriginalMetadataID(pk);
+        this.getTableData().foreignKeys.add(id);
     }
 
     public List<List<TempMetadataID>> getUniqueKeys() {

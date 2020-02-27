@@ -326,14 +326,6 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     }
 
     /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getElementIDsInIndex(java.lang.Object)
-     */
-    public List getElementIDsInIndex(Object index)
-        throws TeiidComponentException, QueryMetadataException {
-        return Collections.EMPTY_LIST;
-    }
-
-    /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getAccessPatternsInGroup(Object)
      */
     public Collection getAccessPatternsInGroup(Object groupID)

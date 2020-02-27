@@ -171,6 +171,10 @@ public class TestMaterialization {
         execute("SELECT * from vgroup7 where y is null", Arrays.asList("1", null, 1));
     }
 
+    @Test public void testKeyJoin() throws Exception {
+        execute("SELECT * from vgroup7, vgroup5 where vgroup7.x = vgroup5.x");
+    }
+
     @Test public void testFunctionBasedIndexQuery() throws Exception {
         TempMetadataID id = this.globalStore.getGlobalTempTableMetadataId(metadata.getGroupID("MatView.vgroup2a"));
         assertEquals("SELECT MatView.VGroup2a.*, ucase(x) FROM MatView.VGroup2a option nocache MatView.VGroup2a", id.getQueryNode().getQuery());

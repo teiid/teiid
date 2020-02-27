@@ -413,16 +413,6 @@ public interface QueryMetadataInterface {
         throws TeiidComponentException, QueryMetadataException;
 
     /**
-     * Get the elements in the index
-     * @param index Index identifier, as returned by {@link #getIndexesInGroup}
-     * @return List of Object, where each object is a metadata element identifier
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     */
-    List getElementIDsInIndex(Object index)
-        throws TeiidComponentException, QueryMetadataException;
-
-    /**
      * Get the elements in the key
      * @param key Key identifier, as returned by {@link #getUniqueKeysInGroup}
      * @return List of Object, where each object is a metadata element identifier

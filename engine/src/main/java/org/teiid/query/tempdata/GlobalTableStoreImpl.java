@@ -320,6 +320,11 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
                     for (Object index : indexes) {
                         id.addIndex(index, resolveIndex(metadata, id, index));
                     }
+                    Collection fks = metadata.getForeignKeysInGroup(viewId);
+                    for (Object fk : fks) {
+                        //a corner case would be for a self relationship
+                        id.addForeignKey(fk, metadata.getPrimaryKeyIDForForeignKeyID(fk), resolveIndex(metadata, id, fk));
+                    }
                     if (newExprs != null) {
                         Table table = (Table)viewId;
                         List<KeyRecord> fbis = table.getFunctionBasedIndexes();
