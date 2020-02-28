@@ -265,37 +265,41 @@ public class DDLStringVisitor {
     private void visitPolicies(Role r) {
         for (Map<String, Policy> policies : r.getPolicies().values()) {
             for (Policy p : policies.values()) {
-                append(CREATE).append(SPACE).append(POLICY).append(SPACE);
-                append(SQLStringVisitor.escapeSinglePart(p.getName())).append(SPACE);
-                append(ON).append(SPACE);
-                if (p.getResourceType() == ResourceType.PROCEDURE) {
-                    append(PROCEDURE).append(SPACE);
-                    append(new GroupSymbol(p.getResourceName())).append(SPACE);
-                    if (p.getOperations().contains(Operation.ALL)) {
-                        append(FOR).append(SPACE).append(ALL);
-                    }
-                } else {
-                    append(new GroupSymbol(p.getResourceName())).append(SPACE);
-                    if (p.getOperations().contains(Operation.ALL)) {
-                        append(FOR).append(SPACE).append(ALL).append(SPACE);
-                    } else if (!p.getOperations().isEmpty()) {
-                        append(FOR).append(SPACE);
-                        boolean first = true;
-                        for (Operation oper : p.getOperations()) {
-                            if (!first) {
-                                append(COMMA).append(SPACE);
-                            }
-                            append(oper.name());
-                            first = false;
-                        }
-                        append(SPACE);
-                    }
-                }
-                append(TO).append(SPACE).append(r.getName()).append(SPACE);
-                append(USING).append(SPACE).append(LPAREN).append(p.getCondition()).append(RPAREN);
-                append(SEMICOLON).append(NEWLINE);
+                visitPolicy(r, p);
             }
         }
+    }
+
+    private void visitPolicy(Role r, Policy p) {
+        append(CREATE).append(SPACE).append(POLICY).append(SPACE);
+        append(SQLStringVisitor.escapeSinglePart(p.getName())).append(SPACE);
+        append(ON).append(SPACE);
+        if (p.getResourceType() == ResourceType.PROCEDURE) {
+            append(PROCEDURE).append(SPACE);
+            append(new GroupSymbol(p.getResourceName())).append(SPACE);
+            if (p.getOperations().contains(Operation.ALL)) {
+                append(FOR).append(SPACE).append(ALL);
+            }
+        } else {
+            append(new GroupSymbol(p.getResourceName())).append(SPACE);
+            if (p.getOperations().contains(Operation.ALL)) {
+                append(FOR).append(SPACE).append(ALL).append(SPACE);
+            } else if (!p.getOperations().isEmpty()) {
+                append(FOR).append(SPACE);
+                boolean first = true;
+                for (Operation oper : p.getOperations()) {
+                    if (!first) {
+                        append(COMMA).append(SPACE);
+                    }
+                    append(oper.name());
+                    first = false;
+                }
+                append(SPACE);
+            }
+        }
+        append(TO).append(SPACE).append(r.getName()).append(SPACE);
+        append(USING).append(SPACE).append(LPAREN).append(p.getCondition()).append(RPAREN);
+        append(SEMICOLON).append(NEWLINE);
     }
 
     private void visitGrants(Role r) {
@@ -309,8 +313,22 @@ public class DDLStringVisitor {
                 }
                 continue;
             }
-            if (!permission.getPrivileges().isEmpty() || permission.getMask() != null || permission.getCondition() != null) {
+            if (!permission.getPrivileges().isEmpty() || permission.getMask() != null) {
                 appendGrant(r, permission, permission.getPrivileges(), false);
+            }
+            if (permission.getCondition() != null) {
+                Policy p = new Policy();
+                p.setCondition(permission.getCondition());
+                p.setName("grant_policy_" + permission.getResourceName()); //$NON-NLS-1$
+                if (Boolean.FALSE.equals(permission.isConditionAConstraint())) {
+                    p.getOperations().add(Operation.SELECT);
+                    p.getOperations().add(Operation.DELETE);
+                } else {
+                    p.getOperations().add(Operation.ALL);
+                }
+                p.setResourceName(permission.getResourceName());
+                p.setResourceType(permission.getResourceType());
+                visitPolicy(r, p);
             }
             if (!permission.getRevokePrivileges().isEmpty()) {
                 appendGrant(r, permission, permission.getRevokePrivileges(), true);
@@ -344,20 +362,6 @@ public class DDLStringVisitor {
                 append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
             }
             append(SPACE).append(new Constant(permission.getMask()));
-        }
-
-        if (!revoke && permission.getCondition() != null) {
-            append(SPACE).append(CONDITION);
-            if (!revoke) {
-                if (permission.isConditionAConstraint() != null) {
-                    append(SPACE);
-                    if (!permission.isConditionAConstraint()) {
-                        append(NOT).append(SPACE);
-                    }
-                    append(CONSTRAINT);
-                }
-                append(SPACE).append(new Constant(permission.getCondition()));
-            }
         }
 
         append(SPACE).append(revoke?FROM:TO).append(SPACE).append(role.getName());

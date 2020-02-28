@@ -106,7 +106,7 @@ SET SCHEMA Stocks;
 --############ Grants ############
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK 'null' TO ReadOnly;
-GRANT "Accounts.Customer" CONDITION 'state <> ''New York''' TO ReadOnly;
+CREATE POLICY "grant_policy_Accounts.Customer" ON Accounts.Customer FOR ALL TO ReadOnly USING (state <> 'New York');
 GRANT ON COLUMN "Accounts.Customer.SSN" MASK 'null' TO ReadOnly;
 GRANT SELECT ON SCHEMA MarketData TO ReadOnly;
 GRANT SELECT ON SCHEMA Stocks TO ReadOnly;
@@ -116,7 +116,7 @@ REVOKE SELECT ON SCHEMA Accounts FROM Prices;
 
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA Accounts TO ReadWrite;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
-GRANT "Accounts.Customer" CONDITION 'true' TO ReadWrite;
+CREATE POLICY "grant_policy_Accounts.Customer" ON Accounts.Customer FOR ALL TO ReadWrite USING (true);
 GRANT ON COLUMN "Accounts.Customer.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA MarketData TO ReadWrite;
 
