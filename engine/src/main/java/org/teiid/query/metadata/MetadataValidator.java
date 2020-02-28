@@ -668,6 +668,7 @@ public class MetadataValidator {
                 QueryNode node = null;
                 if (t.isVirtual()) {
                     QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
+                    Command clone = (Command) command.clone();
                     validateNoReferences(command, report, model, t);
                     QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
                     resolverReport =  Validator.validate(command, metadata);
@@ -712,7 +713,9 @@ public class MetadataValidator {
                         }
                     }
 
-                    node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
+                    node = new QueryNode(selectTransformation);
+                    node.setCommand(clone);
+                    node = QueryResolver.resolveView(symbol, node, SQLConstants.Reserved.SELECT, metadata, true);
 
                     if (t.getColumns() != null && !t.getColumns().isEmpty()) {
                         determineDependencies(t, command);

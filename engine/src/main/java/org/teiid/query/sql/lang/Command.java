@@ -114,8 +114,6 @@ public abstract class Command implements LanguageObject {
 
     private transient GroupContext externalGroups;
 
-    private boolean isResolved;
-
     /** The option clause */
     private Option option;
 
