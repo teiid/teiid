@@ -40,9 +40,9 @@ public class TestVDBMetadataParser {
         TestVDBUtility.validateVDB(vdb);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        VDBMetadataParser.marshall(vdb, baos);
+        VDBMetadataParser.marshell(vdb, baos);
         baos.close();
-        VDBMetaData parsed = VDBMetadataParser.unmarshall(new ByteArrayInputStream(baos.toByteArray()));
+        VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
 
         TestVDBUtility.validateVDB(parsed);
     }
