@@ -3,7 +3,7 @@
     <parent>
         <artifactId>jdbc</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>12.3.2</version>
+        <version>12.3.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-hive</artifactId>

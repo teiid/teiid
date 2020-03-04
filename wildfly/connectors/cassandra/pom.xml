@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid.wildfly</groupId>
       <artifactId>connectors</artifactId>
-      <version>12.3.2</version>
+      <version>12.3.3-SNAPSHOT</version>
   </parent>
   <groupId>org.teiid.wildfly.connectors</groupId>
   <artifactId>cassandra</artifactId>
