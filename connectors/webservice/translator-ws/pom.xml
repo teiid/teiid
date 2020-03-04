@@ -3,7 +3,7 @@
     <parent>
         <artifactId>webservice</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>12.3.2-SNAPSHOT</version>
+        <version>12.3.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-ws</artifactId>
