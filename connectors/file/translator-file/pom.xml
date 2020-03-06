@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.teiid.connectors</groupId>
         <artifactId>file</artifactId>
-        <version>13.1.0</version>    
+        <version>13.1.1-SNAPSHOT</version>    
    </parent>
     <artifactId>translator-file</artifactId>
     <name>File Translator</name>
