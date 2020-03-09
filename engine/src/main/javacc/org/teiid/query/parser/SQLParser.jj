@@ -1497,7 +1497,7 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
 name=procedure body definition
 description=Defines a procedure body on a Procedure metadata object.
 example=[source,sql]\n----\nBEGIN ... END\n----\n
-index=true
+unused=true
 */
 CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
 {
