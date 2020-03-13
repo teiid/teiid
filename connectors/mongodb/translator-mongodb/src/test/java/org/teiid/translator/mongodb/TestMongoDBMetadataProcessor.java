@@ -58,8 +58,7 @@ public class TestMongoDBMetadataProcessor {
                 "    col6 string,\n" +
                 "    col7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
                 "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" +
-                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
-                "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" +
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE child (\n" +
@@ -109,8 +108,7 @@ public class TestMongoDBMetadataProcessor {
                 "    col7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
                 "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" +
                 "    col9 string,\n" +
-                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
-                "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" +
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE child (\n" +
@@ -350,8 +348,7 @@ public class TestMongoDBMetadataProcessor {
                 "    col6 string,\n" +
                 "    col7 string[] OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
                 "    col8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n" +
-                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
-                "    CONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" +
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE child (\n" +
