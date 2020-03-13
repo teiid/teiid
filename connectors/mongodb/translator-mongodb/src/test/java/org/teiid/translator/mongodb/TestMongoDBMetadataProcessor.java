@@ -46,6 +46,7 @@ public class TestMongoDBMetadataProcessor {
     @Test
     public void testMetadata() throws TranslatorException {
         MongoDBMetadataProcessor mp = new MongoDBMetadataProcessor();
+        mp.setFullEmbeddedNames(true);
 
         MetadataFactory mf = processExampleMetadata(mp);
 
@@ -61,7 +62,7 @@ public class TestMongoDBMetadataProcessor {
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" +
                 "\n" +
-                "CREATE FOREIGN TABLE child (\n" +
+                "CREATE FOREIGN TABLE table_child (\n" +
                 "    col1 string,\n" +
                 "    col2 string,\n" +
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
@@ -69,7 +70,7 @@ public class TestMongoDBMetadataProcessor {
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=child');\n" +
                 "\n" +
-                "CREATE FOREIGN TABLE embedded (\n" +
+                "CREATE FOREIGN TABLE table_embedded (\n" +
                 "    col1 integer,\n" +
                 "    col2 varbinary,\n" +
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
@@ -77,7 +78,7 @@ public class TestMongoDBMetadataProcessor {
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
                 "\n" +
-                "CREATE FOREIGN TABLE embedded_1 (\n" +
+                "CREATE FOREIGN TABLE embedded (\n" +
                 "    col1 string,\n" +
                 "    col2 string\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=embedded');\n" +
