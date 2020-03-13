@@ -73,6 +73,8 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
 
     private int sampleSize = 1;
 
+    private boolean fullEmbeddedNames;
+
     @Override
     public void process(MetadataFactory metadataFactory, MongoDBConnection connection) throws TranslatorException {
         DB db = connection.getDatabase();
@@ -145,6 +147,9 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 FullyQualifiedName rn = new FullyQualifiedName("embedded", tableName); //$NON-NLS-1$
                 String parentfqn = parent.getProperty(FQN, false);
                 fqnString = parentfqn + FullyQualifiedName.SEPARATOR + rn.toString();
+                if (fullEmbeddedNames) {
+                    tableName = parent.getName() + "_" + tableName; //$NON-NLS-1$
+                }
             } else {
                 FullyQualifiedName fqn = new FullyQualifiedName("collection", tableName); //$NON-NLS-1$
                 fqnString = fqn.toString();
@@ -374,5 +379,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
 
     public void setSampleSize(int sampleSize) {
         this.sampleSize = sampleSize;
+    }
+
+    @TranslatorProperty(display="Full Embedded Names", category=PropertyType.IMPORT, description="Whether to prefix embedded table names with their parents, e.g. parent_embedded")
+    public boolean isFullEmbeddedNames() {
+        return this.fullEmbeddedNames;
+    }
+
+    public void setFullEmbeddedNames(boolean fullEmbeddedNames) {
+        this.fullEmbeddedNames = fullEmbeddedNames;
     }
 }
