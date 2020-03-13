@@ -140,17 +140,25 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         Table table = metadataFactory.getSchema().getTable(tableName);
         Set<String> keys = row.keySet();
         if (keys != null && !keys.isEmpty()) {
+            String fqnString = null;
+            if (parent != null) {
+                FullyQualifiedName rn = new FullyQualifiedName("embedded", tableName); //$NON-NLS-1$
+                String parentfqn = parent.getProperty(FQN, false);
+                fqnString = parentfqn + FullyQualifiedName.SEPARATOR + rn.toString();
+            } else {
+                FullyQualifiedName fqn = new FullyQualifiedName("collection", tableName); //$NON-NLS-1$
+                fqnString = fqn.toString();
+            }
+
+            if (table != null && !fqnString.equals(table.getProperty(FQN))) {
+                table = null;
+                //the user will need to turn on duplicate renaming
+            }
+
             if (table == null) {
                 table = metadataFactory.addTable(tableName);
                 table.setSupportsUpdate(true);
-                if (parent != null) {
-                    FullyQualifiedName rn = new FullyQualifiedName("embedded", tableName); //$NON-NLS-1$
-                    String parentfqn = parent.getProperty(FQN, false);
-                    table.setProperty(FQN, parentfqn + FullyQualifiedName.SEPARATOR + rn.toString());
-                } else {
-                    FullyQualifiedName fqn = new FullyQualifiedName("collection", tableName); //$NON-NLS-1$
-                    table.setProperty(FQN, fqn.toString());
-                }
+                table.setProperty(FQN, fqnString);
             }
 
             for (String columnKey:keys) {

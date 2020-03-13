@@ -71,12 +71,17 @@ public class TestMongoDBMetadataProcessor {
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=child');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE embedded (\n" +
-                "    col1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
-                "    col2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
+                "    col1 integer,\n" +
+                "    col2 varbinary,\n" +
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE embedded_1 (\n" +
+                "    col1 string,\n" +
+                "    col2 string\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=embedded');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE emptyFirst (\n" +
                 "    \"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" +
@@ -117,12 +122,17 @@ public class TestMongoDBMetadataProcessor {
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=child');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE embedded (\n" +
-                "    col1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
-                "    col2 object OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
+                "    col1 integer,\n" +
+                "    col2 varbinary,\n" +
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE embedded_1 (\n" +
+                "    col1 string,\n" +
+                "    col2 string\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=embedded');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE emptyFirst (\n" +
                 "    \"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" +
@@ -169,6 +179,7 @@ public class TestMongoDBMetadataProcessor {
     private MetadataFactory processExampleMetadata(MongoDBMetadataProcessor mp)
             throws TranslatorException {
         MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        mf.setRenameAllDuplicates(true);
         MongoDBConnection conn = Mockito.mock(MongoDBConnection.class);
         DBCollection tableDBCollection = Mockito.mock(DBCollection.class);
         DBCollection embeddedDBCollection = Mockito.mock(DBCollection.class);
