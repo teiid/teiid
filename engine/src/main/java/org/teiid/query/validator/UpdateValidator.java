@@ -554,7 +554,8 @@ public class UpdateValidator {
         // checking if the elements not specified in the query are required.
         if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.NULL)
             || metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE)
-            || metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
+            || metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)
+            || !metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.UPDATE)) {
             return true;
         }
         if (this.updateInfo.insertType == UpdateType.INHERENT) {
