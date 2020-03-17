@@ -524,6 +524,21 @@ public class TestValidator {
         helpRunValidator(command, new String[] {"test.\"group\".e0"}, metadata); //$NON-NLS-1$
     }
 
+    /**
+     * Non-updatable columns should not be required
+     * @throws Exception
+     */
+    @Test public void testInsert6() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table contacts "
+                + "(name string options (updatable false), first string)"
+                + " options (updatable true);", "x", "y");
+
+        Command command = QueryParser.getQueryParser().parseCommand("INSERT INTO contacts (first) VALUES ('x')"); //$NON-NLS-1$
+        QueryResolver.resolveCommand(command, metadata);
+
+        helpRunValidator(command, new String[] {}, metadata); //$NON-NLS-1$
+    }
+
     @Test public void testValidateInsertElements1() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata();
 

@@ -578,7 +578,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             for (ElementSymbol nextElmnt : insertElmnts) {
                 if(!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) &&
                     !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.NULL) &&
-                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
+                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT) &&
+                    getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.UPDATE)) {
                         handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0053", new Object[] {insertGroup, nextElmnt}), nextElmnt); //$NON-NLS-1$
                 }
             }
