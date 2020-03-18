@@ -175,6 +175,12 @@
 				<artifactId>connector-file</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			
+			<dependency>
+                <groupId>org.teiid.wildfly.connectors</groupId>
+                <artifactId>ws-cxf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.cxf</groupId>
