@@ -215,9 +215,11 @@ public class TestSqlServerConversionVisitor {
         Schema foo = RealMetadataFactory.createPhysicalModel("foo", metadataStore); //$NON-NLS-1$
         Table table = RealMetadataFactory.createPhysicalGroup("bar", foo); //$NON-NLS-1$
         String[] elemNames = new String[] {
-            "x"  //$NON-NLS-1$
+            "x",  //$NON-NLS-1$
+            "y"  //$NON-NLS-1$
         };
         String[] elemTypes = new String[] {
+            DataTypeManager.DefaultDataTypes.STRING,
             DataTypeManager.DefaultDataTypes.STRING
         };
         List<Column> cols =RealMetadataFactory.createElements(table, elemNames, elemTypes);
@@ -238,6 +240,15 @@ public class TestSqlServerConversionVisitor {
         command = tu.parseCommand("insert into bar (x) values ('a')"); //$NON-NLS-1$
         TranslationHelper.helpTestVisitor("INSERT INTO bar (x) VALUES ('a')", trans, command); //$NON-NLS-1$
 
+        command = tu.parseCommand("select x from bar where x = 'abc'"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT bar.x FROM bar WHERE bar.x = 'abc'", trans, command); //$NON-NLS-1$
+
+        command = tu.parseCommand("select x from bar where x = y"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT bar.x FROM bar WHERE cast(bar.x as char(36)) = bar.y", trans, command); //$NON-NLS-1$
+
+        command = tu.parseCommand("select x || 'a' from bar"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT (cast(bar.x as char(36)) + 'a') FROM bar", trans, command); //$NON-NLS-1$
+
         trans = new SQLServerExecutionFactory();
         trans.setDatabaseVersion(SQLServerExecutionFactory.V_2000);
         trans.start();
@@ -247,6 +258,13 @@ public class TestSqlServerConversionVisitor {
 
         command = tu.parseCommand("select * from (select max(x) as max from bar) x"); //$NON-NLS-1$
         TranslationHelper.helpTestVisitor("SELECT x.max FROM (SELECT MAX(cast(bar.x as char(36))) AS max FROM bar) x", trans, command); //$NON-NLS-1$
+
+        command = tu.parseCommand("insert into bar (x) values ('a')"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("INSERT INTO bar (x) VALUES ('a')", trans, command); //$NON-NLS-1$
+
+        command = tu.parseCommand("select x from bar where x = 'abc'"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT cast(bar.x as char(36)) FROM bar WHERE cast(bar.x as char(36)) = 'abc'", trans, command); //$NON-NLS-1$
+
     }
 
     @Test public void testRowLimitWithInlineViewOrderBy() throws Exception {

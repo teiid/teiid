@@ -136,6 +136,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
     public static final Version ELEVEN_0 = Version.getVersion("11.0"); //$NON-NLS-1$
 
+    static final class UniqueIdentifier {}
 
     //TEIID-31 remove mod modifier for SQL Server 2008
     public SQLServerExecutionFactory() {
@@ -230,10 +231,37 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (getVersion().compareTo(SEVEN_0) > 0) {
+            if (obj instanceof SortSpecification) {
+                SortSpecification ss = (SortSpecification)obj;
+                if (ss.getExpression() instanceof ColumnReference && isUniqueIdentifier(((ColumnReference)ss.getExpression()))) {
+                    ((ColumnReference)ss.getExpression()).setType(UniqueIdentifier.class); //prevent the cast
+                }
+            }
+            if (obj instanceof DerivedColumn) {
+                DerivedColumn dc = (DerivedColumn)obj;
+                if (dc.getExpression() instanceof ColumnReference && isUniqueIdentifier(((ColumnReference)dc.getExpression()))) {
+                    ((ColumnReference)dc.getExpression()).setType(UniqueIdentifier.class); //prevent the cast
+                }
+            } else if (obj instanceof Comparison) {
+                Comparison comp = (Comparison)obj;
+                if (comp.getOperator() == Comparison.Operator.EQ
+                        && comp.getLeftExpression() instanceof ColumnReference && isUniqueIdentifier((ColumnReference)comp.getLeftExpression())
+                        && (comp.getRightExpression() instanceof Literal || comp.getRightExpression() instanceof Parameter)) {
+                    ((ColumnReference)comp.getLeftExpression()).setType(UniqueIdentifier.class); //prevent the cast
+                }
+            } else if (obj instanceof AggregateFunction) {
+                AggregateFunction f = (AggregateFunction)obj;
+                for (Expression p : f.getParameters()) {
+                    if (p instanceof ColumnReference && isUniqueIdentifier(((ColumnReference)p))) {
+                        ((ColumnReference)p).setType(UniqueIdentifier.class); //prevent the cast
+                    }
+                }
+            }
+        }
         if (obj instanceof ColumnReference) {
             ColumnReference elem = (ColumnReference)obj;
-            if (getVersion().compareTo(SEVEN_0) <= 0
-                    && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
+            if (isUniqueIdentifier(elem)) {
                 return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
             }
         } else if (obj instanceof AggregateFunction) {
@@ -292,6 +320,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
             }
         }
         return super.translate(obj, context);
+    }
+
+    private boolean isUniqueIdentifier(ColumnReference elem) {
+        return TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType()); //$NON-NLS-1$
     }
 
     private void addCast(String nativeType, DerivedColumn dc) {
