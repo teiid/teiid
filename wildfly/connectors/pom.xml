@@ -67,12 +67,7 @@
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
         <scope>test</scope>        
-    </dependency>        
-    <dependency>
-        <groupId>org.wildfly.build</groupId>
-        <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
-        <version>${version.org.wildfly.build-tools}</version>
-    </dependency>         
+    </dependency>
     
   </dependencies>
   

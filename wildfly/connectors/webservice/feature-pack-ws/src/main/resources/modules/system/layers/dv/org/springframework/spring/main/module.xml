@@ -7,7 +7,6 @@
     <artifact name="${org.springframework:spring-beans}"/>
     <artifact name="${org.springframework:spring-context}"/>
     <artifact name="${org.springframework:spring-core}"/>
-    <artifact name="${org.springframework:spring-asm}"/>
     <artifact name="${org.springframework:spring-expression}"/>
     <artifact name="${org.springframework:spring-aop}"/>
     <artifact name="${org.springframework:spring-tx}"/>    
