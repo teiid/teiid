@@ -20,16 +20,7 @@ package org.teiid.translator.ws;
 import java.util.List;
 import java.util.Map;
 
-import javax.wsdl.Binding;
-import javax.wsdl.BindingOperation;
-import javax.wsdl.Definition;
-import javax.wsdl.Input;
-import javax.wsdl.Message;
-import javax.wsdl.Operation;
-import javax.wsdl.Output;
-import javax.wsdl.Port;
-import javax.wsdl.Service;
-import javax.wsdl.WSDLException;
+import javax.wsdl.*;
 import javax.wsdl.extensions.ExtensibilityElement;
 import javax.wsdl.extensions.http.HTTPBinding;
 import javax.wsdl.extensions.soap.SOAPBinding;
@@ -147,7 +138,7 @@ public class WSDLMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
 
         // add output
-        String outXML = null;
+        String outXML = "response"; //$NON-NLS-1$
         Output output = operation.getOutput();
         if (output != null) {
             Message message = output.getMessage();

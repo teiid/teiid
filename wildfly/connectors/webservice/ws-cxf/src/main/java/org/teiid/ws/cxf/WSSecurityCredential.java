@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.resource.adapter.ws;
+package org.teiid.ws.cxf;
 
 import java.io.Serializable;
 import java.util.HashMap;

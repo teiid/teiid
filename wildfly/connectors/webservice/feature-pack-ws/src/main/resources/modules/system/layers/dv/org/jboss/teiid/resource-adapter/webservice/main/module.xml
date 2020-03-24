@@ -6,6 +6,7 @@
     <main-class name="org.teiid.oauth.OAuthUtil"/>
     
     <resources>
+        <artifact name="${org.teiid.wildfly.connectors:ws-cxf}"/>
         <artifact name="${org.teiid.wildfly.connectors:connector-ws}"/>
         <resource-root path="." />
         <!-- Insert resources here -->

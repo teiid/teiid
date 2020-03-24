@@ -20,25 +20,26 @@ package org.teiid.resource.adapter.ws;
 
 import javax.resource.ResourceException;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.ws.WebServiceException;
 import javax.xml.ws.Service.Mode;
+import javax.xml.ws.WebServiceException;
 import javax.xml.ws.http.HTTPBinding;
 
 import org.junit.Test;
+import org.teiid.translator.ws.WSConnection;
 
 public class TestWSAdapter {
 
     @Test(expected=WebServiceException.class) public void testMissingEndpoint() throws ResourceException {
         WSManagedConnectionFactory wsmcf = new WSManagedConnectionFactory();
 
-        WSConnectionImpl conn = (WSConnectionImpl)wsmcf.createConnectionFactory().getConnection();
+        WSConnection conn = (WSConnection)wsmcf.createConnectionFactory().getConnection();
         conn.createDispatch(HTTPBinding.HTTP_BINDING, null, StreamSource.class, Mode.PAYLOAD);
     }
 
     @Test(expected=WebServiceException.class) public void testMissingEndpoint1() throws ResourceException {
         WSManagedConnectionFactory wsmcf = new WSManagedConnectionFactory();
 
-        WSConnectionImpl conn = (WSConnectionImpl)wsmcf.createConnectionFactory().getConnection();
+        WSConnection conn = (WSConnection)wsmcf.createConnectionFactory().getConnection();
         conn.createDispatch(HTTPBinding.HTTP_BINDING, "/x", StreamSource.class, Mode.PAYLOAD); //$NON-NLS-1$
     }
 

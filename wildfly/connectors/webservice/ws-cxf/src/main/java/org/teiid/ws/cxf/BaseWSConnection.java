@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.resource.adapter.ws;
+package org.teiid.ws.cxf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.activation.DataSource;
-import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.namespace.QName;
@@ -70,8 +69,6 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.resource.spi.BasicConnection;
-import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.ws.WSConnection;
 import org.teiid.util.WSUtil;
 
@@ -80,7 +77,7 @@ import org.teiid.util.WSUtil;
  *
  * TODO: set a handler chain
  */
-public class WSConnectionImpl extends BasicConnection implements WSConnection {
+public abstract class BaseWSConnection implements WSConnection {
 
     private static final String CONNECTION_TIMEOUT = "javax.xml.ws.client.connectionTimeout"; //$NON-NLS-1$
     private static final String RECEIVE_TIMEOUT = "javax.xml.ws.client.receiveTimeout"; //$NON-NLS-1$
@@ -256,10 +253,10 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 
 
-    private WSManagedConnectionFactory mcf;
+    private WSConnectionFactory mcf;
     private Service wsdlService;
 
-    public WSConnectionImpl(WSManagedConnectionFactory mcf) {
+    public BaseWSConnection(WSConnectionFactory mcf) {
         this.mcf = mcf;
     }
 
@@ -273,7 +270,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
                 BusFactory.setThreadDefaultBus(bus);
             }
             if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
-                LogManager.logDetail(LogConstants.CTX_WS, "Created the WSDL service for", this.mcf.getWsdl()); //$NON-NLS-1$
+                LogManager.logDetail(LogConstants.CTX_WS, "Created the WSDL service for", this.mcf.getConfig().getWsdl()); //$NON-NLS-1$
             }
         }
         Dispatch<T> dispatch = this.wsdlService.createDispatch(this.mcf.getPortQName(), type, mode);
@@ -291,11 +288,11 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
             } catch (MalformedURLException e) {
                 //otherwise it should be a relative value
                 //but we should still preserve the base path and query string
-                String defaultEndpoint = this.mcf.getEndPoint();
+                String defaultEndpoint = this.mcf.getConfig().getEndPoint();
                 String defaultQueryString = null;
                 String defaultFragment = null;
                 if (defaultEndpoint == null) {
-                    throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("null_default_endpoint")); //$NON-NLS-1$
+                    throw new WebServiceException(WSConnectionFactory.UTIL.getString("null_default_endpoint")); //$NON-NLS-1$
                 }
                 String[] parts = defaultEndpoint.split("\\?", 2); //$NON-NLS-1$
                 defaultEndpoint = parts[0];
@@ -320,24 +317,22 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
                 }
             }
         } else {
-            endpoint = this.mcf.getEndPoint();
+            endpoint = this.mcf.getConfig().getEndPoint();
             if (endpoint == null) {
-                throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("null_endpoint")); //$NON-NLS-1$
+                throw new WebServiceException(WSConnectionFactory.UTIL.getString("null_endpoint")); //$NON-NLS-1$
             }
         }
         Dispatch<T> dispatch = null;
+        Bus bus = BusFactory.getThreadDefaultBus();
+        BusFactory.setThreadDefaultBus(this.mcf.getBus());
         if (HTTPBinding.HTTP_BINDING.equals(binding) && (type == DataSource.class)) {
-            Bus bus = BusFactory.getThreadDefaultBus();
-            BusFactory.setThreadDefaultBus(this.mcf.getBus());
             try {
-                dispatch = (Dispatch<T>) new HttpDispatch(endpoint, this.mcf.getConfigFile(), this.mcf.getConfigName());
+                dispatch = (Dispatch<T>) new HttpDispatch(endpoint, this.mcf.getConfig().getConfigFile(), this.mcf.getConfig().getConfigName());
             } finally {
                 BusFactory.setThreadDefaultBus(bus);
             }
         } else {
             //TODO: cache service/port/dispatch instances?
-            Bus bus = BusFactory.getThreadDefaultBus();
-            BusFactory.setThreadDefaultBus(this.mcf.getBus());
             Service svc;
             try {
                 svc = Service.create(this.mcf.getServiceQName());
@@ -357,7 +352,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
     }
 
     private <T> void configureWSSecurity(Dispatch<T> dispatch) {
-        if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
+        if (this.mcf.getConfig().getAsSecurityType() == WSConfiguration.SecurityType.WSSecurity) {
             Bus bus = BusFactory.getThreadDefaultBus();
             BusFactory.setThreadDefaultBus(this.mcf.getBus());
             try {
@@ -372,9 +367,9 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
                 }
 
                 // ws-security pass-thru from custom jaas domain
-                Subject subject = ConnectionContext.getSubject();
+                Subject subject = getSubject();
                 if (subject != null) {
-                    WSSecurityCredential credential = ConnectionContext.getSecurityCredential(subject, WSSecurityCredential.class);
+                    WSSecurityCredential credential = getSecurityCredential(subject, WSSecurityCredential.class);
                     if (credential != null) {
                         if (credential.useSts()) {
                             dispatch.getRequestContext().put(SecurityConstants.STS_CLIENT, credential.buildStsClient(bus));
@@ -390,7 +385,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
                     }
 
                     // When properties are set on subject treat them as they can configure WS-Security
-                    HashMap<String, String> properties = ConnectionContext.getSecurityCredential(subject, HashMap.class);
+                    HashMap<String, String> properties = getSecurityCredential(subject, HashMap.class);
                     for (String key:properties.keySet()) {
                         if (key.startsWith("ws-security.")) { //$NON-NLS-1$
                             ep.put(key, properties.get(key));
@@ -404,63 +399,63 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
     }
 
     private <T> void setDispatchProperties(Dispatch<T> dispatch, String binding) {
-        if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic
-                || this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Digest){
+        if (this.mcf.getConfig().getAsSecurityType() == WSConfiguration.SecurityType.HTTPBasic
+                || this.mcf.getConfig().getAsSecurityType() == WSConfiguration.SecurityType.Digest){
 
-            String userName = this.mcf.getAuthUserName();
-            String password = this.mcf.getAuthPassword();
+            String userName = this.mcf.getConfig().getAuthUserName();
+            String password = this.mcf.getConfig().getAuthPassword();
 
             // if security-domain is specified and caller identity is used; then use
             // credentials from subject
-            Subject subject = ConnectionContext.getSubject();
+            Subject subject = getSubject();
             if (subject != null) {
-                userName = ConnectionContext.getUserName(subject, this.mcf, userName);
-                password = ConnectionContext.getPassword(subject, this.mcf, userName, password);
+                userName = getUserName(subject, userName);
+                password = getPassword(subject, userName, password);
             }
             AuthorizationPolicy policy = new AuthorizationPolicy();
             policy.setUserName(userName);
             policy.setPassword(password);
-            if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Digest) {
+            if (this.mcf.getConfig().getAsSecurityType() == WSConfiguration.SecurityType.Digest) {
                 policy.setAuthorizationType("Digest");
             } else {
                 policy.setAuthorizationType("Basic");
             }
             dispatch.getRequestContext().put(AuthorizationPolicy.class.getName(), policy);
         }
-        else if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.Kerberos) {
+        else if (this.mcf.getConfig().getAsSecurityType() == WSConfiguration.SecurityType.Kerberos) {
             boolean credentialFound = false;
-            Subject subject = ConnectionContext.getSubject();
+            Subject subject = getSubject();
             if (subject != null) {
-                GSSCredential credential = ConnectionContext.getSecurityCredential(subject, GSSCredential.class);
+                GSSCredential credential = getSecurityCredential(subject, GSSCredential.class);
                 if (credential != null) {
                     dispatch.getRequestContext().put(GSSCredential.class.getName(), credential);
                     credentialFound = true;
                 }
             }
             if (!credentialFound) {
-                throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("no_gss_credential")); //$NON-NLS-1$
+                throw new WebServiceException(WSConnectionFactory.UTIL.getString("no_gss_credential")); //$NON-NLS-1$
             }
         }
-        else if (this.mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.OAuth) {
+        else if (this.mcf.getConfig().getAsSecurityType() == WSConfiguration.SecurityType.OAuth) {
             boolean credentialFound = false;
-            Subject subject = ConnectionContext.getSubject();
+            Subject subject = getSubject();
             if (subject != null) {
-                OAuthCredential credential = ConnectionContext.getSecurityCredential(subject, OAuthCredential.class);
+                OAuthCredential credential = getSecurityCredential(subject, OAuthCredential.class);
                 if (credential != null) {
                     dispatch.getRequestContext().put(OAuthCredential.class.getName(), credential);
                     credentialFound = true;
                 }
             }
             if (!credentialFound) {
-                throw new WebServiceException(WSManagedConnectionFactory.UTIL.getString("no_oauth_credential")); //$NON-NLS-1$
+                throw new WebServiceException(WSConnectionFactory.UTIL.getString("no_oauth_credential")); //$NON-NLS-1$
             }
         }
 
-        if (this.mcf.getRequestTimeout() != null){
-            dispatch.getRequestContext().put(RECEIVE_TIMEOUT, this.mcf.getRequestTimeout());
+        if (this.mcf.getConfig().getRequestTimeout() != null){
+            dispatch.getRequestContext().put(RECEIVE_TIMEOUT, this.mcf.getConfig().getRequestTimeout());
         }
-        if (this.mcf.getConnectTimeout() != null){
-            dispatch.getRequestContext().put(CONNECTION_TIMEOUT, this.mcf.getConnectTimeout());
+        if (this.mcf.getConfig().getConnectTimeout() != null){
+            dispatch.getRequestContext().put(CONNECTION_TIMEOUT, this.mcf.getConfig().getConnectTimeout());
         }
 
         if (HTTPBinding.HTTP_BINDING.equals(binding)) {
@@ -475,7 +470,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
     }
 
     @Override
-    public void close() throws ResourceException {
+    public void close() {
     }
 
     @Override
@@ -501,4 +496,9 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
         }
         return null;
     }
+
+    protected abstract Subject getSubject();
+    protected abstract <T> T getSecurityCredential(Subject s, Class<T> clazz);
+    protected abstract String getUserName(Subject s, String defaultUserName);
+    protected abstract String getPassword(Subject s, String userName, String defaultPassword);
 }

@@ -48,7 +48,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
     public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
 
     public static final Version SIX_1 = Version.getVersion("6.1"); //$NON-NLS-1$
-    private static final String WEEK_ISO = "WEEK_ISO";
+    private static final String WEEK_ISO = "WEEK_ISO"; //$NON-NLS-1$
 
     private boolean dB2ForI;
 
