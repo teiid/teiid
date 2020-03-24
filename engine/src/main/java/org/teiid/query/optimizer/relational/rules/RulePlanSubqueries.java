@@ -269,8 +269,8 @@ public final class RulePlanSubqueries implements OptimizerRule {
     private PlanNode planMergeJoin(PlanNode current, PlanNode root,
             LanguageObject obj, PlannedResult plannedResult, boolean isProjection)
             throws QueryMetadataException, TeiidComponentException {
-        if (current.getFirstChild() == null) {
-            //select subquery over just a source node representing a table function
+        if (current == null || current.getFirstChild() == null) {
+            //select subquery with no from or over just a source node representing a table function
             return current;
         }
         float sourceCost = NewCalculateCostUtil.computeCostForTree(current.getFirstChild(), metadata);
