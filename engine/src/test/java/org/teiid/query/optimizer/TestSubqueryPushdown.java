@@ -2086,5 +2086,22 @@ public class TestSubqueryPushdown {
         }
     }
 
+    @Test public void testProcedureInSelectWithNoFrom() throws Exception {
+        String sql = "SELECT (EXEC pm1.sqsp1())"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        CommandContext cc = TestProcessor.createCommandContext();
+        ProcessorPlan pp = TestProcessor.helpGetPlan(TestOptimizer.helpGetCommand(sql, metadata), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+
+        HardcodedDataManager manager = new HardcodedDataManager(metadata);
+        manager.addData("EXEC sp1()", Arrays.asList("a"));
+
+        List<?>[] expected = new List[] { Arrays.asList("a") };
+
+        helpProcess(pp, cc, manager, expected);
+    }
+
 }
 
