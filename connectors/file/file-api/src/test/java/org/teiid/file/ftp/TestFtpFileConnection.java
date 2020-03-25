@@ -15,40 +15,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.resource.adapter.ftp;
+package org.teiid.file.ftp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-
-import javax.resource.ResourceException;
 
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.translator.TranslatorException;
 
 @Ignore("Ignore due to this test depend on remote ftp server and reference configuration")
 public class TestFtpFileConnection {
 
-    private static FtpFileConnectionImpl sample() throws ResourceException {
-        FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
-        mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
-        mcf.setHost("10.66.192.120"); //$NON-NLS-1$
-        mcf.setPort(21);
-        mcf.setUsername("kylin"); //$NON-NLS-1$
-        mcf.setPassword("redhat"); //$NON-NLS-1$
-        return mcf.createConnectionFactory().getConnection();
+    static FtpFileConnection sample() throws Exception {
+        FtpConfiguration mcf = new FtpConfiguration() {
+            @Override
+            public String getParentDirectory() {
+                return "/home/kylin/vsftpd";
+            }
+            @Override
+            public String getUsername() {
+                return "kylin";
+            }
+            @Override
+            public String getHost() {
+                return "10.66.192.120";
+            }
+            @Override
+            public String getPassword() {
+                return "redhat";
+            }
+        };
+        return new FtpFileConnection(mcf);
     }
 
     @Test
-    public void testGetFile() throws ResourceException, IOException {
+    public void testGetFile() throws Exception {
 
-        FtpFileConnectionImpl conn = sample();
+        FtpFileConnection conn = sample();
         VirtualFile file = conn.getFile("marketdata-price.txt"); //$NON-NLS-1$
         assertNotNull(file.openStream());
         file = conn.getFile("marketdata-price1.txt"); //$NON-NLS-1$
@@ -66,9 +79,9 @@ public class TestFtpFileConnection {
         }
     }
 
-    @Test(expected = ResourceException.class)
+    @Test(expected = TranslatorException.class)
     public void testGetFiles() throws Exception {
-        FtpFileConnectionImpl conn = sample();
+        FtpFileConnection conn = sample();
         org.teiid.file.VirtualFile[] files = conn.getFiles("*.txt");
         assertEquals(2, files.length);
         conn.close();
@@ -76,7 +89,7 @@ public class TestFtpFileConnection {
 
     @Test
     public void testAdd() throws Exception {
-        FtpFileConnectionImpl conn = sample();
+        FtpFileConnection conn = sample();
         VirtualFile file = conn.getFile("pom.xml"); //$NON-NLS-1$
         assertFalse(file.exists());
         VirtualFile pom = VFS.getChild(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
@@ -91,7 +104,7 @@ public class TestFtpFileConnection {
 
     @Test
     public void testRemove() throws Exception {
-        FtpFileConnectionImpl conn = sample();
+        FtpFileConnection conn = sample();
         VirtualFile pom = VFS.getChild(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
         VirtualFile file = conn.getFile("pom.xml"); //$NON-NLS-1$
         conn.add(pom.openStream(), pom.getName());

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.resource.adapter.ftp;
+package org.teiid.file.ftp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,10 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-
-import javax.resource.ResourceException;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.jboss.vfs.VFS;
@@ -40,25 +37,21 @@ import org.junit.Test;
 public class TestFtpFileSystem {
 
     @BeforeClass
-    public static void sample() throws IOException, ResourceException {
-        FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
-        mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
-        mcf.setHost("10.66.192.120"); //$NON-NLS-1$
-        mcf.setPort(21);
-        mcf.setUsername("kylin"); //$NON-NLS-1$
-        mcf.setPassword("redhat"); //$NON-NLS-1$
+    public static void sample() throws Exception {
+        FtpFileConnection conn = TestFtpFileConnection.sample();
+
         VirtualFile mountPoint = VFS.getChild("/home/kylin/vsftpd"); //$NON-NLS-1$
-        VFS.mount(mountPoint, new FtpFileSystem(mcf.createClient()));
+        VFS.mount(mountPoint, new FtpFileSystem(conn.getClient()));
     }
 
     @Test
-    public void testGetFile() throws IOException, ResourceException {
+    public void testGetFile() throws Exception {
         File file = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").getPhysicalFile(); //$NON-NLS-1$
         assertNull(file);
     }
 
     @Test
-    public void testOpenStream() throws IOException, ResourceException {
+    public void testOpenStream() throws Exception {
         InputStream in = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").openStream(); //$NON-NLS-1$
         assertNull(in);
         in = VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").openStream(); //$NON-NLS-1$
@@ -67,7 +60,7 @@ public class TestFtpFileSystem {
     }
 
     @Test
-    public void testDelete() throws IOException, ResourceException {
+    public void testDelete() throws Exception {
         writeFile(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
         VirtualFile file = VFS.getChild("/home/kylin/vsftpd/pom.xml"); //$NON-NLS-1$
         assertTrue(file.exists());
@@ -75,15 +68,10 @@ public class TestFtpFileSystem {
         assertFalse(file.exists());
     }
 
-    private void writeFile(String path) throws ResourceException, IOException {
+    private void writeFile(String path) throws Exception {
         VirtualFile file = VFS.getChild(path);
-        FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
-        mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
-        mcf.setHost("10.66.192.120"); //$NON-NLS-1$
-        mcf.setPort(21);
-        mcf.setUsername("kylin"); //$NON-NLS-1$
-        mcf.setPassword("redhat"); //$NON-NLS-1$
-        FTPClient client = mcf.createClient();
+        FtpFileConnection conn = TestFtpFileConnection.sample();
+        FTPClient client = conn.getClient();
         client.storeFile(file.getName(), file.openStream());
         client.disconnect();
     }

@@ -16,5 +16,6 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.vfs" export="true" />
+        <module name="org.apache.commons.net" export="true"/>
     </dependencies>
 </module>
