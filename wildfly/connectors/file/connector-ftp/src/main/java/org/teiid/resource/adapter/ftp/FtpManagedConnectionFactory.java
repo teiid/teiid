@@ -17,13 +17,14 @@
  */
 package org.teiid.resource.adapter.ftp;
 
-import static org.teiid.core.util.Assertion.*;
+import static org.apache.commons.net.ftp.FTP.ASCII_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTP.EBCDIC_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
 import static org.apache.commons.net.ftp.FTPClient.ACTIVE_LOCAL_DATA_CONNECTION_MODE;
 import static org.apache.commons.net.ftp.FTPClient.PASSIVE_LOCAL_DATA_CONNECTION_MODE;
-import static org.apache.commons.net.ftp.FTP.ASCII_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTP.EBCDIC_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
+import static org.teiid.core.util.Assertion.assertTrue;
+import static org.teiid.core.util.Assertion.isNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,19 +42,19 @@ import javax.net.ssl.TrustManager;
 import javax.resource.ResourceException;
 
 import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
-import org.apache.commons.net.ftp.FTPReply;
-import org.apache.commons.net.ftp.FTPSClient;
 import org.apache.commons.net.util.KeyManagerUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
+import org.teiid.file.ftp.FtpConfiguration;
+import org.teiid.file.ftp.FtpFileConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.translator.TranslatorException;
 
-public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
+public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory implements FtpConfiguration {
 
     private static final long serialVersionUID = -687763504336137294L;
 
@@ -123,6 +124,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         return config;
     }
 
+    @Override
     public String getParentDirectory() {
         return parentDirectory;
     }
@@ -132,6 +134,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.parentDirectory = parentDirectory;
     }
 
+    @Override
     public String getFileMapping() {
         return fileMapping;
     }
@@ -145,6 +148,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.config = config;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }
@@ -154,6 +158,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.username = username;
     }
 
+    @Override
     public String getHost() {
         return host;
     }
@@ -163,6 +168,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.host = host;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -172,6 +178,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.password = password;
     }
 
+    @Override
     public Integer getPort() {
         return port;
     }
@@ -181,6 +188,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.port = port;
     }
 
+    @Override
     public Integer getBufferSize() {
         return bufferSize;
     }
@@ -189,6 +197,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.bufferSize = bufferSize;
     }
 
+    @Override
     public Integer getClientMode() {
         return clientMode;
     }
@@ -198,6 +207,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.clientMode = clientMode;
     }
 
+    @Override
     public Integer getFileType() {
         return fileType;
     }
@@ -217,6 +227,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.fileType = fileType;
     }
 
+    @Override
     public String getControlEncoding() {
         return controlEncoding;
     }
@@ -226,6 +237,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.controlEncoding = controlEncoding;
     }
 
+    @Override
     public Integer getConnectTimeout() {
         return connectTimeout;
     }
@@ -234,6 +246,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.connectTimeout = connectTimeout;
     }
 
+    @Override
     public Integer getDefaultTimeout() {
         return defaultTimeout;
     }
@@ -242,6 +255,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.defaultTimeout = defaultTimeout;
     }
 
+    @Override
     public Integer getDataTimeout() {
         return dataTimeout;
     }
@@ -250,6 +264,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.dataTimeout = dataTimeout;
     }
 
+    @Override
     public Boolean getIsFtps() {
         return isFtps;
     }
@@ -258,6 +273,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.isFtps = isFtps;
     }
 
+    @Override
     public Boolean getUseClientMode() {
         return useClientMode;
     }
@@ -266,6 +282,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.useClientMode = useClientMode;
     }
 
+    @Override
     public Boolean getSessionCreation() {
         return sessionCreation;
     }
@@ -274,6 +291,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.sessionCreation = sessionCreation;
     }
 
+    @Override
     public String getAuthValue() {
         return authValue;
     }
@@ -297,7 +315,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
                 KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
                 keyStore.load(null);
                 keyStore.setCertificateEntry("alias", cert); //$NON-NLS-1$
-                trustManager = TrustManagerUtils.getDefaultTrustManager(keyStore);
+                this.trustManager = TrustManagerUtils.getDefaultTrustManager(keyStore);
             } catch (IOException | GeneralSecurityException e) {
                 throw new TeiidRuntimeException(UTIL.getString("ftp_certificate_path", certificate, e));  //$NON-NLS-1$
             }
@@ -356,6 +374,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.keyPassword = keyPassword;
     }
 
+    @Override
     public Boolean getNeedClientAuth() {
         return needClientAuth;
     }
@@ -364,6 +383,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.needClientAuth = needClientAuth;
     }
 
+    @Override
     public Boolean getWantsClientAuth() {
         return wantsClientAuth;
     }
@@ -372,6 +392,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.wantsClientAuth = wantsClientAuth;
     }
 
+    @Override
     public Boolean isImplicit() {
         return implicit;
     }
@@ -380,6 +401,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.implicit = implicit;
     }
 
+    @Override
     public String getExecProt() {
         return execProt;
     }
@@ -388,6 +410,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.execProt = execProt;
     }
 
+    @Override
     public String getProtocol() {
         return protocol;
     }
@@ -401,136 +424,19 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     @SuppressWarnings("serial")
     @Override
     public BasicConnectionFactory<FtpFileConnectionImpl> createConnectionFactory()throws ResourceException {
-
-        final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
-
         return new BasicConnectionFactory<FtpFileConnectionImpl>() {
-
             @Override
             public FtpFileConnectionImpl getConnection() throws ResourceException {
                 try {
-                    return new FtpFileConnectionImpl(createClient(), parentDirectory, map);
-                } catch (IOException e) {
+                    return new FtpFileConnectionImpl(new FtpFileConnection(configuration()));
+                } catch (TranslatorException e) {
                     throw new ResourceException(e);
                 }
             }};
     }
 
-    protected FTPClient createClient() throws IOException, ResourceException {
-
-        FTPClient client = createClientInstance();
-
-        beforeConnectProcessing(client);
-
-        client.connect(this.host, this.port);
-
-        if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
-            throw new ResourceException(UTIL.getString("ftp_connect_failed", this.host, this.port)); //$NON-NLS-1$
-        }
-
-        if (!client.login(this.username, this.password)) {
-            throw new IllegalStateException(UTIL.getString("ftp_login_failed", client.getReplyString())); //$NON-NLS-1$
-        }
-
-        afterConnectProcessing(client);
-
-        return client;
-
-    }
-
-    private FTPClient createClientInstance() {
-        if(this.isFtps) {
-            if(this.getProtocol() != null) {
-                return new FTPSClient(this.protocol, this.implicit);
-            }
-            return new FTPSClient(this.implicit);
-        }
-        return new FTPClient();
-    }
-
-    private void beforeConnectProcessing(FTPClient client) throws IOException {
-
-        client.configure(this.config);
-        if (this.connectTimeout != null) {
-            client.setConnectTimeout(this.connectTimeout);
-        }
-        if (this.defaultTimeout != null) {
-            client.setDefaultTimeout(this.defaultTimeout);
-        }
-        if (this.dataTimeout != null) {
-            client.setDataTimeout(this.dataTimeout);
-        }
-        client.setControlEncoding(this.controlEncoding);
-
-        if(this.isFtps){
-            FTPSClient ftpsClient  = (FTPSClient) client;
-            ftpsClient.execPBSZ(0);
-            ftpsClient.execPROT(this.execProt);
-        }
-    }
-
-
-    private void afterConnectProcessing(FTPClient client) throws IOException {
-
-        if (this.parentDirectory == null) {
-            throw new IOException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
-        }
-
-        if(!client.changeWorkingDirectory(this.getParentDirectory())){
-            throw new IOException(UTIL.getString("ftp_dir_not_exist", this.getParentDirectory())); //$NON-NLS-1$
-        }
-
-        updateClientMode(client);
-
-        client.setFileType(this.fileType);
-        client.setBufferSize(this.bufferSize);
-
-        if(this.isFtps) {
-            FTPSClient ftpsClient  = (FTPSClient) client;
-            if(this.getAuthValue() != null) {
-                ftpsClient.setAuthValue(this.authValue);
-            }
-            if (this.trustManager != null) {
-                ftpsClient.setTrustManager(this.trustManager);
-            }
-            if (this.cipherSuites != null) {
-                ftpsClient.setEnabledCipherSuites(this.cipherSuites);
-            }
-            if (this.protocols != null) {
-                ftpsClient.setEnabledProtocols(this.protocols);
-            }
-            if (this.sessionCreation != null) {
-                ftpsClient.setEnabledSessionCreation(this.sessionCreation);
-            }
-            if (this.useClientMode != null) {
-                ftpsClient.setUseClientMode(this.useClientMode);
-            }
-            if (this.sessionCreation != null) {
-                ftpsClient.setEnabledSessionCreation(this.sessionCreation);
-            }
-            if (this.keyManager != null) {
-                ftpsClient.setKeyManager(this.keyManager);
-            }
-            if (this.needClientAuth != null) {
-                ftpsClient.setNeedClientAuth(this.needClientAuth);
-            }
-            if (this.wantsClientAuth != null) {
-                ftpsClient.setWantClientAuth(this.wantsClientAuth);
-            }
-        }
-    }
-
-    private void updateClientMode(FTPClient client) {
-        switch (this.clientMode) {
-            case ACTIVE_LOCAL_DATA_CONNECTION_MODE:
-                client.enterLocalActiveMode();
-                break;
-            case PASSIVE_LOCAL_DATA_CONNECTION_MODE:
-                client.enterLocalPassiveMode();
-                break;
-            default:
-                break;
-        }
+    FtpConfiguration configuration() {
+        return this;
     }
 
     @Override
@@ -659,4 +565,23 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         return true;
     }
 
+    @Override
+    public TrustManager getTrustManager() {
+        return this.trustManager;
+    }
+
+    @Override
+    public KeyManager getKeyManager() {
+        return this.keyManager;
+    }
+
+    @Override
+    public String[] getSupportedCipherSuites() {
+        return this.cipherSuites;
+    }
+
+    @Override
+    public String[] getSupportedProtocols() {
+        return this.protocols;
+    }
 }

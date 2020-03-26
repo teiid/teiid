@@ -31,13 +31,5 @@
             <groupId>org.teiid.connectors</groupId>
             <artifactId>file-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-vfs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-net</groupId>
-            <artifactId>commons-net</artifactId>
-        </dependency>
     </dependencies>
 </project>
