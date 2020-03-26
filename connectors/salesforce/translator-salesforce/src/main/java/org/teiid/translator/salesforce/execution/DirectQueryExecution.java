@@ -136,7 +136,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
 
     private void doUpsert(String upsert) throws TranslatorException {
         DataPayload payload = buildDataPlayload(upsert);
-        this.updateCount = this.connection.upsert(payload); //$NON-NLS-1$
+        this.updateCount = this.connection.upsert(payload);
         this.updateQuery = true;
     }
 
@@ -253,7 +253,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
                     if (anObj == null) {
                         continue;
                     }
-                    anObj = Util.stripQutes(anObj.toString());
+                    anObj = Util.toSalesforceObjectValue(anObj, argument.getType());
                     payload.addField(name, anObj);
                 }
             }

@@ -20,10 +20,8 @@ package org.teiid.translator.salesforce.execution;
 
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,6 +41,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.InsertVisitor;
 
 import com.sforce.async.BatchResult;
@@ -136,12 +135,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
             }
 
             Literal literalValue = (Literal)values.get(i);
-            Object val = literalValue.getValue();
-            if (val instanceof Timestamp) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime((Timestamp)val);
-                val = cal;
-            }
+            Object val = Util.toSalesforceObjectValue(literalValue.getValue(), literalValue.getType());
             data.addField(column.getSourceName(), val);
         }
     }

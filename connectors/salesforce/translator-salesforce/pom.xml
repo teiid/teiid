@@ -6,7 +6,6 @@
 		<artifactId>salesforce</artifactId>
 		<version>13.1.1-SNAPSHOT</version>
 	</parent>
-	<groupId>org.teiid.connectors</groupId>
 	<artifactId>translator-salesforce</artifactId>
 	<name>Salesforce Translator</name>
 	<description>Integrates the query engine with Salesforce.com.</description>
