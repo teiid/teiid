@@ -179,14 +179,15 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         criteriaBuffer.add(SPACE);
         criteriaBuffer.add(funcName);
         criteriaBuffer.add(OPEN);
-        String fullParam = ((Literal)expressions.get(1)).toString();
+        //TODO: this should be a vararg array, rather than a single value
+        String fullParam = (String)((Literal)expressions.get(1)).getValue();
         String[] params = fullParam.split(","); //$NON-NLS-1$
         for (int i = 0; i < params.length; i++) {
             String token = params[i];
             if (i != 0) {
                 criteriaBuffer.add(COMMA);
             }
-            criteriaBuffer.add(Util.addSingleQuotes(token));
+            criteriaBuffer.add("'" + token + "'"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         criteriaBuffer.add(CLOSE);
     }

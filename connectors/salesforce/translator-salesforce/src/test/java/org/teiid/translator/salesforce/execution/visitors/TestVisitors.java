@@ -350,7 +350,7 @@ public class TestVisitors {
         helpTest(sql, source);
     }
 
-    @Test public void testIncludExclude() throws Exception {
+    @Test public void testIncludeExclude() throws Exception {
         String sql = "select id from idea where includes(categories, 'a,b')";
         String source = "SELECT Idea.Id FROM Idea WHERE Categories includes('a','b')";
         helpTest(sql, source);

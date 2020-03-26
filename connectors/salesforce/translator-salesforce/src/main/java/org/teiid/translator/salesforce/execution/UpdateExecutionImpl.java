@@ -62,8 +62,9 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
             for (SetClause clause : ((Update)command).getChanges()) {
                 ColumnReference element = clause.getSymbol();
                 Column column = element.getMetadataObject();
-                String val = ((Literal) clause.getValue()).toString();
-                data.addField(column.getSourceName(), Util.stripQutes(val));
+                Literal l = (Literal) clause.getValue();
+                Object value = Util.toSalesforceObjectValue(l.getValue(),  l.getType());
+                data.addField(column.getSourceName(), value);
             }
 
             data.setType(visitor.getTableName());
