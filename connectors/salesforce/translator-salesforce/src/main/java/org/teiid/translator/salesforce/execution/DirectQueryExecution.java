@@ -250,9 +250,6 @@ public class DirectQueryExecution implements ProcedureExecution  {
                     }
                     Argument argument = arguments.get(attrCount++);
                     Object  anObj = argument.getArgumentValue().getValue();
-                    if (anObj == null) {
-                        continue;
-                    }
                     anObj = Util.toSalesforceObjectValue(anObj, argument.getType());
                     payload.addField(name, anObj);
                 }

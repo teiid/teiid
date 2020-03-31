@@ -344,11 +344,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
     }
 
     public int upsert(DataPayload data) throws TranslatorException {
-        SObject toCreate = new SObject();
-        toCreate.setType(data.getType());
-        for (DataPayload.Field field : data.getMessageElements()) {
-            toCreate.addField(field.name, field.value);
-        }
+        SObject toCreate = toUpdateSObject(new ArrayList<>(), data);
         SObject[] objects = new SObject[] {toCreate};
         UpsertResult[] results;
         try {
@@ -398,14 +394,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
     public int update(List<DataPayload> updateDataList) throws TranslatorException {
         List<SObject> params = new ArrayList<SObject>(updateDataList.size());
+        List<String> nullFields = new ArrayList<>();
         for(int i = 0; i < updateDataList.size(); i++) {
             DataPayload data = updateDataList.get(i);
-            SObject toCreate = new SObject();
-            toCreate.setType(data.getType());
-            toCreate.setId(data.getID());
-            for (DataPayload.Field field : data.getMessageElements()) {
-                toCreate.addField(field.name, field.value);
-            }
+            SObject toCreate = toUpdateSObject(nullFields, data);
             params.add(i, toCreate);
         }
         SaveResult[] result;
@@ -423,6 +415,24 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
                 throw new TranslatorException(e);
             }
         return analyzeResult(result);
+    }
+
+    static SObject toUpdateSObject(List<String> nullFields, DataPayload data) {
+        SObject toCreate = new SObject();
+        toCreate.setType(data.getType());
+        toCreate.setId(data.getID());
+        for (DataPayload.Field field : data.getMessageElements()) {
+            if (field.value == null) {
+                nullFields.add(field.name);
+            } else {
+                toCreate.addField(field.name, field.value);
+            }
+        }
+        if (!nullFields.isEmpty()) {
+            toCreate.setFieldsToNull(nullFields.toArray(new String[nullFields.size()]));
+            nullFields.clear();
+        }
+        return toCreate;
     }
 
     private int analyzeResult(SaveResult[] results) throws TranslatorException {
