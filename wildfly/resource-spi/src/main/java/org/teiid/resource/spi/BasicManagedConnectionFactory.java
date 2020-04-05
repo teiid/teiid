@@ -59,7 +59,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
         Assertion.isNotNull(this.cf);
         ConnectionContext.setSubject(arg0);
 
-        BasicConnection connection = null;
+        ResourceConnection connection = null;
         if (arg1 instanceof ConnectionRequestInfoWrapper) {
             connection = this.cf.getConnection(((ConnectionRequestInfoWrapper)arg1).cs);
         }

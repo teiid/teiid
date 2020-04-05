@@ -15,12 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.resource.spi;
 
-/**
- * see {@link ResourceConnection}
- */
-@Deprecated
-public abstract class BasicConnection implements ResourceConnection {
+package org.teiid.salesforce;
+
+public interface SalesforceConfiguration {
+
+    String getUsername();
+
+    String getPassword();
+
+    String getURL();
+
+    Long getConnectTimeout();
+
+    Long getRequestTimeout();
 
 }

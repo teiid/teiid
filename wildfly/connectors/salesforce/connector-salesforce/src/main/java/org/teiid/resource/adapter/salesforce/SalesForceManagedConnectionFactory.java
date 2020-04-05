@@ -26,12 +26,17 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.resource.spi.ResourceConnection;
+import org.teiid.salesforce.SalesforceConfiguration;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 
+import com.sforce.async.AsyncApiException;
 import com.sforce.soap.partner.Connector;
+import com.sforce.ws.ConnectionException;
 
 
-public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
+public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory implements SalesforceConfiguration {
+
     private static final long serialVersionUID = 5298591275313314698L;
 
     private String username;
@@ -47,6 +52,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
     private String configProperties;
     private String configFile; // path to the "jbossws-cxf.xml" file
 
+    @Override
     public String getUsername() {
         return username;
     }
@@ -57,6 +63,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
         this.username = username;
     }
 
+    @Override
     public String getPassword() {
         return this.password;
     }
@@ -64,6 +71,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
         this.password = password;
     }
 
+    @Override
     public String getURL() {
         return this.url;
     }
@@ -72,6 +80,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
         this.url = uRL;
     }
 
+    @Override
     public Long getConnectTimeout() {
         return connectTimeout;
     }
@@ -80,6 +89,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
         this.connectTimeout = connectTimeout;
     }
 
+    @Override
     public Long getRequestTimeout() {
         return requestTimeout;
     }
@@ -89,14 +99,18 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
     }
 
     @Override
-    public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
+    public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
         checkVersion();
-        return new BasicConnectionFactory<SalesforceConnectionImpl>() {
+        return new BasicConnectionFactory<ResourceConnection>() {
             private static final long serialVersionUID = 5028356110047329135L;
 
             @Override
-            public SalesforceConnectionImpl getConnection() throws ResourceException {
-                return new SalesforceConnectionImpl(SalesForceManagedConnectionFactory.this);
+            public ResourceConnection getConnection() throws ResourceException {
+                try {
+                    return new SalesforceConnectionImpl(SalesForceManagedConnectionFactory.this);
+                } catch (AsyncApiException | ConnectionException e) {
+                    throw new ResourceException(e);
+                }
             }
         };
     }

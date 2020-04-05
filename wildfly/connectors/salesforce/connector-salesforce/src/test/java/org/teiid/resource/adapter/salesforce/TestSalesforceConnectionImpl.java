@@ -25,6 +25,7 @@ import java.util.Calendar;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.salesforce.BaseSalesforceConnection;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 
@@ -56,7 +57,7 @@ public class TestSalesforceConnectionImpl {
         DataPayload payload = new DataPayload();
         payload.addField("hello", "world");
         payload.addField("null", null);
-        SObject obj = SalesforceConnectionImpl.toUpdateSObject(new ArrayList<>(), payload);
+        SObject obj = BaseSalesforceConnection.toUpdateSObject(new ArrayList<>(), payload);
         assertArrayEquals(new String [] {"null"}, obj.getFieldsToNull());
     }
 
