@@ -20,8 +20,8 @@ package org.teiid.language;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * SQL Constants for Teiid.
@@ -506,7 +506,7 @@ public class SQLConstants {
      * @throws AssertionError
      */
     private static Set<String> extractFieldNames(Class<?> clazz) throws AssertionError {
-        HashSet<String> result = new HashSet<String>();
+        TreeSet<String> result = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         Field[] fields = clazz.getDeclaredFields();
          for (Field field : fields) {
              if (field.getType() == String.class) {
@@ -547,6 +547,6 @@ public class SQLConstants {
          if(str == null) {
              return false;
          }
-         return RESERVED_WORDS.contains(str.toUpperCase());
+         return RESERVED_WORDS.contains(str);
      }
 }

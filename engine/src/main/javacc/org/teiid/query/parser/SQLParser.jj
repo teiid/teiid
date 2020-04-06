@@ -5701,7 +5701,7 @@ void createPolicy(DatabaseStore dbStore, ParseInfo info) :
 /*
 name=DROP POLICY
 description=DROP row level policy
-example=[source,sql]\n----\DROP POLICY pname ON tbl TO role\n----\n
+example=[source,sql]\n----\nDROP POLICY pname ON tbl TO role\n----\n
 */
 void dropPolicy(DatabaseStore dbStore) :
 {
