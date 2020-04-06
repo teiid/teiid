@@ -37,10 +37,10 @@ import javax.transaction.xa.XAResource;
 public class BasicManagedConnection implements ManagedConnection {
     protected PrintWriter log;
     protected final Collection<ConnectionEventListener> listeners = new ArrayList<ConnectionEventListener>();
-    private BasicConnection physicalConnection;
+    private ResourceConnection physicalConnection;
     private final Set<WrappedConnection> handles = new HashSet<WrappedConnection>();
 
-    public BasicManagedConnection(BasicConnection connection) {
+    public BasicManagedConnection(ResourceConnection connection) {
         this.physicalConnection = connection;
     }
 

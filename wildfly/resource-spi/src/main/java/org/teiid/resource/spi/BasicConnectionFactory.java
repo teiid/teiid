@@ -26,7 +26,7 @@ import javax.resource.cci.ConnectionSpec;
 import javax.resource.cci.RecordFactory;
 import javax.resource.cci.ResourceAdapterMetaData;
 
-public abstract class BasicConnectionFactory<T extends BasicConnection> implements ConnectionFactory, org.teiid.resource.api.ConnectionFactory {
+public abstract class BasicConnectionFactory<T extends ResourceConnection> implements ConnectionFactory, org.teiid.resource.api.ConnectionFactory<T> {
     private static final long serialVersionUID = 2900581028589520388L;
     private Reference reference;
 
@@ -34,7 +34,7 @@ public abstract class BasicConnectionFactory<T extends BasicConnection> implemen
     public abstract T getConnection() throws ResourceException;
 
     @Override
-    public BasicConnection getConnection(ConnectionSpec arg0) throws ResourceException {
+    public ResourceConnection getConnection(ConnectionSpec arg0) throws ResourceException {
         throw new ResourceException("This operation not supported"); //$NON-NLS-1$;
     }
 
