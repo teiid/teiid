@@ -21,9 +21,11 @@ package org.teiid.transport;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
 
 import org.teiid.net.socket.SocketUtil;
 
@@ -74,6 +76,7 @@ public class SSLConfiguration {
     private String keyAlias;
     private String keyPassword;
     private boolean truststoreCheckExpired;
+    private boolean disableTrustManager;
 
     public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
@@ -83,17 +86,8 @@ public class SSLConfiguration {
         // Use the SSLContext to create an SSLServerSocketFactory.
         SSLContext context = null;
 
-        context = SocketUtil.getSSLContext(keyStoreFileName,
-                                keyStorePassword,
-                                trustStoreFileName,
-                                trustStorePassword,
-                                keyManagerFactoryAlgorithm,
-                                keyStoreType,
-                                sslProtocol,
-                                keyAlias,
-                                keyPassword,
-                                false,
-                                truststoreCheckExpired);
+        context = SocketUtil.getSSLContext(getKeyManagers(),
+                this.disableTrustManager ? getTrustAllManagers() : getTrustManagers(), this.sslProtocol);
 
         SSLEngine result = context.createSSLEngine();
         result.setUseClientMode(false);
@@ -206,5 +200,27 @@ public class SSLConfiguration {
 
     public void setTruststoreCheckExpired(boolean checkExpired) {
         this.truststoreCheckExpired = checkExpired;
+    }
+
+    public KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException {
+        return SocketUtil.getKeyManagers(keyStoreFileName, this.keyStorePassword, this.keyManagerFactoryAlgorithm,
+                this.keyStoreType, this.keyAlias, this.keyPassword);
+    }
+
+    public TrustManager[] getTrustManagers() throws IOException, GeneralSecurityException {
+        return SocketUtil.getTrustManagers(this.trustStoreFileName, this.trustStorePassword,
+                this.keyManagerFactoryAlgorithm, this.keyStoreType, this.truststoreCheckExpired);
+    }
+
+    public static TrustManager[] getTrustAllManagers() {
+        return SocketUtil.getTrustAllManagers();
+    }
+
+    public boolean isDisableTrustManager() {
+        return disableTrustManager;
+    }
+
+    public void setDisableTrustManager(boolean disableTrustManager) {
+        this.disableTrustManager = disableTrustManager;
     }
 }

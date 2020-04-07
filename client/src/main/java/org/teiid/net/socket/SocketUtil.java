@@ -160,6 +160,14 @@ public class SocketUtil {
         return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL, null, null, false, false);
     }
 
+    public static SSLContext getSSLContext(KeyManager[] keyManagers, TrustManager[] trustManagers, String protocol)
+            throws IOException, GeneralSecurityException {
+        // Configure the SSL
+        SSLContext sslc = SSLContext.getInstance(protocol);
+        sslc.init(keyManagers, trustManagers, null);
+        return sslc;
+    }
+
     public static SSLContext getSSLContext(String keystore,
                                             String password,
                                             String truststore,
@@ -172,54 +180,14 @@ public class SocketUtil {
                                             boolean trustAll,
                                             boolean checkExpired) throws IOException, GeneralSecurityException {
 
-        if (algorithm == null) {
-            algorithm = KeyManagerFactory.getDefaultAlgorithm();
-        }
-        // Configure the Keystore Manager
-        KeyManager[] keyManagers = null;
-        if (keystore != null) {
-            KeyStore ks = loadKeyStore(keystore, password, keystoreType);
-            if (ks != null) {
 
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
-                if (keyPassword == null) {
-                    keyPassword = password;
-                }
-                kmf.init(ks, keyPassword != null ? keyPassword.toCharArray() : null);
-                keyManagers = kmf.getKeyManagers();
-                if (keyAlias != null) {
-                    if (!ks.isKeyEntry(keyAlias)) {
-                        throw new GeneralSecurityException(JDBCPlugin.Util.getString("alias_no_key_entry", keyAlias)); //$NON-NLS-1$
-                    }
-                    if (DEFAULT_KEYSTORE_TYPE.equals(keystoreType)) {
-                        keyAlias = keyAlias.toLowerCase(Locale.ENGLISH);
-                    }
-                    for(int i=0; i < keyManagers.length; i++) {
-                        if (keyManagers[i] instanceof X509KeyManager) {
-                            keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
-                        }
-                    }
-                }
-            }
-        }
-
+        KeyManager[] keyManagers = getKeyManagers(keystore, password, algorithm, keystoreType, keyAlias, keyPassword);
         // Configure the Trust Store Manager
         TrustManager[] trustManagers = null;
         if (trustAll) {
             trustManagers = TRUST_ALL_MANAGER;
         } else {
-            if (truststore != null) {
-                KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
-                if (ks != null) {
-                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
-                    tmf.init(ks);
-                    trustManagers = tmf.getTrustManagers();
-                }
-            }
-
-            if (checkExpired) {
-                trustManagers = getCheckExpiredTrustManager(algorithm, trustManagers);
-            }
+            trustManagers = getTrustManagers(truststore, truststorePassword, algorithm, keystoreType, checkExpired);
         }
 
         // Configure the SSL
@@ -357,5 +325,72 @@ public class SocketUtil {
                 Principal[] issuers, SSLEngine engine) {
             return keyAlias;
         }
+    }
+
+    public static KeyManager[] getKeyManagers(String keystore,
+            String password,
+            String algorithm,
+            String keystoreType,
+            String keyAlias,
+            String keyPassword
+            ) throws IOException, GeneralSecurityException {
+        if (algorithm == null) {
+            algorithm = KeyManagerFactory.getDefaultAlgorithm();
+        }
+        // Configure the Keystore Manager
+        KeyManager[] keyManagers = null;
+        if (keystore != null) {
+            KeyStore ks = loadKeyStore(keystore, password, keystoreType);
+            if (ks != null) {
+
+                KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
+                if (keyPassword == null) {
+                    keyPassword = password;
+                }
+                kmf.init(ks, keyPassword != null ? keyPassword.toCharArray() : null);
+                keyManagers = kmf.getKeyManagers();
+                if (keyAlias != null) {
+                    if (!ks.isKeyEntry(keyAlias)) {
+                        throw new GeneralSecurityException(JDBCPlugin.Util.getString("alias_no_key_entry", keyAlias)); //$NON-NLS-1$
+                    }
+                    if (DEFAULT_KEYSTORE_TYPE.equals(keystoreType)) {
+                        keyAlias = keyAlias.toLowerCase(Locale.ENGLISH);
+                    }
+                    for(int i=0; i < keyManagers.length; i++) {
+                        if (keyManagers[i] instanceof X509KeyManager) {
+                            keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
+                        }
+                    }
+                }
+            }
+        }
+        return keyManagers;
+    }
+
+    public static TrustManager[] getTrustManagers(String truststore, String truststorePassword, String algorithm,
+            String keystoreType, boolean checkExpired) throws IOException, GeneralSecurityException {
+
+        if (algorithm == null) {
+            algorithm = KeyManagerFactory.getDefaultAlgorithm();
+        }
+
+        TrustManager[] trustManagers = null;
+        if (truststore != null) {
+            KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
+            if (ks != null) {
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+                tmf.init(ks);
+                trustManagers = tmf.getTrustManagers();
+            }
+        }
+
+        if (checkExpired) {
+            trustManagers = getCheckExpiredTrustManager(algorithm, trustManagers);
+        }
+        return trustManagers;
+    }
+
+    public static TrustManager[] getTrustAllManagers() {
+        return TRUST_ALL_MANAGER;
     }
 }
