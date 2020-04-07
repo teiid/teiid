@@ -168,11 +168,14 @@ public final class RuleRaiseNull implements OptimizerRule {
                         }
                     }
 
+                    //repair the upper symbol map if needed
                     PlanNode sourceNode = NodeEditor.findParent(parentNode, NodeConstants.Types.SOURCE);
                     if (sourceNode != null && NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.PROJECT) == firstProject) {
                         SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-                        symbolMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), newProjectSymbols);
-                        sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
+                        if (!firstProject.hasProperty(Info.INTO_GROUP) && symbolMap != null) {
+                            symbolMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), newProjectSymbols);
+                            sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
+                        }
                     }
                 }
 
