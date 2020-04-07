@@ -178,7 +178,7 @@ public final class RuleMergeVirtual implements
             if (frame.getParent() == null || !sources.isEmpty() || projectNode.getType() != NodeConstants.Types.PROJECT || parentJoin == null) {
                 return root; //only consider no sources when the frame is simple and there is a parent join
             }
-            if (sources.isEmpty() && parentJoin != null) {
+            if (sources.isEmpty()) {
                 JoinType jt = (JoinType) parentJoin.getProperty(Info.JOIN_TYPE);
                 if (jt.isOuter()) {
                     return root; //cannot remove if the no source side is an outer side, or if it can change the meaning of the plan
@@ -496,12 +496,16 @@ public final class RuleMergeVirtual implements
     static boolean checkJoinCriteria(PlanNode frameRoot,
                                              GroupSymbol virtualGroup,
                                              PlanNode parentJoin) {
-        if (parentJoin != null) {
-            List<PlanNode> selectNodes = NodeEditor.findAllNodes(frameRoot,
-                                                                 NodeConstants.Types.SELECT,
-                                                                 NodeConstants.Types.SOURCE);
-            Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
-            groups.add(virtualGroup);
+        List<PlanNode> selectNodes = null;
+        Set<GroupSymbol> groups = null;
+
+        while (parentJoin != null) {
+            if (selectNodes == null) {
+                selectNodes = NodeEditor.findAllNodes(frameRoot,
+                        NodeConstants.Types.SELECT,
+                        NodeConstants.Types.SOURCE);
+                groups = Collections.singleton(virtualGroup);
+            }
             for (PlanNode selectNode : selectNodes) {
                 if (selectNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)) {
                     continue;
@@ -512,6 +516,8 @@ public final class RuleMergeVirtual implements
                     return false;
                 }
             }
+            //check against all joins in the frame
+            parentJoin = NodeEditor.findParent(parentJoin, NodeConstants.Types.JOIN);
         }
         return true;
     }
