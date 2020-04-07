@@ -24,6 +24,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -32,6 +33,7 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+@SuppressWarnings("nls")
 public class TestRuleRaiseNull {
 
     public static final int[] FULLY_NULL = new int[] {
@@ -355,6 +357,42 @@ public class TestRuleRaiseNull {
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),
                                                     new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 <> g_1.e1"}); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+
+    @Test public void testInsertIntoWithUnionFirstBranchNull() throws Exception {
+        String ddl = "create foreign table test_mat_simplified (a integer, b integer) options (updatable true); "
+                + "     CREATE view v1 as\n" +
+                "          select null as a\n" +
+                "          union all\n" +
+                "          select 1 as a;\n" +
+                "        CREATE view mat_test_view_simplified as\n" +
+                "          select a as a, a as b from v1 where a = null\n" +
+                "          union all \n" +
+                "          select a as a, a as b from v1";
+
+        //String sql = "select * from (select * from mat_test_view_simplified order by a limit 4) z order by b limit 2";
+
+        String sql = "insert into test_mat_simplified select * from mat_test_view_simplified";
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, metadata, new String[]{}); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                0,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                3,      // Project
+                0,      // Select
+                0,      // Sort
+                1       // UnionAll
+            });
     }
 
 }
