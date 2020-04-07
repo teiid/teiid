@@ -1743,4 +1743,71 @@ public class TestJoinOptimization {
 
     }
 
+    @Test public void testPredicatePlacementUnderFullOuter() throws TeiidComponentException, TeiidProcessingException, Exception {
+        String ddl = "create foreign table table1_m (date_value date, id integer);"
+                + "create foreign table table2_m (date_value date, id integer);"
+                + "create foreign table calendar_m (date_value date); "
+                + "CREATE VIEW view1_m\n" +
+                "        AS\n" +
+                "          SELECT\n" +
+                "            days.date_value as date_value1\n" +
+                "            ,table1_m.*\n" +
+                "          FROM \n" +
+                "            (SELECT *\n" +
+                "             FROM calendar_m\n" +
+                "             WHERE year(date_value) BETWEEN 2018 AND year(NOW())+2) days\n" +
+                "             LEFT JOIN (select * from table1_m) table1_m on days.date_value = table1_m.date_value;\n" +
+                "        CREATE VIEW view2_m\n" +
+                "        AS\n" +
+                "          SELECT\n" +
+                "            days.date_value as date_value2\n" +
+                "            ,table2_m.*\n" +
+                "          FROM \n" +
+                "            (SELECT *\n" +
+                "             FROM calendar_m\n" +
+                "             WHERE year(date_value) BETWEEN 2018 AND year(NOW())+2) days\n" +
+                "             LEFT JOIN (select * from table2_m) table2_m on days.date_value = table2_m.date_value";
+
+        String sql = "SELECT COUNT(*) \n" +
+                "FROM \n" +
+                "    (\n" +
+                "        SELECT \n" +
+                "            date_value1 \n" +
+                "            , id\n" +
+                "        FROM view1_m \n" +
+                "        --Limit 1000000000\n" +
+                "    ) v1 \n" +
+                "full \n" +
+                "JOIN  \n" +
+                "    (\n" +
+                "        SELECT \n" +
+                "            date_value2 \n" +
+                "            , id\n" +
+                "        FROM view2_m \n" +
+                "        --LIMIT 1000000000\n" +
+                "    ) v2 \n" +
+                "    ON \n" +
+                "        v1.date_value1 = v2.date_value2 \n" +
+                "        and v1.id = v2.id";
+
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setFunctionSupport(SourceSystemFunctions.YEAR, true);
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.fromDDL(ddl, "x", "y"),
+                new String[] {
+                        "SELECT COUNT(*) FROM ((SELECT g_0.date_value AS c_0 FROM y.calendar_m AS g_0 WHERE (year(g_0.date_value) >= 2018) AND (year(g_0.date_value) <= (year(NOW()) + 2))) AS v_0 LEFT OUTER JOIN y.table1_m AS g_1 ON v_0.c_0 = g_1.date_value) "
+                        + "FULL OUTER JOIN ((SELECT g_2.date_value AS c_0 FROM y.calendar_m AS g_2 WHERE (year(g_2.date_value) >= 2018) AND (year(g_2.date_value) <= (year(NOW()) + 2))) AS v_1 LEFT OUTER JOIN y.table2_m AS g_3 ON v_1.c_0 = g_3.date_value) ON v_0.c_0 = v_1.c_0 AND g_1.id = g_3.id" }, //$NON-NLS-1$
+                new DefaultCapabilitiesFinder(caps),
+                ComparisonMode.EXACT_COMMAND_STRING);
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
 }
