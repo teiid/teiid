@@ -979,6 +979,12 @@
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
                 <version>${version.accumulo}</version>
+                <exclusions>
+	                 <exclusion>
+	                     <artifactId>log4j</artifactId>
+	                     <groupId>log4j</groupId>
+	                 </exclusion>
+                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
