@@ -979,11 +979,23 @@
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
                 <version>${version.accumulo}</version>
+                <exclusions>
+	                 <exclusion>
+	                     <artifactId>log4j</artifactId>
+	                     <groupId>log4j</groupId>
+	                 </exclusion>
+                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-fate</artifactId>
                 <version>${version.accumulo}</version>
+                <exclusions>
+	                 <exclusion>
+	                     <artifactId>log4j</artifactId>
+	                     <groupId>log4j</groupId>
+	                 </exclusion>
+                 </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
@@ -1015,6 +1027,10 @@
 	                     <!-- removed for Java 9 -->
 	                     <artifactId>jdk.tools</artifactId>
 	                     <groupId>jdk.tools</groupId>
+	                 </exclusion>
+	                 <exclusion>
+	                     <artifactId>log4j</artifactId>
+	                     <groupId>log4j</groupId>
 	                 </exclusion>
                  </exclusions>
             </dependency>
@@ -1144,6 +1160,12 @@
                 <groupId>org.apache.zookeeper</groupId>
                 <artifactId>zookeeper</artifactId>
                 <version>${version.zookeeper}</version>
+                <exclusions>
+	                 <exclusion>
+	                     <artifactId>log4j</artifactId>
+	                     <groupId>log4j</groupId>
+	                 </exclusion>
+                 </exclusions>
             </dependency>
 
             <dependency>
@@ -1188,6 +1210,14 @@
                         <groupId>org.apache.lucene</groupId>
                         <artifactId>lucene-analyzers-common</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.quartz-scheduler</groupId>
+                        <artifactId>quartz</artifactId>
+                    </exclusion>
+	                 <exclusion>
+	                     <artifactId>log4j</artifactId>
+	                     <groupId>log4j</groupId>
+	                 </exclusion>
                 </exclusions>
             </dependency>
 
