@@ -63,9 +63,9 @@
         <version.cassandra-driver-core>3.7.1</version.cassandra-driver-core>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
         <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
-        <version.com.fasterxml.jackson.core>2.9.10</version.com.fasterxml.jackson.core>
-        <version.com.fasterxml.jackson.dataformat>2.9.10</version.com.fasterxml.jackson.dataformat>
-        <version.com.fasterxml.jackson.core.jackson-databind>2.9.10.2</version.com.fasterxml.jackson.core.jackson-databind>
+        <version.com.fasterxml.jackson.core>2.11.0.rc1</version.com.fasterxml.jackson.core>
+        <version.com.fasterxml.jackson.dataformat>2.11.0.rc1</version.com.fasterxml.jackson.dataformat>
+        <version.com.fasterxml.jackson.core.jackson-databind>2.11.0.rc1</version.com.fasterxml.jackson.core.jackson-databind>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.com.force.api.41>45.1.0</version.com.force.api.41>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
@@ -1787,7 +1787,7 @@
            <dependency>
                <groupId>joda-time</groupId>
                <artifactId>joda-time</artifactId>
-               <version>2.9.7</version>
+               <version>2.9.9</version>
            </dependency>
            
            <dependency>
