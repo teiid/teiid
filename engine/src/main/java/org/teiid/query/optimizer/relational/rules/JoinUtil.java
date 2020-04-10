@@ -32,6 +32,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -146,7 +147,19 @@ public class JoinUtil {
             //log the exception
             return true;
         }
-        return !(simplifiedCrit.equals(QueryRewriter.FALSE_CRITERIA) || simplifiedCrit.equals(QueryRewriter.UNKNOWN_CRITERIA));
+        if (simplifiedCrit.equals(QueryRewriter.FALSE_CRITERIA) || simplifiedCrit.equals(QueryRewriter.UNKNOWN_CRITERIA)) {
+            return false;
+        }
+        //this is a narrow check added for test consistency with TEIID-5933
+        //the query rewriter based logic can't catch this and similar cases as it's possible
+        //to be either false or unknown, so it can't fully rewrite
+        if (simplifiedCrit instanceof SubquerySetCriteria) {
+            SubquerySetCriteria setCriteria = (SubquerySetCriteria)simplifiedCrit;
+            if (!setCriteria.isNegated() && QueryRewriter.isNull(setCriteria.getExpression())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean isNullDependent(QueryMetadataInterface metadata,

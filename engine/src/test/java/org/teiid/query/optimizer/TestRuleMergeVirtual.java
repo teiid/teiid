@@ -33,6 +33,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
 public class TestRuleMergeVirtual {
@@ -534,6 +535,104 @@ public class TestRuleMergeVirtual {
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT 1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) OR (g_0.e2 < 1)", "SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+
+    @Test public void testPredicatePlacementUnderFullOuter() throws TeiidComponentException, TeiidProcessingException, Exception {
+        String ddl = "create foreign table table1_m (date_value date, id integer);"
+                + "create foreign table table2_m (date_value date, id integer);"
+                + "create foreign table calendar_m (date_value date); "
+                + "CREATE VIEW view1_m\n" +
+                "        AS\n" +
+                "          SELECT\n" +
+                "            days.date_value as date_value1\n" +
+                "            ,table1_m.*\n" +
+                "          FROM \n" +
+                "            (SELECT *\n" +
+                "             FROM calendar_m\n" +
+                "             WHERE year(date_value) BETWEEN 2018 AND year(NOW())+2) days\n" +
+                "             LEFT JOIN (select * from table1_m) table1_m on days.date_value = table1_m.date_value;\n" +
+                "        CREATE VIEW view2_m\n" +
+                "        AS\n" +
+                "          SELECT\n" +
+                "            days.date_value as date_value2\n" +
+                "            ,table2_m.*\n" +
+                "          FROM \n" +
+                "            (SELECT *\n" +
+                "             FROM calendar_m\n" +
+                "             WHERE year(date_value) BETWEEN 2018 AND year(NOW())+2) days\n" +
+                "             LEFT JOIN (select * from table2_m) table2_m on days.date_value = table2_m.date_value";
+
+        String sql = "SELECT COUNT(*) \n" +
+                "FROM \n" +
+                "    (\n" +
+                "        SELECT \n" +
+                "            date_value1 \n" +
+                "            , id\n" +
+                "        FROM view1_m \n" +
+                "        --Limit 1000000000\n" +
+                "    ) v1 \n" +
+                "full \n" +
+                "JOIN  \n" +
+                "    (\n" +
+                "        SELECT \n" +
+                "            date_value2 \n" +
+                "            , id\n" +
+                "        FROM view2_m \n" +
+                "        --LIMIT 1000000000\n" +
+                "    ) v2 \n" +
+                "    ON \n" +
+                "        v1.date_value1 = v2.date_value2 \n" +
+                "        and v1.id = v2.id";
+
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setFunctionSupport(SourceSystemFunctions.YEAR, true);
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.fromDDL(ddl, "x", "y"),
+                new String[] {
+                        "SELECT COUNT(*) FROM ((SELECT g_0.date_value AS c_0 FROM y.calendar_m AS g_0 WHERE (year(g_0.date_value) >= 2018) AND (year(g_0.date_value) <= (year(NOW()) + 2))) AS v_0 LEFT OUTER JOIN y.table1_m AS g_1 ON v_0.c_0 = g_1.date_value) "
+                        + "FULL OUTER JOIN ((SELECT g_2.date_value AS c_0 FROM y.calendar_m AS g_2 WHERE (year(g_2.date_value) >= 2018) AND (year(g_2.date_value) <= (year(NOW()) + 2))) AS v_1 LEFT OUTER JOIN y.table2_m AS g_3 ON v_1.c_0 = g_3.date_value) ON v_0.c_0 = v_1.c_0 AND g_1.id = g_3.id" }, //$NON-NLS-1$
+                new DefaultCapabilitiesFinder(caps),
+                ComparisonMode.EXACT_COMMAND_STRING);
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+
+    @Test public void testNullDependentPredicateUnderLeftOuter() throws Exception {
+        String ddl = "create foreign table test_1 (c1 string);"
+                + "\ncreate foreign table test_2 (c1 string);"
+                + "\ncreate foreign table test_3 (c1 string);";
+        String sql = "SELECT *\n" +
+                "FROM test_1 a\n" +
+                "    LEFT JOIN ( SELECT x.c1 \n" +
+                "                FROM test_2 x\n" +
+                "                    LEFT JOIN (SELECT * FROM test_3 WHERE c1 <> '123')  y  ON x.c1 = y.c1 WHERE y.c1 IS NULL\n" +
+                //" LIMIT 1000000000 "+
+                "     ) b ON a.c1 = b.c1\n" +
+                "WHERE b.c1 IS NULL";
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.fromDDL(ddl, "x", "y"),
+                new String[] {"SELECT g_0.c1, v_0.c_0 FROM y.test_1 AS g_0 LEFT OUTER JOIN (SELECT g_1.c1 AS c_0 FROM y.test_2 AS g_1 LEFT OUTER JOIN y.test_3 AS g_2 ON g_1.c1 = g_2.c1 AND g_2.c1 <> '123' WHERE g_2.c1 IS NULL) AS v_0 ON g_0.c1 = v_0.c_0 WHERE v_0.c_0 IS NULL"}, //$NON-NLS-1$
+                new DefaultCapabilitiesFinder(caps),
+                ComparisonMode.EXACT_COMMAND_STRING);
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
 }

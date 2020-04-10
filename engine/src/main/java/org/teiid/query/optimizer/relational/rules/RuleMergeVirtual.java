@@ -200,7 +200,7 @@ public final class RuleMergeVirtual implements
             }
         }
 
-        if (!checkJoinCriteria(frame.getFirstChild(), virtualGroup, parentJoin)) {
+        if (!checkJoinCriteria(frame.getFirstChild(), virtualGroup, parentJoin, metadata)) {
             return root;
         }
 
@@ -492,10 +492,11 @@ public final class RuleMergeVirtual implements
      * check to see if criteria is used in a full outer join or has no groups and is on the inner side of an outer join. if this
      * is the case then the layers cannot be merged, since merging would possibly force the criteria to change it's position (into
      * the on clause or above the join).
+     * @param metadata
      */
     static boolean checkJoinCriteria(PlanNode frameRoot,
                                              GroupSymbol virtualGroup,
-                                             PlanNode parentJoin) {
+                                             PlanNode parentJoin, QueryMetadataInterface metadata) {
         List<PlanNode> selectNodes = null;
         Set<GroupSymbol> groups = null;
 
@@ -512,7 +513,9 @@ public final class RuleMergeVirtual implements
                 }
                 JoinType jt = JoinUtil.getJoinTypePreventingCriteriaOptimization(parentJoin, groups);
 
-                if (jt != null && (jt == JoinType.JOIN_FULL_OUTER || selectNode.getGroups().size() == 0)) {
+                if (jt != null && (jt == JoinType.JOIN_FULL_OUTER
+                        || selectNode.getGroups().size() == 0
+                        || JoinUtil.isNullDependent(metadata, selectNode.getGroups(), (Criteria)selectNode.getProperty(Info.SELECT_CRITERIA)))) {
                     return false;
                 }
             }
