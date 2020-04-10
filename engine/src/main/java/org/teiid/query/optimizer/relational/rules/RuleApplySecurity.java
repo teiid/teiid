@@ -158,7 +158,7 @@ public class RuleApplySecurity implements OptimizerRule {
                     critNode.addGroups(GroupsUsedByElementsVisitor.getGroups(critNode.getCorrelatedReferenceElements()));
                     root.addAsParent(critNode);
                 }
-                if (!RuleMergeVirtual.checkJoinCriteria(parent, group, parentJoin)) {
+                if (!RuleMergeVirtual.checkJoinCriteria(parent, group, parentJoin, metadata)) {
                     PlanNode project = RelationalPlanner.createProjectNode(cols);
                     parent.addAsParent(project);
                     //a view is needed to keep the logical placement of the criteria
