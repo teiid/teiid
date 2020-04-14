@@ -8078,5 +8078,60 @@ public class TestProcessor {
         }
    }
 
+   @Test public void testLeftOuterNestedTableJoin() throws TeiidComponentException, TeiidProcessingException, Exception {
+       String sql = "SELECT\n" +
+               "    xt.event_id, xt2.some_col\n" +
+               "FROM tbl AS d\n" +
+               " inner JOIN TABLE (select d.event_id from tbl limit 1) xt\n" +
+               " on true " +
+               "LEFT JOIN TABLE (select tbl.str as some_col from tbl where str = 'a' || d.str) xt2 \n" +
+               "    ON xt.event_id = -1\n" +
+               "    order by event_id\n";
+
+       String ddl = "create foreign table tbl (event_id integer, str string)";
+
+       BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+       caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+       caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
+       caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+       caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+       caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+       caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+       caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+
+       TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "test_dwh_pg");
+
+       HardcodedDataManager dataManager = new HardcodedDataManager() {
+
+           @Override
+           protected List<?>[] getData(String commandString) {
+               if (commandString.contains("WHERE")) {
+                   return new List<?>[0];
+               }
+               if (commandString.endsWith("LIMIT 1")) {
+                   return new List<?>[]{Arrays.asList(Integer.valueOf(commandString.split(" ")[1]))};
+               }
+               return super.getData(commandString);
+           }
+
+       };
+
+       List<?>[] data = new List<?>[1024];
+       for (int i = 0; i < data.length; i++) {
+           data[i] = Arrays.asList(i, null);
+       }
+
+       List<?>[] result = new List<?>[data.length];
+       for (int i = 0; i < result.length; i++) {
+           result[i] = Arrays.asList(i, null);
+       }
+
+       dataManager.addData("SELECT g_0.event_id, g_0.str FROM test_dwh_pg.tbl AS g_0", data);
+       CommandContext cc = createCommandContext();
+       cc.setMetadata(metadata);
+       ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(caps), cc);
+       helpProcess(plan, cc, dataManager, result);
+   }
+
     private static final boolean DEBUG = false;
 }
