@@ -17,69 +17,45 @@
  */
 package org.teiid.resource.adapter.ws;
 
-import java.io.IOException;
-import java.net.URL;
-
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
-import javax.xml.namespace.QName;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
 
-import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.resource.spi.ConnectionContext;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.ws.WSConnection;
 import org.teiid.ws.cxf.BaseWSConnection;
 import org.teiid.ws.cxf.WSConfiguration;
 import org.teiid.ws.cxf.WSConnectionFactory;
 
 public class WSManagedConnectionFactory extends BasicManagedConnectionFactory implements WSConfiguration {
 
-    private class WSConnectionImpl extends BasicConnection implements WSConnection {
-        private BaseWSConnection conn;
+    private class WSConnectionImpl extends BaseWSConnection implements ResourceConnection {
 
-        public WSConnectionImpl(BaseWSConnection conn) {
-            this.conn = conn;
+        public WSConnectionImpl(WSConnectionFactory wsConnectionFactory) {
+            super(wsConnectionFactory);
         }
 
         @Override
-        public void close() throws ResourceException {
-            conn.close();
+        protected String getUserName(Subject s, String defaultUserName) {
+            return ConnectionContext.getUserName(s, WSManagedConnectionFactory.this, defaultUserName);
         }
 
         @Override
-        public <T> Dispatch<T> createDispatch(String binding, String endpoint,
-                Class<T> type, Mode mode) {
-            return conn.createDispatch(binding, endpoint, type, mode);
+        protected Subject getSubject() {
+            return ConnectionContext.getSubject();
         }
 
         @Override
-        public <T> Dispatch<T> createDispatch(Class<T> type, Mode mode)
-                throws IOException {
-            return conn.createDispatch(type, mode);
+        protected <T> T getSecurityCredential(Subject s, Class<T> clazz) {
+            return ConnectionContext.getSecurityCredential(s, clazz);
         }
 
         @Override
-        public URL getWsdl() {
-            return conn.getWsdl();
-        }
-
-        @Override
-        public QName getServiceQName() {
-            return conn.getServiceQName();
-        }
-
-        @Override
-        public QName getPortQName() {
-            return conn.getPortQName();
-        }
-
-        @Override
-        public String getStatusMessage(int status) {
-            return conn.getStatusMessage(status);
+        protected String getPassword(Subject s, String userName,
+                String defaultPassword) {
+            return ConnectionContext.getPassword(s, WSManagedConnectionFactory.this, userName, defaultPassword);
         }
     }
 
@@ -104,39 +80,13 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory im
 
     @SuppressWarnings("serial")
     @Override
-    public BasicConnectionFactory<BasicConnection> createConnectionFactory() throws ResourceException {
+    public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
         try {
             WSConnectionFactory wsConnectionFactory = new WSConnectionFactory(this);
-            return new BasicConnectionFactory<BasicConnection>() {
+            return new BasicConnectionFactory<ResourceConnection>() {
                 @Override
-                public BasicConnection getConnection() throws ResourceException {
-                    //create a base connection implementing the security methods
-                    BaseWSConnection conn = new BaseWSConnection(wsConnectionFactory) {
-
-                        @Override
-                        protected String getUserName(Subject s, String defaultUserName) {
-                            return ConnectionContext.getUserName(s, WSManagedConnectionFactory.this, defaultUserName);
-                        }
-
-                        @Override
-                        protected Subject getSubject() {
-                            return ConnectionContext.getSubject();
-                        }
-
-                        @Override
-                        protected <T> T getSecurityCredential(Subject s, Class<T> clazz) {
-                            return ConnectionContext.getSecurityCredential(s, clazz);
-                        }
-
-                        @Override
-                        protected String getPassword(Subject s, String userName,
-                                String defaultPassword) {
-                            return ConnectionContext.getPassword(s, WSManagedConnectionFactory.this, userName, defaultPassword);
-                        }
-                    };
-
-                    //now wrap it to be as basic connection
-                    return new WSConnectionImpl(conn);
+                public ResourceConnection getConnection() throws ResourceException {
+                    return new WSConnectionImpl(wsConnectionFactory);
                 }
 
             };

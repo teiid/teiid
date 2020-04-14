@@ -46,4 +46,6 @@ public interface WSConnection extends Connection {
 
     String getStatusMessage(int status);
 
+    String getEndPoint();
+
 }

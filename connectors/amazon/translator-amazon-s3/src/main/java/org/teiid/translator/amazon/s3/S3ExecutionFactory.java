@@ -20,8 +20,6 @@ package org.teiid.translator.amazon.s3;
 
 import java.nio.charset.Charset;
 
-import org.teiid.resource.api.ConnectionFactory;
-
 import org.teiid.core.BundleUtil;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Call;
@@ -32,6 +30,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
@@ -43,6 +42,9 @@ import org.teiid.translator.ws.WSConnection;
 
 @Translator(name="amazon-s3", description="Amazon S3 Translator, reads contents of files or writes to them")
 public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
+
+
+    public static final String US_EAST_1 = "US-EAST-1"; //$NON-NLS-1$
 
     public static BundleUtil UTIL = BundleUtil.getBundleUtil(S3ExecutionFactory.class);
 
@@ -56,7 +58,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     private String awsAccessKey;
     private String awsSecretKey;
     private String bucket;
-    private String region;
+    private String region = US_EAST_1;
     private String encryption;
     private String encryptionKey;
 
@@ -153,7 +155,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
         metadataFactory.addColumn("Size", DataTypeManager.DefaultDataTypes.STRING, t);
         metadataFactory.addColumn("StorageClass", DataTypeManager.DefaultDataTypes.STRING, t);
         metadataFactory.addColumn("NextContinuationToken", DataTypeManager.DefaultDataTypes.STRING, t);
-        t.setSelectTransformation("select b.* from (exec list()) as a, " +
+        t.setSelectTransformation("select b.* from (exec \""+metadataFactory.getSchema().getName().replace("\"", "\"\"")+"\".list()) as a, " +
                 " XMLTABLE(XMLNAMESPACES(DEFAULT 'http://s3.amazonaws.com/doc/2006-03-01/'), '/ListBucketResult/Contents' \n" +
                 " PASSING XMLPARSE(CONTENT a.result WELLFORMED) COLUMNS Key string, LastModified string," +
                 " ETag string, Size string, StorageClass string, \n" +

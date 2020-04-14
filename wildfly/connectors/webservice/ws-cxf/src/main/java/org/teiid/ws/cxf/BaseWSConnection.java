@@ -474,6 +474,11 @@ public abstract class BaseWSConnection implements WSConnection {
     }
 
     @Override
+    public String getEndPoint() {
+        return this.mcf.getConfig().getEndPoint();
+    }
+
+    @Override
     public URL getWsdl() {
         return this.mcf.getWsdlUrl();
     }

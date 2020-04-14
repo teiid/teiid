@@ -63,11 +63,17 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 import org.teiid.translator.ws.WSConnection;
 
 public class S3ProcedureExecution implements ProcedureExecution {
+
+    private static String AWS_S3_URL_PREFIX = "https://s3."; //$NON-NLS-1$
+    private static String AWS_S3_HOSTHAME = "amazonaws.com"; //$NON-NLS-1$
+
     private final Call command;
     private final WSConnection conn;
     private S3ExecutionFactory ef;
     private RuntimeMetadata metadata;
     private ExecutionContext ec;
+    private String baseEndpoint;
+
     private String endpoint;
 
     private BinaryWSProcedureExecution execution = null;
@@ -82,6 +88,9 @@ public class S3ProcedureExecution implements ProcedureExecution {
         this.ef = ef;
         this.metadata = metadata;
         this.ec = ec;
+        if (this.conn.getEndPoint() != null) {
+            baseEndpoint = this.conn.getEndPoint();
+        }
     }
 
     @Override
@@ -143,13 +152,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
             region = this.ef.getRegion();
         }
 
-        if (endpoint == null) {
-            if (region.equals("us-east-1")) {
-                endpoint = "https://s3.amazonaws.com/" + bucket + "/" + name;
-            } else {
-                endpoint = "https://s3-" + region + ".amazonaws.com/" + bucket + "/"+ name;
-            }
-        }
+        determineEndpoint(name, bucket, region);
 
         if (accessKey == null) {
             accessKey = this.ef.getAccesskey();
@@ -205,6 +208,25 @@ public class S3ProcedureExecution implements ProcedureExecution {
         }
     }
 
+    protected String determineEndpoint(String name, String bucket, String region) throws TranslatorException {
+        if (endpoint != null) {
+            return endpoint;
+        }
+        if (bucket == null) {
+            throw new TranslatorException(S3ExecutionFactory.UTIL.gs("no_bucket")); //$NON-NLS-1$
+        }
+        if (baseEndpoint != null) {
+            endpoint = baseEndpoint;
+        } else if (region.equalsIgnoreCase(S3ExecutionFactory.US_EAST_1)) {
+            endpoint = AWS_S3_URL_PREFIX + AWS_S3_HOSTHAME;
+        } else {
+            endpoint = AWS_S3_URL_PREFIX + region + "." + AWS_S3_HOSTHAME; //$NON-NLS-1$
+        }
+        //TODO: is url encoding needed here
+        endpoint += ((!endpoint.endsWith("/")?"/":"") + bucket + "/" + name); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return endpoint;
+    }
+
     private BinaryWSProcedureExecution getFile(List<Argument> arguments) throws TranslatorException {
         String name = (String)arguments.get(0).getArgumentValue().getValue();
         String bucket = (String)arguments.get(1).getArgumentValue().getValue();
@@ -229,9 +251,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
             region = this.ef.getRegion();
         }
 
-        if (endpoint == null) {
-            endpoint = "https://"+bucket+".s3.amazonaws.com/"+name;
-        }
+        determineEndpoint(name, bucket, region);
 
         if (accessKey == null) {
             accessKey = this.ef.getAccesskey();
@@ -254,10 +274,10 @@ public class S3ProcedureExecution implements ProcedureExecution {
             if (accessKey != null) {
                 AWS4SignerForAuthorizationHeader signer = new AWS4SignerForAuthorizationHeader(new URL(endpoint), "GET",
                         "s3", region);
+                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
                 String authorization = signer.computeSignature(headers, null, AWS4SignerBase.EMPTY_BODY_SHA256, accessKey,
                         secretKey);
                 headers.put("Authorization", authorization);
-                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
             }
 
             if (encryption != null) {
@@ -292,13 +312,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
             region = this.ef.getRegion();
         }
 
-        if (endpoint == null) {
-            if (region.equals("us-east-1")) {
-                endpoint = "https://s3.amazonaws.com/" + bucket + "/" + name;
-            } else {
-                endpoint = "https://s3-" + region + ".amazonaws.com/" + bucket + "/"+ name;
-            }
-        }
+        determineEndpoint(name, bucket, region);
 
         if (accessKey == null) {
             accessKey = this.ef.getAccesskey();
@@ -313,10 +327,10 @@ public class S3ProcedureExecution implements ProcedureExecution {
             if (accessKey != null) {
                 AWS4SignerForAuthorizationHeader signer = new AWS4SignerForAuthorizationHeader(
                         new URL(endpoint), "DELETE", "s3", region);
+                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
                 String authorization = signer.computeSignature(headers, null, // no query parameters
                         AWS4SignerBase.EMPTY_BODY_SHA256, accessKey, secretKey);
                 headers.put("Authorization", authorization);
-                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
             }
             headers.put("Content-Type", "text/plain");
             LogManager.logDetail(LogConstants.CTX_WS, "Deleting", endpoint); //$NON-NLS-1$
@@ -341,11 +355,9 @@ public class S3ProcedureExecution implements ProcedureExecution {
             region = this.ef.getRegion();
         }
 
-        if (endpoint == null) {
-            endpoint = "https://s3.amazonaws.com/"+bucket+"/?list-type=2";
-            if (next != null) {
-                endpoint += "&continuation-token="+next;
-            }
+        determineEndpoint("?list-type=2", bucket, region);
+        if (next != null) {
+            endpoint += "&continuation-token="+next;
         }
 
         if (accessKey == null) {
@@ -367,10 +379,10 @@ public class S3ProcedureExecution implements ProcedureExecution {
                 if (next != null) {
                     query.put("continuation-token", next);
                 }
+                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
                 String authorization = signer.computeSignature(headers, query, AWS4SignerBase.EMPTY_BODY_SHA256, accessKey,
                         secretKey);
                 headers.put("Authorization", authorization);
-                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
             }
             this.isText = true;
             this.isList = true;
