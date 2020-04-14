@@ -109,23 +109,25 @@ public class NestedTableJoinStrategy extends JoinStrategy {
                 }
             }
 
-            if (!outerMatched && this.joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
-                joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
-            }
-
-            outerMatched = false;
-
-            if (rightMap == null) {
-                rightSource.getIterator().setPosition(1);
-            } else {
-                rightSource.close();
-                for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
-                    joinNode.getContext().getVariableContext().remove(entry.getKey());
+            try {
+                if (!outerMatched && this.joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
+                    joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
                 }
-            }
+            } finally {
+                outerMatched = false;
 
-            leftSource.saveNext();
-            updateContext(null, leftSource.getSource().getElements());
+                if (rightMap == null) {
+                    rightSource.getIterator().setPosition(1);
+                } else {
+                    rightSource.close();
+                    for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
+                        joinNode.getContext().getVariableContext().remove(entry.getKey());
+                    }
+                }
+
+                leftSource.saveNext();
+                updateContext(null, leftSource.getSource().getElements());
+            }
         }
 
     }
@@ -136,9 +138,9 @@ public class NestedTableJoinStrategy extends JoinStrategy {
             Expression element = elements.get(i);
             if (element instanceof ElementSymbol) {
                 if (tuple == null) {
-                    joinNode.getContext().getVariableContext().remove((ElementSymbol)element);
+                    joinNode.getContext().getVariableContext().remove(element);
                 } else {
-                    joinNode.getContext().getVariableContext().setValue((ElementSymbol)element, tuple.get(i));
+                    joinNode.getContext().getVariableContext().setValue(element, tuple.get(i));
                 }
             }
         }
