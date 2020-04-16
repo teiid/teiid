@@ -939,17 +939,19 @@ public class RulePushAggregates implements
             } else {
                 other = parentJoin.getFirstChild();
             }
-            SymbolMap map = (SymbolMap)other.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-            if (map != null) {
-                return null;
-                //TODO: handle this case. the logic would look something like below,
-                //but we would need to handle the updating of the symbol maps in addGroupBy
-                /*filterExpressions(stagedGroupingSymbols, groups, map.getKeys(), true);
-                for (ElementSymbol ex : map.getKeys()) {
-                    if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ex.getType()))) {
-                        return null;
-                    }
-                }*/
+            for (PlanNode node : NodeEditor.findAllNodes(other, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
+                SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                if (map != null) {
+                    return null;
+                    //TODO: handle this case. the logic would look something like below,
+                    //but we would need to handle the updating of the symbol maps in addGroupBy
+                    /*filterExpressions(stagedGroupingSymbols, groups, map.getKeys(), true);
+                    for (ElementSymbol ex : map.getKeys()) {
+                        if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ex.getType()))) {
+                            return null;
+                        }
+                    }*/
+                }
             }
 
             if (!parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS) || !parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)) {
