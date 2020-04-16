@@ -1580,5 +1580,32 @@ public class TestAggregatePushdown {
         TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1L)});
     }
 
+    @Test public void testAggregatePushdownOverNestedLateralJoin() throws Exception {
+
+        String sql = "SELECT xt.e2, count(*) FROM pm1.g1 AS d, \n" +
+                "    TABLE (select d.e2 from pm1.g1 limit 1) xt\n" +
+                "      LEFT JOIN TABLE (select pm1.g1.e1 as some_col from pm1.g1 where e1 = 'a' || d.e1) xt2\n" +
+                "      ON xt.e2 = -1\n" +
+                "group by xt.e2";
+
+        BasicSourceCapabilities aggregateCapabilities = getAggregateCapabilities();
+        CommandContext cc = TestProcessor.createCommandContext();
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        cc.setMetadata(metadata);
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(aggregateCapabilities),  //$NON-NLS-1$
+            new String[]{"SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0",
+            "SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = concat('a', d.e1)",
+            "SELECT d.e2 AS c_0 FROM pm1.g1 AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING);
+
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        hdm = new HardcodedDataManager(metadata, cc, aggregateCapabilities);
+        hdm.addData("SELECT g_0.e2, g_0.e1 FROM g1 AS g_0", Arrays.asList(1, "a"));
+        hdm.addData("SELECT 1 AS c_0 FROM g1 AS g_0 LIMIT 1", Arrays.asList(1));
+        hdm.addData("SELECT 1 FROM g1 AS g_0 WHERE g_0.e1 = 'aa'");
+
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(1, 1)});
+    }
+
 }
 
