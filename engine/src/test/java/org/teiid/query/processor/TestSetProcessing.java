@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -164,6 +166,25 @@ public class TestSetProcessing {
         manager.addData("SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id = 100", Arrays.asList(100));
 
         List<?>[] expected = new List[] {Arrays.asList("N"), Arrays.asList("N"), Arrays.asList("N")};
+
+        TestProcessor.helpProcess(plan, manager, expected);
+    }
+
+    @Test public void testNestedSetOpsWithLiteralProjection() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select 2 as e1 except select 1 as e1\n" +
+                "UNION ALL\n" +
+                "select 1 as e1 except select e1 from (select 2 as e1) g2";
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                sql, RealMetadataFactory.example1Cached(),
+                new String[] {},
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+
+        HardcodedDataManager manager = new HardcodedDataManager();
+
+        List<?>[] expected = new List[] {Arrays.asList(1)};
 
         TestProcessor.helpProcess(plan, manager, expected);
     }
