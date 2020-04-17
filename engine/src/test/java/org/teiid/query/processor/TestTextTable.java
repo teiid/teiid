@@ -670,4 +670,22 @@ public class TestTextTable {
         helpProcess(plan, TestProcessor.createCommandContext(), new HardcodedDataManager(), expected);
     }
 
+    @Test public void testEscapedRowDelimiter() throws Exception {
+        String sql = "select * from TextTable (\n" +
+                "    'greetings, \"hello, world,,\"'\n" +
+                "    Columns \n" +
+                "        x string\n" +
+                "    Row Delimiter ','\n" +
+                "    Delimiter ';'\n" +
+                "    Quote '\"'\n" +
+                ")x "; //$NON-NLS-1$
+
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("greetings"),
+                Arrays.asList("hello, world,,"),
+        };
+
+        process(sql, expected);
+    }
+
 }
