@@ -279,7 +279,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
                 if (isBatchFull() || r != this.reader) {
                     return;
                 }
-                StringBuilder line = readLine(lineWidth, table.isFixedWidth());
+                StringBuilder line = readLine(lineWidth, table.isFixedWidth(), false);
 
                 if (line == null) {
                     terminateBatches();
@@ -362,11 +362,15 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
         }
     }
 
-    private StringBuilder readLine(int maxLength, boolean exact) throws TeiidProcessingException {
+    private StringBuilder readLine(int maxLength, boolean exact, boolean invalue) throws TeiidProcessingException {
         if (eof) {
             return null;
         }
         StringBuilder sb = new StringBuilder(exact ? maxLength : (maxLength >> 4));
+        if (invalue) {
+            //we must include the newline in the quoted value
+            sb.insert(0, newLine);
+        }
         while (true) {
             char c = readChar();
             if (c == newLine) {
@@ -470,7 +474,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
         while (textLine < skip) {
             boolean isHeader = textLine == header;
             if (isHeader) {
-                StringBuilder line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false);
+                StringBuilder line = readLine(DataTypeManager.MAX_STRING_LENGTH * 16, false, false);
                 if (line == null) { //just return an empty batch
                     reset();
                     return;
@@ -531,7 +535,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
                     }
                     builder.append(newLine);
                     escaped = false;
-                    line = readLine(lineWidth, false);
+                    line = readLine(lineWidth, false, false);
                     continue;
                 }
                 if (!qualified) {
@@ -539,7 +543,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
                     addValue(result, wasQualified || noTrim, builder.toString());
                     return result;
                 }
-                line = readLine(lineWidth, false);
+                line = readLine(lineWidth, false, true);
                 if (line == null) {
                      throw new TeiidProcessingException(QueryPlugin.Event.TEIID30182, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30182, systemId));
                 }
