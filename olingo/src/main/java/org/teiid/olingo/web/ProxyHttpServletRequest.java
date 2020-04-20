@@ -28,6 +28,19 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
 
     public static HttpServletRequest handleProxiedRequest(
             HttpServletRequest httpRequest) {
+        String proxyUrl = getProxyUrl(httpRequest);
+        if (proxyUrl != null) {
+            httpRequest = new ProxyHttpServletRequest(httpRequest, proxyUrl);
+        }
+        return httpRequest;
+    }
+
+    /**
+     *
+     * @param httpRequest
+     * @return the url or null if not proxied
+     */
+    static String getProxyUrl(HttpServletRequest httpRequest) {
         /*
         Forwarded for=192.168.42.1;host=hostname:80;proto=http;proto-version=
         X-Forwarded-Proto http
@@ -55,13 +68,20 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
                 }
             }
         }
+        String proxyUrl = null;
         if (host != null) {
-            if (protocol == null) {
-                protocol = "http"; //$NON-NLS-1$
+            StringBuffer buf = new StringBuffer();
+            buf.append(protocol==null?"http":protocol); //$NON-NLS-1$
+            buf.append("://").append(host); //$NON-NLS-1$
+            if (port != null) {
+                String portSuffix = ":" + port; //$NON-NLS-1$
+                if (!host.endsWith(portSuffix)) {
+                    buf.append(portSuffix);
+                }
             }
-            httpRequest = new ProxyHttpServletRequest(httpRequest, protocol + "://" + host + (port != null?(":"+port):"")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            proxyUrl = buf.toString();
         }
-        return httpRequest;
+        return proxyUrl;
     }
 
     private URI encodedURI;
