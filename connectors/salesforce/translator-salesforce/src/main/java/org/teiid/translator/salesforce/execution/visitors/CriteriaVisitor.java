@@ -109,7 +109,9 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         if (negated) {
             criteriaBuffer.add("NOT ("); //$NON-NLS-1$
         }
-        criteriaBuffer.add(criteria.toString());
+        criteriaBuffer.add(getValue(criteria.getLeftExpression(), false));
+        criteriaBuffer.add(SPACE + SQLConstants.Reserved.LIKE + SPACE);
+        criteriaBuffer.add(getValue(criteria.getRightExpression(), false));
         if (negated) {
             criteriaBuffer.add(CLOSE);
             criteria.setNegated(true);
@@ -152,6 +154,15 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         } else {
             appendCriteria(criteria);
         }
+        criteriaBuffer.add(OPEN);
+        Iterator<Expression> iter = criteria.getRightExpressions().iterator();
+        while (iter.hasNext()) {
+            criteriaBuffer.add(getValue(iter.next(), false));
+            if (iter.hasNext()) {
+                criteriaBuffer.add(COMMA);
+            }
+        }
+        criteriaBuffer.add(CLOSE);
         setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
     }
 
@@ -191,6 +202,19 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         criteriaBuffer.add(CLOSE);
     }
 
+    private void appendCriteria( In criteria ) {
+        Expression leftExp = criteria.getLeftExpression();
+        if(isIdColumn(leftExp)) {
+            idInCriteria  = criteria;
+        }
+        criteriaBuffer.add(getValue(leftExp, false));
+        criteriaBuffer.add(SPACE);
+        if (criteria.isNegated()) {
+            criteriaBuffer.add("NOT "); //$NON-NLS-1$
+        }
+        criteriaBuffer.add("IN"); //$NON-NLS-1$
+    }
+
     private void appendMultiselectIn( Column column,
                                       In criteria ) {
         criteriaBuffer.add(column.getSourceName());
@@ -200,17 +224,6 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         } else {
             criteriaBuffer.add(INCLUDES);
         }
-        criteriaBuffer.add(OPEN);
-        List<Expression> rightExpressions = criteria.getRightExpressions();
-        Iterator<Expression> iter = rightExpressions.iterator();
-        while (iter.hasNext()) {
-            Expression rightExpression = iter.next();
-            criteriaBuffer.add(rightExpression.toString());
-            if (iter.hasNext()) {
-                criteriaBuffer.add(COMMA);
-            }
-        }
-        criteriaBuffer.add(CLOSE);
     }
 
     private void validateFunction( List<Expression> expressions ) throws TranslatorException {
@@ -252,28 +265,6 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         queryString.append(ref.getMetadataObject().getParent().getSourceName());
         queryString.append('.');
         queryString.append(ref.getMetadataObject().getSourceName());
-    }
-
-    private void appendCriteria( In criteria ) {
-        Expression leftExp = criteria.getLeftExpression();
-        if(isIdColumn(leftExp)) {
-            idInCriteria  = criteria;
-        }
-        criteriaBuffer.add(getValue(leftExp, false));
-        criteriaBuffer.add(SPACE);
-        if (criteria.isNegated()) {
-            criteriaBuffer.add("NOT "); //$NON-NLS-1$
-        }
-        criteriaBuffer.add("IN"); //$NON-NLS-1$
-        criteriaBuffer.add(OPEN);
-        Iterator<Expression> iter = criteria.getRightExpressions().iterator();
-        while (iter.hasNext()) {
-            criteriaBuffer.add(getValue(iter.next(), false));
-            if (iter.hasNext()) {
-                criteriaBuffer.add(COMMA);
-            }
-        }
-        criteriaBuffer.add(CLOSE);
     }
 
     protected String getValue( Expression expr, boolean raw) {
