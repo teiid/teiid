@@ -309,7 +309,7 @@ public class TestVisitors {
     }
 
     private void helpTest(String sql, String expected) throws Exception {
-        Command command = translationUtility.parseCommand(sql);
+        Command command = translationUtility.parseCommand(sql, true, true);
         SalesForceExecutionFactory factory = new SalesForceExecutionFactory();
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
@@ -363,6 +363,15 @@ public class TestVisitors {
     @Test public void testFloatingLiteral() throws Exception {
         String sql = "SELECT COUNT(*) FROM Opportunity where amount > 100000000";
         String source = "SELECT COUNT(Id) FROM Opportunity WHERE Opportunity.Amount > 100000000";
+        helpTest(sql, source);
+    }
+
+    /*
+     * Aliasing is turned on by default in helpTest, but this makes it obvious what is being tested
+     */
+    @Test public void testTableAliasWithLike() throws Exception {
+        String sql = "SELECT id FROM Opportunity as g_0 where  g_0.amount > 100000000 and g_0.name like 'gene%'";
+        String source = "SELECT Opportunity.Id FROM Opportunity WHERE (Opportunity.Amount > 100000000) AND (Opportunity.Name LIKE 'gene%')";
         helpTest(sql, source);
     }
 
