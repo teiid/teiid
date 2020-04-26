@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.cassandra.CassandraConnection;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Command;

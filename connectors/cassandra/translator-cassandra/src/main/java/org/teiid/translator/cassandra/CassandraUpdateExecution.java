@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.cassandra.CassandraConnection;
 import org.teiid.core.types.BinaryType;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.BulkCommand;

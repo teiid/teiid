@@ -20,7 +20,6 @@ package org.teiid.cassandra;
 
 import com.datastax.driver.core.*;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.cassandra.CassandraConnection;
 
 import java.util.List;
 import java.util.Set;

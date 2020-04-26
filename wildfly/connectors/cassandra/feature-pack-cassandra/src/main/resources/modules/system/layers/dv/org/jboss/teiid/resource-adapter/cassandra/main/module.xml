@@ -16,5 +16,6 @@
         <module name="org.jboss.teiid.api"/>
         <module name="com.datastax.cassandra.driver.core"/>
         <module name="org.jboss.teiid.translator.cassandra"/>
+        <module name="org.jboss.teiid.translator.cassandra.api" />
     </dependencies>
 </module>

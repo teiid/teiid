@@ -20,6 +20,7 @@ package org.teiid.translator.cassandra;
 
 import java.util.List;
 
+import org.teiid.cassandra.CassandraConnection;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;

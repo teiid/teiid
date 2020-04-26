@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.cassandra.CassandraConnection;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;

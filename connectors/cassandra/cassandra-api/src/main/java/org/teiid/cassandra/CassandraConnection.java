@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.teiid.translator.cassandra;
+package org.teiid.cassandra;
 
 import java.util.List;
 

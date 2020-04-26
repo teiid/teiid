@@ -21,7 +21,7 @@ package org.teiid.translator.cassandra;
 import java.util.List;
 
 import org.teiid.resource.api.ConnectionFactory;
-
+import org.teiid.cassandra.CassandraConnection;
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;

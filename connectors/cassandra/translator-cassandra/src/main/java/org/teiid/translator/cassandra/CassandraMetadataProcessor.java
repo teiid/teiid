@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.cassandra.CassandraConnection;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
