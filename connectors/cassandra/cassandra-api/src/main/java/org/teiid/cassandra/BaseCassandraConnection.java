@@ -1,3 +1,21 @@
+/*
+ * Copyright Red Hat, Inc. and/or its affiliates
+ * and other contributors as indicated by the @author tags and
+ * the COPYRIGHT.txt file distributed with this work.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.teiid.cassandra;
 
 import com.datastax.driver.core.*;
@@ -9,39 +27,43 @@ import java.util.Set;
 
 public abstract class BaseCassandraConnection implements CassandraConnection {
 
+    private CassandraConfiguration config;
     private Session session = null;
     private Metadata metadata = null;
     private VersionNumber version;
-
-    //to be provided by sub-class
-
     private Cluster cluster = null;
-    private String keyspace;
 
-    public BaseCassandraConnection(Cluster cassandraCluster,String keyspace, Metadata metadata) {
-        this.cluster = cassandraCluster;
-        this.metadata = metadata;
-        this.keyspace = keyspace;
-    }
+    public BaseCassandraConnection(CassandraConfiguration config) {
+        this.config = config;
 
-    public BaseCassandraConnection(Cluster cassandraCluster, String keyspace) {
-        this.cluster = cassandraCluster;
+        Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
+
+        if (this.config.getUsername() != null) {
+            builder.withCredentials(this.config.getUsername(), this.config.getPassword());
+        }
+
+        if (this.config.getPort() != null) {
+            builder.withPort(this.config.getPort());
+        }
+
+        this.cluster = builder.build();
 
         this.metadata = cluster.getMetadata();
 
-        this.session = cluster.connect(keyspace);
+        this.session = cluster.connect(config.getKeyspace());
 
-        this.keyspace = keyspace;
-
-        Set<Host> allHosts = this.cluster.getMetadata().getAllHosts();
+        Set<Host> allHosts = cluster.getMetadata().getAllHosts();
         if (!allHosts.isEmpty()) {
             Host host = allHosts.iterator().next();
             this.version = host.getCassandraVersion();
         }
     }
 
-    public BaseCassandraConnection(String keyspace){
-        this.keyspace = keyspace;
+    public BaseCassandraConnection(CassandraConfiguration config, Metadata metadata) {
+        this.config = config;
+
+        this.metadata = metadata;
+
     }
 
     @Override
@@ -51,6 +73,7 @@ public abstract class BaseCassandraConnection implements CassandraConnection {
 
     @Override
     public KeyspaceMetadata keyspaceInfo() throws TranslatorException {
+        String keyspace = config.getKeyspace();
         KeyspaceMetadata result = metadata.getKeyspace(keyspace);
         if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 1) == '"') {
             //try unquoted

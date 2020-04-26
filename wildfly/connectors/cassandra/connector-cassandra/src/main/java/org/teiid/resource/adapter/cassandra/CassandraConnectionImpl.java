@@ -18,59 +18,43 @@
 
 package org.teiid.resource.adapter.cassandra;
 
-import javax.resource.ResourceException;
-
 import org.teiid.cassandra.BaseCassandraConnection;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-
+import org.teiid.resource.spi.ResourceConnection;
 import com.datastax.driver.core.*;
-import org.teiid.translator.cassandra.CassandraConnection;
+
+import javax.resource.ResourceException;
 
 /**
  * Represents a connection to Cassandra database.
  * */
-public class CassandraConnectionImpl extends BaseCassandraConnection implements CassandraConnection {
-    private CassandraManagedConnectionFactory config;
+public class CassandraConnectionImpl extends BaseCassandraConnection implements ResourceConnection {
 
-    public CassandraConnectionImpl(String keyspace) {
-        super(keyspace);
+    public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
+        super(config);
     }
 
     public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
-        super(getCluster(config),config.getKeyspace(), metadata);
-        this.config = config;
-    }
-
-    public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
-        super(getCluster(config), config.getKeyspace());
-        this.config = config;
-    }
-
-    private static Cluster getCluster(CassandraManagedConnectionFactory config) {
-        Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
-
-        if (config.getUsername() != null) {
-            builder.withCredentials(config.getUsername(), config.getPassword());
-        }
-
-        if (config.getPort() != null) {
-            builder.withPort(config.getPort());
-        }
-
-        return builder.build();
+        super(config, metadata);
     }
 
     @Override
-    public void close() throws ResourceException, Exception {
-        super.close();
+    public void close() throws ResourceException {
+        try {
+            super.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("shutting_down")); //$NON-NLS-1$
     }
 
-
+    @Override
     public boolean isAlive() {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("alive")); //$NON-NLS-1$
         return true;
     }
+
+
 
 }
