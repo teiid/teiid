@@ -20,11 +20,12 @@ package org.teiid.resource.adapter.cassandra;
 
 import javax.resource.ResourceException;
 
+import org.teiid.cassandra.CassandraConfiguration;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
-public class CassandraManagedConnectionFactory extends BasicManagedConnectionFactory{
+public class CassandraManagedConnectionFactory extends BasicManagedConnectionFactory implements CassandraConfiguration {
 
     private static final long serialVersionUID = 6467964324032304311L;
     private String address;
@@ -46,6 +47,7 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
         };
     }
 
+    @Override
     public String getKeyspace() {
         return keyspace;
     }
@@ -54,6 +56,7 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
         this.keyspace = keyspace;
     }
 
+    @Override
     public String getAddress() {
         return address;
     }
@@ -62,6 +65,7 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
         this.address = address;
     }
 
+    @Override
     public String getUsername() {
         return username;
     }
@@ -70,6 +74,7 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
         this.username = username;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -78,6 +83,7 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
         this.password = password;
     }
 
+    @Override
     public Integer getPort() {
         return port;
     }

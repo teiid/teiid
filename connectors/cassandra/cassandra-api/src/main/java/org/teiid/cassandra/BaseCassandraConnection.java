@@ -18,23 +18,30 @@ public abstract class BaseCassandraConnection implements CassandraConnection {
     private Cluster cluster = null;
     private String keyspace;
 
-    public BaseCassandraConnection(Cluster cassandraCluster, Metadata metadata) {
+    public BaseCassandraConnection(Cluster cassandraCluster,String keyspace, Metadata metadata) {
         this.cluster = cassandraCluster;
         this.metadata = metadata;
+        this.keyspace = keyspace;
     }
 
-    public BaseCassandraConnection(Cluster cassandraCluster) {
+    public BaseCassandraConnection(Cluster cassandraCluster, String keyspace) {
         this.cluster = cassandraCluster;
 
         this.metadata = cluster.getMetadata();
 
         this.session = cluster.connect(keyspace);
 
+        this.keyspace = keyspace;
+
         Set<Host> allHosts = this.cluster.getMetadata().getAllHosts();
         if (!allHosts.isEmpty()) {
             Host host = allHosts.iterator().next();
             this.version = host.getCassandraVersion();
         }
+    }
+
+    public BaseCassandraConnection(String keyspace){
+        this.keyspace = keyspace;
     }
 
     @Override
@@ -82,5 +89,9 @@ public abstract class BaseCassandraConnection implements CassandraConnection {
     }
 
     @Override
-    public abstract void close() throws Exception;
+    public void close() throws Exception{
+        if(cluster != null){
+            cluster.close();
+        }
+    }
 }
