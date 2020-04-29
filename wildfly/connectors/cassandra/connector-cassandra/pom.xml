@@ -34,10 +34,6 @@
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-cassandra</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.teiid.connectors</groupId>
-            <artifactId>cassandra-api</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

@@ -1634,11 +1634,6 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
-                <artifactId>cassandra-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
                 <artifactId>couchbase-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
