@@ -596,6 +596,26 @@ public class TestAggregateProcessing {
         helpProcess(plan, dataManager, expected);
     }
 
+    @Test public void testAggSumStateNPE() throws Exception {
+        // need a group/sort query where the group by is not pushed down
+        String sql = "SELECT B.INTKEY, SUM(cast(B.BIGDECIMALVALUE as BIGINTEGER)) FROM bqt1.SMALLA AS B group by INTKEY ORDER BY INTKEY;"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+                Arrays.asList(0, BigInteger.valueOf(0)),
+                Arrays.asList(1, null),
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        List<?>[] data = new List[2];
+        data[0] = Arrays.asList(0, BigDecimal.valueOf(0));
+        data[1] = Arrays.asList(1, null); //need the last value to be null
+
+        dataManager.addData("SELECT g_0.IntKey, g_0.BigDecimalValue FROM BQT1.SmallA AS g_0", data);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached(), TestAggregatePushdown.getAggregatesFinder());
+        helpProcess(plan, dataManager, expected);
+    }
+
     @Test public void testGroupSortMultipleAggregates() throws Exception {
         String sql = "select e1, min(e2), max(e3) from pm1.g1 group by e1";
 
