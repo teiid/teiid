@@ -42,7 +42,6 @@
                <description>{$display:"Cache name",$description:"Name of Cache to connect to"}</description>
                <config-property-name>CacheName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>default</config-property-value>
             </config-property>
             
             <config-property>
