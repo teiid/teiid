@@ -200,6 +200,8 @@ public class Sum extends SingleArgumentAggregateFunction {
             this.sumBigDecimal = (BigDecimal)state.get(index);
             if (this.sumBigDecimal != null) {
                 isNull = false;
+            } else {
+                isNull = true;
             }
             break;
         }
