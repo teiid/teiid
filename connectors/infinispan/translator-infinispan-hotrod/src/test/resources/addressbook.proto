@@ -3,11 +3,11 @@
 /* @Indexed */
 message Person {
 
-   /* @IndexedField */
+   /* @Field */
    required string name = 1;
 
    /* @Id
-    @IndexedField(index=false, store=false) */
+    @Field(index=Index.NO, store=Store.NO) */
    required int32 id = 2;
 
    optional string email = 3;
@@ -21,13 +21,13 @@ message Person {
    /* @Indexed */
    message PhoneNumber {
 
-      /* @IndexedField */
+      /* @Field */
       required string number = 1;
 
-      /* @IndexedField(index=false, store=false) */
+      /* @Field(index=Index.NO, store=false) */
       optional PhoneType type = 2 [default = HOME];
    }
 
-   /* @IndexedField(index=true, store=false) */
+   /* @Field(index=Index.YES, store=Store.NO) */
    repeated PhoneNumber phone = 4;
 }

@@ -2,12 +2,12 @@ package pm1;
 
 /* @Indexed @Cache(name=foo) */
 message G1 {
-   /* @Id @IndexedField(index=true, store=false) */
+   /* @Id @Field(index=Index.YES, store=Store.NO) */
    required int32 e1 = 1;
-   /* @IndexedField */
+   /* @Field */
    required string e2 = 2;
    optional float e3 = 3;
-   /* @IndexedField(index=true, store=false) */
+   /* @Field(index=Index.YES, store=Store.NO) */
    repeated string e4 = 4;
    repeated string e5 = 5;
 }
