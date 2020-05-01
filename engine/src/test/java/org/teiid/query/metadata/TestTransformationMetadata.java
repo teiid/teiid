@@ -34,6 +34,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
@@ -182,6 +183,26 @@ public class TestTransformationMetadata {
         assertSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
 
         assertEquals(1, mf1.getSchema().getTable("y").getColumns().get(1).getArrayDimensions());
+    }
+
+    @Test public void testAdminHidden() throws Exception {
+        TransformationMetadata tm = exampleTransformationMetadata();
+        tm.setHiddenResolvable(false);
+        VDBMetaData vdb = tm.getVdbMetaData();
+        vdb.getModel("x").setVisible(false);
+        try {
+            StoredProcedureInfo spi = tm.getStoredProcedureInfoForProcedure("x.y"); //$NON-NLS-1$
+            fail(); //not visible
+        } catch (QueryMetadataException e) {
+        }
+
+        DQPWorkContext.getWorkContext().setAdmin(true);
+        try {
+            StoredProcedureInfo spi = tm.getStoredProcedureInfoForProcedure("x.y"); //$NON-NLS-1$
+            assertEquals("x.y", spi.getProcedureCallableName());
+        } finally {
+            DQPWorkContext.setWorkContext(new DQPWorkContext());
+        }
     }
 
 }
