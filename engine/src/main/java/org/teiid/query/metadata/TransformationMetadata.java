@@ -45,6 +45,7 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
@@ -940,7 +941,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     @Override
     public FunctionLibrary getFunctionLibrary() {
-        if (!hiddenResolvable) {
+        if (!isHiddenResolvableInternal()) {
             if (visibleFunctionLibrary == null && functionLibrary != null && vdbMetaData != null) {
                 FunctionTree[] userFuncts = functionLibrary.getUserFunctions();
                 List<FunctionTree> filtered = new ArrayList<>();
@@ -1055,12 +1056,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     private final boolean isResolvable(Schema s) {
-        return hiddenResolvable || vdbMetaData == null || vdbMetaData.isVisible(s.getName());
+        return isHiddenResolvableInternal() || vdbMetaData == null || vdbMetaData.isVisible(s.getName());
     }
 
     @Override
     public List<Schema> getModelIDs() {
-        if (!hiddenResolvable && vdbMetaData != null) {
+        if (!isHiddenResolvableInternal() && vdbMetaData != null) {
             //filter list
             return this.getMetadataStore().getSchemaList().stream()
                     .filter(s -> vdbMetaData.isVisible(s.getName()))
@@ -1095,8 +1096,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         this.widenComparisonToString = widenComparisonToString;
     }
 
-    public boolean isHiddenResolvable() {
-        return hiddenResolvable;
+    boolean isHiddenResolvableInternal() {
+        return hiddenResolvable || DQPWorkContext.getWorkContext().isAdmin();
     }
 
     public void setHiddenResolvable(boolean hiddenResolvable) {
