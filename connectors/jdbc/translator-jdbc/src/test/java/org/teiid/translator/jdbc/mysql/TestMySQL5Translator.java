@@ -33,6 +33,7 @@ public class TestMySQL5Translator {
     @BeforeClass public static void oneTimeSetup() throws TranslatorException {
         TRANSLATOR = new MySQL5ExecutionFactory();
         TRANSLATOR.start();
+        TRANSLATOR.initCapabilities(null);
     }
 
     @Test public void testChar() throws Exception {
