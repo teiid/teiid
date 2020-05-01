@@ -5748,20 +5748,23 @@ void grant(DatabaseStore dbStore) :
     String to = null;
     ArrayList<Permission.Privilege> privileges = new ArrayList<Permission.Privilege>();
     Permission permission = new Permission();
+    Expression booleanExpr = null;
 }
 {
     <GRANT> 
     ((
        [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
        <ON> ( 
-        <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
-        	[<CONDITION> [[<NOT>{isConstraint=false;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()] |
-        <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
-        <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
-        	[<CONDITION> [[<NOT>{isConstraint=true;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()] |
-        <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
-        <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
-            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
+        (<TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
+        	[<CONDITION> [[<NOT>{isConstraint=false;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()]) |
+        (<FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;}) |
+        (<PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
+        	[<CONDITION> [[<NOT>{isConstraint=true;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()]) |
+        (<SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;}) |
+        (<COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
+            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()]
+            [<CONDITION> (LOOKAHEAD(booleanPrimary(ParseInfo.DEFAULT_INSTANCE)) booleanExpr = booleanPrimary(ParseInfo.DEFAULT_INSTANCE) | condition = stringVal())]
+        ) 
        )
       ) 
       |
@@ -5778,7 +5781,10 @@ void grant(DatabaseStore dbStore) :
             }
             permission.setResourceName(resource);
             permission.setPrivileges(privileges);
-            permission.setResourceType(on);            
+            permission.setResourceType(on);
+            if (booleanExpr != null) {
+                condition = booleanExpr.toString();
+            }           
             if (mask != null) {
                 permission.setMask(mask);
                 if (maskOrder != -1) {

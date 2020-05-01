@@ -549,6 +549,14 @@ public class TestDDLStringVisitor {
         permission6.setResourceName("schema.tableName.col");
         permission6.setResourceType(ResourceType.TABLE);
 
+        Permission permission7 = new Permission();
+        permission7.setAllowSelect(true);
+        permission7.setResourceName("schema.tableName.col2");
+        permission7.setResourceType(ResourceType.COLUMN);
+        permission7.setCondition("x=y", null);
+        permission7.setMaskOrder(2);
+        permission7.setMask("'xxx'");
+
         db.addRole(role);
         db.addRole(role1);
 
@@ -558,6 +566,8 @@ public class TestDDLStringVisitor {
         db.addGrant(new Grant(role.getName(), permission2));
         db.addGrant(new Grant(role.getName(), permission5));
         db.addGrant(new Grant(role.getName(), permission6));
+
+        db.addGrant(new Grant(role.getName(), permission7));
 
         db.addGrant(new Grant("uber", permission3));
 
@@ -581,6 +591,7 @@ public class TestDDLStringVisitor {
                 "GRANT TEMPORARY TABLE TO admin;\n" +
                 "GRANT DELETE ON COLUMN \"schema.tableName.col\" TO admin;\n" +
                 "GRANT SELECT ON TABLE \"schema.tableName.col\" TO admin;\n" +
+                "GRANT SELECT ON COLUMN \"schema.tableName.col2\" MASK ORDER 2 '''xxx''' CONDITION x=y TO admin;\n" +
                 "\n" +
                 "GRANT ALL PRIVILEGES TO uber;\n" +
                 "GRANT TEMPORARY TABLE TO uber;\n" +

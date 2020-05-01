@@ -316,7 +316,7 @@ public class DDLStringVisitor {
             if (!permission.getPrivileges().isEmpty() || permission.getMask() != null) {
                 appendGrant(r, permission, permission.getPrivileges(), false);
             }
-            if (permission.getCondition() != null) {
+            if (permission.getMask() == null && permission.getCondition() != null) {
                 Policy p = new Policy();
                 p.setCondition(permission.getCondition());
                 p.setName("grant_policy_" + permission.getResourceName()); //$NON-NLS-1$
@@ -362,6 +362,9 @@ public class DDLStringVisitor {
                 append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
             }
             append(SPACE).append(new Constant(permission.getMask()));
+            if (permission.getCondition() != null) {
+                append(SPACE).append(CONDITION).append(SPACE).append(permission.getCondition());
+            }
         }
 
         append(SPACE).append(revoke?FROM:TO).append(SPACE).append(role.getName());
