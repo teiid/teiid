@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -1458,7 +1459,8 @@ public class TestDDLParser {
                 + "CREATE ROLE someone WITH JAAS ROLE x;"
                 + "GRANT SELECT ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;"
                 + "GRANT SELECT ON TABLE test.G1 CONDITION 'foo>bar' TO otheruser;"
-                + "GRANT SELECT ON TABLE test.G1 CONDITION NOT CONSTRAINT 'foo<bar' TO someone;";
+                + "GRANT SELECT ON TABLE test.G1 CONDITION NOT CONSTRAINT 'foo<bar' TO someone;"
+                + "GRANT SELECT ON COLUMN test.G1.e1 MASK ORDER 1 'null' CONDITION foo>1 TO someone;";
 
         Database db = helpParse(ddl);
         Role role = db.getRole("otheruser");
@@ -1473,11 +1475,17 @@ public class TestDDLParser {
         role = db.getRole("someone");
         assertNotNull(role);
         grants = role.getGrants().values();
-        assertEquals(1, grants.size());
-        p = grants.iterator().next();
+        assertEquals(2, grants.size());
+        Iterator<Permission> iter = grants.iterator();
+        p = iter.next();
         assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertEquals("foo<bar", p.getCondition());
         assertFalse(p.isConditionAConstraint());
+        p = iter.next();
+        assertTrue(p.hasPrivilege(Privilege.SELECT));
+        assertEquals("foo > 1", p.getCondition());
+        assertEquals("null", p.getMask());
+        assertEquals(Integer.valueOf(1), p.getMaskOrder());
 
         role = db.getRole("superuser");
         assertNotNull(role);
