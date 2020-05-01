@@ -1,6 +1,6 @@
 CREATE FOREIGN TABLE G1 (
 	e1 integer NOT NULL,
-	e2 string NOT NULL,
+	e2 string NOT NULL INDEX,
 	e3 float ,
 	e4 string[],
 	e5 string[],

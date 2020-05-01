@@ -50,12 +50,12 @@ public class TestSchemaToProtobufProcessor {
                 "\n" +
                 "/* @Indexed @Cache(name=foo) */\n" +
                 "message G1 {\n" +
-                "    /* @Id @IndexedField(index=true, store=false) */\n" +
+                "    /* @Id @Field(index=Index.YES, store=Store.NO) */\n" +
                 "    required int32 e1 = 1;\n" +
-                "    /* @IndexedField */\n" +
+                "    /* @Field */\n" +
                 "    required string e2 = 2;\n" +
                 "    optional float e3 = 3;\n" +
-                "    /* @IndexedField(index=true, store=false) */\n" +
+                "    /* @Field(index=Index.YES, store=Store.NO) */\n" +
                 "    repeated string e4 = 4;\n" +
                 "    repeated string e5 = 5;\n" +
                 "}\n" +
@@ -66,7 +66,7 @@ public class TestSchemaToProtobufProcessor {
                 "    required int32 e1 = 1;\n" +
                 "    required string e2 = 2;\n" +
                 "    optional G3 g3 = 5;\n" +
-                "    /* @IndexedField(index=false) */\n" +
+                "    /* @Field(index=Index.NO) */\n" +
                 "    optional bytes e5 = 7;\n" +
                 "    /* @Field(index=Index.NO) */\n" +
                 "    optional fixed64 e6 = 8;\n" +
@@ -143,7 +143,7 @@ public class TestSchemaToProtobufProcessor {
                 "\n" +
                 "/* @Indexed */\n"+
                 "message G1 {\n" +
-                "    /* @Id */\n" +
+                "    /* @Id @Field(index=Index.YES) */\n" +
                 "    required int32 e1 = 1;\n" +
                 "    required string e2 = 2;\n" +
                 "    optional float e3 = 3;\n" +
@@ -153,7 +153,7 @@ public class TestSchemaToProtobufProcessor {
                 "\n" +
                 "/* @Indexed */\n"+
                 "message G2 {\n" +
-                "    /* @Id */\n" +
+                "    /* @Id @Field(index=Index.YES) */\n" +
                 "    required int32 e1 = 1;\n" +
                 "    optional string e2 = 2;\n" +
                 "    optional bytes e5 = 3;\n" +
@@ -215,12 +215,12 @@ public class TestSchemaToProtobufProcessor {
                 "\n" +
                 "/* @Indexed @Cache(name=foo) */\n" +
                 "message G1 {\n" +
-                "    /* @Id @IndexedField(index=true, store=false) */\n" +
+                "    /* @Id @Field(index=Index.YES, store=Store.NO) */\n" +
                 "    required int32 e1 = 1;\n" +
-                "    /* @IndexedField */\n" +
+                "    /* @Field */\n" +
                 "    required string e2 = 2;\n" +
                 "    optional float e3 = 3;\n" +
-                "    /* @IndexedField(index=true, store=false) */\n" +
+                "    /* @Field(index=Index.YES, store=Store.NO) */\n" +
                 "    repeated string e4 = 4;\n" +
                 "    repeated string e5 = 5;\n" +
                 "}\n\n";
