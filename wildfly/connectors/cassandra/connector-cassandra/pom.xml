@@ -34,6 +34,6 @@
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-cassandra</artifactId>
         </dependency>
-	</dependencies>
+    </dependencies>
 
 </project>
