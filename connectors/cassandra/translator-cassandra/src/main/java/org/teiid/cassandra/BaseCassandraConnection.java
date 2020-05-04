@@ -112,7 +112,7 @@ public abstract class BaseCassandraConnection implements CassandraConnection {
     }
 
     @Override
-    public void close() throws Exception{
+    public void close() {
         if(cluster != null){
             cluster.close();
         }
