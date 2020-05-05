@@ -53,6 +53,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
     public static final String DELETEFILE = "deleteFile"; //$NON-NLS-1$
     public static final String LISTBUCKET = "list"; //$NON-NLS-1$
+    public static final String LISTBUCKETV1 = "listv1"; //$NON-NLS-1$
 
     private Charset encoding = Charset.defaultCharset();
     private String awsAccessKey;
@@ -145,6 +146,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
         saveFile(metadataFactory);
         deleteFile(metadataFactory);
         listBucket(metadataFactory);
+        listBucketV1(metadataFactory);
 
         Table t = metadataFactory.addTable("Bucket");
         t.setVirtual(true);
@@ -154,12 +156,12 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
         metadataFactory.addColumn("ETag", DataTypeManager.DefaultDataTypes.STRING, t);
         metadataFactory.addColumn("Size", DataTypeManager.DefaultDataTypes.STRING, t);
         metadataFactory.addColumn("StorageClass", DataTypeManager.DefaultDataTypes.STRING, t);
-        metadataFactory.addColumn("NextContinuationToken", DataTypeManager.DefaultDataTypes.STRING, t);
-        t.setSelectTransformation("select b.* from (exec \""+metadataFactory.getSchema().getName().replace("\"", "\"\"")+"\".list()) as a, " +
+        metadataFactory.addColumn("IsTruncated", DataTypeManager.DefaultDataTypes.BOOLEAN, t);
+        t.setSelectTransformation("select b.* from (exec \""+metadataFactory.getSchema().getName().replace("\"", "\"\"")+"\".listv1()) as a, " +
                 " XMLTABLE(XMLNAMESPACES(DEFAULT 'http://s3.amazonaws.com/doc/2006-03-01/'), '/ListBucketResult/Contents' \n" +
                 " PASSING XMLPARSE(CONTENT a.result WELLFORMED) COLUMNS Key string, LastModified string," +
                 " ETag string, Size string, StorageClass string, \n" +
-                " NextContinuationToken string PATH '../NextContinuationToken') as b;");
+                " IsTruncated boolean PATH '../IsTruncated') as b;");
     }
 
     private void saveFile(MetadataFactory metadataFactory) {
@@ -175,8 +177,32 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
         param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML"); //$NON-NLS-1$
     }
 
-    private void listBucket(MetadataFactory metadataFactory) {
+    private void listBucketV1(MetadataFactory metadataFactory) {
         Procedure p = metadataFactory.addProcedure(LISTBUCKET);
+        p.setAnnotation("Lists the Objects in a given bucket."); //$NON-NLS-1$
+
+        ProcedureParameter param;
+        param = metadataFactory.addProcedureParameter("bucket", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+        param.setAnnotation("The name of the bucket in Amazon S3"); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+
+        param = metadataFactory.addProcedureParameter("region", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+        param.setAnnotation("region in which the bucket exists on Amazon S3"); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+
+        param = metadataFactory.addProcedureParameter("accesskey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+        param.setAnnotation("Security Access Key, if not provided will use translator configured keys."); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+
+        param = metadataFactory.addProcedureParameter("secretkey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+        param.setAnnotation("Security Secret Key, if not provided will use translator configured keys."); //$NON-NLS-1$
+        param.setNullType(NullType.Nullable);
+
+        metadataFactory.addProcedureResultSetColumn("result", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
+    }
+
+    private void listBucket(MetadataFactory metadataFactory) {
+        Procedure p = metadataFactory.addProcedure(LISTBUCKETV1);
         p.setAnnotation("Lists the Objects in a given bucket."); //$NON-NLS-1$
 
         ProcedureParameter param;

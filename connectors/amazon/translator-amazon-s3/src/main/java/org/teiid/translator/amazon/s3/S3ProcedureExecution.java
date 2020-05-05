@@ -130,6 +130,13 @@ public class S3ProcedureExecution implements ProcedureExecution {
                 throw new TranslatorException(S3ExecutionFactory.UTIL.gs("error_list", this.endpoint,
                         this.execution.getResponseCode(), getErrorDescription()));
             }
+        } else if (command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.LISTBUCKETV1)) {
+            this.execution = listBucketV1(arguments);
+            this.execution.execute();
+            if (this.execution.getResponseCode() != 200) {
+                throw new TranslatorException(S3ExecutionFactory.UTIL.gs("error_list", this.endpoint,
+                        this.execution.getResponseCode(), getErrorDescription()));
+            }
         }
     }
 
@@ -335,6 +342,51 @@ public class S3ProcedureExecution implements ProcedureExecution {
             headers.put("Content-Type", "text/plain");
             LogManager.logDetail(LogConstants.CTX_WS, "Deleting", endpoint); //$NON-NLS-1$
             return invokeHTTP("DELETE", endpoint, null, headers);
+        } catch (MalformedURLException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    private BinaryWSProcedureExecution listBucketV1(List<Argument> arguments) throws TranslatorException {
+        String bucket = (String)arguments.get(0).getArgumentValue().getValue();
+        String region = (String)arguments.get(1).getArgumentValue().getValue();
+        String accessKey = (String)arguments.get(2).getArgumentValue().getValue();
+        String secretKey = (String)arguments.get(3).getArgumentValue().getValue();
+
+        if (bucket == null) {
+            bucket = this.ef.getBucket();
+        }
+
+        if (region == null) {
+            region = this.ef.getRegion();
+        }
+
+        determineEndpoint("", bucket, region);
+
+        if (accessKey == null) {
+            accessKey = this.ef.getAccesskey();
+        }
+
+        if (secretKey == null) {
+            secretKey = this.ef.getSecretkey();
+        }
+
+        Map<String, String> headers = new HashMap<String, String>();
+        try {
+            if (accessKey != null) {
+                URL url = new URL(endpoint);
+                AWS4SignerForAuthorizationHeader signer = new AWS4SignerForAuthorizationHeader(url, "GET",
+                        "s3", region);
+                Map<String, String> query = new HashMap<String, String>();
+                headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
+                String authorization = signer.computeSignature(headers, query, AWS4SignerBase.EMPTY_BODY_SHA256, accessKey,
+                        secretKey);
+                headers.put("Authorization", authorization);
+            }
+            this.isText = true;
+            this.isList = true;
+            LogManager.logDetail(LogConstants.CTX_WS, "Getting", endpoint); //$NON-NLS-1$
+            return invokeHTTP("GET", endpoint, null, headers);
         } catch (MalformedURLException e) {
             throw new TranslatorException(e);
         }
