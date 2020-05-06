@@ -48,7 +48,7 @@
         <module name="org.jboss.marshalling"/>
         <module name="org.jboss.marshalling.river"/> 
         <module name="org.jboss.as.ee"/>
-        <module name="org.jboss.metadata"/> 
+        <module name="org.jboss.metadata.common"/> 
         <module name="org.wildfly.clustering.jgroups.api"/>
         <module name="org.wildfly.clustering.jgroups.spi"/>
         <module name="org.wildfly.clustering.infinispan.spi"/>

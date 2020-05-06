@@ -34,7 +34,7 @@ final class SimpleChannelFactory implements ChannelFactory {
     public JChannel createChannel(String id) throws Exception {
         synchronized (this) {
             if (channel == null) {
-                channel = new JChannel(this.getClass().getClassLoader().getResource(jgroupsConfigFile));
+                channel = new JChannel(this.getClass().getClassLoader().getResourceAsStream(jgroupsConfigFile));
                 channel.connect("teiid-replicator"); //$NON-NLS-1$
             }
         }
