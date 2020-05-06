@@ -120,7 +120,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
           </snapshots>
         </repository>
       </repositories>
-    </profile>
+    </profile>-->
     <profile>
       <id>jboss-earlyaccess</id>
       <repositories>
@@ -139,7 +139,6 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         </repository>
       </repositories>
     </profile>       
-    -->                
     <profile>
       <id>thirdparty-uploads</id>
       <repositories>
@@ -169,8 +168,8 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
     <activeProfile>thirdparty-uploads</activeProfile>
     <!-- 
     <activeProfile>jboss-techpreview</activeProfile>
-    <activeProfile>jboss-earlyaccess</activeProfile>    
-     -->
+    -->
+    <activeProfile>jboss-earlyaccess</activeProfile>
   </activeProfiles>
 
 </settings>
