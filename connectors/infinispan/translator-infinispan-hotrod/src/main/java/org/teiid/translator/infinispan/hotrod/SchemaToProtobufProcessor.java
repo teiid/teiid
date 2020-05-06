@@ -149,6 +149,9 @@ public class SchemaToProtobufProcessor {
                 if (needId) {
                     buffer.append("@Id ");
                 }
+                if (needId || hasIndex(column)) {
+                    buffer.append("@Field(index=Index.YES) ");
+                }
                 if (needType) {
                     buffer.append("@Teiid(type=").append(column.getRuntimeType());
                     if (column.getLength() != 0 &&
@@ -232,6 +235,18 @@ public class SchemaToProtobufProcessor {
         List<KeyRecord> list = ((Table) column.getParent()).getUniqueKeys();
         for (KeyRecord uk : list) {
             for (Column c : uk.getColumns()) {
+                if (c.getName().equals(column.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean hasIndex(Column column) {
+        List<KeyRecord> list = ((Table) column.getParent()).getIndexes();
+        for (KeyRecord idx : list) {
+            for (Column c : idx.getColumns()) {
                 if (c.getName().equals(column.getName())) {
                     return true;
                 }
