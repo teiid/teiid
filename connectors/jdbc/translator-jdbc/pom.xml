@@ -6,7 +6,6 @@
 		<artifactId>jdbc</artifactId>
 		<version>14.0.0-SNAPSHOT</version>
 	</parent>
-	<groupId>org.teiid.connectors</groupId>
 	<artifactId>translator-jdbc</artifactId>
 	<name>JDBC Translator</name>
 	<description>This project contains translators for a JDBC source. Currently this is an aggregator for all the JDBC translators relational databases.</description>

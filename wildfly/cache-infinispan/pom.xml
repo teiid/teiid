@@ -51,12 +51,7 @@
 	        <artifactId>infinispan-commons</artifactId>
 	        <version>${version.wildfly.org.infinispan}</version>
 	    </dependency>
-	    
-	    <dependency>
-            <groupId>org.jgroups</groupId>
-            <artifactId>jgroups</artifactId>
-        </dependency>
-	    
+	    	    
 	    <dependency>
 	        <groupId>org.teiid</groupId>
 	        <artifactId>teiid-engine</artifactId>
@@ -73,8 +68,8 @@
 	    </dependency>
 	    
 	    <dependency>
-	      <groupId>javax.transaction</groupId>
-	      <artifactId>javax.transaction-api</artifactId>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
 	    </dependency>
 
 		<dependency>

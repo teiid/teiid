@@ -24,6 +24,11 @@
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-tasks-api</artifactId>
 		</dependency>
+		<dependency>
+		    <groupId>jakarta.annotation</groupId>
+		    <artifactId>jakarta.annotation-api</artifactId>
+		    <scope>runtime</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
