@@ -17,10 +17,12 @@
  */
 package org.teiid.arquillian;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.jboss.arquillian.junit.Arquillian;
@@ -60,21 +62,34 @@ public class IntegrationTestVDBSeviceCleanup extends AbstractMMQueryTestCase {
 
         assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1));
 
-        assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
+        Connection c = TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null);
+        Statement s = c.createStatement();
+        s.execute("select ID,SESSION_START from example.SESSIONS ORDER BY ID");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        String id = rs.getString(1);
+        c.close();
 
         admin.undeploy("service-vdb.xml");
 
         admin.deleteDataSource("ServiceDS");
 
-        /*
         admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
 
         createDS("ServiceDS");
 
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1, 3));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1));
 
-        assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
-        */
+        c = TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null);
+        s = c.createStatement();
+        s.execute("select ID,SESSION_START from example.SESSIONS ORDER BY ID");
+        rs = s.getResultSet();
+        rs.next();
+        String id2 = rs.getString(1);
+
+        //the ids should be different if the datasource got fully bounced
+        assertNotEquals(id, id2);
+        c.close();
     }
 
     private void createDS(String deployName) throws AdminException {

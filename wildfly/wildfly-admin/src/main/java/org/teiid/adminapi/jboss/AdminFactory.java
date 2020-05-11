@@ -47,6 +47,7 @@ import org.jboss.as.cli.operation.OperationFormatException;
 import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
 import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
+import org.jboss.as.controller.client.helpers.ClientConstants;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
@@ -882,9 +883,12 @@ public class AdminFactory {
                 builder.addNode(subsystem[1], deployedName);
                 builder.setOperationName("remove");
                 request = builder.buildRequest();
+                request.get(ClientConstants.OPERATION_HEADERS).get("allow-resource-service-restart").set(Boolean.TRUE);
             } catch (OperationFormatException e) {
                 throw new AdminComponentException(AdminPlugin.Event.TEIID70010, e, "Failed to build operation"); //$NON-NLS-1$
             }
+
+
 
             try {
                 ModelNode outcome = this.connection.execute(request);
