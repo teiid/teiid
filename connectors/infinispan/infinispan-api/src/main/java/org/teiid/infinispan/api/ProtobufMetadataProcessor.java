@@ -536,10 +536,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
     }
 
     public static String getMessageName(Table table) {
-        if (table.getNameInSource() != null) {
-            return table.getNameInSource();
-        }
-        return table.getName();
+        return table.getSourceName();
     }
 
     public static String getMessageName(Column column) {
