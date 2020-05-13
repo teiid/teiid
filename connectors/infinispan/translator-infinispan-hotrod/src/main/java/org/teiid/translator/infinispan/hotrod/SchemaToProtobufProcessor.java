@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.InfinispanPlugin;
 import org.teiid.infinispan.api.ProtobufDataManager;
 import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.ProtobufResource;
@@ -52,7 +53,7 @@ public class SchemaToProtobufProcessor {
     public ProtobufResource process(MetadataFactory metadataFactory, InfinispanConnection connection)
             throws TranslatorException {
 
-        String defaultCacheName = "default";
+        String defaultCacheName = null;
         if (connection != null) {
             defaultCacheName = connection.getCache().getName();
         }
@@ -79,7 +80,8 @@ public class SchemaToProtobufProcessor {
         buffer.append(TAB);
     }
 
-    private void visit(Table table, String defaultCacheName) {
+    private void visit(Table table, String defaultCacheName) throws TranslatorException {
+
         if (table.getAnnotation() != null) {
             buffer.append("/* ").append(table.getAnnotation()).append(" */").append(NL);
         } else if (isIndexMessages()) {
@@ -90,7 +92,8 @@ public class SchemaToProtobufProcessor {
             }
             buffer.append(" */").append(NL);
         }
-        buffer.append("message ").append(table.getName()).append(SPACE).append(OPEN_CURLY).append(NL);
+        String id = getUnqualifiedMessageName(table);
+        buffer.append("message ").append(validateIdentifier(id)).append(SPACE).append(OPEN_CURLY).append(NL);
         for (Column column : table.getColumns()) {
             visit(column);
         }
@@ -100,7 +103,24 @@ public class SchemaToProtobufProcessor {
         buffer.append(CLOSE_CURLY);
     }
 
-    private void visitTable(String name, List<Column> columns) {
+    private String getUnqualifiedMessageName(Table table) {
+        String id = ProtobufMetadataProcessor.getMessageName(table);
+        //needs to be unqualfied for protobuf
+        if (id.contains(".")) {
+            id = id.substring(id.indexOf(".")+1);
+        }
+        return id;
+    }
+
+    private String validateIdentifier(String value) throws TranslatorException {
+        if (!value.matches("[a-zA-z]\\w*")) {
+            throw new TranslatorException(InfinispanPlugin.Event.TEIID25021,
+                    InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25021, value));
+        }
+        return value;
+    }
+
+    private void visitTable(String name, List<Column> columns) throws TranslatorException {
         if (isIndexMessages()) {
             buffer.append("/* @Indexed */").append(NL);
         }
@@ -111,7 +131,7 @@ public class SchemaToProtobufProcessor {
         buffer.append(CLOSE_CURLY);
     }
 
-    private void visit(Column column) {
+    private void visit(Column column) throws TranslatorException {
         String messageName = ProtobufMetadataProcessor.getMessageName(column);
         if (messageName != null) {
             if (this.processLater.get(messageName) == null) {
@@ -131,7 +151,7 @@ public class SchemaToProtobufProcessor {
         visitColumn(column);
     }
 
-    private void visitColumn(Column column) {
+    private void visitColumn(Column column) throws TranslatorException {
         addTab();
 
         boolean array = column.getJavaType().isArray();
@@ -183,11 +203,7 @@ public class SchemaToProtobufProcessor {
 
         buffer.append(type).append(SPACE);
 
-        if (column.getNameInSource() != null) {
-            buffer.append(column.getNameInSource()).append(SPACE);
-        } else {
-            buffer.append(column.getName()).append(SPACE);
-        }
+        buffer.append(validateIdentifier(column.getSourceName())).append(SPACE);
 
         int tag = ProtobufMetadataProcessor.getTag(column);
         if (tag == -1) {
@@ -268,12 +284,7 @@ public class SchemaToProtobufProcessor {
                 for (ForeignKey fk : fks) {
                     if (fk.getReferenceTableName().equals(table.getName())) {
                         addTab();
-                        String messageName = ProtobufMetadataProcessor.getMessageName(t);
-                        if (messageName == null) {
-                            messageName = table.getName();
-                        } else {
-                            messageName = messageName.substring(messageName.lastIndexOf('.') + 1);
-                        }
+                        String messageName = getUnqualifiedMessageName(t);
                         String columnName = ProtobufMetadataProcessor.getParentColumnName(t);
                         if (columnName == null) {
                             columnName = t.getName().toLowerCase();

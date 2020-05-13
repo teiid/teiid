@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 import java.util.TreeMap;
@@ -77,7 +77,6 @@ public class TestProtobufMetadataProcessor {
     public void testMetadataProcessor() throws Exception {
         MetadataFactory mf = protoMatadata("tables.proto", false);
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         //ObjectConverterUtil.write(new StringReader(ddl), UnitTestUtil.getTestDataFile("tables.ddl"));
         assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.ddl")), ddl);
     }
@@ -86,7 +85,6 @@ public class TestProtobufMetadataProcessor {
     public void testMetadataProcessorClasspath() throws Exception {
         MetadataFactory mf = protoMatadata("tables.proto", true);
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         //ObjectConverterUtil.write(new StringReader(ddl), UnitTestUtil.getTestDataFile("tables.ddl"));
         assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.ddl")), ddl);
     }
