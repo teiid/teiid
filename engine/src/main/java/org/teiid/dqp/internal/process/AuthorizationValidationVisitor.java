@@ -71,9 +71,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
     @Override
     public void visit(DynamicCommand obj) {
-        if (obj.getIntoGroup() != null) {
+        if (obj.getIntoGroup() != null && obj.getIntoGroup().isTempTable() && obj.getIntoGroup().isImplicitTempGroupSymbol()) {
             validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), obj.getIntoGroup(), Context.CREATE);
-        }
+        } //else if not a temp table, then this will be checked by the dynamic sql instruction
     }
 
     @Override

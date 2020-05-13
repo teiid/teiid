@@ -808,6 +808,29 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
       }
 
+    @Test public void testDynamicCommandWithIntoRegularTable() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        String query = "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+            + "execute string 'SELECT * FROM pm1.g1 WHERE e1 = ''First''' as a string, b integer, c boolean, d double into pm1.g1; declare string VARIABLES.RESULT = select count(e1) from pm1.g1;select VARIABLES.RESULT; END";
+
+        addProc(metadata, query);
+
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
+
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+
+        //Create expected results
+        List[] expected = new List[] {
+            Arrays.asList("3"),  //$NON-NLS-1$
+            };
+        helpTestProcess(plan, expected, dataMgr, metadata);
+
+        //make sure the insert looks good
+        assertTrue(dataMgr.getQueries().toString(), dataMgr.getQueries().contains("INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES ('First', 5, TRUE, 1.003)"));
+    }
+
     @Test public void testDynamicUpdateInto() throws Exception {
 
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();

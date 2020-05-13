@@ -97,6 +97,9 @@ public class DynamicCommandResolver implements CommandResolver {
                     //must be a temp table from a higher scope
                     for (ElementSymbol column : (List<ElementSymbol>)dynamicCmd.getAsColumns()) {
                         column.setGroupSymbol(dynamicCmd.getIntoGroup().clone());
+                        //if we want the insert to happen based upon column name matching we need to resolve
+                        //currently we expect to match positionally
+                        //ResolverVisitor.resolveLanguageObject(column, metadata);
                     }
                 }
             } else {

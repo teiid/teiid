@@ -55,6 +55,7 @@ import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
 import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -208,7 +209,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                     && !dynamicCommand.getAsColumns().isEmpty()) {
                 command = QueryRewriter.createInlineViewQuery(new GroupSymbol("X"), command, metadata, dynamicCommand.getAsColumns()); //$NON-NLS-1$
                 if (dynamicCommand.getIntoGroup() != null) {
-                    Insert insert = new Insert(dynamicCommand.getIntoGroup(), dynamicCommand.getAsColumns(), Collections.emptyList());
+                    //we use the into group because we expect to positionally match all of the columns
+                    Insert insert = new Insert(dynamicCommand.getIntoGroup(), ResolverUtil.resolveElementsInGroup(dynamicCommand.getIntoGroup(),  metadata), Collections.emptyList());
                     insert.setQueryExpression((Query)command);
                     command = insert;
                     insertInto = true;
