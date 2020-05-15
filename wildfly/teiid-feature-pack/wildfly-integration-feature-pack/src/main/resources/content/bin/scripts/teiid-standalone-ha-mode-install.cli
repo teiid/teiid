@@ -110,7 +110,7 @@ run-batch
 /subsystem=teiid/translator=jpa2:add(module=org.jboss.teiid.translator.jpa)
 /subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
-/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
+/subsystem=teiid/translator=openapi:add(module=org.jboss.teiid.translator.openapi)
 /subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
 /subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 /subsystem=teiid/translator=amazon-s3:add(module=org.jboss.teiid.translator.amazon.s3)
