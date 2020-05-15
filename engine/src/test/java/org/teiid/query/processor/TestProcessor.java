@@ -30,6 +30,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.metadata.ParameterInfo;
@@ -74,6 +75,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -8131,6 +8133,22 @@ public class TestProcessor {
        cc.setMetadata(metadata);
        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(caps), cc);
        helpProcess(plan, cc, dataManager, result);
+   }
+
+   @Test(expected = QueryProcessingException.class) public void testHiddenDynamicAnonProc() throws Exception {
+       String sql = "begin execute 'select shortvalue from bqt1.smalla'; end";
+       TransformationMetadata tm = RealMetadataFactory.exampleBQT();
+       tm.getVdbMetaData().getModel("BQT1").setVisible(false);
+       tm.setHiddenResolvable(false);
+
+       ProcedurePlan plan = (ProcedurePlan)TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(getTypicalCapabilities()));
+       plan.setValidateAccess(true);
+       HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+       dataManager.addData("SELECT g_0.ShortValue FROM SmallA AS g_0",
+               new List<?>[] {Arrays.asList((short)1)});
+
+        //direct access should not resolve
+        helpProcess(plan, createCommandContext(), dataManager, null);
    }
 
     private static final boolean DEBUG = false;

@@ -188,7 +188,12 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 command.addExternalGroupToContext(using);
             }
 
-            QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
+            QueryMetadataInterface metadataToUse = metadata;
+            if (!procEnv.isValidateAccess()) {
+                //if we are not a user query, then use the design time metadata
+                metadataToUse = metadata.getDesignTimeMetadata();
+            }
+            QueryResolver.resolveCommand(command, metadataToUse);
 
             validateDynamicCommand(procEnv, command, value.toString());
 
@@ -276,7 +281,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                         insert.addVariable(col);
                     }
                     insert.addValue(new Constant(procEnv.getCurrentVariableContext().getValue(ProcedurePlan.ROWCOUNT)));
-                    QueryResolver.resolveCommand(insert, metadata.getDesignTimeMetadata());
+                    QueryResolver.resolveCommand(insert, metadataToUse);
                     TupleSource ts = procEnv.getDataManager().registerRequest(procEnv.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
                     ts.nextTuple();
                     ts.closeSource();
