@@ -622,7 +622,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     private long readLong(byte[] bytes, int length) {
         long val = 0;
         for (int k = 0; k < length; k++) {
-            val += ((bytes[k] & 255) << ((length - k - 1)*8));
+            val += ((long)(bytes[k] & 255) << ((length - k - 1)*8));
         }
         return val;
     }

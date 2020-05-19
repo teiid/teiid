@@ -489,7 +489,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
         private long readLong(InputStream is) throws IOException {
             long val = 0;
             for (int k = 0; k < 8; k++) {
-                val += ((is.read() & 255) << (56-k*8));
+                val += ((long)(is.read() & 255) << (56-k*8));
             }
             return val;
         }
