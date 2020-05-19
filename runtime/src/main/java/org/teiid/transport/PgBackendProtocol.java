@@ -35,6 +35,8 @@ import java.sql.Blob;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Properties;
 
@@ -56,6 +58,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
+import org.teiid.odbc.ODBCClientRemote.CursorDirection;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.runtime.RuntimePlugin;
@@ -291,6 +294,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
         sendParameterStatus("server_version", "8.2");
         sendParameterStatus("session_authorization", this.props.getProperty("user"));
         sendParameterStatus("standard_conforming_strings", "on");
+        sendParameterStatus("integer_datetimes", "on");
         sendParameterStatus(APPLICATION_NAME, this.props.getProperty(APPLICATION_NAME, DEFAULT_APPLICATION_NAME));
 
         // TODO PostgreSQL TimeZone
@@ -555,6 +559,27 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
                 dataOut.writeInt((int) (secs / 86400));
             }
             break;
+        case PG_TYPE_TIME:
+            Time time = rs.getTime(column);
+            if (time != null) {
+                long millis = time.getTime();
+                millis += TimestampWithTimezone.getCalendar().getTimeZone().getOffset(millis);
+                millis *= 1000;
+                dataOut.writeLong(millis);
+            }
+            break;
+        case PG_TYPE_TIMESTAMP_NO_TMZONE:
+            Timestamp t = rs.getTimestamp(column);
+            if (t != null) {
+                long millis = t.getTime();
+                millis += TimestampWithTimezone.getCalendar().getTimeZone().getOffset(millis);
+                long secs = TimestampUtils.toPgSecs(millis / 1000);
+                //convert from secs / millis to micro
+                long pgMicros = secs * 1000000 + (millis % 1000)*1000;
+                pgMicros += t.getNanos()/1000;
+                dataOut.writeLong(pgMicros);
+            }
+            break;
         default:
             throw new AssertionError();
         }
@@ -764,6 +789,8 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
         case PG_TYPE_FLOAT8:
         case PG_TYPE_BYTEA:
         case PG_TYPE_DATE:
+        case PG_TYPE_TIME:
+        case PG_TYPE_TIMESTAMP_NO_TMZONE:
             return true;
         }
         return false;

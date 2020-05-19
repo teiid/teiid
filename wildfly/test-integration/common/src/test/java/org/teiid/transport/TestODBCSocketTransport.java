@@ -30,7 +30,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.concurrent.ForkJoinPool;
 
 import org.junit.After;
@@ -50,10 +53,12 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.TestEmbeddedServer;
 import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
@@ -130,10 +135,12 @@ public class TestODBCSocketTransport {
     static FakeOdbcServer odbcServer = new FakeOdbcServer();
 
     @BeforeClass public static void oneTimeSetup() throws Exception {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
         odbcServer.start(Mode.LEGACY);
     }
 
     @AfterClass public static void oneTimeTearDown() throws Exception {
+        TimestampWithTimezone.resetCalendar(null);
         odbcServer.stop();
     }
 
@@ -142,14 +149,17 @@ public class TestODBCSocketTransport {
     @Before public void setUp() throws Exception {
         String database = "parts";
         TRANSACTION_MANAGER.reset();
-        connect(database);
+        connect("parts");
     }
 
-    private void connect(String database) throws SQLException {
+    private void connect(String database, Map.Entry<String, String>... props) throws SQLException {
         Driver d = new Driver();
         Properties p = new Properties();
         p.setProperty("user", "testuser");
         p.setProperty("password", "testpassword");
+        for (Map.Entry<String, String> prop : props) {
+            p.setProperty(prop.getKey(), prop.getValue());
+        }
         conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/"+database, p);
     }
 
@@ -935,6 +945,27 @@ public class TestODBCSocketTransport {
         rs.next();
         assertTrue(rs.getString(1).contains("Select Columns Subplan"));
         assertFalse(rs.next());
+    }
+
+    @Test public void testBinaryTransfer() throws Exception {
+        connect("parts", new AbstractMap.SimpleEntry<String, String>("binaryTransfer", "true"));
+        PreparedStatement s = conn.prepareStatement("SELECT ?,?,?,?,?,?,?,?,?,?");
+        //date and timestamp are not actually sent in binary in the pg driver
+        s.setTimestamp(1, TimestampUtil.createTimestamp(100, 1, 2, 3, 4, 5, 6000));
+        s.setTime(2, TimestampUtil.createTime(1, 2, 3));
+        s.setDate(3, TimestampUtil.createDate(100, 1, 2));
+        s.setString(4, "abc");
+        s.setByte(5, (byte)3);
+        s.setShort(6, (short)4);
+        s.setInt(7, 5);
+        s.setLong(8, 10000000000l);
+        s.setFloat(9, 5.1f);
+        s.setDouble(10, 5.2);
+        s.execute();
+
+        //1410065410                                                         5.1                                                                1.06773274E-315
+
+        TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
     }
 
 }

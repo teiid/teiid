@@ -622,7 +622,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     private long readLong(byte[] bytes, int length) {
         long val = 0;
         for (int k = 0; k < length; k++) {
-            val += ((bytes[k] & 255) << ((length - k - 1)*8));
+            val += ((long)(bytes[k] & 255) << ((length - k - 1)*8));
         }
         return val;
     }
@@ -685,8 +685,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                     case PGUtil.PG_TYPE_FLOAT8:
                         param = Double.longBitsToDouble(readLong((byte[])param, 8));
                         break;
+                    case PGUtil.PG_TYPE_TIME:
+                        //micro to millis
+                        param = TimestampUtils.convertToTime(readLong((byte[])param, 8)/1000, TimestampWithTimezone.getCalendar().getTimeZone());
+                        break;
                     case PGUtil.PG_TYPE_DATE:
                         param = TimestampUtils.toDate(TimestampWithTimezone.getCalendar().getTimeZone(), (int)readLong((byte[])param, 4));
+                        break;
+                    case PGUtil.PG_TYPE_TIMESTAMP_NO_TMZONE:
+                        param = TimestampUtils.toTimestamp(readLong((byte[])param, 8), TimestampWithTimezone.getCalendar().getTimeZone());
                         break;
                     default:
                         //start with the string conversion
