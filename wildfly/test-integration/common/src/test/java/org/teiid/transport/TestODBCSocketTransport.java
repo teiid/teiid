@@ -945,6 +945,26 @@ public class TestODBCSocketTransport {
         rs.next();
         assertTrue(rs.getString(1).contains("Select Columns Subplan"));
         assertFalse(rs.next());
+
+        //extended query, so prepared under the covers
+        s.execute("explain SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");
+        rs = s.getResultSet();
+        rs.next();
+        assertTrue(rs.getString(1).contains("Select Columns Subplan"));
+        assertFalse(rs.next());
+
+        PreparedStatement ps = conn.prepareStatement("explain SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");
+        ps.execute();
+        rs = ps.getResultSet();
+        rs.next();
+        assertTrue(rs.getString(1).contains("Select Columns Subplan"));
+        assertFalse(rs.next());
+
+        ps.execute();
+        rs = ps.getResultSet();
+        rs.next();
+        assertTrue(rs.getString(1).contains("Select Columns Subplan"));
+        assertFalse(rs.next());
     }
 
     @Test public void testBinaryTransfer() throws Exception {
@@ -962,9 +982,6 @@ public class TestODBCSocketTransport {
         s.setFloat(9, 5.1f);
         s.setDouble(10, 5.2);
         s.execute();
-
-        //1410065410                                                         5.1                                                                1.06773274E-315
-
         TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
     }
 
