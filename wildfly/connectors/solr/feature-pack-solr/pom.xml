@@ -4,7 +4,7 @@
 	<parent>
         <groupId>org.teiid.wildfly.connectors</groupId>
 		<artifactId>solr</artifactId>
-		<version>14.0.0-SNAPSHOT</version>
+		<version>14.0.0</version>
 	</parent>
 	<artifactId>feature-pack-solr</artifactId>
 	<name>Teiid SOLR Feature Pack</name>
