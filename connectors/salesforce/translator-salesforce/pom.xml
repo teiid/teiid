@@ -52,10 +52,6 @@
 			<groupId>com.force.api</groupId>
 			<artifactId>force-wsc</artifactId>
 		</dependency>
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-        </dependency>        
 	</dependencies>
 
 	<build>

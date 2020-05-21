@@ -37,10 +37,6 @@
           <artifactId>wsdl4j</artifactId>
         </dependency>
         <dependency>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </dependency>
-        <dependency>
           <groupId>jakarta.activation</groupId>
           <artifactId>jakarta.activation-api</artifactId>
         </dependency>        
