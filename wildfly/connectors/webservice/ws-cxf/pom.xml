@@ -3,7 +3,7 @@
     <parent>
       <groupId>org.teiid.wildfly.connectors</groupId>
       <artifactId>webservice</artifactId>
-      <version>14.0.0-SNAPSHOT</version>
+      <version>15.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>ws-cxf</artifactId>
     <name>WS CXF</name>
