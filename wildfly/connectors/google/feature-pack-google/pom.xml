@@ -4,7 +4,7 @@
 	<parent>
         <groupId>org.teiid.wildfly.connectors</groupId>
 		<artifactId>google</artifactId>
-		<version>13.1.1</version>
+		<version>13.1.2-SNAPSHOT</version>
 	</parent>
     <artifactId>feature-pack-google</artifactId>
     <name>Google Feature Pack</name>
