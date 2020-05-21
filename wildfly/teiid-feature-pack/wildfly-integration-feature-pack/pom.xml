@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid.wildfly</groupId>
         <artifactId>teiid-feature-pack</artifactId>
-        <version>13.0.3</version>
+        <version>13.0.4-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
