@@ -8,8 +8,6 @@ CREATE DATABASE empty VERSION '2';
 USE DATABASE empty VERSION '2';
 
 --############ Translators ############
-CREATE FOREIGN DATA WRAPPER y;
-
 
 --############ Servers ############
 CREATE SERVER z FOREIGN DATA WRAPPER y OPTIONS ("resource-name" 'z');

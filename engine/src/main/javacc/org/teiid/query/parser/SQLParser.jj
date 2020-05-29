@@ -5564,11 +5564,12 @@ void createDataWrapper(DatabaseStore dbStore) :
         wrapper = new DataWrapper(wrapperName);
       } 
     )
-    [ (<TYPE> | <HANDLER>) (type = id(null) { wrapper.setType(type);}) ]      
-    [ optionsClause(wrapper, dbStore.getCurrentNamespaceContainer())
-      {
-         OptionsUtil.setOptions(wrapper);
-      }
+    [ (<TYPE> | <HANDLER>) (type = id(null) { wrapper.setType(type);})       
+      [ optionsClause(wrapper, dbStore.getCurrentNamespaceContainer())
+        {
+           OptionsUtil.setOptions(wrapper);
+        }
+      ]
     ]    
     {
         dbStore.dataWrapperCreated(wrapper);

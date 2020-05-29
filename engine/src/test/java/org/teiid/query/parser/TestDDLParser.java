@@ -1157,6 +1157,14 @@ public class TestDDLParser {
         assertEquals("v2", s.getProperty("k1", false));
     }
 
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testCreateDataWrapperWithOptionsNoType() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "USE DATABASE FOO version '2';"
+                + "CREATE FOREIGN DATA WRAPPER orcl options (x 'y');";
+        helpParse(ddl);
+    }
+
     @Test
     public void testCreateServerNoType() throws Exception {
         String ddl = "CREATE DATABASE FOO VERSION '2';"

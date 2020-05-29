@@ -8,8 +8,6 @@ CREATE DATABASE override VERSION '1';
 USE DATABASE override VERSION '1';
 
 --############ Translators ############
-CREATE FOREIGN DATA WRAPPER mysql;
-
 CREATE FOREIGN DATA WRAPPER "mysql-override" TYPE mysql OPTIONS (RequiresCriteria 'true');
 
 
