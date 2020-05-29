@@ -27,13 +27,38 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings("nls")
 public class TestSecurityFunctions {
+
+    private class NoRoleAuthValidator implements AuthorizationValidator {
+        @Override
+        public boolean validate(String[] originalSql, Command command,
+                QueryMetadataInterface metadata,
+                CommandContext commandContext, CommandType commandType)
+                throws QueryValidatorException, TeiidComponentException {
+            return false;
+        }
+
+        @Override
+        public boolean hasRole(String roleName,
+                CommandContext commandContext) {
+            return false;
+        }
+
+        @Override
+        public boolean isAccessible(AbstractMetadataRecord record,
+                CommandContext commandContext) {
+            return true;
+        }
+    }
+
+
 
     /**
      *  hasRole should be true without a service
@@ -76,34 +101,39 @@ public class TestSecurityFunctions {
         });
 
         CommandContext context = new CommandContext();
-        context.setAuthoriziationValidator(new AuthorizationValidator() {
-
-            @Override
-            public boolean validate(String[] originalSql, Command command,
-                    QueryMetadataInterface metadata,
-                    CommandContext commandContext, CommandType commandType)
-                    throws QueryValidatorException, TeiidComponentException {
-                return false;
-            }
-
-            @Override
-            public boolean hasRole(String roleName,
-                    CommandContext commandContext) {
-                return false;
-            }
-
-            @Override
-            public boolean isAccessible(AbstractMetadataRecord record,
-                    CommandContext commandContext) {
-                return true;
-            }
-
-        });
+        context.setAuthoriziationValidator(new NoRoleAuthValidator());
 
         Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
 
         // Run query
+        TestProcessor.helpProcess(plan, context, dataManager, expected);
+    }
+
+    @Test public void testHasRoleBranchPruning() throws Exception {
+
+        String sql = "select * from (\n" +
+                "            select e1, e2 from \"pm1.g1\" \n" +
+                "            union all\n" +
+                "            select e1, e2 from \"pm1.g2\" where hasRole('report-role')) as a\n" +
+                "            where e2 = 1 limit 100 ;";
+
+        // Create expected results
+        List[] expected = new List[] { Arrays.asList("a", 1) };
+
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+
+        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 1", new List[] { //$NON-NLS-1$
+            Arrays.asList("a", 1), //$NON-NLS-1$
+        });
+
+        CommandContext context = new CommandContext();
+        context.setAuthoriziationValidator(new NoRoleAuthValidator());
+
+        Command command = TestProcessor.helpParse(sql);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), context);
+
         TestProcessor.helpProcess(plan, context, dataManager, expected);
     }
 

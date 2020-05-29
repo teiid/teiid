@@ -357,7 +357,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     boolean pushTowardOriginatingNode(PlanNode sourceNode, PlanNode critNode, final QueryMetadataInterface metadata, final CapabilitiesFinder capFinder)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
-        boolean groupSelects = sourceNode.getParent().getType() == NodeConstants.Types.SELECT && sourceNode.getChildCount() == 0;
+        boolean groupSelects = createdNodes == null && sourceNode.getParent().getType() == NodeConstants.Types.SELECT && sourceNode.getChildCount() == 0;
 
         //to keep a stable criteria ordering, move the sourceNode to the top of the criteria chain
         while (sourceNode.getParent().getType() == NodeConstants.Types.SELECT) {

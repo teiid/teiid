@@ -1601,6 +1601,10 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
     }
 
+    @Test public void testRewriteExpressionCriteriaAlwaysFalse() throws Exception {
+        helpTestRewriteCriteria("cast('false' as boolean)", "1 = 0");
+    }
+
     @Test public void testRewriteExpressionCriteriaBooleanLiterals() {
         helpTestRewriteCriteria("not(true)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
         helpTestRewriteCriteria("not(true)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
