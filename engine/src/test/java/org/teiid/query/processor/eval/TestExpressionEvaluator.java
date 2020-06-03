@@ -429,6 +429,26 @@ public class TestExpressionEvaluator {
         }
     }
 
+    @Test public void testExtractDOW() throws Exception {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+        try {
+            Expression ex = TestFunctionResolving.getExpression("extract(dow from cast('2011-04-01 11:11:11.1234567' as timestamp))");
+            assertEquals(6, Evaluator.evaluate(ex));
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
+    }
+
+    @Test public void testExtractDOY() throws Exception {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+        try {
+            Expression ex = TestFunctionResolving.getExpression("extract(doy from cast('2011-04-01 11:11:11.1234567' as timestamp))");
+            assertEquals(91, Evaluator.evaluate(ex));
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
+    }
+
     @Test public void testSimilarTo() throws Exception {
         Expression ex = TestFunctionResolving.getExpression("'aaaxy' similar to 'a+%'");
         assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
