@@ -147,10 +147,13 @@
         <version.opentracing>0.31.0</version.opentracing>
 
         <version.xerces>2.12.0</version.xerces>
-        <version.org.slf4j>1.7.28</version.org.slf4j>
+        <version.org.slf4j>1.7.29</version.org.slf4j>
         
         <version.caffeine>2.8.0</version.caffeine>
         <version.org.checkerframework>2.10.0</version.org.checkerframework>
+        
+        <version.org.apache.cxf>3.3.6</version.org.apache.cxf>
+        <version.org.springframework>5.1.14.RELEASE</version.org.springframework>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1622,6 +1625,11 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
+                <artifactId>ws-cxf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>translator-salesforce</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1822,7 +1830,7 @@
            <dependency>
                <groupId>commons-codec</groupId>
                <artifactId>commons-codec</artifactId>
-               <version>1.12</version>
+               <version>1.13</version>
            </dependency>
            
            <dependency>
@@ -1947,6 +1955,46 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${version.org.slf4j}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-client</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                <version>${version.org.apache.cxf}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-rt-bindings-xml</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-rt-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth2</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
+                <version>${version.org.apache.cxf}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -14,6 +14,7 @@
 	<description />
 
 	<modules>
+	    <module>ws-cxf</module>
 		<module>translator-ws</module>
 	</modules>
 
