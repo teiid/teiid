@@ -30,7 +30,6 @@ import org.apache.commons.net.ftp.FTPSClient;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.core.BundleUtil;
-import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.StringUtil;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.translator.TranslatorException;
@@ -48,17 +47,6 @@ public class FtpFileConnection implements VirtualFileConnection {
         @Override
         public String getName() {
             return file.getName();
-        }
-
-        @Override
-        public InputStreamFactory createInputStreamFactory() {
-            return new InputStreamFactory() {
-
-                @Override
-                public InputStream getInputStream() throws IOException {
-                    return file.openStream();
-                }
-            };
         }
 
         @Override

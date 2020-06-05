@@ -77,7 +77,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConn
             VirtualFile xlsFile = xlsFiles[0];
 
             String extension = getFileExtension(xlsFile);
-            InputStream xlsFileStream = xlsFile.createInputStreamFactory().getInputStream();
+            InputStream xlsFileStream = xlsFile.openInputStream(true);
             try {
                 Workbook workbook = null;
                 if (extension.equalsIgnoreCase("xls")) { //$NON-NLS-1$
