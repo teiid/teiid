@@ -23,21 +23,73 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 
 public interface VirtualFile {
 
+    /**
+     * Get the file name
+     */
     String getName();
 
-    InputStreamFactory createInputStreamFactory();
+    /**
+     * The {@link InputStreamFactory} for utilizing this file as a blob or clob in the
+     * engine.
+     */
+    default InputStreamFactory createInputStreamFactory() {
+        InputStreamFactory isf = new InputStreamFactory () {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return openInputStream(true);
+            }
 
+            @Override
+            public StorageMode getStorageMode() {
+                return getStorageMode();
+            }
+        };
+
+        isf.setSystemId(getName());
+        isf.setLength(getSize());
+        return isf;
+    }
+
+    /**
+     * Get the {@link StorageMode} of this file.  Used by {@link #createInputStreamFactory()}. Defaults to OTHER (not local on disk nor memory).
+     * @return
+     */
+    default StorageMode getStorageMode() {
+        return StorageMode.OTHER;
+    }
+
+    /**
+     * Open a stream for reading
+     * @param lock true if a lock is requested.
+     * It's up to the implementation whether to actually honor the lock.
+     */
     InputStream openInputStream(boolean lock) throws IOException;
 
+    /**
+     * Open a stream for writing
+     * @param lock true if a lock is requested.
+     * It's up to the implementation whether to actually honor the lock.
+     */
     OutputStream openOutputStream(boolean lock) throws IOException;
 
+    /**
+     * The last modified time in UTC milliseconds
+     */
     long getLastModified();
 
+    /**
+     * The creation time in UTC milliseconds
+     */
     long getCreationTime();
 
+    /**
+     * The size in bytes.
+     * @return the size or -1 if unknown.
+     */
     long getSize();
 
 }

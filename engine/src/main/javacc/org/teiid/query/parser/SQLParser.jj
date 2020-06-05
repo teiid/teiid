@@ -541,6 +541,8 @@ TOKEN : /* NonReserved words */
 |   <POLICY: "policy">
 |   <EPOCH: "epoch">
 |   <QUARTER: "quarter">
+|   <DOW: "dow">
+|   <DOY: "doy">
 }
 /*
 name=all in group identifier
@@ -4593,17 +4595,16 @@ Expression function(ParseInfo info) :
 	   <LPAREN>
 	   (funcToken = <YEAR> | 
 	    funcToken = <MONTH> |
-	    funcToken = <DAY> |
+	    funcToken = <DAY> {funcName = "DAYOFMONTH";}|
 	    funcToken = <HOUR> |
 	    funcToken = <MINUTE> |
 	    funcToken = <SECOND> |
 	    funcToken = <QUARTER> |
-	    funcToken = <EPOCH>)
+	    funcToken = <EPOCH> |
+	    funcToken = <DOW> {funcName = "DAYOFWEEK";} |
+	    funcToken = <DOY> {funcName = "DAYOFYEAR";})
 	   <FROM> expression = expression(info)
 	   {
-	   	  if (funcToken.image.equalsIgnoreCase("DAY")) {
-	         funcName = "DAYOFMONTH";
-	      }  	      
 	      args.add(expression);
 	   }
 	   <RPAREN>
@@ -5564,11 +5565,12 @@ void createDataWrapper(DatabaseStore dbStore) :
         wrapper = new DataWrapper(wrapperName);
       } 
     )
-    [ (<TYPE> | <HANDLER>) (type = id(null) { wrapper.setType(type);}) ]      
-    [ optionsClause(wrapper, dbStore.getCurrentNamespaceContainer())
-      {
-         OptionsUtil.setOptions(wrapper);
-      }
+    [ <TYPE> type = id(null) { wrapper.setType(type);}
+      [ optionsClause(wrapper, dbStore.getCurrentNamespaceContainer())
+        {
+           OptionsUtil.setOptions(wrapper);
+        }
+      ]
     ]    
     {
         dbStore.dataWrapperCreated(wrapper);

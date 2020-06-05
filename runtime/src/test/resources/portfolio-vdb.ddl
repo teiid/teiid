@@ -8,10 +8,6 @@ CREATE DATABASE Portfolio VERSION '1' OPTIONS (ANNOTATION 'A Dynamic VDB', UseCo
 USE DATABASE Portfolio VERSION '1';
 
 --############ Translators ############
-CREATE FOREIGN DATA WRAPPER file;
-
-CREATE FOREIGN DATA WRAPPER h2;
-
 
 --############ Servers ############
 CREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("resource-name" 'java:/accounts-ds');

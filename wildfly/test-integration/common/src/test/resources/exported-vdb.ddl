@@ -8,8 +8,6 @@ CREATE DATABASE foo VERSION '1' OPTIONS ("deployment-name" 'foo-vdb.ddl');
 USE DATABASE foo VERSION '1';
 
 --############ Translators ############
-CREATE FOREIGN DATA WRAPPER loopback;
-
 
 --############ Servers ############
 CREATE SERVER NONE FOREIGN DATA WRAPPER loopback OPTIONS ("resource-name" 'NONE');

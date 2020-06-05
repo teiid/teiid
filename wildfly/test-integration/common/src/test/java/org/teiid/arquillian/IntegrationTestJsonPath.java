@@ -53,7 +53,6 @@ public class IntegrationTestJsonPath extends AbstractMMQueryTestCase {
     public void testJsonPathValue() throws Exception {
         String ddl = "create database foo version '1';"
                 + "use database foo version '1';"
-                + "create foreign data wrapper loopback;"
                 + "create server NONE type 'NONE' foreign data wrapper loopback;"
                 + "create schema test server NONE;"
                 + "set schema test;"

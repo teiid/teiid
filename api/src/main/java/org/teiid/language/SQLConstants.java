@@ -196,6 +196,8 @@ public class SQLConstants {
 
         static final String EPOCH = "EPOCH"; //$NON-NLS-1$
         static final String QUARTER = "QUARTER"; //$NON-NLS-1$
+        static final String DOW = "DOW"; //$NON-NLS-1$
+        static final String DOY = "DOY"; //$NON-NLS-1$
 
         //policy
         static final String POLICY = "POLICY"; //$NON-NLS-1$

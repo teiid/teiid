@@ -131,8 +131,6 @@ public class DDLStringVisitor {
             append(NEWLINE);
             for (DataWrapper dw : database.getDataWrappers()) {
                 visit(dw);
-                append(NEWLINE);
-                append(NEWLINE);
             }
         }
 
@@ -387,14 +385,18 @@ public class DDLStringVisitor {
     }
 
     private void visit(DataWrapper dw) {
-        append(CREATE).append(SPACE).append(FOREIGN).append(SPACE).append(DATA).append(SPACE).append(WRAPPER)
-                .append(SPACE);
-        append(SQLStringVisitor.escapeSinglePart(dw.getName()));
         if (dw.getType() != null) {
-            append(SPACE).append(TYPE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(dw.getType()));
+            append(CREATE).append(SPACE).append(FOREIGN).append(SPACE).append(DATA).append(SPACE).append(WRAPPER)
+                    .append(SPACE);
+            append(SQLStringVisitor.escapeSinglePart(dw.getName()));
+            if (dw.getType() != null) {
+                append(SPACE).append(TYPE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(dw.getType()));
+            }
+            appendOptions(dw);
+            append(SEMICOLON);
+            append(NEWLINE);
+            append(NEWLINE);
         }
-        appendOptions(dw);
-        append(SEMICOLON);
     }
 
     private void visit(Server server) {

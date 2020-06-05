@@ -459,7 +459,7 @@ public class TestDDLStringVisitor {
     public void testSchema() throws Exception {
         Database db = new Database("foo", "2");
 
-        DataWrapper dw = new DataWrapper("orcle");
+        DataWrapper dw = new DataWrapper("oracle");
         db.addDataWrapper(dw);
 
         Server s = new Server("testing");
@@ -489,10 +489,8 @@ public class TestDDLStringVisitor {
                 "USE DATABASE foo VERSION '2';" +
                 "\n" +
                 "\n--############ Translators ############\n" +
-                "CREATE FOREIGN DATA WRAPPER orcle;\n" +
-                "\n" +
                 "\n--############ Servers ############\n" +
-                "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"resource-name\" 'java://test-server');\n" +
+                "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER oracle OPTIONS (\"resource-name\" 'java://test-server');\n" +
                 "\n" +
                 "\n--############ Schemas ############\n" +
                 "CREATE SCHEMA SchemaA SERVER testing OPTIONS (ANNOTATION 'x', VISIBLE 'false');\n\n" +
