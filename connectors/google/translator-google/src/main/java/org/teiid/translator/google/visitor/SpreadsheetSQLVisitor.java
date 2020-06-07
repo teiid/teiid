@@ -29,10 +29,8 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.Select;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.google.SpreadsheetExecutionFactory;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.google.api.metadata.Worksheet;
 /**
  * Translates SQL SELECT queries
  *
@@ -48,22 +46,14 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
         super(spreadsheetInfo);
     }
 
-    public String getWorksheetTitle() {
-        return worksheetTitle;
-    }
-
     /**
      * Return only col name e.g. "A"
      */
     @Override
     protected String replaceElementName(String group, String element) {
-        Worksheet worksheetSourceName=info.getWorksheetByName(worksheetTitle);
-        if(worksheetSourceName==null){
-            throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetTitle)); //$NON-NLS-1$
-        }
-        String columnId=worksheetSourceName.getColumnID(element);
+        String columnId=worksheet.getColumnID(element);
          if(columnId==null){
-             throw new SpreadsheetOperationException("Column "+element +" doesn't exist in the worksheet "+worksheetTitle);
+             throw new SpreadsheetOperationException("Column "+element +" doesn't exist in the worksheet "+worksheet.getName());
          }
         return columnId;
     }
@@ -81,10 +71,8 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 
         if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
             NamedTable table = ((NamedTable)obj.getFrom().get(0));
-            this.worksheetTitle = table.getName();
-            if (table.getMetadataObject().getNameInSource() != null) {
-                this.worksheetTitle = table.getMetadataObject().getNameInSource();
-            }
+            String name =table.getMetadataObject().getSourceName();
+            setWorksheetByName(name);
         }
         append(obj.getDerivedColumns());
         if (obj.getWhere() != null) {

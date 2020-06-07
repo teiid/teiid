@@ -17,15 +17,17 @@
  */
 package org.teiid.resource.adapter.google;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
-import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
@@ -42,6 +44,10 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 
     private String spreadsheetId;
 
+    private String spreadsheetMap;
+
+    private Map<String, String> spreadsheets;
+
     private String apiVersion = V_3;
 
     private String refreshToken;
@@ -51,17 +57,17 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 
     @Override
     @SuppressWarnings("serial")
-    public BasicConnectionFactory<BasicConnection> createConnectionFactory() throws ResourceException {
+    public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
         checkConfig();
 
-        return new BasicConnectionFactory<BasicConnection>() {
+        return new BasicConnectionFactory<ResourceConnection>() {
 
             //share the spreadsheet info among all connections
             private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
             private AtomicReference<SpreadsheetInfo> v2SpreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
 
             @Override
-            public BasicConnection getConnection() throws ResourceException {
+            public ResourceConnection getConnection() throws ResourceException {
                 if (apiVersion.equals(V_3)) {
                     return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
                 }
@@ -73,7 +79,7 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
    private void checkConfig() throws ResourceException {
 
         //SpreadsheetName should be set
-        if ((getSpreadsheetName()==null ||  getSpreadsheetName().trim().equals("")) && getSpreadsheetId() == null){ //$NON-NLS-1$
+        if ((getSpreadsheetName()==null ||  getSpreadsheetName().trim().equals("")) && getSpreadsheetId() == null && spreadsheetMap == null){ //$NON-NLS-1$
             throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.
                     getString("provide_spreadsheetname",SpreadsheetManagedConnectionFactory.SPREADSHEET_NAME));      //$NON-NLS-1$
         }
@@ -90,8 +96,19 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
             if (getClientId() == null || getClientSecret() == null) {
                 throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires"));   //$NON-NLS-1$
             }
-            if (getSpreadsheetId() == null) {
+            if (getSpreadsheetId() == null && spreadsheetMap == null) {
                 throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("v4_sheet_id"));   //$NON-NLS-1$
+            }
+            if (spreadsheetMap != null) {
+                spreadsheets = new LinkedHashMap<>();
+                String[] pairs = spreadsheetMap.split(";"); //$NON-NLS-1$
+                for (String pair : pairs) {
+                    String[] prefixId = pair.split("=", 2); //$NON-NLS-1$
+                    if (prefixId.length != 2) {
+                        throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("invalid_mapping"));   //$NON-NLS-1$
+                    }
+                    spreadsheets.put(prefixId[0], prefixId[1]);
+                }
             }
         }
     }
@@ -212,6 +229,18 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
+    }
+
+    public Map<String, String> getSpreadsheets() {
+        return spreadsheets;
+    }
+
+    public String getSpreadsheetMap() {
+        return spreadsheetMap;
+    }
+
+    public void setSpreadsheetMap(String spreadsheetMap) {
+        this.spreadsheetMap = spreadsheetMap;
     }
 
 }

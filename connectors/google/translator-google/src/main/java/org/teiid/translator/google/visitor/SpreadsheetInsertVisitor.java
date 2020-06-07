@@ -26,7 +26,6 @@ import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
 import org.teiid.language.Literal;
-import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
@@ -36,22 +35,15 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  * @author felias
  *
  */
-public class SpreadsheetInsertVisitor extends SQLStringVisitor {
-    private String worksheetKey;
+public class SpreadsheetInsertVisitor extends SpreadsheetCriteriaVisitor {
     private Map<String, Object> columnNameValuePair = new LinkedHashMap<String, Object>();
-    SpreadsheetInfo info;
-    private String worksheetTitle;
 
     public SpreadsheetInsertVisitor(SpreadsheetInfo info) {
-        this.info = info;
+        super(info);
     }
 
     public void visit(Insert obj) {
-        worksheetTitle = obj.getTable().getName();
-        if (obj.getTable().getMetadataObject().getNameInSource() != null) {
-            worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
-        }
-        worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
+        setWorksheetByName(obj.getTable().getMetadataObject().getSourceName());
         ExpressionValueSource evs = (ExpressionValueSource)obj.getValueSource();
         for (int i = 0; i < evs.getValues().size(); i++) {
             Expression e = evs.getValues().get(i);
@@ -67,16 +59,8 @@ public class SpreadsheetInsertVisitor extends SQLStringVisitor {
         }
     }
 
-    public String getWorksheetKey() {
-        return worksheetKey;
-    }
-
     public Map<String, Object> getColumnNameValuePair() {
         return columnNameValuePair;
-    }
-
-    public String getWorksheetTitle() {
-        return worksheetTitle;
     }
 
 }

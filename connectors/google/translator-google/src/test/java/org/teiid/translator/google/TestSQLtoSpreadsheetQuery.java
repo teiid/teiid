@@ -68,7 +68,7 @@ public class TestSQLtoSpreadsheetQuery {
 
     @BeforeClass
     public static void createSpreadSheetInfo() {
-        people=  new SpreadsheetInfo("People");
+        people=  new SpreadsheetInfo();
         Worksheet worksheet = people.createWorksheet("PeopleList");
         worksheet.setHeaderEnabled(true);
         for (int i = 1; i <= 4; i++) {
@@ -126,7 +126,7 @@ public class TestSQLtoSpreadsheetQuery {
         return spreadsheetVisitor;
     }
     private void testVisitorValues(SpreadsheetSQLVisitor visitor,String worksheetTitle, Integer limitValue, Integer offsetvalue) {
-        assertEquals(worksheetTitle, visitor.getWorksheetTitle());
+        assertEquals(worksheetTitle, visitor.getWorksheet().getTitle());
         assertEquals(limitValue, visitor.getLimitValue());
         assertEquals(offsetvalue, visitor.getOffsetValue());
     }
@@ -237,7 +237,7 @@ public class TestSQLtoSpreadsheetQuery {
         vals.put("A", "String,String");
         vals.put("B", "val");
         vals.put("C", 15.5);
-        Mockito.verify(gsc).executeRowInsert("PeopleList", vals);
+        Mockito.verify(gsc).executeRowInsert(people.getWorksheetByName("PeopleList"), vals);
     }
 
     @Test

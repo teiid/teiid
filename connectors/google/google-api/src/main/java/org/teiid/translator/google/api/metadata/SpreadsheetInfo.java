@@ -11,26 +11,15 @@ import java.util.Map;
  *
  */
 public class SpreadsheetInfo {
-    private String spreadsheetName;
     private Map<String, Worksheet> worksheetByName = new HashMap<String,Worksheet>();
-    private String spreadsheetKey;
 
-    public String getSpreadsheetKey() {
-        return spreadsheetKey;
+    public Worksheet createWorksheet(String name) {
+        return this.createWorksheet(name, name);
     }
 
-    public void setSpreadsheetKey(String spreadsheetKey) {
-        this.spreadsheetKey = spreadsheetKey;
-    }
-
-    public SpreadsheetInfo(String spreadsheetName) {
-        this.spreadsheetName = spreadsheetName;
-
-    }
-
-    public Worksheet createWorksheet(String title) {
-        Worksheet worksheet = new Worksheet(title);
-        worksheetByName.put(title, worksheet);
+    public Worksheet createWorksheet(String name, String title) {
+        Worksheet worksheet = new Worksheet(name, title);
+        worksheetByName.put(name, worksheet);
         return worksheet;
     }
 
@@ -41,10 +30,5 @@ public class SpreadsheetInfo {
     public Worksheet getWorksheetByName(String worksheet){
         return worksheetByName.get(worksheet);
     }
-
-    public String getSpreadsheetName() {
-        return spreadsheetName;
-    }
-
 
 }

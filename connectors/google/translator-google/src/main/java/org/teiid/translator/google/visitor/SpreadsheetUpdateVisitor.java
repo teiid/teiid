@@ -47,12 +47,9 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
     private List<UpdateSet> changes;
 
     public void visit(Update obj) {
-        worksheetTitle = obj.getTable().getName();
+        setWorksheetByName(obj.getTable().getMetadataObject().getSourceName());
         changes = new ArrayList<UpdateSet>();
         String columnName;
-        if (obj.getTable().getMetadataObject().getNameInSource() != null) {
-            this.worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
-        }
         for (SetClause s : obj.getChanges()) {
             if(s.getSymbol().getMetadataObject().getNameInSource()!=null){
                 columnName=s.getSymbol().getMetadataObject().getNameInSource();

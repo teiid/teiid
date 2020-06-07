@@ -46,15 +46,18 @@ public class SpreadsheetMetadataExtractor {
         this.dataProtocolAPI = dataProtocolAPI;
     }
 
-    public SpreadsheetInfo extractMetadata(String spreadsheetId){
+    public void extractMetadata(SpreadsheetInfo metadata, String prefix, String spreadsheetId){
         try {
             Spreadsheet spreadsheet = sheetsAPI.getSpreadsheet(spreadsheetId);
-            SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheet.getProperties().getTitle());
-            metadata.setSpreadsheetKey(spreadsheet.getSpreadsheetId());
             for (Sheet sheet : spreadsheet.getSheets()) {
                 String title = sheet.getProperties().getTitle();
-                Worksheet worksheet = metadata.createWorksheet(title);
-                worksheet.setId(sheet.getProperties().getSheetId().toString());
+                //add a sheet with the spreadsheet prefix
+                Worksheet worksheet = metadata.createWorksheet(prefix + title, title);
+                //for some reason a sheet can have a 0 id, which is invalid
+                //so use the index as the id, but change to 1 based
+                Integer sheetId = sheet.getProperties().getIndex() + 1;
+                worksheet.setId(sheetId.toString());
+                worksheet.setSpreadsheetId(spreadsheet.getSpreadsheetId());
                 List<Column> cols = dataProtocolAPI.getMetadata(spreadsheet.getSpreadsheetId(), title);
                 if(!cols.isEmpty()){
                     if(cols.get(0).getLabel()!=null){
@@ -65,7 +68,6 @@ public class SpreadsheetMetadataExtractor {
                     worksheet.addColumn(c.getLabel()!=null ? c.getLabel(): c.getAlphaName(), c);
                 }
             }
-            return metadata;
         } catch (IOException ex) {
             throw new SpreadsheetOperationException(
                     SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$

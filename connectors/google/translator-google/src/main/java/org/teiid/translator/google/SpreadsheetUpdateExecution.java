@@ -68,8 +68,8 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
         SpreadsheetInfo info = connection.getSpreadsheetInfo();
         SpreadsheetUpdateVisitor updateVisitor = new SpreadsheetUpdateVisitor(info);
         updateVisitor.visit((Update) command);
-        checkHeaders(updateVisitor.getWorksheetTitle());
-        result = connection.updateRows(updateVisitor.getWorksheetTitle(), updateVisitor.getCriteriaQuery(), updateVisitor.getChanges());
+        checkHeaders(updateVisitor.getWorksheet());
+        result = connection.updateRows(updateVisitor.getWorksheet(), updateVisitor.getCriteriaQuery(), updateVisitor.getChanges());
         return result;
     }
 
@@ -77,8 +77,8 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
         SpreadsheetInfo info = connection.getSpreadsheetInfo();
         SpreadsheetInsertVisitor visitor = new SpreadsheetInsertVisitor(info);
         visitor.visit((Insert) command);
-        checkHeaders(visitor.getWorksheetTitle());
-        result = connection.executeRowInsert(visitor.getWorksheetTitle(), visitor.getColumnNameValuePair());
+        checkHeaders(visitor.getWorksheet());
+        result = connection.executeRowInsert(visitor.getWorksheet(), visitor.getColumnNameValuePair());
         return result;
     }
 
@@ -86,8 +86,8 @@ public class SpreadsheetUpdateExecution extends AbstractSpreadsheetExecution {
         SpreadsheetInfo info = connection.getSpreadsheetInfo();
         SpreadsheetDeleteVisitor visitor = new SpreadsheetDeleteVisitor(info);
         visitor.visit((Delete) command);
-        checkHeaders(visitor.getWorksheetTitle());
-        result = connection.deleteRows(visitor.getWorksheetTitle(), visitor.getCriteriaQuery());
+        checkHeaders(visitor.getWorksheet());
+        result = connection.deleteRows(visitor.getWorksheet(), visitor.getCriteriaQuery());
         return result;
     }
 }
