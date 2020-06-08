@@ -157,6 +157,11 @@
             </dependency>
 
             <dependency>
+                <groupId>org.teiid.wildfly.connectors</groupId>
+                <artifactId>connector-google</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
 				<groupId>org.teiid.wildfly.connectors</groupId>
 				<artifactId>connector-salesforce</artifactId>
 				<version>${project.version}</version>

@@ -40,7 +40,7 @@ public class TestMetadataProcessor {
     @Test public void testRemoveColumns() throws Exception {
         GoogleSpreadsheetConnection conn = Mockito.mock(GoogleSpreadsheetConnection.class);
 
-        SpreadsheetInfo people=  new SpreadsheetInfo("People");
+        SpreadsheetInfo people=  new SpreadsheetInfo();
         Worksheet worksheet = people.createWorksheet("PeopleList");
         worksheet.setHeaderEnabled(true);
         for (int i = 1; i <= 3; i++) {

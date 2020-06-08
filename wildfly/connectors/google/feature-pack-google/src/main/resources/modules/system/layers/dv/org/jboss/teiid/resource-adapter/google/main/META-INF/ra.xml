@@ -53,6 +53,11 @@
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
             <config-property>
+               <description>{$display:"Sheet prefix and id pairs separated by ; of the spreadsheets we are connecting to",$description:"",$required:"false"}</description>
+               <config-property-name>SpreadsheetMap</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            <config-property>
                <description>{$display:"Id of the spreadsheet we are connecting to",$description:"",$required:"false"}</description>
                <config-property-name>SpreadsheetId</config-property-name>
                <config-property-type>java.lang.String</config-property-type>

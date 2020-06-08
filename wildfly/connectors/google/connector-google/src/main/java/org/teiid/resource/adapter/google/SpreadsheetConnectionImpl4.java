@@ -29,11 +29,11 @@ import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.v4.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.v4.SheetsAPI;
 import org.teiid.resource.adapter.google.v4.SpreadsheetMetadataExtractor;
-import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.UpdateSet;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.UpdateResult;
 
@@ -44,7 +44,7 @@ import org.teiid.translator.google.api.result.UpdateResult;
  *
  * Uses a mixture of Sheets v4 api, visualization, and Sheets v3
  */
-public class SpreadsheetConnectionImpl4 extends BasicConnection implements GoogleSpreadsheetConnection  {
+public class SpreadsheetConnectionImpl4 implements GoogleSpreadsheetConnection, ResourceConnection  {
     private SpreadsheetManagedConnectionFactory config;
     private SheetsAPI sheetsAPI = null; //v4 specific
     private GoogleDataProtocolAPI googleDataProtocolAPI; //visualization api
@@ -91,11 +91,9 @@ public class SpreadsheetConnectionImpl4 extends BasicConnection implements Googl
     }
 
     @Override
-    public RowsResult executeQuery(
-            String worksheetTitle, String query,
-             Integer offset, Integer limit, int batchSize) {
-
-        return googleDataProtocolAPI.executeQuery(getSpreadsheetInfo(), worksheetTitle, query, Math.min(batchSize, config.getBatchSize()),
+    public RowsResult executeQuery(Worksheet worksheet, String query,
+            Integer offset, Integer limit, int batchSize) {
+        return googleDataProtocolAPI.executeQuery(worksheet.getSpreadsheetId(), worksheet.getTitle(), query, Math.min(batchSize, config.getBatchSize()),
                 offset, limit);
     }
 
@@ -106,8 +104,15 @@ public class SpreadsheetConnectionImpl4 extends BasicConnection implements Googl
             synchronized (spreadsheetInfo) {
                 info = spreadsheetInfo.get();
                 if (info == null) {
+                    info = new SpreadsheetInfo();
                     SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor(sheetsAPI, googleDataProtocolAPI);
-                    info = metadataExtractor.extractMetadata(config.getSpreadsheetId());
+                    if (config.getSpreadsheetId() != null) {
+                        metadataExtractor.extractMetadata(info, SpreadsheetConnectionImpl.EMPTY_PREFIX, config.getSpreadsheetId());
+                    } else {
+                        for (Map.Entry<String, String> entry : config.getSpreadsheets().entrySet()) {
+                            metadataExtractor.extractMetadata(info, entry.getKey(), entry.getValue());
+                        }
+                    }
                     spreadsheetInfo.set(info);
                 }
             }
@@ -121,10 +126,17 @@ public class SpreadsheetConnectionImpl4 extends BasicConnection implements Googl
             synchronized (v2spreadsheetInfo) {
                 info = v2spreadsheetInfo.get();
                 if (info == null) {
+                    info = new SpreadsheetInfo();
                     org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor metadataExtractor = new org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor();
                     metadataExtractor.setVisualizationAPI(googleDataProtocolAPI);
                     metadataExtractor.setGdataAPI(gdata);
-                    info = metadataExtractor.extractMetadata(config.getSpreadsheetId(), true);
+                    if (config.getSpreadsheetId() != null) {
+                        metadataExtractor.extractMetadata(info, SpreadsheetConnectionImpl.EMPTY_PREFIX, config.getSpreadsheetId(), true);
+                    } else {
+                        for (Map.Entry<String, String> entry : config.getSpreadsheets().entrySet()) {
+                            metadataExtractor.extractMetadata(info, entry.getKey(), entry.getValue(), true);
+                        }
+                    }
                     v2spreadsheetInfo.set(info);
                 }
             }
@@ -133,27 +145,20 @@ public class SpreadsheetConnectionImpl4 extends BasicConnection implements Googl
     }
 
     @Override
-    public UpdateResult updateRows(String worksheetTitle, String criteria, List<UpdateSet> set) {
-        SpreadsheetInfo info = getV2SpreadsheetInfo();
-        org.teiid.translator.google.api.metadata.Worksheet sheet = info.getWorksheetByName(worksheetTitle);
-        if (sheet == null) {
-            throw new SpreadsheetOperationException(SpreadsheetManagedConnectionFactory.UTIL.getString("not_visible")); //$NON-NLS-1$
-        }
-        return gdata.listFeedUpdate(info.getSpreadsheetKey(), sheet.getId(), criteria, set, sheet.getColumnsAsList());
+    public UpdateResult updateRows(Worksheet worksheet, String criteria,
+            List<UpdateSet> set) {
+        return gdata.listFeedUpdate(worksheet.getSpreadsheetId(), worksheet.getId(), criteria, set, worksheet.getColumnsAsList());
     }
 
     @Override
-    public UpdateResult deleteRows(String worksheetTitle, String criteria) {
-        SpreadsheetInfo info = getV2SpreadsheetInfo();
-        org.teiid.translator.google.api.metadata.Worksheet sheet = info.getWorksheetByName(worksheetTitle);
-        if (sheet == null) {
-            throw new SpreadsheetOperationException(SpreadsheetManagedConnectionFactory.UTIL.getString("not_visible")); //$NON-NLS-1$
-        }
-        return gdata.listFeedDelete(info.getSpreadsheetKey(), sheet.getId(), criteria);
+    public UpdateResult deleteRows(Worksheet worksheet, String criteria) {
+        return gdata.listFeedDelete(worksheet.getSpreadsheetId(), worksheet.getId(), criteria);
     }
+
     @Override
-    public UpdateResult executeRowInsert(String worksheetTitle, Map<String,Object> pairs){
-        return sheetsAPI.insert(getSpreadsheetInfo().getSpreadsheetKey(), pairs, getSpreadsheetInfo().getWorksheetByName(worksheetTitle));
+    public UpdateResult executeRowInsert(Worksheet worksheet,
+            Map<String, Object> pairs) {
+        return sheetsAPI.insert(worksheet.getSpreadsheetId(), pairs, worksheet);
     }
 
 }

@@ -79,7 +79,7 @@ public class SheetsAPI {
 
         try {
             service.spreadsheets().values()
-            .append(spreadsheetId, worksheet.getName(), content)
+            .append(spreadsheetId, worksheet.getTitle(), content)
             .setValueInputOption("USER_ENTERED") //$NON-NLS-1$ -- TODO: this could be configurable
             .execute();
         } catch (IOException e) {

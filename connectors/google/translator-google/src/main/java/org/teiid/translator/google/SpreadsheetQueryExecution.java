@@ -66,7 +66,7 @@ public class SpreadsheetQueryExecution implements ResultSetExecution {
     public void execute() throws TranslatorException {
         SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
         visitor.translateSQL(query);
-        rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
+        rowIterator = connection.executeQuery(visitor.getWorksheet(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
 
     }
 

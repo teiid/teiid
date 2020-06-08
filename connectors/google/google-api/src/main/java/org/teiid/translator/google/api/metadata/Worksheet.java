@@ -24,8 +24,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class Worksheet {
+    //google ids / names
     private String id;
-    private String name;
+    private String title;
+    private String spreadsheetId;
+
+    //teiid name, will be same as title for a single spreadsheet
+    private String name; //teiid name
+
     private LinkedHashMap<String, Column> columns = new LinkedHashMap<String, Column>();
     private boolean headerEnabled=false;
 
@@ -49,8 +55,13 @@ public class Worksheet {
         return column.getAlphaName();
     }
 
-    public Worksheet( String name) {
+    public Worksheet(String name, String title) {
         this.name = name;
+        this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public String getName() {
@@ -75,6 +86,14 @@ public class Worksheet {
 
     public void setHeaderEnabled(boolean headerEnabled) {
         this.headerEnabled = headerEnabled;
+    }
+
+    public String getSpreadsheetId() {
+        return spreadsheetId;
+    }
+
+    public void setSpreadsheetId(String spreadsheetId) {
+        this.spreadsheetId = spreadsheetId;
     }
 
 }

@@ -32,6 +32,8 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.metadata.Worksheet;
 import org.teiid.translator.google.api.result.SheetRow;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 
@@ -70,7 +72,7 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 
     @Override
     public void execute() throws TranslatorException {
-        String worksheet = null;
+        String worksheetName = null;
         Integer limit = null;
         Integer offset = null;
         String toQuery = query;
@@ -85,7 +87,7 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
             String value = var.substring(index+1).trim();
 
             if (key.equalsIgnoreCase(WORKSHEET)) {
-                worksheet = value;
+                worksheetName = value;
             }
             else if (key.equalsIgnoreCase(QUERY)) {
                 StringBuilder buffer = new StringBuilder();
@@ -107,6 +109,11 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
             else if (key.equalsIgnoreCase(OFFEST)) {
                 offset = Integer.parseInt(value);
             }
+        }
+
+        Worksheet worksheet = this.connection.getSpreadsheetInfo().getWorksheetByName(worksheetName);
+        if(worksheet==null){
+            throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetName)); //$NON-NLS-1$
         }
 
         this.rowIterator = this.connection.executeQuery(worksheet, toQuery, offset, limit, executionContext.getBatchSize()).iterator();

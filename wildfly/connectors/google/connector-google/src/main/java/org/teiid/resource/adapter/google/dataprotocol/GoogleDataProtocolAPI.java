@@ -43,7 +43,6 @@ import org.teiid.translator.google.api.SpreadsheetAuthException;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.metadata.Column;
 import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
-import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.result.PartialResultExecutor;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.SheetRow;
@@ -83,12 +82,10 @@ public class GoogleDataProtocolAPI {
      * @param batchSize How big portions of data should be returned by one roundtrip to Google.
      * @return Iterable RowsResult that will actually perform the roundtrips to Google for data
      */
-    public RowsResult executeQuery(SpreadsheetInfo info, String worksheetTitle,
+    public RowsResult executeQuery(String spreadsheetKey, String worksheetTitle,
             String query, int batchSize, Integer offset, Integer limit) {
 
-        String key = info.getSpreadsheetKey();
-
-        RowsResult result = new RowsResult(new DataProtocolQueryStrategy(key,worksheetTitle,query), batchSize);
+        RowsResult result = new RowsResult(new DataProtocolQueryStrategy(spreadsheetKey,worksheetTitle,query), batchSize);
         if (offset!= null)
             result.setOffset(offset);
         if (limit != null)
@@ -112,15 +109,15 @@ public class GoogleDataProtocolAPI {
      */
     public class DataProtocolQueryStrategy implements PartialResultExecutor {
         private String spreadsheetKey;
-        private String worksheetName;
+        private String worksheetTitle;
         private String urlEncodedQuery;
         private List<Column> metadata;
 
-        public DataProtocolQueryStrategy(String key, String worksheetKey,
+        public DataProtocolQueryStrategy(String key, String worksheetTitle,
                 String query) {
             super();
             this.spreadsheetKey = key;
-            this.worksheetName = worksheetKey;
+            this.worksheetTitle = worksheetTitle;
             try {
                 this.urlEncodedQuery = URLEncoder.encode(query, ENCODING);
             } catch (UnsupportedEncodingException e) {
@@ -137,7 +134,7 @@ public class GoogleDataProtocolAPI {
             String worksheet = null;
             try {
                 boundariedQuery = getQueryWithBoundaries(amount, Math.max(0,(startIndex)));
-                worksheet = URLEncoder.encode(worksheetName, ENCODING);
+                worksheet = URLEncoder.encode(worksheetTitle, ENCODING);
             } catch (UnsupportedEncodingException e) {
                 throw new SpreadsheetOperationException(e);
             }

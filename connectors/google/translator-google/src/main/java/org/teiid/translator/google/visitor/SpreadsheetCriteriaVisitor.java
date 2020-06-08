@@ -33,6 +33,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.google.SpreadsheetExecutionFactory;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 
 /**
  * Base visitor for criteria
@@ -42,10 +43,9 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  */
 public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 
-    protected String worksheetKey;
     protected String criteriaQuery;
     protected SpreadsheetInfo info;
-    protected String worksheetTitle;
+    protected Worksheet worksheet;
 
     public SpreadsheetCriteriaVisitor(SpreadsheetInfo info) {
         this.info = info;
@@ -107,8 +107,16 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
         this.criteriaQuery = criteriaQuery;
     }
 
-    public String getWorksheetTitle() {
-        return worksheetTitle;
+    public void setWorksheetByName(String name) {
+        worksheet=info.getWorksheetByName(name);
+        if(worksheet==null){
+            throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", name)); //$NON-NLS-1$
+        }
+    }
+
+
+    public Worksheet getWorksheet() {
+        return worksheet;
     }
 
     public void translateWhere(Condition condition) {

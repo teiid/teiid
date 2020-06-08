@@ -60,14 +60,13 @@ public class SpreadsheetMetadataExtractor {
     }
 
 
-    public SpreadsheetInfo extractMetadata(String spreadsheetName, boolean isKey){
+    public void extractMetadata(SpreadsheetInfo metadata, String prefix, String spreadsheetName, boolean isKey){
         SpreadsheetEntry sentry = gdataAPI.getSpreadsheetEntry(spreadsheetName, isKey);
-        SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheetName);
-        metadata.setSpreadsheetKey(sentry.getKey());
         try {
             for (WorksheetEntry wentry : sentry.getWorksheets()) {
                 String title = wentry.getTitle().getPlainText();
                 Worksheet worksheet = metadata.createWorksheet(title);
+                worksheet.setSpreadsheetId(sentry.getKey());
                 worksheet.setId(wentry.getId().substring(wentry.getId().lastIndexOf('/')+1));
                 List<Column> cols = visualizationAPI.getMetadata(sentry.getKey(), title);
                 if(!cols.isEmpty()){
@@ -86,7 +85,6 @@ public class SpreadsheetMetadataExtractor {
             throw new SpreadsheetOperationException(
                     SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
         }
-        return metadata;
     }
 
 }

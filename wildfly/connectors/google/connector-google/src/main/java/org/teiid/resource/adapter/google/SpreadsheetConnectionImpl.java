@@ -28,10 +28,11 @@ import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
-import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.UpdateSet;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.UpdateResult;
 
@@ -40,7 +41,8 @@ import org.teiid.translator.google.api.result.UpdateResult;
 /**
  * Represents a connection to an Google spreadsheet data source.
  */
-public class SpreadsheetConnectionImpl extends BasicConnection implements GoogleSpreadsheetConnection  {
+public class SpreadsheetConnectionImpl implements GoogleSpreadsheetConnection, ResourceConnection  {
+    static final String EMPTY_PREFIX = ""; //$NON-NLS-1$
     private SpreadsheetManagedConnectionFactory config;
     private GDataClientLoginAPI gdata = null;
     private GoogleDataProtocolAPI dataProtocol = null;
@@ -81,11 +83,9 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
     }
 
     @Override
-    public RowsResult executeQuery(
-            String worksheetTitle, String query,
-             Integer offset, Integer limit, int batchSize) {
-
-        return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetTitle, query, Math.min(batchSize, config.getBatchSize()),
+    public RowsResult executeQuery(Worksheet worksheet, String query,
+            Integer offset, Integer limit, int batchSize) {
+        return dataProtocol.executeQuery(worksheet.getSpreadsheetId(), worksheet.getTitle(), query, Math.min(batchSize, config.getBatchSize()),
                 offset, limit);
     }
 
@@ -96,13 +96,14 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
             synchronized (spreadsheetInfo) {
                 info = spreadsheetInfo.get();
                 if (info == null) {
+                    info = new SpreadsheetInfo();
                     SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor();
                     metadataExtractor.setGdataAPI(gdata);
                     metadataExtractor.setVisualizationAPI(dataProtocol);
                     if (config.getSpreadsheetId() == null) {
-                        info = metadataExtractor.extractMetadata(config.getSpreadsheetName(), false);
+                        metadataExtractor.extractMetadata(info, EMPTY_PREFIX, config.getSpreadsheetName(), false);
                     } else {
-                        info = metadataExtractor.extractMetadata(config.getSpreadsheetId(), true);
+                        metadataExtractor.extractMetadata(info, EMPTY_PREFIX, config.getSpreadsheetId(), true);
                     }
                     spreadsheetInfo.set(info);
                 }
@@ -112,19 +113,20 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
     }
 
     @Override
-    public UpdateResult updateRows(String worksheetTitle, String criteria, List<UpdateSet> set) {
-        SpreadsheetInfo info = getSpreadsheetInfo();
-        org.teiid.translator.google.api.metadata.Worksheet sheet = info.getWorksheetByName(worksheetTitle);
-        return gdata.listFeedUpdate(info.getSpreadsheetKey(), sheet.getId(), criteria, set, sheet.getColumnsAsList());
+    public UpdateResult updateRows(Worksheet worksheet, String criteria,
+            List<UpdateSet> set) {
+        return gdata.listFeedUpdate(worksheet.getSpreadsheetId(), worksheet.getId(), criteria, set, worksheet.getColumnsAsList());
     }
 
     @Override
-    public UpdateResult deleteRows(String worksheetTitle, String criteria) {
-        return gdata.listFeedDelete(getSpreadsheetInfo().getSpreadsheetKey(), getSpreadsheetInfo().getWorksheetByName(worksheetTitle).getId(), criteria);
+    public UpdateResult deleteRows(Worksheet worksheet, String criteria) {
+        return gdata.listFeedDelete(worksheet.getSpreadsheetId(), worksheet.getId(), criteria);
     }
+
     @Override
-    public UpdateResult executeRowInsert(String worksheetTitle, Map<String,Object> pair){
-        return gdata.listFeedInsert(getSpreadsheetInfo().getSpreadsheetKey(), getSpreadsheetInfo().getWorksheetByName(worksheetTitle).getId(), pair);
+    public UpdateResult executeRowInsert(Worksheet worksheet,
+            Map<String, Object> pair) {
+        return gdata.listFeedInsert(worksheet.getSpreadsheetId(), worksheet.getId(), pair);
     }
 
 }

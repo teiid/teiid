@@ -26,7 +26,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
-import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.metadata.Worksheet;
 import org.teiid.translator.google.api.result.UpdateResult;
 
@@ -65,12 +64,7 @@ public abstract class AbstractSpreadsheetExecution implements UpdateExecution {
         return new int[]{result.getActualNumberOfRows()};
     }
 
-     void checkHeaders(String worksheetTitle) throws TranslatorException{
-        SpreadsheetInfo info=connection.getSpreadsheetInfo();
-        Worksheet worksheet=info.getWorksheetByName(worksheetTitle);
-        if(worksheet==null){
-            throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetTitle)); //$NON-NLS-1$
-        }
+     void checkHeaders(Worksheet worksheet) throws TranslatorException{
         if(!worksheet.isHeaderEnabled()){
             throw new TranslatorException(SpreadsheetExecutionFactory.UTIL.gs("headers_required")); //$NON-NLS-1$
         }
