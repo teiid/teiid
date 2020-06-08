@@ -189,4 +189,23 @@ public class TestSetProcessing {
         TestProcessor.helpProcess(plan, manager, expected);
     }
 
+    @Test public void testNestedSetOpsWithLiteralProjection1() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "(select * from (select 2) x except select * from (select 1) x \n" +
+                "UNION ALL\n" +
+                "select * from (select 1) x) except select * from (select 2) x";
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                sql, RealMetadataFactory.example1Cached(),
+                new String[] {},
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+
+        HardcodedDataManager manager = new HardcodedDataManager();
+
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+
+        TestProcessor.helpProcess(plan, manager, expected);
+    }
+
 }
