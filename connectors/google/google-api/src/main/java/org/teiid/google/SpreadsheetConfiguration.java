@@ -16,35 +16,27 @@
  * limitations under the License.
  */
 
-package org.teiid.translator.google.api.metadata;
+package org.teiid.google;
 
+import java.util.Map;
 
-public class Column {
-    private String alphaName;
-    private String label;
-    private SpreadsheetColumnType dataType = SpreadsheetColumnType.STRING;
+import org.teiid.core.BundleUtil;
 
-    public String getAlphaName() {
-        return alphaName;
-    }
+public interface SpreadsheetConfiguration {
 
-    public void setAlphaName(String alphaName) {
-        this.alphaName = alphaName;
-    }
+    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetConfiguration.class);
 
-    public String getLabel() {
-        return label;
-    }
+    Integer getBatchSize();
+    String getClientId();
+    String getClientSecret();
+    String getRefreshToken();
+    String getSpreadsheetId();
+    /**
+     * Only in use for v3 metadata
+     * @deprecated
+     */
+    @Deprecated
+    String getSpreadsheetName();
+    Map<String, String> getSpreadsheets();
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public SpreadsheetColumnType getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(SpreadsheetColumnType dataType) {
-        this.dataType = dataType;
-    }
 }

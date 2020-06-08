@@ -16,35 +16,23 @@
  * limitations under the License.
  */
 
-package org.teiid.translator.google.api.metadata;
+package org.teiid.google.auth;
 
+/**
+ * Google services are authenticated using Http headers. Format and content
+ * of this header differs based on authentication mechanism.
+ *
+ * Implementors of this interface should choose provide the header for auth purposes.
+ *
+ * @author fnguyen
+ *
+ */
+public interface AuthHeaderFactory {
 
-public class Column {
-    private String alphaName;
-    private String label;
-    private SpreadsheetColumnType dataType = SpreadsheetColumnType.STRING;
-
-    public String getAlphaName() {
-        return alphaName;
-    }
-
-    public void setAlphaName(String alphaName) {
-        this.alphaName = alphaName;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public SpreadsheetColumnType getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(SpreadsheetColumnType dataType) {
-        this.dataType = dataType;
-    }
+    /**
+     * Gets the authorization header. Typically performs the login (interaction
+     * with google services). Should be called only when necessary (first login, google session expires)
+     */
+    public void refreshToken();
+    public String getAuthHeader();
 }
