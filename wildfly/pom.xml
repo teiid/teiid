@@ -21,7 +21,6 @@
 	    <version.org.wildfly.arquillian>2.2.0.Final</version.org.wildfly.arquillian>
         <version.org.wildfly.build-tools>1.2.12.Final</version.org.wildfly.build-tools>
         <version.org.jboss.arquillian.testenricher>1.4.1.Final</version.org.jboss.arquillian.testenricher>
-        <version.org.apache.cxf>3.3.6</version.org.apache.cxf>
         <version.org.springframework>5.1.14.RELEASE</version.org.springframework>
 
         <!-- override Teiid to align with wildfly -->
@@ -179,52 +178,6 @@
 				<version>${project.version}</version>
 			</dependency>
 			
-			<dependency>
-                <groupId>org.teiid.wildfly.connectors</groupId>
-                <artifactId>ws-cxf</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-rs-client</artifactId>
-                <version>${version.org.apache.cxf}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-                <version>${version.org.apache.cxf}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.cxf</groupId>
-                        <artifactId>cxf-rt-bindings-xml</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.cxf</groupId>
-                        <artifactId>cxf-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.cxf</groupId>
-                        <artifactId>cxf-rt-core</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-rs-security-oauth</artifactId>
-                <version>${version.org.apache.cxf}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-rs-security-oauth2</artifactId>
-                <version>${version.org.apache.cxf}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
-                <version>${version.org.apache.cxf}</version>
-            </dependency>
-            
             <!-- ====== -->            
             <!-- Import the core parent to get all the managed dependencies from core -->
             <dependency>
@@ -335,37 +288,6 @@
 			<type>zip</type>
 		</dependency>
 		
-		    <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-beans</artifactId>
-                <version>${version.org.springframework}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-context</artifactId>
-                <version>${version.org.springframework}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-core</artifactId>
-                <version>${version.org.springframework}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-aop</artifactId>
-                <version>${version.org.springframework}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-expression</artifactId>
-                <version>${version.org.springframework}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-tx</artifactId>
-                <version>${version.org.springframework}</version>
-            </dependency>
-            
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-joda</artifactId>

@@ -1,13 +1,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>org.teiid.wildfly.connectors</groupId>
       <artifactId>webservice</artifactId>
+      <groupId>org.teiid.connectors</groupId>
       <version>14.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>ws-cxf</artifactId>
     <name>WS CXF</name>
     <description>CXF Support for SOAP/Webservice Calls</description>
+    <properties>
+        <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+        <basepom.check.skip-dependency>true</basepom.check.skip-dependency>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+              <groupId>org.apache.cxf</groupId>
+              <artifactId>cxf-parent</artifactId>
+              <version>${version.org.apache.cxf}</version>
+              <type>pom</type>
+              <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
           <groupId>org.teiid</groupId>
@@ -23,11 +38,16 @@
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxws</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-bindings-xml</artifactId>
+            <scope>runtime</scope>
         </dependency>        
         <dependency>
             <groupId>org.apache.cxf</groupId>
@@ -36,6 +56,26 @@
         <dependency>
             <groupId>org.apache.wss4j</groupId>
             <artifactId>wss4j-ws-security-common</artifactId>
+            <version>2.2.5</version>
+            <exclusions>
+              <exclusion>
+               <artifactId>geronimo-javamail_1.4_mail</artifactId>
+                <groupId>org.apache.geronimo.javamail</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>opensaml</artifactId>
+                <groupId>org.opensaml</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jaxws-api</artifactId>
+                <groupId>javax.xml.ws</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <groupId>jakarta.xml.bind</groupId>
+              </exclusion>
+            </exclusions>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.wss4j</groupId>
@@ -56,6 +96,7 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-ws-policy</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
@@ -72,22 +113,27 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-databinding-jaxb</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore-nio</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>            
+            <artifactId>httpasyncclient</artifactId>
+            <scope>runtime</scope>            
         </dependency>
         <dependency>
-            <groupId>org.jboss.spec.javax.annotation</groupId>
-            <artifactId>jboss-annotations-api_1.3_spec</artifactId>
+             <groupId>jakarta.annotation</groupId>
+             <artifactId>jakarta.annotation-api</artifactId>
+             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>net.oauth.core</groupId>
             <artifactId>oauth</artifactId>
+            <scope>runtime</scope>
         </dependency>                         
         <dependency>
             <groupId>org.apache.cxf</groupId>
@@ -100,38 +146,60 @@
         <dependency>
           <groupId>org.apache.cxf</groupId>
           <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
+          <scope>runtime</scope>
         </dependency>                                                                       
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aop</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-expression</artifactId>
+            <version>${version.org.springframework}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-        </dependency>         
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.ws.xmlschema</groupId>
             <artifactId>xmlschema-core</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
         </dependency>
     </dependencies>    
 </project>
