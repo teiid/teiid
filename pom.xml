@@ -74,7 +74,7 @@
         
         <version.commons-configuration>1.7</version.commons-configuration>
         <version.commons-logging>1.2</version.commons-logging>
-        <version.commons-net>3.5</version.commons-net>
+        <version.commons-net>3.6</version.commons-net>
 
         <version.de.flapdoodle.embed.mongo>2.2.0</version.de.flapdoodle.embed.mongo>
         <version.de.flapdoodle.embed.process>2.1.2</version.de.flapdoodle.embed.process>
@@ -82,8 +82,8 @@
         <version.gdata-core>1.47.1</version.gdata-core>
         <version.hadoop-common>3.1.1</version.hadoop-common>
         
-        <version.google-api-services-sheets>v4-rev502-1.23.0</version.google-api-services-sheets>
-        <version.google-api-client>1.23.0</version.google-api-client>
+        <version.google-api-services-sheets>v4-rev612-1.25.0</version.google-api-services-sheets>
+        <version.google-api-client>1.25.0</version.google-api-client>
 
         <version.io.dropwizard.metrics.metrics-core>3.2.2</version.io.dropwizard.metrics.metrics-core>
         <version.io.swagger>1.5.22</version.io.swagger>
@@ -1881,6 +1881,12 @@
                <groupId>org.apache.httpcomponents</groupId>
                <artifactId>httpclient</artifactId>
                <version>4.5.8</version>
+           </dependency>
+           
+           <dependency>
+               <groupId>org.apache.httpcomponents</groupId>
+               <artifactId>httpcore</artifactId>
+               <version>4.4.11</version>
            </dependency>
            
            <dependency>
