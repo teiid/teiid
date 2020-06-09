@@ -19,18 +19,22 @@ package org.teiid.resource.adapter.google;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.google.SpreadsheetConfiguration;
+import org.teiid.google.SpreadsheetConnectionImpl;
+import org.teiid.google.SpreadsheetConnectionImpl4;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
-public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
+public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory implements SpreadsheetConfiguration {
 
     public static final String V_3 = "v3"; //$NON-NLS-1$
     public static final String V_4 = "v4"; //$NON-NLS-1$
@@ -55,23 +59,39 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
     private String clientId;
     private String clientSecret;
 
+    private static class SpreadsheetConnection extends SpreadsheetConnectionImpl implements ResourceConnection {
+
+        public SpreadsheetConnection(SpreadsheetConfiguration config,
+                AtomicReference<SpreadsheetInfo> spreadsheetInfo) {
+            super(config, spreadsheetInfo);
+        }
+
+    }
+
+    private static class SpreadsheetConnection4 extends SpreadsheetConnectionImpl4 implements ResourceConnection {
+
+        public SpreadsheetConnection4(SpreadsheetConfiguration config,
+                AtomicReference<SpreadsheetInfo> spreadsheetInfo) {
+            super(config, spreadsheetInfo);
+        }
+
+    }
+
     @Override
     @SuppressWarnings("serial")
     public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
         checkConfig();
 
         return new BasicConnectionFactory<ResourceConnection>() {
-
             //share the spreadsheet info among all connections
             private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
-            private AtomicReference<SpreadsheetInfo> v2SpreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
 
             @Override
             public ResourceConnection getConnection() throws ResourceException {
                 if (apiVersion.equals(V_3)) {
-                    return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
+                    return new SpreadsheetConnection(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
                 }
-                return new SpreadsheetConnectionImpl4(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo, v2SpreadsheetInfo);
+                return new SpreadsheetConnection4(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
             }
         };
     }
@@ -172,6 +192,10 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
                 return false;
         } else if (!apiVersion.equals(other.apiVersion))
             return false;
+
+        if (!Objects.equals(this.spreadsheetMap, other.spreadsheetMap)) {
+            return false;
+        }
         return true;
     }
 
