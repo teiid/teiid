@@ -669,6 +669,9 @@ public class IntegrationTestDeployment {
         fullProps = admin.getDataSource(deployedName);
 
         assertEquals("...", fullProps.getProperty("URL"));
+
+        //will only be set if enabled
+        assertEquals("false", fullProps.getProperty("interleaving"));
     }
 
     @Test
