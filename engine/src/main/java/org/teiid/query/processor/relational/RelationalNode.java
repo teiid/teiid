@@ -394,8 +394,11 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         Map<Expression, Integer> lookupMap = new HashMap<Expression, Integer>();
         for(int i=0; i<elements.size(); i++) {
             Expression element = elements.get(i);
-            lookupMap.put(element, i);
-            lookupMap.put(SymbolMap.getExpression(element), i);
+            //in some set ops implemented as joins it's possible to have element conflicts
+            //across branches if they are constants, we need to track the first as to
+            //not reference outer/null values
+            lookupMap.putIfAbsent(element, i);
+            lookupMap.putIfAbsent(SymbolMap.getExpression(element), i);
         }
         return lookupMap;
     }
