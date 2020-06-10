@@ -527,6 +527,8 @@ public class AdminFactory {
             parameters.add(addJavaContext(deploymentName));
             parameters.add("driver-name");
             parameters.add(stripXA(templateName));
+            parameters.add("enabled");
+            parameters.add("true");
 
             DefaultBatch batch = new DefaultBatch();
             try {
