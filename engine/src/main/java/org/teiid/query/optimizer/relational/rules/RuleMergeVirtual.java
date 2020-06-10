@@ -354,40 +354,6 @@ public final class RuleMergeVirtual implements
             return root;
         }
 
-        //we can't allow multiple projections of overlapping constants as that messes up
-        //determining the projection index later
-        PlanNode lowerProject = NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT);
-        List<Expression> lowerSelectSymbols = (List<Expression>)lowerProject.getProperty(NodeConstants.Info.PROJECT_COLS);
-        PlanNode upper = NodeEditor.findParent(parentProject, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
-        //so if we have an upper join or set op and that has at least one direct projection, then we need to look for duplicates
-        if (upper != null && !NodeEditor.findAllNodes(upper, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE).isEmpty()) {
-            List<Expression> upperOutput = null;
-            if (upper.getType() == NodeConstants.Types.SET_OP) {
-                PlanNode upperProject = NodeEditor.findNodePreOrder(upper, NodeConstants.Types.PROJECT);
-                if (upperProject != null) {
-                    upperOutput = (List<Expression>) upperProject.getProperty(NodeConstants.Info.PROJECT_COLS);
-                }
-            } else {
-                PlanNode upperProjectLeft = NodeEditor.findNodePreOrder(upper.getFirstChild(), NodeConstants.Types.PROJECT);
-                PlanNode upperProjectRight = NodeEditor.findNodePreOrder(upper.getLastChild(), NodeConstants.Types.PROJECT);
-                upperOutput = new ArrayList<>();
-                if (upperProjectLeft != null) {
-                    upperOutput.addAll((Collection<? extends Expression>) upperProjectLeft.getProperty(NodeConstants.Info.PROJECT_COLS));
-                }
-                if (upperProjectRight != null) {
-                    upperOutput.addAll((Collection<? extends Expression>) upperProjectRight.getProperty(NodeConstants.Info.PROJECT_COLS));
-                }
-            }
-            for (Expression ex : lowerSelectSymbols) {
-                if (!ElementCollectorVisitor.getElements(ex, false).isEmpty()) {
-                    continue;
-                }
-                if (upperOutput == null || upperOutput.contains(ex)) {
-                    return root;
-                }
-            }
-        }
-
         // re-order the lower projects
         RuleAssignOutputElements.filterVirtualElements(frame, new ArrayList<Expression>(symbols), metadata);
 
