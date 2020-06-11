@@ -20,18 +20,42 @@ package org.teiid.infinispan.api;
 
 public interface InfinispanConfiguration {
 
+    /**
+     * See the inifinspan docs for all transation modes including NONE, NON_XA, NON_DURABLE_XA, and FULL_XA
+     */
     String getTransactionMode();
+    /**
+     * A ; separated list of host:port servers
+     */
     String getRemoteServerList();
+    /**
+     * The name of the cache for use by this source.
+     */
     String getCacheName();
+    /**
+     * The name of the cache template, which must already be registered, for impliciting creating the cache
+     * if it does not exist.
+     */
     String getCacheTemplate();
 
+    /**
+     * The sasl mechanism.  May be left at the default of null when using simple username/password
+     * authenticataion.  See the infinispan docs for all values, including PLAIN, DIGEST-MD5, GSSAPI, and EXTERNAL.
+     * <br>When set to EXTERNAL the key and trust store properties are required.
+     */
     String getSaslMechanism();
     String getKeyStoreFileName();
     String getKeyStorePassword();
     String getTrustStoreFileName();
     String getTrustStorePassword();
-    String getUserName();
+    String getUsername();
     String getPassword();
+    /**
+     * The authentication realm name, typicallly defaults to default
+     */
     String getAuthenticationRealm();
+    /**
+     * The authentication server name, typically defaults to infinispan
+     */
     String getAuthenticationServerName();
 }

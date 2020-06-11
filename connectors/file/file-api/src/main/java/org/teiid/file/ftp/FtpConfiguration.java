@@ -24,7 +24,8 @@ import org.apache.commons.net.ftp.FTP;
 
 public interface FtpConfiguration {
     /**
-     * Required Property
+     * The parent/root directory for ftp operations.
+     * <br>Required Property
      */
     String getParentDirectory();
 
@@ -136,7 +137,8 @@ public interface FtpConfiguration {
         return null;
     }
     /**
-     * Default value needed, when SFTP is chosen
+     * Value for the PROT command when SFTP is chosen.
+     * Defaults to P - private
      */
     default String getExecProt() {
         return "P";

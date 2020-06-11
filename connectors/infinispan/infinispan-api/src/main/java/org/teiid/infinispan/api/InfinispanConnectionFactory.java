@@ -148,8 +148,8 @@ public class InfinispanConnectionFactory implements Closeable {
                     .ssl().enable().keyStoreFileName(config.getKeyStoreFileName())
                     .keyStorePassword(config.getKeyStorePassword().toCharArray()).trustStoreFileName(config.getTrustStoreFileName())
                     .trustStorePassword(config.getTrustStorePassword().toCharArray());
-        } else if (config.getSaslMechanism() != null || config.getUserName() != null) {
-            if (config.getUserName() == null) {
+        } else if (config.getSaslMechanism() != null || config.getUsername() != null) {
+            if (config.getUsername() == null) {
                 throw new TranslatorException(InfinispanPlugin.Util.getString("no_user"));
             }
             if (config.getPassword() == null) {
@@ -164,7 +164,7 @@ public class InfinispanConnectionFactory implements Closeable {
             AuthenticationConfigurationBuilder authBuilder = builder.security()
                     .authentication().enable()
                     .saslMechanism(config.getSaslMechanism())
-                    .username(config.getUserName())
+                    .username(config.getUsername())
                     .realm(config.getAuthenticationRealm())
                     .password(config.getPassword())
                     .serverName(config.getAuthenticationServerName());

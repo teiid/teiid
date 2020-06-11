@@ -17,14 +17,9 @@
  */
 package org.teiid.resource.adapter.ftp;
 
-import static org.apache.commons.net.ftp.FTP.ASCII_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTP.EBCDIC_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
-import static org.apache.commons.net.ftp.FTPClient.ACTIVE_LOCAL_DATA_CONNECTION_MODE;
-import static org.apache.commons.net.ftp.FTPClient.PASSIVE_LOCAL_DATA_CONNECTION_MODE;
-import static org.teiid.core.util.Assertion.assertTrue;
-import static org.teiid.core.util.Assertion.isNotNull;
+import static org.apache.commons.net.ftp.FTP.*;
+import static org.apache.commons.net.ftp.FTPClient.*;
+import static org.teiid.core.util.Assertion.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +30,6 @@ import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.util.Arrays;
-import java.util.Map;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
@@ -47,7 +41,6 @@ import org.apache.commons.net.util.KeyManagerUtils;
 import org.apache.commons.net.util.TrustManagerUtils;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.StringUtil;
 import org.teiid.file.ftp.FtpConfiguration;
 import org.teiid.file.ftp.FtpFileConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;

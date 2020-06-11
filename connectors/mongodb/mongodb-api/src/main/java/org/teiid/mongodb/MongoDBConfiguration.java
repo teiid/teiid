@@ -17,6 +17,11 @@ public interface MongoDBConfiguration {
 
     Boolean getSsl();
 
+    /**
+     * A list of servers to use.  If the string starts with mongodb:// or mongodb+srv://, then it will be used
+     * as the full uri.  All other values will be assumed to be a ; separated list of servers.
+     * @return
+     */
     String getRemoteServerList();
 
     String getUsername();
@@ -25,6 +30,11 @@ public interface MongoDBConfiguration {
 
     String getDatabase();
 
+    /**
+     * The {@link SecurityType}.  Can be one of SCRAM_SHA_256, SCRAM_SHA_1, MONGODB_CR, Kerberos, X509, None.
+     * <br>Any other value will be treated as MONGODB_CR
+     * @return
+     */
     String getSecurityType();
 
     String getAuthDatabase();

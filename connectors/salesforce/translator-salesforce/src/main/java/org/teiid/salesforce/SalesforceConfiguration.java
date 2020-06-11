@@ -24,6 +24,11 @@ public interface SalesforceConfiguration {
 
     String getPassword();
 
+    /**
+     * The salesforce URL to use as the AuthEndpoint.  May be used to
+     * explicitly control the api version being used.  The source will default
+     * to an appropriate value for the included Salesforce API library.
+     */
     String getURL();
 
     Long getConnectTimeout();

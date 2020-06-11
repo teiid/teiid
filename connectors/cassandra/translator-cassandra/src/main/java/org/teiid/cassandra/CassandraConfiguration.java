@@ -20,13 +20,25 @@ package org.teiid.cassandra;
 
 public interface CassandraConfiguration {
 
-        String getAddress();
+    /**
+     * The address of the Cassandra cluster.
+     * @return
+     */
+    String getAddress();
 
-        String getKeyspace();
+    /**
+     * The Cassandra keyspace to use.
+     * @return
+     */
+    String getKeyspace();
 
-        String getUsername();
+    String getUsername();
 
-        String getPassword();
+    String getPassword();
 
-        Integer getPort();
+    /**
+     * Optional port to use with the address.
+     * @return
+     */
+    Integer getPort();
 }
