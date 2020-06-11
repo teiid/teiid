@@ -688,6 +688,19 @@ public class IntegrationTestDeployment {
     }
 
     @Test
+    public void testCreateInfinispanSource() throws AdminException {
+        Properties p = new Properties();
+        p.setProperty("UserName", "b");
+        p.setProperty("Password", "c");
+        p.setProperty("CacheName", "foo");
+        p.setProperty("RemoteServerList", "localhost:12345");
+        p.setProperty("class-name", "org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory");
+
+        admin.createDataSource("my-jdg", "infinispan", p);
+        admin.deleteDataSource("my-jdg");
+    }
+
+    @Test
     public void testVDBRestart() throws Exception{
         String vdbName = "test";
         String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +

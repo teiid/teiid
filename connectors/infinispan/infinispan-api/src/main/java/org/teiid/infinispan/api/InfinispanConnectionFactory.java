@@ -53,6 +53,9 @@ public class InfinispanConnectionFactory implements Closeable {
         if (config.getTransactionMode() != null) {
             this.transactionMode = TransactionMode.valueOf(config.getTransactionMode());
         }
+        if (config.getRemoteServerList() == null) {
+            throw new TranslatorException("The remoteServerList is required"); //$NON-NLS-1$
+        }
         buildCacheManager(transactionManagerLookup);
         buildScriptCacheManager();
     }
@@ -98,7 +101,7 @@ public class InfinispanConnectionFactory implements Closeable {
             this.cacheManager.start();
             this.ctx = MarshallerUtil.getSerializationContext(this.cacheManager);
             this.ctx.registerMarshallerProvider(teiidMarshallerProvider);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new TranslatorException(e);
         }
     }
