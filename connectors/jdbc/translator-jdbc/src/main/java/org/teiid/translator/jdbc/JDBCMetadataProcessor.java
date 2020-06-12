@@ -101,7 +101,6 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     private boolean autoCreateUniqueConstraints = true;
     private boolean useQualifiedName = true;
 
-    private Set<String> unsignedTypes = new HashSet<String>();
     private String startQuoteString;
     private String endQuoteString;
 
@@ -118,7 +117,8 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     private boolean importRowIdAsBinary;
     private boolean importLargeAsLob;
     private boolean useIntegralTypes;
-
+    private boolean useTypeInfo = true;
+    Set<String> unsignedTypes = new HashSet<String>();
     Map<String, Integer> typeMapping = new TreeMap<>();
 
     public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
@@ -159,25 +159,21 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         this.startQuoteString = getDefaultQuoteStr(metadata, startQuoteString);
         this.endQuoteString = getDefaultQuoteStr(metadata, endQuoteString);
 
-        ResultSet rs = null;
-        try {
-            rs = metadata.getTypeInfo();
-            while (rs.next()) {
-                String name = rs.getString(1);
-                int type = rs.getInt(2);
-                this.typeMapping.put(name, type);
-                if (widenUnsingedTypes) {
-                    boolean unsigned = rs.getBoolean(10);
-                    if (unsigned && isUnsignedTypeName(name)) {
-                        unsignedTypes.add(name);
+        if (useTypeInfo) {
+            try (ResultSet rs = metadata.getTypeInfo()) {
+                while (rs.next()) {
+                    String name = rs.getString(1);
+                    int type = rs.getInt(2);
+                    this.typeMapping.put(name, type);
+                    if (widenUnsingedTypes) {
+                        boolean unsigned = rs.getBoolean(10);
+                        if (unsigned && isUnsignedTypeName(name)) {
+                            unsignedTypes.add(name);
+                        }
                     }
                 }
-            }
-        } catch (Exception e) {
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11021));
-        } finally {
-            if (rs != null) {
-                rs.close();
+            } catch (Exception e) {
+                LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11021));
             }
         }
 
@@ -1392,6 +1388,15 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
      */
     protected String getGeometryMetadataTableName() {
         return null;
+    }
+
+    @TranslatorProperty(display="Use Type Info", category=PropertyType.IMPORT, description="If JDBC DatabaseMetaData getTypeInfo should be used.  If false, array component types and unsigned types may not be able to be determined.")
+    public boolean isUseTypeInfo() {
+        return useTypeInfo;
+    }
+
+    public void setUseTypeInfo(boolean useTypeInfo) {
+        this.useTypeInfo = useTypeInfo;
     }
 
 }
