@@ -638,7 +638,7 @@ public final class FunctionMethods {
     }
 
     @TeiidFunction(category=FunctionCategoryConstants.DATETIME, nullOnNull=true, pushdown=PushDown.CAN_PUSHDOWN)
-    public static Object epoch(Timestamp date) {
+    public static double epoch(Timestamp date) {
         long time = date.getTime();
         double result = time / 1000.0;
         int nanos = date.getNanos();
