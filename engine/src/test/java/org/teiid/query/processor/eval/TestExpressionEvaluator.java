@@ -423,6 +423,7 @@ public class TestExpressionEvaluator {
         TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
         try {
             Expression ex = TestFunctionResolving.getExpression("extract(epoch from cast('2011-04-01 11:11:11.1234567' as timestamp))");
+            assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, ex.getType());
             assertEquals(1301670671.123456, Evaluator.evaluate(ex));
         } finally {
             TimestampWithTimezone.resetCalendar(null);
