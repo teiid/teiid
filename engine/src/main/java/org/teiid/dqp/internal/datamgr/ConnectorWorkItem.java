@@ -272,7 +272,10 @@ public class ConnectorWorkItem implements ConnectorWork {
     public synchronized void close() {
         lobBuffer = null;
         if (lobStore != null) {
-            lobStore.remove();
+            if (explicitClose) {
+                lobStore.remove();
+            }
+            //else don't remove this store, it will need to be implicitly cleaned up
             lobStore = null;
         }
         if (!manager.removeState(this.id)) {

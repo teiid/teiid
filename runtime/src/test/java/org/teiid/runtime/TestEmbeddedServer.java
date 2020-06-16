@@ -66,6 +66,8 @@ import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
@@ -3040,6 +3042,37 @@ public class TestEmbeddedServer {
                 + "       ]]>"
                 + "</metadata></model>"
                 + "</vdb>").getBytes()));
+    }
+
+    @Test public void testLargeCopyLobs() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        es.start(ec);
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+        hcef.addData("SELECT t.col FROM t", Arrays.asList(Arrays.asList(new ClobType(new ClobImpl(new InputStreamFactory() {
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(new byte[DataTypeManager.MAX_LOB_MEMORY_BYTES*2]);
+            }
+
+        }, DataTypeManager.MAX_LOB_MEMORY_BYTES)))));
+        hcef.setCopyLobs(true);
+
+        es.addTranslator("y", hcef);
+
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("my-schema");
+        mmd.addSourceMapping("x", "y", null);
+        mmd.addSourceMetadata("ddl", "create foreign table t (col clob);");
+
+        es.deployVDB("test", mmd);
+
+        TeiidDriver td = es.getDriver();
+        Connection c = td.connect("jdbc:teiid:test", null);
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select cast(t.col as string) from t");
+        assertTrue(rs.next());
+        assertEquals(DataTypeManager.MAX_STRING_LENGTH, rs.getString(1).length());
     }
 
 }
