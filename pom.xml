@@ -822,6 +822,13 @@
                 <groupId>commons-configuration</groupId>
                 <artifactId>commons-configuration</artifactId>
                 <version>${version.commons-configuration}</version>
+                <!-- Fix for commons-beanutils CVE-2019-10086 (ENTESB-12539) -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -1048,6 +1055,11 @@
 	                     <artifactId>log4j</artifactId>
 	                     <groupId>log4j</groupId>
 	                 </exclusion>
+                    <!-- Fix for commons-beanutils CVE-2019-10086 (ENTESB-12539) -->
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
+                    </exclusion>
                  </exclusions>
             </dependency>
             <dependency>
@@ -1234,6 +1246,11 @@
 	                     <artifactId>log4j</artifactId>
 	                     <groupId>log4j</groupId>
 	                 </exclusion>
+                    <!-- Fix for commons-beanutils CVE-2019-10086 (ENTESB-12539) -->
+                    <exclusion>
+                        <groupId>commons-beanutils</groupId>
+                        <artifactId>commons-beanutils</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 

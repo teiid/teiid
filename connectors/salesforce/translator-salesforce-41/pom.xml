@@ -25,6 +25,11 @@
 						<groupId>rhino</groupId>
 						<artifactId>js</artifactId>
 					</exclusion>
+                    <!-- Fix for commons-beanutils CVE-2019-10086 (ENTESB-12539) -->
+					<exclusion>
+						<groupId>commons-beanutils</groupId>
+						<artifactId>commons-beanutils</artifactId>
+					</exclusion>
 				</exclusions>
 			</dependency>
 			<dependency>
