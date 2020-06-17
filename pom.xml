@@ -68,7 +68,7 @@
         <version.com.fasterxml.jackson.core.jackson-databind>2.11.0.rc1</version.com.fasterxml.jackson.core.jackson-databind>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.com.force.api.41>45.1.0</version.com.force.api.41>
-        <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
+        <version.com.google.code.findbugs>3.0.2</version.com.google.code.findbugs>
         <version.com.google.guava>27.0.1-jre</version.com.google.guava>
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>      
         
@@ -819,7 +819,7 @@
             </dependency>
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
-                <artifactId>annotations</artifactId>
+                <artifactId>jsr305</artifactId>
                 <version>${version.com.google.code.findbugs}</version>
             </dependency>
 
@@ -1068,7 +1068,62 @@
 	                     <artifactId>log4j</artifactId>
 	                     <groupId>log4j</groupId>
 	                 </exclusion>
+	                 <exclusion>
+                         <groupId>javax.activation</groupId>
+                         <artifactId>javax.activation-api</artifactId>
+                     </exclusion>
+                     <exclusion>
+                         <groupId>javax.activation</groupId>
+                         <artifactId>activation</artifactId>
+                     </exclusion>
+                     <exclusion>
+                         <groupId>commons-logging</groupId>
+                         <artifactId>commons-logging</artifactId>
+                     </exclusion>
+                     <exclusion>
+                         <groupId>javax.servlet</groupId>
+                         <artifactId>javax.servlet-api</artifactId>
+                     </exclusion>
+                     <exclusion>
+                         <groupId>org.slf4j</groupId>
+                         <artifactId>slf4j-log4j12</artifactId>
+                     </exclusion>
+                     <exclusion>
+                        <artifactId>org.codehaus.jackson</artifactId>
+                        <groupId>jackson-core-asl</groupId>
+                     </exclusion>
+                     <exclusion>
+                        <artifactId>org.codehaus.jackson</artifactId>
+                        <groupId>jackson-mapper-asl</groupId>
+                     </exclusion>
+                     <exclusion>
+                        <artifactId>jline</artifactId>
+                        <groupId>jline</groupId>
+                     </exclusion>
                  </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-hdfs</artifactId>
+                <version>${version.hadoop-common}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.olingo</groupId>
@@ -1290,6 +1345,16 @@
                 <artifactId>jetty-server</artifactId>
                 <version>${version.org.eclipse.jetty}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>servlet-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
@@ -1701,6 +1766,11 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
+                <artifactId>file-hdfs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>translator-jdbc</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
@@ -1958,10 +2028,10 @@
                 <version>2.3.2</version>
             </dependency>
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>4.0.1</version>
-            </dependency>            
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>4.0.3</version>
+            </dependency>
             <dependency>
                 <groupId>jakarta.transaction</groupId>
                 <artifactId>jakarta.transaction-api</artifactId>

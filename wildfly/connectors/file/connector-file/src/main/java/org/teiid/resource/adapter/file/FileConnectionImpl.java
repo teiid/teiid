@@ -34,11 +34,11 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.file.JavaVirtualFile;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
-import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.TranslatorException;
 
 
-public class FileConnectionImpl extends BasicConnection implements VirtualFileConnection {
+public class FileConnectionImpl implements VirtualFileConnection, ResourceConnection {
 
     private File parentDirectory;
     private Map<String, String> fileMapping;

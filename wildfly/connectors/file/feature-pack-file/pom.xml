@@ -29,6 +29,12 @@
             <type>zip</type>
         </dependency>
         <dependency>
+            <groupId>org.teiid.wildfly.connectors</groupId>
+            <artifactId>feature-pack-accumulo</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-file</artifactId>
         </dependency>
@@ -44,6 +50,11 @@
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
             <artifactId>connector-ftp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.teiid.wildfly.connectors</groupId>
+            <artifactId>connector-hdfs</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

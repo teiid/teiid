@@ -463,7 +463,7 @@ public class IntegrationTestDeployment {
     public void getDatasourceTemplateNames() throws Exception {
         Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap",
                 "accumulo", "file", "ftp", "cassandra", "salesforce", "salesforce-34", "salesforce-41", "mongodb", "solr", "webservice",
-                "simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa", "couchbase", "infinispan"}));
+                "simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa", "couchbase", "infinispan", "hdfs"}));
         deployVdb();
         Set<String> templates = admin.getDataSourceTemplateNames();
         assertEquals(vals, templates);
@@ -698,6 +698,16 @@ public class IntegrationTestDeployment {
 
         admin.createDataSource("my-jdg", "infinispan", p);
         admin.deleteDataSource("my-jdg");
+    }
+
+    @Test
+    public void testCreateHdfsSource() throws AdminException {
+        Properties p = new Properties();
+        p.setProperty("FsUri", "localhost:12345");
+        p.setProperty("class-name", "org.teiid.resource.adapter.hdfs.HdfsManagedConnectionFactory");
+
+        admin.createDataSource("my-hdfs", "hdfs", p);
+        admin.deleteDataSource("my-hdfs");
     }
 
     @Test
