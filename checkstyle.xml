@@ -47,8 +47,6 @@
   <!-- =========================================================== -->
 
   <module name="TreeWalker">
-    <property name="cacheFile" value="checkstyle.cache"/>
-
     <module name="SuppressWithNearbyCommentFilter"/>
 
     <!-- http://checkstyle.sourceforge.net/config_annotation.html -->
