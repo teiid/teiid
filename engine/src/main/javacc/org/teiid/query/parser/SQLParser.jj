@@ -7068,9 +7068,9 @@ void importSchema(DatabaseStore dbStore) :
 }
 
 /*
-name=Import another Database
-description=imports another database into current database
-example=[source,sql]\n----\nIMPORT DATABASE vdb VERSION '1.2.3' WITH ACCESS CONTROL]\n----\n
+name=Import VDB
+description=imports another VDB into current database
+example=[source,sql]\n----\nIMPORT DATABASE vdb VERSION '1.2.3' WITH ACCESS CONTROL\n----\n
 */
 void importDatabase(DatabaseStore dbStore) :
 {
