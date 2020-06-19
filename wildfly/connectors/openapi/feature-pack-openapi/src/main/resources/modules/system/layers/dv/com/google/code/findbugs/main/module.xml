@@ -4,7 +4,7 @@
         <property name="jboss.api" value="private"/>
     </properties>
     <resources>
-        <artifact name="${com.google.code.findbugs:annotations}"/>
+        <artifact name="${com.google.code.findbugs:jsr305}"/>
     </resources>
     
     <dependencies>

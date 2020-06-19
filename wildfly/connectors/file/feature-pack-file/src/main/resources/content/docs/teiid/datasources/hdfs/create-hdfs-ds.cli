@@ -1,0 +1,4 @@
+/subsystem=resource-adapters/resource-adapter=hdfs:add(module=org.jboss.teiid.resource-adapter.hdfs)
+/subsystem=resource-adapters/resource-adapter=hdfs/connection-definitions=hdfsDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.hdfs.HdfsManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=hdfs/connection-definitions=hdfsDS/config-properties=FsUri:add(value="${fs.uri}" )
+/subsystem=resource-adapters/resource-adapter=hdfs:activate

@@ -14,6 +14,7 @@
   
   <modules>
     <module>file-api</module>
+    <module>file-hdfs</module>
     <module>translator-file</module>
     <module>translator-excel</module>
   </modules>

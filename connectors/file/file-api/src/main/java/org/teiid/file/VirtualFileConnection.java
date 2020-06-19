@@ -30,7 +30,7 @@ public interface VirtualFileConnection extends Connection {
 
     /**
      * Return a list of files by a given file pattern
-     * @param namePattern - the syntax and pattern
+     * @param namePattern - the syntax and pattern.  The wildcard character * is supported in the filename only.
      * @return
      * @throws TranslatorException
      */
