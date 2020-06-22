@@ -17,9 +17,11 @@
  */
 package org.teiid.resource.adapter.hdfs;
 
+import java.util.Objects;
+
 import javax.resource.ResourceException;
 
-import org.apache.curator.shaded.com.google.common.base.Objects;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.teiid.core.BundleUtil;
 import org.teiid.hdfs.HdfsConfiguration;
 import org.teiid.hdfs.HdfsConnection;
@@ -53,10 +55,17 @@ public class HdfsManagedConnectionFactory extends BasicManagedConnectionFactory 
 
             @Override
             public ResourceConnection getConnection() throws ResourceException {
+                //this may need to be done more generally
+                //at least here we need the classloader that may create the filesystem to match
+                //the resource adapter - not the translator
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
                 try {
+                    Thread.currentThread().setContextClassLoader(DistributedFileSystem.class.getClassLoader());
                     return new HdfsResourceConnection(HdfsManagedConnectionFactory.this);
                 } catch (TranslatorException e) {
                     throw new ResourceException(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(classLoader);
                 }
             }
         };
@@ -82,7 +91,7 @@ public class HdfsManagedConnectionFactory extends BasicManagedConnectionFactory 
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(fsUri, resourcePath);
+        return Objects.hash(fsUri, resourcePath);
     }
 
     @Override
@@ -94,7 +103,7 @@ public class HdfsManagedConnectionFactory extends BasicManagedConnectionFactory 
             return false;
         }
         HdfsManagedConnectionFactory other = (HdfsManagedConnectionFactory) obj;
-        return Objects.equal(fsUri, other.fsUri) && Objects.equal(resourcePath, other.resourcePath);
+        return Objects.equals(fsUri, other.fsUri) && Objects.equals(resourcePath, other.resourcePath);
     }
 
 }

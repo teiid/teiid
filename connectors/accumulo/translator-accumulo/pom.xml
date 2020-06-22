@@ -38,17 +38,14 @@
 			<artifactId>accumulo-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-fate</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.accumulo</groupId>
-			<artifactId>accumulo-trace</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-common</artifactId>
-		</dependency> 
+			<artifactId>hadoop-client-api</artifactId>
+		</dependency>
+		<dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client-runtime</artifactId>
+            <scope>runtime</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.thrift</groupId>
 			<artifactId>libthrift</artifactId>
@@ -58,13 +55,15 @@
 			<artifactId>zookeeper</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-configuration2</artifactId>
 		</dependency>
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-        </dependency>
+		<dependency>
+		    <groupId>org.apache.accumulo</groupId>
+            <artifactId>accumulo-minicluster</artifactId>
+            <version>2.0.0</version>
+            <scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -27,8 +27,11 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -60,7 +63,9 @@ public class AccumuloMetadataProcessor implements MetadataProcessor<AccumuloConn
         for (String tableName:tableNames) {
             try {
 
-                if (tableName.equals("!METADATA") || tableName.equals("trace")) { //$NON-NLS-1$ //$NON-NLS-2$
+                if (tableName.equals("!METADATA") //$NON-NLS-1$
+                        || tableName.equals("trace") //$NON-NLS-1$
+                        || tableName.startsWith("accumulo.")) { //$NON-NLS-1$
                     continue;
                 }
 

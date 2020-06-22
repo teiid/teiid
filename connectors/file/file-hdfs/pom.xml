@@ -8,6 +8,13 @@
     <artifactId>file-hdfs</artifactId>
     <name>file-hdfs</name>
     <description>HDFS file support</description>
+    
+    <!-- 
+     using the shaded client causes minicluster to be unusable in project
+     https://issues.apache.org/jira/browse/HADOOP-15924?page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel&focusedCommentId=16685144#comment-16685144
+     an arquillian test was added instead
+    -->
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -19,35 +26,20 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
+            <artifactId>hadoop-client-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client-runtime</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>file-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>

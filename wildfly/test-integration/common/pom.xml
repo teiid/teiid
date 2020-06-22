@@ -22,7 +22,43 @@
 	<description>Common Integration tests that do not require external dependencies</description>
 	<properties>
 	   <arquillian.vmArgs>-Xmx2048m -Xms512m -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Dteiid.some-property=true</arquillian.vmArgs>
+	   <version.hadoop.org.eclipse.jetty>9.3.19.v20170502</version.hadoop.org.eclipse.jetty>
 	</properties>
+    <dependencyManagement>
+        <!-- to make minihdfs work we need some overrides -->
+        <dependencies>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${version.hadoop.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlet</artifactId>
+                <version>${version.hadoop.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-http</artifactId>
+                <version>${version.hadoop.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${version.hadoop.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <scope>runtime</scope>
+                <version>20.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -127,6 +163,12 @@
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
             <artifactId>connector-file</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
             <scope>test</scope>
         </dependency>
         

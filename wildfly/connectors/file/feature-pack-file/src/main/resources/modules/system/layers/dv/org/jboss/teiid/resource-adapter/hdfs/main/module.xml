@@ -1,4 +1,4 @@
-<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.resource-adapter.hdfs">
+<module xmlns="urn:jboss:module:1.8" name="org.jboss.teiid.resource-adapter.hdfs">
     <properties>
         <property name="jboss.api" value="private"/>
     </properties>
@@ -16,7 +16,9 @@
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.translator.file.api"/>
-        <module name="org.apache.hadoop.common"/>
-        <module name="org.apache.hadoop.hdfs"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.commons.logging"/>
+        <module name="sun.jdk" />
+        <module name="org.apache.hadoop.client" services="import"/>
     </dependencies>
 </module>

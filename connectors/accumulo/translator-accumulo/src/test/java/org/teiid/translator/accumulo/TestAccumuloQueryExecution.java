@@ -19,22 +19,27 @@ package org.teiid.translator.accumulo;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.admin.TimeType;
-import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.accumulo.minicluster.MiniAccumuloCluster;
+import org.apache.accumulo.minicluster.MiniAccumuloConfig;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
@@ -50,6 +55,10 @@ public class TestAccumuloQueryExecution {
     private static TranslationUtility utility;
     private static AccumuloConnection connection;
 
+    private static AccumuloClient client;
+    private static Connector connector;
+    private static MiniAccumuloCluster cluster;
+
     @BeforeClass
     public static void setUp() throws Exception {
         translator = new AccumuloExecutionFactory();
@@ -58,13 +67,27 @@ public class TestAccumuloQueryExecution {
         TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sampledb.ddl")), "sakila", "rental");
         utility = new TranslationUtility(metadata);
 
-        MockInstance instance = new MockInstance("teiid");
         connection = Mockito.mock(AccumuloConnection.class);
-        Connector connector = instance.getConnector("root", new PasswordToken(""));
+        File f = UnitTestUtil.getTestScratchFile("accumulo");
+        FileUtils.removeDirectoryAndChildren(f);
+        MiniAccumuloConfig cfg = new MiniAccumuloConfig(f, "password");
+        cluster = new MiniAccumuloCluster(cfg);
+        cluster.start();
+
+        client = cluster.createAccumuloClient("root", new PasswordToken("password"));
+        client.securityOperations().changeUserAuthorizations("root", new Authorizations("public"));
+
+        connector = Connector.from(client);
+
         Mockito.stub(connection.getInstance()).toReturn(connector);
         Mockito.stub(connection.getAuthorizations()).toReturn(new Authorizations("public"));
         connector.tableOperations().create("customer", true, TimeType.LOGICAL);
         connector.tableOperations().create("rental", true, TimeType.LOGICAL);
+    }
+
+    @AfterClass
+    public static void teardown() throws Exception {
+        cluster.stop();
     }
 
     private Execution executeCmd(String sql) throws TranslatorException {

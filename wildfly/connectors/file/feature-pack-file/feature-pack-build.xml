@@ -2,7 +2,7 @@
     <dependencies>
         <artifact name="org.wildfly:wildfly-feature-pack"/>
         <artifact name="org.teiid.wildfly:teiid-client-feature-pack"/>
-        <!-- for hadoop common -->
+        <!-- for hadoop client -->
         <artifact name="org.teiid.wildfly.connectors:feature-pack-accumulo"/>
     </dependencies>
     <config>

@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.resource.api.ConnectionFactory;
-
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BlobImpl;
@@ -49,6 +47,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -173,6 +172,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Vi
 
     private Charset encoding = Charset.defaultCharset();
     private boolean exceptionIfFileNotFound = true;
+    private boolean areFilesUsableAfterClose = true;
 
     public FileExecutionFactory() {
         setTransactionSupport(TransactionSupport.NONE);
@@ -238,8 +238,20 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Vi
     }
 
     @Override
-    public boolean areLobsUsableAfterClose() {
+    public boolean isSourceRequiredForCapabilities() {
         return true;
+    }
+
+    @Override
+    public void initCapabilities(VirtualFileConnection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+        areFilesUsableAfterClose = connection.areFilesUsableAfterClose();
+    }
+
+    @Override
+    public boolean areLobsUsableAfterClose() {
+        return areFilesUsableAfterClose;
     }
 
 }

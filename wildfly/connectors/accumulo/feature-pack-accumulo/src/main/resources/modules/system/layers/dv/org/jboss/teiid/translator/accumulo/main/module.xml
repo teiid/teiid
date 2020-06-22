@@ -16,6 +16,6 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid" />
         <module name="org.apache.accumulo" />
-        <module name="org.apache.hadoop.common" />
+        <module name="org.apache.hadoop.client" />
     </dependencies>
 </module>

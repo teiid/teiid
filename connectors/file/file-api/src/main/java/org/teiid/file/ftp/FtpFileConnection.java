@@ -262,4 +262,9 @@ public class FtpFileConnection implements VirtualFileConnection {
             }
         }
     }
+
+    @Override
+    public boolean areFilesUsableAfterClose() {
+        return false;
+    }
 }

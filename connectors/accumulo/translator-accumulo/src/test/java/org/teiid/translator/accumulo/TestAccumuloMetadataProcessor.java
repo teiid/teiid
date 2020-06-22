@@ -17,46 +17,60 @@
  */
 package org.teiid.translator.accumulo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
 import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.security.Authorizations;
-import org.junit.Before;
+import org.apache.accumulo.minicluster.MiniAccumuloCluster;
+import org.apache.accumulo.minicluster.MiniAccumuloConfig;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.metadata.*;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 
 @SuppressWarnings("nls")
 public class TestAccumuloMetadataProcessor {
 
+    private static AccumuloClient client;
     private static Connector connector;
+    private static MiniAccumuloCluster cluster;
 
-    @Before
-    public void setup() throws Exception {
-        MockInstance instance = new MockInstance("teiid-test");
+    @BeforeClass
+    public static void setup() throws Exception {
+        File f = UnitTestUtil.getTestScratchFile("accumulo");
+        FileUtils.removeDirectoryAndChildren(f);
+        MiniAccumuloConfig cfg = new MiniAccumuloConfig(f, "password");
+        cluster = new MiniAccumuloCluster(cfg);
+        cluster.start();
 
-        connector = instance.getConnector("root", new PasswordToken(""));
-        try {
-            connector.tableOperations().create("Customer");
-            connector.tableOperations().create("Category");
-        } catch (Exception e) {
-        }
+        client = cluster.createAccumuloClient("root", new PasswordToken("password"));
+        client.securityOperations().changeUserAuthorizations("root", new Authorizations("public"));
 
-        BatchWriter writer = connector.createBatchWriter("Customer",new BatchWriterConfig());
+        connector = Connector.from(client);
+        client.tableOperations().create("Customer");
+        client.tableOperations().create("Category");
+
+        BatchWriter writer = client.createBatchWriter("Customer",new BatchWriterConfig());
         Mutation m = new Mutation("1");
         m.put("Customer", "CompanyName", new Value("teiid.org".getBytes()));
         m.put("Customer", "ContactName", new Value("helpdesk".getBytes()));
@@ -64,12 +78,17 @@ public class TestAccumuloMetadataProcessor {
         writer.addMutation(m);
         writer.close();
 
-        writer = connector.createBatchWriter("Category",new BatchWriterConfig());
+        writer = client.createBatchWriter("Category",new BatchWriterConfig());
         m = new Mutation("1");
         m.put("Category", "CategoryName", new Value("software".getBytes()));
         m.put("Category", "CategoryDescription", new Value("Data Virtualization Software".getBytes()));
         writer.addMutation(m);
         writer.close();
+    }
+
+    @AfterClass
+    public static void teardown() throws Exception {
+        cluster.stop();
     }
 
     @Test

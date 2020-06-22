@@ -20,7 +20,6 @@ package org.teiid.resource.adapter.accumulo;
 
 import javax.resource.ResourceException;
 
-import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -44,16 +43,14 @@ public class AccumuloManagedConnectionFactory extends BasicManagedConnectionFact
 
     class AccumuloConnectionFactory extends BasicConnectionFactory<AccumuloConnectionImpl>{
         private static final long serialVersionUID = 831361159531236916L;
-        private ZooKeeperInstance instance;
         private AccumuloManagedConnectionFactory mcf;
 
         public AccumuloConnectionFactory(AccumuloManagedConnectionFactory mcf) {
             this.mcf = mcf;
-            this.instance = new ZooKeeperInstance(mcf.getInstanceName(), mcf.getZooKeeperServerList());
         }
         @Override
         public AccumuloConnectionImpl getConnection() throws ResourceException {
-            return new AccumuloConnectionImpl(this.mcf, this.instance);
+            return new AccumuloConnectionImpl(this.mcf);
         }
     }
 
