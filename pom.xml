@@ -56,7 +56,7 @@
         <derby.version>10.2.1.6</derby.version>
         <mysql.connector.version>5.1.5</mysql.connector.version>
         
-        <version.accumulo>1.9.2</version.accumulo>
+        <version.accumulo>2.0.0</version.accumulo>
         <version.ant-contrib>1.0b3</version.ant-contrib>
         <version.aws-java-sdk>1.11.0</version.aws-java-sdk>
                 
@@ -73,6 +73,7 @@
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>      
         
         <version.commons-configuration>1.7</version.commons-configuration>
+        <version.commons-configuration2>2.5</version.commons-configuration2>
         <version.commons-logging>1.2</version.commons-logging>
         <version.commons-net>3.6</version.commons-net>
 
@@ -80,7 +81,7 @@
         <version.de.flapdoodle.embed.process>2.1.2</version.de.flapdoodle.embed.process>
 
         <version.gdata-core>1.47.1</version.gdata-core>
-        <version.hadoop-common>3.1.1</version.hadoop-common>
+        <version.hadoop>3.1.3</version.hadoop>
         
         <version.google-api-services-sheets>v4-rev612-1.25.0</version.google-api-services-sheets>
         <version.google-api-client>1.25.0</version.google-api-client>
@@ -843,7 +844,11 @@
                 <artifactId>commons-configuration</artifactId>
                 <version>${version.commons-configuration}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-configuration2</artifactId>
+                <version>${version.commons-configuration2}</version>
+            </dependency>
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
@@ -1013,29 +1018,8 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-client</artifactId>
-                <version>2.8.5</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
-                <version>${version.accumulo}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-fate</artifactId>
-                <version>${version.accumulo}</version>
-                <exclusions>
-	                 <exclusion>
-	                     <artifactId>log4j</artifactId>
-	                     <groupId>log4j</groupId>
-	                 </exclusion>
-                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.accumulo</groupId>
-                <artifactId>accumulo-trace</artifactId>
                 <version>${version.accumulo}</version>
             </dependency>
 
@@ -1056,74 +1040,19 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-                <version>${version.hadoop-common}</version>
-                <exclusions>
-	                 <exclusion>
-	                     <!-- removed for Java 9 -->
-	                     <artifactId>jdk.tools</artifactId>
-	                     <groupId>jdk.tools</groupId>
-	                 </exclusion>
-	                 <exclusion>
-	                     <artifactId>log4j</artifactId>
-	                     <groupId>log4j</groupId>
-	                 </exclusion>
-	                 <exclusion>
-                         <groupId>javax.activation</groupId>
-                         <artifactId>javax.activation-api</artifactId>
-                     </exclusion>
-                     <exclusion>
-                         <groupId>javax.activation</groupId>
-                         <artifactId>activation</artifactId>
-                     </exclusion>
-                     <exclusion>
-                         <groupId>commons-logging</groupId>
-                         <artifactId>commons-logging</artifactId>
-                     </exclusion>
-                     <exclusion>
-                         <groupId>javax.servlet</groupId>
-                         <artifactId>javax.servlet-api</artifactId>
-                     </exclusion>
-                     <exclusion>
-                         <groupId>org.slf4j</groupId>
-                         <artifactId>slf4j-log4j12</artifactId>
-                     </exclusion>
-                     <exclusion>
-                        <artifactId>org.codehaus.jackson</artifactId>
-                        <groupId>jackson-core-asl</groupId>
-                     </exclusion>
-                     <exclusion>
-                        <artifactId>org.codehaus.jackson</artifactId>
-                        <groupId>jackson-mapper-asl</groupId>
-                     </exclusion>
-                     <exclusion>
-                        <artifactId>jline</artifactId>
-                        <groupId>jline</groupId>
-                     </exclusion>
-                 </exclusions>
+                <artifactId>hadoop-client-api</artifactId>
+                <version>${version.hadoop}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-hdfs</artifactId>
-                <version>${version.hadoop-common}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.servlet</groupId>
-                        <artifactId>servlet-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.servlet</groupId>
-                        <artifactId>javax.servlet-api</artifactId>
-                    </exclusion>
-                </exclusions>
+                <artifactId>hadoop-client-runtime</artifactId>
+                <version>${version.hadoop}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-minicluster</artifactId>
+                <version>${version.hadoop}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.olingo</groupId>

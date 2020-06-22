@@ -48,8 +48,14 @@ public class HdfsConnection implements VirtualFileConnection {
 
     protected FileSystem createFileSystem(String fsUri, String resourcePath) throws TranslatorException {
         Configuration configuration = new Configuration();
+        configuration.set("s.hdfs.impl.disable.cache", "true"); //$NON-NLS-1$ //$NON-NLS-2$
         if(resourcePath != null){
-            if (HdfsConnection.class.getResourceAsStream(resourcePath) != null) {
+            boolean classpath = false;
+            try (InputStream is = HdfsConnection.class.getResourceAsStream(resourcePath)) {
+                classpath = is != null;
+            } catch (IOException e) {
+            }
+            if (classpath) {
                 configuration.addResource(resourcePath);
             } else {
                 configuration.addResource(new Path(resourcePath));
@@ -68,6 +74,20 @@ public class HdfsConnection implements VirtualFileConnection {
     public VirtualFile[] getFiles(String location) throws TranslatorException {
         Path path = new Path(location);
         Path parentPath = path.getParent();
+        try {
+            FileStatus fileStatus = fileSystem.getFileStatus(path);
+            if(fileStatus.isDirectory()){
+                return convert(path);
+            }
+            if(fileStatus.isFile()) {
+                return new VirtualFile[] {new HdfsVirtualFile(fileSystem, fileStatus)};
+            }
+        } catch (FileNotFoundException e){
+            //ignore and see if it's a wildcard
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
+
         if(location.contains("*") && parentPath!=null){
             location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
             location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -94,17 +114,6 @@ public class HdfsConnection implements VirtualFileConnection {
             } catch (IOException e) {
                 throw new TranslatorException(e);
             }
-        }
-        try {
-            FileStatus fileStatus = fileSystem.getFileStatus(path);
-            if(fileStatus.isDirectory()){
-                return convert(path);
-            }
-            if(fileStatus.isFile()) {
-                return new VirtualFile[] {new HdfsVirtualFile(fileSystem, fileStatus)};
-            }
-        } catch (IOException e) {
-            throw new TranslatorException(e);
         }
         return null;
     }
@@ -136,6 +145,8 @@ public class HdfsConnection implements VirtualFileConnection {
     public boolean remove(String s) throws TranslatorException {
         try {
             return fileSystem.delete(new Path(s), false);
+        } catch (FileNotFoundException e) {
+            return false;
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
@@ -148,6 +159,11 @@ public class HdfsConnection implements VirtualFileConnection {
         } catch (IOException e) {
             throw new TeiidRuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean areFilesUsableAfterClose() {
+        return false;
     }
 
 }

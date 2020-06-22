@@ -50,6 +50,10 @@ public interface VirtualFileConnection extends Connection {
      */
     boolean remove(String path) throws TranslatorException;
 
+    default boolean areFilesUsableAfterClose() {
+        return true;
+    }
+
     public static class Util {
 
         /**

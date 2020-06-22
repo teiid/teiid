@@ -5,8 +5,6 @@
        
     <resources>
         <artifact name="${org.apache.accumulo:accumulo-core}"/>
-        <artifact name="${org.apache.accumulo:accumulo-fate}"/>
-        <artifact name="${org.apache.accumulo:accumulo-trace}"/>
     </resources>
 
     <dependencies>
@@ -15,10 +13,10 @@
         <module name="org.apache.log4j"/>
         <module name="com.google.guava"/>
         <module name="org.apache.commons.io"/>
-        <module name="org.apache.commons.configuration"/>
+        <module name="org.apache.commons.configuration2"/>
         <module name="org.apache.commons.logging"/>
         <module name="org.apache.commons.lang"/>
         <module name="org.apache.zookeeper" />
-        <module name="org.apache.hadoop.common" />
+        <module name="org.apache.hadoop.client" />
     </dependencies>
 </module>

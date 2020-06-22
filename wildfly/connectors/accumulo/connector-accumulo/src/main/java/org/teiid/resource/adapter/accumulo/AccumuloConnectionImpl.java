@@ -23,30 +23,23 @@ import java.util.List;
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 
+import org.apache.accumulo.core.client.Accumulo;
+import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.ZooKeeperInstance;
-import org.apache.accumulo.core.client.impl.ClientContext;
-import org.apache.accumulo.core.client.impl.ConnectorImpl;
-import org.apache.accumulo.core.client.impl.Credentials;
-import org.apache.accumulo.core.client.impl.ServerClient;
-import org.apache.accumulo.core.client.impl.thrift.ClientService;
-import org.apache.accumulo.core.client.impl.thrift.ClientService.Client;
-import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.security.Authorizations;
-import org.apache.accumulo.core.util.Pair;
-import org.apache.thrift.transport.TTransportException;
 import org.teiid.core.util.StringUtil;
-import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.accumulo.AccumuloConnection;
 
-public class AccumuloConnectionImpl extends BasicConnection implements AccumuloConnection {
-    private ConnectorImpl conn;
+public class AccumuloConnectionImpl implements AccumuloConnection, ResourceConnection {
+    private Connector conn;
+    private AccumuloClient client;
     private String[] roles;
 
-    public AccumuloConnectionImpl(AccumuloManagedConnectionFactory mcf, ZooKeeperInstance inst) throws ResourceException {
+    public AccumuloConnectionImpl(AccumuloManagedConnectionFactory mcf) throws ResourceException {
         try {
             if (mcf.getRoles() != null) {
                 List<String> auths = StringUtil.getTokens(mcf.getRoles(), ",");  //$NON-NLS-1$
@@ -64,8 +57,8 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
                 password = ConnectionContext.getPassword(subject, mcf, userName, password);
                 this.roles = ConnectionContext.getRoles(subject, this.roles);
             }
-            checkTabletServerExists(inst, userName, password);
-            this.conn = (ConnectorImpl) inst.getConnector(userName, new PasswordToken(password));
+            this.client = Accumulo.newClient().to(mcf.getInstanceName(), mcf.getZooKeeperServerList()).as(userName, password).build();
+            this.conn = Connector.from(client);
         } catch (AccumuloException e) {
             throw new ResourceException(e);
         } catch (AccumuloSecurityException e) {
@@ -73,20 +66,6 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
         }
     }
 
-    private void checkTabletServerExists(ZooKeeperInstance inst, String userName, String password)
-            throws ResourceException {
-        ClientService.Client client = null;
-        try {
-            Pair<String,Client> pair = ServerClient.getConnection(new ClientContext(inst, new Credentials(userName, new PasswordToken(password)), inst.getConfiguration()), true, 10);
-            client = pair.getSecond();
-        } catch (TTransportException e) {
-            throw new ResourceException(AccumuloManagedConnectionFactory.UTIL.getString("no_tserver"), e);
-        } finally {
-            if (client != null) {
-                ServerClient.close(client);
-            }
-        }
-    }
 
     @Override
     public Connector getInstance() {
@@ -95,8 +74,9 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
 
     @Override
     public void close() throws ResourceException {
-        // Where is the close call on instance Accumulo? Am I supposed to
-        // waste resources??
+        if (client != null) {
+            client.close();
+        }
     }
 
     @Override
