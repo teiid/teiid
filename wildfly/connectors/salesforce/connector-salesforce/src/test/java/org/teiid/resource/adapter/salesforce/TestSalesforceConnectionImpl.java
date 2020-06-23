@@ -31,14 +31,13 @@ import org.teiid.translator.salesforce.execution.DeletedResult;
 
 import com.sforce.soap.partner.DeletedRecord;
 import com.sforce.soap.partner.GetDeletedResult;
-import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.sobject.SObject;
 
 @SuppressWarnings("nls")
 public class TestSalesforceConnectionImpl {
 
     @Test public void testGetDeleted() throws Exception {
-        PartnerConnection pc = Mockito.mock(PartnerConnection.class);
+        TeiidPartnerConnection pc = Mockito.mock(TeiidPartnerConnection.class);
         GetDeletedResult gdr = new GetDeletedResult();
         Calendar c = Calendar.getInstance();
         gdr.setEarliestDateAvailable(c);

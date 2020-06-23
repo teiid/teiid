@@ -36,10 +36,9 @@ import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.salesforce.BaseSalesforceConnection;
 
 import com.sforce.async.AsyncApiException;
-import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.ws.ConnectionException;
 
-public class SalesforceConnectionImpl extends BaseSalesforceConnection<SalesForceManagedConnectionFactory> implements ResourceConnection {
+public class SalesforceConnectionImpl extends BaseSalesforceConnection<SalesForceManagedConnectionFactory, SalesforceConnectorConfig, TeiidPartnerConnection> implements ResourceConnection {
 
     public SalesforceConnectionImpl(
             SalesForceManagedConnectionFactory config) throws AsyncApiException, ConnectionException {
@@ -47,14 +46,21 @@ public class SalesforceConnectionImpl extends BaseSalesforceConnection<SalesForc
     }
 
     public SalesforceConnectionImpl(
-            PartnerConnection partnerConnection) {
+            TeiidPartnerConnection partnerConnection) {
         super(partnerConnection);
     }
 
     @Override
-    protected void login(SalesForceManagedConnectionFactory mcf) throws AsyncApiException, ConnectionException {
+    protected TeiidPartnerConnection login(
+            SalesForceManagedConnectionFactory salesforceConfig,
+            SalesforceConnectorConfig connectorConfig)
+            throws AsyncApiException, ConnectionException {
+        return new TeiidPartnerConnection(connectorConfig);
+    }
+
+    @Override
+    protected SalesforceConnectorConfig createConnectorConfig(SalesForceManagedConnectionFactory mcf) throws ConnectionException {
         SalesforceConnectorConfig salesforceConnectorConfig = new SalesforceConnectorConfig();
-        config = salesforceConnectorConfig;
         String username = mcf.getUsername();
         String password = mcf.getPassword();
 
@@ -75,11 +81,11 @@ public class SalesforceConnectionImpl extends BaseSalesforceConnection<SalesForc
 
         salesforceConnectorConfig.setCxfConfigFile(mcf.getConfigFile());
         if (useCXFTransport) {
-            config.setTransport(SalesforceCXFTransport.class);
+            salesforceConnectorConfig.setTransport(SalesforceCXFTransport.class);
         }
 
-        config.setCompression(true);
-        config.setTraceMessage(false);
+        salesforceConnectorConfig.setCompression(true);
+        salesforceConnectorConfig.setTraceMessage(false);
 
         //set the catch all properties
         String props = mcf.getConfigProperties();
@@ -90,34 +96,33 @@ public class SalesforceConnectionImpl extends BaseSalesforceConnection<SalesForc
             } catch (IOException e) {
                 throw new ConnectionException("Could not read config properties", e); //$NON-NLS-1$
             }
-            PropertiesUtils.setBeanProperties(config, p, null);
+            PropertiesUtils.setBeanProperties(salesforceConnectorConfig, p, null);
         }
 
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setAuthEndpoint(mcf.getURL());
+        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login attempted for username", username); //$NON-NLS-1$
+
+        salesforceConnectorConfig.setUsername(username);
+        salesforceConnectorConfig.setPassword(password);
+        salesforceConnectorConfig.setAuthEndpoint(mcf.getURL());
 
         //set proxy if needed
         if (mcf.getProxyURL() != null) {
             try {
                 URL proxyURL = new URL(mcf.getProxyURL());
-                config.setProxy(proxyURL.getHost(), proxyURL.getPort());
-                config.setProxyUsername(mcf.getProxyUsername());
-                config.setProxyPassword(mcf.getProxyPassword());
+                salesforceConnectorConfig.setProxy(proxyURL.getHost(), proxyURL.getPort());
+                salesforceConnectorConfig.setProxyUsername(mcf.getProxyUsername());
+                salesforceConnectorConfig.setProxyPassword(mcf.getProxyPassword());
             } catch (MalformedURLException e) {
                 throw new ConnectionException(e.getMessage(), e);
             }
         }
         if (mcf.getConnectTimeout() != null) {
-            config.setConnectionTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getConnectTimeout()));
+            salesforceConnectorConfig.setConnectionTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getConnectTimeout()));
         }
         if (mcf.getRequestTimeout() != null) {
-            config.setReadTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getRequestTimeout()));
+            salesforceConnectorConfig.setReadTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getRequestTimeout()));
         }
-
-        partnerConnection = new TeiidPartnerConnection(salesforceConnectorConfig);
-
-        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username", username); //$NON-NLS-1$
+        return salesforceConnectorConfig;
     }
 
 }

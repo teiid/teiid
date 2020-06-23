@@ -61,7 +61,7 @@ import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
 import com.sforce.ws.transport.JdkHttpTransport;
 
-public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration> implements SalesforceConnection {
+public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration, C extends ConnectorConfig, P extends PartnerConnection> implements SalesforceConnection {
 
     private static final String ID_FIELD_NAME = "id"; //$NON-NLS-1$
     private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
@@ -73,11 +73,12 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     private String apiVersion;
 
     //set by subclasses during login
-    protected PartnerConnection partnerConnection;
-    protected ConnectorConfig config;
+    private P partnerConnection;
+    private C config;
 
     public BaseSalesforceConnection(T salesforceConfig) throws AsyncApiException, ConnectionException {
-        login(salesforceConfig);
+        config = createConnectorConfig(salesforceConfig);
+        partnerConnection = login(salesforceConfig, config);
 
         String endpoint = config.getServiceEndpoint();
         // The endpoint for the Bulk API service is the same as for the normal
@@ -96,17 +97,19 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    protected BaseSalesforceConnection(PartnerConnection partnerConnection) {
+    protected abstract C createConnectorConfig(T salesforceConfig) throws ConnectionException;
+
+    protected BaseSalesforceConnection(P partnerConnection) {
         this.partnerConnection = partnerConnection;
     }
 
     /**
-     * This method must log the user in and create the appropriate {@link ConnectorConfig} and {@link PartnerConnection} instances
+     * This method must log the user in and create the appropriate {@link PartnerConnection} instance
      * @param salesforceConfig
      * @throws AsyncApiException
      * @throws ConnectionException
      */
-    protected abstract void login(T salesforceConfig) throws AsyncApiException, ConnectionException;
+    protected abstract P login(T salesforceConfig, C connectorConfig) throws AsyncApiException, ConnectionException;
 
     @Override
     public Long getCardinality(String sobject) throws TranslatorException {
@@ -174,6 +177,10 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
         }
         return false;
+    }
+
+    protected P getPartnerConnection() {
+        return partnerConnection;
     }
 
     public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
