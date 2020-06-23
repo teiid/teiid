@@ -35,6 +35,7 @@ import org.apache.accumulo.minicluster.MiniAccumuloCluster;
 import org.apache.accumulo.minicluster.MiniAccumuloConfig;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -49,6 +50,10 @@ import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
+/*
+ * does not consistently run in unit tests, should still be utilized with any translator changes
+ */
+@Ignore
 @SuppressWarnings({"nls", "unchecked"})
 public class TestAccumuloQueryExecution {
     private static AccumuloExecutionFactory translator;
