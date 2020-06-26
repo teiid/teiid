@@ -18,7 +18,14 @@
 
 package org.teiid.translator.prestodb;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.CHAR;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -27,9 +34,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.language.Argument;
 import org.teiid.language.Call;
-import org.teiid.language.Command;
 import org.teiid.language.Function;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -43,7 +48,6 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
-import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.util.Version;
 
 @Translator(name="prestodb", description="PrestoDB custom translator")
@@ -64,19 +68,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-            throws TranslatorException {
-        throw new TranslatorException(PrestoDBPlugin.Event.TEIID26000, PrestoDBPlugin.Util.gs(PrestoDBPlugin.Event.TEIID26000, command));
-    }
-
-    @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-            throws TranslatorException {
-        throw new TranslatorException(PrestoDBPlugin.Event.TEIID26000, PrestoDBPlugin.Util.gs(PrestoDBPlugin.Event.TEIID26000, command));
-    }
-
-    @Override
-    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
             throws TranslatorException {
         throw new TranslatorException(PrestoDBPlugin.Event.TEIID26000, PrestoDBPlugin.Util.gs(PrestoDBPlugin.Event.TEIID26000, command));
     }
