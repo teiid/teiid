@@ -18,7 +18,8 @@
 
 package org.teiid.query.resolver;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Clob;
 
@@ -294,6 +295,14 @@ public class TestFunctionResolving {
     @Test public void testAnalytical() throws Exception {
         String sql = "last_value(pm1.g1.e1) over ()"; //$NON-NLS-1$
         assertEquals(DataTypeManager.DefaultDataClasses.STRING, getExpression(sql).getType());
+    }
+
+    @Test public void testVirtualFunctionAmbiguity() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("y", new RealMetadataFactory.DDLHolder("v", "CREATE VIRTUAL FUNCTION f1(e1 integer) RETURNS integer as return e1*2;"),
+                new RealMetadataFactory.DDLHolder("x", "create foreign function f1(e1 integer)  returns integer; create foreign table t (col integer)"));
+
+        Expression func = QueryParser.getQueryParser().parseExpression("v.f1(1)");
+        ResolverVisitor.resolveLanguageObject(func, metadata);
     }
 
 }

@@ -20,7 +20,16 @@ package org.teiid.query.function;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.teiid.UserDefinedAggregate;
 import org.teiid.api.exception.query.FunctionExecutionException;
@@ -422,6 +431,7 @@ public class FunctionTree {
                     ft = new FunctionTree(schema.getName(), dummySource, false);
                 }
                 FunctionMethod fm = SQLParserUtil.createFunctionMethod(p);
+                fm.setParent(schema);
                 FunctionDescriptor fd = ft.addFunction(schema.getName(), dummySource, fm, false);
                 fd.setProcedure(p);
             }
