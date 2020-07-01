@@ -88,6 +88,7 @@
 
         <version.io.dropwizard.metrics.metrics-core>3.2.2</version.io.dropwizard.metrics.metrics-core>
         <version.io.swagger>1.5.22</version.io.swagger>
+        <version.io.netty.netty-codec>4.1.48.Final</version.io.netty.netty-codec>
 
         <version.jts>1.16.0</version.jts>
         <version.jts2geojson>0.13.0</version.jts2geojson>
@@ -542,6 +543,11 @@
 	</dependencies>
    <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${version.io.netty.netty-codec}</version>
+            </dependency>
             <dependency>
                 <groupId>ant-contrib</groupId>
                 <artifactId>ant-contrib</artifactId>
