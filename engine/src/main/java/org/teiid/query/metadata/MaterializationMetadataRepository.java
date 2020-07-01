@@ -48,6 +48,9 @@ public class MaterializationMetadataRepository implements MetadataRepository {
     public static final String MATVIEW_SCOPE = "teiid_rel:MATVIEW_SCOPE"; //$NON-NLS-1$
     public static final String MATVIEW_LOADNUMBER_COLUMN = "teiid_rel:MATVIEW_LOADNUMBER_COLUMN"; //$NON-NLS-1$
 
+    public static final String MATVIEW_PART_LOAD_COLUMN = "teiid_rel:MATVIEW_PART_LOAD_COLUMN"; //$NON-NLS-1$
+    public static final String MATVIEW_PART_LOAD_VALUES = "teiid_rel:MATVIEW_PART_LOAD_VALUES"; //$NON-NLS-1$
+
     public static final String MATVIEW_OWNER_VDB_NAME = "teiid_rel:MATVIEW_OWNER_VDB_NAME"; //$NON-NLS-1$
     public static final String MATVIEW_OWNER_VDB_VERSION = "teiid_rel:MATVIEW_OWNER_VDB_VERSION"; //$NON-NLS-1$
 

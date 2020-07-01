@@ -23,8 +23,17 @@ import java.sql.Clob;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -38,6 +47,7 @@ import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.RequestMessage;
@@ -77,10 +87,27 @@ import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.NamespaceContainer;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.Table.Type;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
@@ -220,7 +247,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         ISLOGGABLE,
         CANCELREQUEST,
         TERMINATESESSION,
-        TERMINATETRANSACTION
+        TERMINATETRANSACTION,
+        SCHEMASOURCES
     }
 
     private enum SystemProcs {
@@ -1557,6 +1585,15 @@ public class DataTierManagerImpl implements ProcessorDataManager {
                 } catch (IOException e) {
                      throw new TeiidProcessingException(QueryPlugin.Event.TEIID30551, e);
                 }
+            case SCHEMASOURCES:
+                String schemaName = (String)((Constant)proc.getParameter(1).getExpression()).getValue();
+                ModelMetaData mmd = vdb.getModel(schemaName);
+                if (mmd != null && mmd.isSource()) {
+                    for (SourceMappingMetadata smm : mmd.getSourceMappings()) {
+                        rows.add(Arrays.asList(smm.getName(), smm.getConnectionJndiName()));
+                    }
+                }
+                return new CollectionTupleSource(rows.iterator());
             }
             final Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
             MetadataRepository metadataRepository = getMetadataRepository(table, vdb);

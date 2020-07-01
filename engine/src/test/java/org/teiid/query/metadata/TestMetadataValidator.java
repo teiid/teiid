@@ -17,7 +17,10 @@
  */
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Properties;
@@ -501,6 +504,74 @@ public class TestMetadataValidator {
         ValidatorReport report = new ValidatorReport();
         report = new MetadataValidator().validate(this.vdb, this.store);
         assertTrue(printError(report), report.hasItems());
+    }
+
+    @Test
+    public void testExternalPartColumnNonComparable() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar, e3 blob, loadnum long);"
+                + STATUS;
+        String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum', \"teiid_rel:MATVIEW_PART_LOAD_COLUMN\" 'e3') AS SELECT * FROM pm1.G1";
+
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        buildModel("vm1", false, this.vdb, this.store, ddl2);
+
+        buildTransformationMetadata();
+
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertTrue(printError(report), report.hasItems());
+    }
+
+    @Test
+    public void testExternalPartColumnMissing() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar, e3 blob, loadnum long);"
+                + STATUS;
+        String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum', \"teiid_rel:MATVIEW_PART_LOAD_COLUMN\" 'e5') AS SELECT * FROM pm1.G1";
+
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        buildModel("vm1", false, this.vdb, this.store, ddl2);
+
+        buildTransformationMetadata();
+
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertTrue(printError(report), report.hasItems());
+    }
+
+    @Test
+    public void testExternalPartQueryInvalid() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar, e3 blob, loadnum long);"
+                + STATUS;
+        String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum', \"teiid_rel:MATVIEW_PART_LOAD_COLUMN\" 'e1', \"teiid_rel:MATVIEW_PART_LOAD_VALUES\" 'select ''1''') AS SELECT * FROM pm1.G1";
+
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        buildModel("vm1", false, this.vdb, this.store, ddl2);
+
+        buildTransformationMetadata();
+
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertTrue(printError(report), report.hasItems());
+    }
+
+    @Test
+    public void testExternalPartValid() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar, e3 blob, loadnum long);"
+                + STATUS;
+        String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum', \"teiid_rel:MATVIEW_PART_LOAD_COLUMN\" 'e1', \"teiid_rel:MATVIEW_PART_LOAD_VALUES\" 'select 1') AS SELECT * FROM pm1.G1";
+
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        buildModel("vm1", false, this.vdb, this.store, ddl2);
+
+        buildTransformationMetadata();
+
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertFalse(printError(report), report.hasItems());
     }
 
     @Test

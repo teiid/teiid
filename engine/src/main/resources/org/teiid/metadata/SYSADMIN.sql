@@ -335,10 +335,36 @@ BEGIN
             BEGIN
                 DECLARE clob columnNames = '(' || columns || ', ' || VARIABLES.loadNumColumn || ')';
                 DECLARE clob columnValues = columns || ', ' || cast(VARIABLES.loadNumber as string);
-                EXECUTE IMMEDIATE 'UPSERT INTO ' || matViewStageTable || VARIABLES.columnNames || ' SELECT '|| VARIABLES.columnValues || ' FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
-                VARIABLES.rowsUpdated = VARIABLES.ROWCOUNT; 
-                EXECUTE IMMEDIATE 'DELETE FROM ' || matViewStageTable || ' WHERE ' || VARIABLES.loadNumColumn || ' < ' || VARIABLES.loadNumber;
-                VARIABLES.rowsUpdated = VARIABLES.rowsUpdated + VARIABLES.ROWCOUNT;
+                
+                DECLARE string partColumn = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = 'teiid_rel:MATVIEW_PART_LOAD_COLUMN');
+                
+                IF (partColumn IS NULL)
+                BEGIN
+                    EXECUTE IMMEDIATE 'UPSERT INTO ' || matViewStageTable || VARIABLES.columnNames || ' SELECT '|| VARIABLES.columnValues || ' FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+                    VARIABLES.rowsUpdated = VARIABLES.ROWCOUNT; 
+                    EXECUTE IMMEDIATE 'DELETE FROM ' || matViewStageTable || ' WHERE ' || VARIABLES.loadNumColumn || ' < ' || VARIABLES.loadNumber;
+                    VARIABLES.rowsUpdated = VARIABLES.rowsUpdated + VARIABLES.ROWCOUNT;
+                END
+                ELSE
+                BEGIN
+                    partColumn = '"' || replace(partColumn, '"', '""') || '"';
+                    DECLARE string partValues = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = 'teiid_rel:MATVIEW_PART_LOAD_VALUES');
+                    IF (partValues IS NULL)
+                        partValues = 'SELECT DISTINCT(' || viewName || '.' || partColumn || ') FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+                         
+                    VARIABLES.rowsUpdated = 0;
+                    EXECUTE IMMEDIATE partValues as source string INTO #partValues; 
+                    LOOP ON (SELECT source from #partValues) AS sources
+                        BEGIN
+                        EXECUTE IMMEDIATE 'UPSERT INTO ' || matViewStageTable || VARIABLES.columnNames || ' SELECT '|| VARIABLES.columnValues || ' FROM ' || schemaName || '.' || viewName 
+                            || ' WHERE ' || VARIABLES.partColumn || '= DVARS.source ' || ' OPTION NOCACHE ' || schemaName || '.' || viewName USING source = sources.source;
+                        VARIABLES.rowsUpdated = VARIABLES.rowsUpdated + VARIABLES.ROWCOUNT; 
+                        EXECUTE IMMEDIATE 'DELETE FROM ' || matViewStageTable || ' WHERE ' || VARIABLES.loadNumColumn || ' < ' || VARIABLES.loadNumber || ' AND ' || VARIABLES.partColumn || '= DVARS.source' USING source = sources.source;
+                        VARIABLES.rowsUpdated = VARIABLES.rowsUpdated + VARIABLES.ROWCOUNT;
+                    EXCEPTION e
+                        EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'WARN', msg=>e.exception);
+                    END
+                END
             END
             VARIABLES.implicitLoadScript = true;
         END
@@ -583,3 +609,5 @@ CREATE FOREIGN PROCEDURE terminateSession(OUT terminated boolean NOT NULL RESULT
 CREATE FOREIGN PROCEDURE cancelRequest(OUT cancelled boolean NOT NULL RESULT, IN SessionId string NOT NULL, IN executionId long NOT NULL);
 
 CREATE FOREIGN PROCEDURE terminateTransaction(IN sessionid string NOT NULL);
+
+CREATE FOREIGN PROCEDURE schemaSources(IN schemaName string NOT NULL) RETURNS TABLE (name string, resource string);
