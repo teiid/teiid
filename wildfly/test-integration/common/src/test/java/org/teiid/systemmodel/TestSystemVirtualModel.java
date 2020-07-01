@@ -18,7 +18,10 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.sql.CallableStatement;
@@ -407,5 +410,18 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
         CallableStatement cs = this.internalConnection.prepareCall("{? = call terminateSession('abc')}");
         cs.execute();
         assertEquals(cs.getBoolean(1), cs.getBoolean("terminated"));
+    }
+
+    @Test public void testSchemaSources() throws Exception {
+        CallableStatement cs = this.internalConnection.prepareCall("call sysadmin.schemaSources(?)");
+        cs.setString(1, "abc");
+        cs.execute();
+        ResultSet rs = cs.getResultSet();
+        assertFalse(rs.next());
+        cs.setString(1, "PartsSupplier");
+        cs.execute();
+        rs = cs.getResultSet();
+        assertTrue(rs.next());
+        assertEquals("source",rs.getString(1));
     }
 }

@@ -17,9 +17,33 @@
  */
 package org.teiid.query.metadata;
 
-import static org.teiid.query.metadata.MaterializationMetadataRepository.*;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_AFTER_LOAD_SCRIPT;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_BEFORE_LOAD_SCRIPT;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_LOADNUMBER_COLUMN;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_LOAD_SCRIPT;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_OWNER_VDB_NAME;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_PART_LOAD_COLUMN;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_PART_LOAD_VALUES;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_STAGE_TABLE;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_STATUS_TABLE;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_UPDATABLE;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.ON_VDB_DROP_SCRIPT;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.ON_VDB_START_SCRIPT;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.teiid.adminapi.DataPolicy.DataPermission;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
@@ -39,11 +63,24 @@ import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.Trigger;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -416,6 +453,27 @@ public class MetadataValidator {
                                 metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31215, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn, column.getRuntimeType()), t);
                                 continue;
                             }
+                            String partColumn = t.getProperty(MATVIEW_PART_LOAD_COLUMN, false);
+                            if (partColumn != null) {
+                                Column partCol = t.getColumnByName(partColumn);
+                                if (partCol == null) {
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31302, t.getFullName(), partColumn), t);
+                                    continue;
+                                }
+                                if (DataTypeManager.isNonComparable(partCol.getRuntimeType())) {
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31303, t.getFullName(), partColumn), t);
+                                    continue;
+                                }
+                                String partQuery = t.getProperty(MATVIEW_PART_LOAD_VALUES, false);
+                                if (partQuery != null) {
+                                    Command command = loadScriptsValidation(vdb, report, metadataValidator, model, t, partQuery, MaterializationMetadataRepository.MATVIEW_PART_LOAD_VALUES);
+
+                                    if (command.getProjectedSymbols().size() != 1 || !command.getProjectedSymbols().get(0).getType().equals(partCol.getJavaType())) {
+                                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31304, t.getFullName(), partQuery, partColumn), t);
+                                        continue;
+                                    }
+                                }
+                            }
                         }
 
                         String status = t.getProperty(MATVIEW_STATUS_TABLE, false);
@@ -562,9 +620,9 @@ public class MetadataValidator {
             LogManager.logDetail(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31256, st.getName(), t.getName()));
         }
 
-        private void loadScriptsValidation(VDBMetaData vdb, ValidatorReport report, MetadataValidator metadataValidator, ModelMetaData model, Table matView, String script, String option) {
+        private Command loadScriptsValidation(VDBMetaData vdb, ValidatorReport report, MetadataValidator metadataValidator, ModelMetaData model, Table matView, String script, String option) {
             if(script == null) {
-                return;
+                return null;
             }
             QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class).getDesignTimeMetadata();
             QueryParser queryParser = QueryParser.getQueryParser();
@@ -577,9 +635,11 @@ public class MetadataValidator {
                 AbstractValidationVisitor visitor = new ValidationVisitor();
                 ValidatorReport subReport = Validator.validate(command, metadata, visitor);
                 metadataValidator.processReport(model, matView, report, subReport);
+                return command;
             } catch (QueryParserException | QueryResolverException | TeiidComponentException e) {
                 metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getFullName(), option, script, e), matView);
             }
+            return null;
         }
 
         private void pollingQueryValidation(VDBMetaData vdb, ValidatorReport report, MetadataValidator metadataValidator, ModelMetaData model, Table matView, String query, String option) {
