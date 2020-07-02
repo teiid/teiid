@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.FileInputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 
 public class JavaVirtualFile implements VirtualFile {
 
@@ -140,5 +141,10 @@ public class JavaVirtualFile implements VirtualFile {
             result[i] = new JavaVirtualFile(files[i]);
         }
         return result;
+    }
+
+    @Override
+    public StorageMode getStorageMode() {
+        return StorageMode.PERSISTENT;
     }
 }

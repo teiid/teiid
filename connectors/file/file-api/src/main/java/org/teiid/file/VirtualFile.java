@@ -45,7 +45,7 @@ public interface VirtualFile {
 
             @Override
             public StorageMode getStorageMode() {
-                return getStorageMode();
+                return VirtualFile.this.getStorageMode();
             }
         };
 
