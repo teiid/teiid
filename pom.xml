@@ -1062,6 +1062,17 @@
                 <version>${derby.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+                <version>1.19</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                    </exclusion>
+                 </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
                 <version>${version.hadoop-common}</version>
@@ -1074,6 +1085,10 @@
 	                 <exclusion>
 	                     <artifactId>log4j</artifactId>
 	                     <groupId>log4j</groupId>
+	                 </exclusion>
+ 	                 <exclusion>
+	                     <groupId>com.sun.jersey</groupId>
+	                     <artifactId>jersey-json</artifactId>
 	                 </exclusion>
                  </exclusions>
             </dependency>
