@@ -1073,6 +1073,17 @@
                  </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro</artifactId>
+                <version>1.7.7</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                    </exclusion>
+                 </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
                 <version>${version.hadoop-common}</version>
@@ -1090,6 +1101,14 @@
 	                     <groupId>com.sun.jersey</groupId>
 	                     <artifactId>jersey-json</artifactId>
 	                 </exclusion>
+ 	                 <exclusion>
+	                     <groupId>org.apache.avro</groupId>
+	                     <artifactId>avro</artifactId>
+	                 </exclusion>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                    </exclusion>
                  </exclusions>
             </dependency>
             <dependency>
