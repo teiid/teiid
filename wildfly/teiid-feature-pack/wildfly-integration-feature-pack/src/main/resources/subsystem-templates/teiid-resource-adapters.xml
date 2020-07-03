@@ -11,6 +11,9 @@
            <resource-adapter id="hdfs">
                <module slot="main" id="org.jboss.teiid.resource-adapter.hdfs"/>
            </resource-adapter>
+           <resource-adapter id="s3">
+               <module slot="main" id="org.jboss.teiid.resource-adapter.s3"/>
+           </resource-adapter>
 	       <resource-adapter id="google">
 	           <module slot="main" id="org.jboss.teiid.resource-adapter.google"/>
 	       </resource-adapter>

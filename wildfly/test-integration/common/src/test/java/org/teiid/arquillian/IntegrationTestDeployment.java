@@ -18,7 +18,13 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -50,8 +56,17 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.postgresql.Driver;
-import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.Model;
+import org.teiid.adminapi.PropertyDefinition;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -463,7 +478,7 @@ public class IntegrationTestDeployment {
     public void getDatasourceTemplateNames() throws Exception {
         Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap",
                 "accumulo", "file", "ftp", "cassandra", "salesforce", "salesforce-34", "salesforce-41", "mongodb", "solr", "webservice",
-                "simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa", "couchbase", "infinispan", "hdfs"}));
+                "simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa", "couchbase", "infinispan", "hdfs", "s3"}));
         deployVdb();
         Set<String> templates = admin.getDataSourceTemplateNames();
         assertEquals(vals, templates);
@@ -708,6 +723,19 @@ public class IntegrationTestDeployment {
 
         admin.createDataSource("my-hdfs", "hdfs", p);
         admin.deleteDataSource("my-hdfs");
+    }
+
+    @Test
+    public void testCreateS3Source() throws AdminException {
+        Properties p = new Properties();
+        p.setProperty("Endpoint", "localhost:12345");
+        p.setProperty("Bucket", "bucket");
+        p.setProperty("AccessKey", "123");
+        p.setProperty("SecretKey", "abc");
+        p.setProperty("class-name", "org.teiid.resource.adapter.s3.S3ManagedConnectionFactory");
+
+        admin.createDataSource("my-s3", "s3", p);
+        admin.deleteDataSource("my-s3");
     }
 
     @Test

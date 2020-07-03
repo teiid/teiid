@@ -58,7 +58,7 @@
         
         <version.accumulo>2.0.0</version.accumulo>
         <version.ant-contrib>1.0b3</version.ant-contrib>
-        <version.aws-java-sdk>1.11.0</version.aws-java-sdk>
+        <version.aws-java-sdk>1.11.804</version.aws-java-sdk>
                 
         <version.cassandra-driver-core>3.7.1</version.cassandra-driver-core>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
@@ -580,7 +580,11 @@
                 <artifactId>commons-collections</artifactId>
                 <version>3.2.2</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-s3</artifactId>
+                <version>${version.aws-java-sdk}</version>
+            </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-simpledb</artifactId>
@@ -1700,6 +1704,11 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
+                <artifactId>file-s3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
                 <artifactId>translator-jdbc</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
@@ -1879,7 +1888,7 @@
            <dependency>
                <groupId>org.apache.httpcomponents</groupId>
                <artifactId>httpclient</artifactId>
-               <version>4.5.8</version>
+               <version>4.5.9</version>
            </dependency>
            
            <dependency>

@@ -1,0 +1,22 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="s3">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.s3"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.s3.S3ManagedConnectionFactory" 
+                        jndi-name="java:/s3DS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-s3-ds">
+                        
+                       <config-property name="endpoint">http://192.168.1.9:9000</config-property>
+                       <config-property name="bucket">files</config-property>
+                       <config-property name="accessKey">minioadmin</config-property>
+                       <config-property name="secretKey">minioadmin</config-property>
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

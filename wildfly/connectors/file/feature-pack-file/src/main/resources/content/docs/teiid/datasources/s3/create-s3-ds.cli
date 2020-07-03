@@ -1,0 +1,7 @@
+/subsystem=resource-adapters/resource-adapter=s3:add(module=org.jboss.teiid.resource-adapter.s3)
+/subsystem=resource-adapters/resource-adapter=s3/connection-definitions=s3DS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.s3.S3ManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=s3/connection-definitions=s3DS/config-properties=Endpoint:add(value="${endpoint}" )
+/subsystem=resource-adapters/resource-adapter=s3/connection-definitions=s3DS/config-properties=Bucket:add(value="${bucket}" )
+/subsystem=resource-adapters/resource-adapter=s3/connection-definitions=s3DS/config-properties=AccessKey:add(value="${accessKey}" )
+/subsystem=resource-adapters/resource-adapter=s3/connection-definitions=s3DS/config-properties=SecretKey:add(value="${secretKey}" )
+/subsystem=resource-adapters/resource-adapter=s3:activate
