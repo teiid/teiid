@@ -58,6 +58,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.teiid.wildfly.connectors</groupId>
+            <artifactId>connector-s3</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>file-api</artifactId>
         </dependency>

@@ -16,6 +16,7 @@
     <module>connector-file</module>
     <module>connector-ftp</module>
     <module>connector-hdfs</module>
+    <module>connector-s3</module>
     <module>feature-pack-file</module>
   </modules>
 
