@@ -25,6 +25,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.teiid.core.BundleUtil;
 import org.teiid.hdfs.HdfsConfiguration;
 import org.teiid.hdfs.HdfsConnection;
+import org.teiid.hdfs.HdfsConnectionFactory;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.resource.spi.ResourceConnection;
@@ -38,9 +39,8 @@ public class HdfsManagedConnectionFactory extends BasicManagedConnectionFactory 
 
     private static class HdfsResourceConnection extends HdfsConnection implements ResourceConnection {
 
-        public HdfsResourceConnection(HdfsConfiguration config)
-                throws TranslatorException {
-            super(config);
+        public HdfsResourceConnection(HdfsConnectionFactory connectionFactory) throws TranslatorException {
+            super(connectionFactory);
         }
 
     }
@@ -51,6 +51,8 @@ public class HdfsManagedConnectionFactory extends BasicManagedConnectionFactory 
     @Override
     public BasicConnectionFactory<ResourceConnection> createConnectionFactory()
             throws ResourceException {
+        HdfsConnectionFactory hdfsConnectionFactory = new HdfsConnectionFactory(this);
+
         return new BasicConnectionFactory<ResourceConnection>() {
 
             @Override
@@ -61,7 +63,7 @@ public class HdfsManagedConnectionFactory extends BasicManagedConnectionFactory 
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
                 try {
                     Thread.currentThread().setContextClassLoader(DistributedFileSystem.class.getClassLoader());
-                    return new HdfsResourceConnection(HdfsManagedConnectionFactory.this);
+                    return new HdfsResourceConnection(hdfsConnectionFactory);
                 } catch (TranslatorException e) {
                     throw new ResourceException(e);
                 } finally {
