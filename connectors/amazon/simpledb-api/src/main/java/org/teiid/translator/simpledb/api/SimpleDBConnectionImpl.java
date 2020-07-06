@@ -15,6 +15,8 @@
  */
 package org.teiid.translator.simpledb.api;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
 import com.amazonaws.services.simpledb.model.SelectResult;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
@@ -25,6 +27,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class SimpleDBConnectionImpl implements SimpleDBConnection {
+    private AmazonSimpleDBClient amazonSimpleDBClient;
+
+    public SimpleDBConnectionImpl(Builder builder) {
+        amazonSimpleDBClient = builder.amazonSimpleDBClient;
+    }
+
     @Override
     public void createDomain(String domainName) throws TranslatorException {
 
@@ -68,5 +76,80 @@ public class SimpleDBConnectionImpl implements SimpleDBConnection {
     @Override
     public void close() throws Exception {
 
+    }
+
+    public static class Builder {
+        private BaseSimpleDBConfiguration simpleDBConfiguration;
+        private AmazonSimpleDBClient amazonSimpleDBClient;
+        private BasicAWSCredentials basicAWSCredentials;
+        private String accessKey;
+        private String secretAccessKey;
+
+        public Builder simpleDBConfiguration(BaseSimpleDBConfiguration simpleDBConfiguration) {
+            this.simpleDBConfiguration = simpleDBConfiguration;
+            return this;
+        }
+
+        public Builder amazonSimpleDBClient(AmazonSimpleDBClient amazonSimpleDBClient) {
+            this.amazonSimpleDBClient = amazonSimpleDBClient;
+            return this;
+        }
+
+        public Builder basicAWSCredentials(BasicAWSCredentials basicAWSCredentials) {
+            this.basicAWSCredentials = basicAWSCredentials;
+            return this;
+        }
+
+        public Builder accessKey(String accessKey) {
+            this.accessKey = accessKey;
+            return this;
+        }
+
+        public Builder secretAccessKey(String secretAccessKey) {
+            this.secretAccessKey = secretAccessKey;
+            return this;
+        }
+
+        public SimpleDBConnectionImpl build() {
+            if(!setUpAmazonSimpleDBClient()) {
+                return null;
+            }
+            if(!isValidSimpleDBConnectionImplBuilder()) {
+                return null;
+            }
+            return new SimpleDBConnectionImpl(this);
+        }
+
+        private Boolean setUpAmazonSimpleDBClient() {
+            if(amazonSimpleDBClient != null) {
+                return true;
+            }
+            if(basicAWSCredentials != null) {
+                amazonSimpleDBClient = new AmazonSimpleDBClient(basicAWSCredentials);
+                return true;
+            }
+            if(simpleDBConfiguration != null) {
+                amazonSimpleDBClient = new AmazonSimpleDBClient(
+                        new BasicAWSCredentials(simpleDBConfiguration.getAccessKey(),
+                                simpleDBConfiguration.getSecretAccessKey()));
+                return true;
+            }
+            if(secretAccessKey != null && accessKey!= null) {
+                amazonSimpleDBClient = new AmazonSimpleDBClient(
+                        new BasicAWSCredentials(accessKey, secretAccessKey));
+                return true;
+            }
+            return false;
+        }
+
+        private Boolean isValidSimpleDBConnectionImplBuilder() {
+            if(simpleDBConfiguration == null) {
+                return false;
+            }
+            if(amazonSimpleDBClient == null) {
+                return false;
+            }
+            return true;
+        }
     }
 }
