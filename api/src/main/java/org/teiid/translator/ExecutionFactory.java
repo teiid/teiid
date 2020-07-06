@@ -24,6 +24,8 @@ import java.util.List;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.Argument;
@@ -990,6 +992,7 @@ public class ExecutionFactory<F, C> {
 
     /**
      * Indicates if LOBs are usable after the execution is closed.
+     * This check is not performed for values that are already {@link ClobType} or {@link BlobType}
      * @return true if LOBs can be used after close
      * @since 7.2
      */
