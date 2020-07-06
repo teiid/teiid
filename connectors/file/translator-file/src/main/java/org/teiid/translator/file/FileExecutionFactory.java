@@ -32,9 +32,7 @@ import java.util.List;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.file.VirtualFile;
@@ -135,9 +133,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Vi
             if (isText) {
                 ClobImpl clob = new ClobImpl(isf, -1);
                 clob.setCharset(encoding);
-                value = new ClobType(clob);
+                value = clob;
             } else {
-                value = new BlobType(new BlobImpl(isf));
+                value = new BlobImpl(isf);
             }
             result.add(value);
             result.add(file.getName());
