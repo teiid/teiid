@@ -48,7 +48,7 @@ public class S3Connection implements VirtualFileConnection {
 
     @Override
     public VirtualFile[] getFiles(String s) throws TranslatorException {
-        if (s == null || s.isEmpty()) {
+        if (s == null) {
             return null;
         }
         if(s3Client.doesObjectExist(s3Config.getBucket(), s)){
@@ -59,17 +59,14 @@ public class S3Connection implements VirtualFileConnection {
             return new VirtualFile[] {new S3VirtualFile(s3Client, objectListing.getObjectSummaries().get(0), s3Config)};
         }
         if(isDirectory(s)){
-            if(!s.endsWith(SLASH)) {
+            if(!s.isEmpty() && !s.endsWith(SLASH)) {
                 s += SLASH;
             }
             return convert(s);
         }
-        String parentPath;
+        String parentPath = ""; //$NON-NLS-1$
         if(s.contains(SLASH)) {
             parentPath = s.substring(0, s.lastIndexOf(SLASH) + 1);
-        }
-        else {
-            parentPath = "";
         }
 
         if(!isDirectory(parentPath)) {

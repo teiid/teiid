@@ -71,6 +71,8 @@ public class TestS3Connection {
         Mockito.when(objectListing.getObjectSummaries()).thenReturn(objectSummaryList);
         VirtualFile[] virtualFiles = s3Connection.getFiles("folder1/folder2");
         Assert.assertEquals(2, virtualFiles.length);
+        virtualFiles = s3Connection.getFiles("");
+        Assert.assertEquals(2, virtualFiles.length);
     }
 
     @Test
