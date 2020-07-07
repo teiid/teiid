@@ -50,6 +50,13 @@ public class BaseInfinispanConnection implements InfinispanConnection {
         this.defaultCache = getCache(cacheName);
     }
 
+    public BaseInfinispanConnection(InfinispanConnectionFactory icf) throws TranslatorException {
+        this(icf.getCacheManager(), icf.getScriptCacheManager(),
+                icf.getConfig().getCacheName(),
+                icf.getTeiidMarshallerProvider(), icf,
+                icf.getConfig().getCacheTemplate());
+    }
+
     public void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException {
         this.icf.registerProtobufFile(protobuf, getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME));
     }

@@ -32,6 +32,11 @@ public interface ResourceConnection extends Connection, org.teiid.resource.api.C
         throw new ResourceException("This operation not supported"); //$NON-NLS-1$
     }
 
+    /**
+     * Supply the {@link XAResource} is applicable to the {@link BasicManagedConnection}
+     * @return
+     * @throws ResourceException
+     */
     default XAResource getXAResource() throws ResourceException {
         return null;
     }

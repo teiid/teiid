@@ -18,52 +18,41 @@
 
 package org.teiid.cassandra;
 
-import com.datastax.driver.core.*;
+import java.util.List;
+
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.cassandra.CassandraConnection;
 
-import java.util.List;
-import java.util.Set;
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.VersionNumber;
 
-public abstract class BaseCassandraConnection implements CassandraConnection {
+public class BaseCassandraConnection implements CassandraConnection {
 
     private CassandraConfiguration config;
     private Session session = null;
     private Metadata metadata = null;
     private VersionNumber version;
-    private Cluster cluster = null;
 
-    public BaseCassandraConnection(CassandraConfiguration config) {
-        this.config = config;
-
-        Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
-
-        if (this.config.getUsername() != null) {
-            builder.withCredentials(this.config.getUsername(), this.config.getPassword());
-        }
-
-        if (this.config.getPort() != null) {
-            builder.withPort(this.config.getPort());
-        }
-
-        this.cluster = builder.build();
-
+    public BaseCassandraConnection(CassandraConnectionFactory connectionFactory) {
+        this.config = connectionFactory.getConfig();
+        Cluster cluster = connectionFactory.getCluster();
         this.metadata = cluster.getMetadata();
-
+        this.version = connectionFactory.getVersion();
         this.session = cluster.connect(config.getKeyspace());
-
-        Set<Host> allHosts = cluster.getMetadata().getAllHosts();
-        if (!allHosts.isEmpty()) {
-            Host host = allHosts.iterator().next();
-            this.version = host.getCassandraVersion();
-        }
     }
 
-    public BaseCassandraConnection(CassandraConfiguration config, Metadata metadata) {
+    protected BaseCassandraConnection(CassandraConfiguration config, Metadata metadata) {
         this.config = config;
 
         this.metadata = metadata;
-
     }
 
     @Override
@@ -113,8 +102,8 @@ public abstract class BaseCassandraConnection implements CassandraConnection {
 
     @Override
     public void close() {
-        if(cluster != null){
-            cluster.close();
+        if(session != null){
+            session.close();
         }
     }
 }

@@ -739,6 +739,19 @@ public class IntegrationTestDeployment {
     }
 
     @Test
+    public void testCreateCassandraSource() throws AdminException {
+        Properties p = new Properties();
+        p.setProperty("Address", "localhost");
+        p.setProperty("Keyspace", "something");
+        p.setProperty("Username", "user");
+        p.setProperty("Password", "abc");
+        p.setProperty("class-name", "org.teiid.resource.adapter.cassandra.CassandraManagedConnectionFactory");
+
+        admin.createDataSource("my-cassandra", "cassandra", p);
+        admin.deleteDataSource("my-cassandra");
+    }
+
+    @Test
     public void testVDBRestart() throws Exception{
         String vdbName = "test";
         String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +

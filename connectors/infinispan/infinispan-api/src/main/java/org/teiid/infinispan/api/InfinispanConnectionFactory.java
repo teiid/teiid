@@ -213,9 +213,20 @@ public class InfinispanConnectionFactory implements Closeable {
         return false;
     }
 
-    public BaseInfinispanConnection getConnection() throws TranslatorException {
-        return new BaseInfinispanConnection(this.cacheManager, this.scriptCacheManager, config.getCacheName(), this.teiidMarshallerProvider, this,
-                config.getCacheTemplate());
+    public RemoteCacheManager getCacheManager() {
+        return cacheManager;
+    }
+
+    public RemoteCacheManager getScriptCacheManager() {
+        return scriptCacheManager;
+    }
+
+    public InfinispanConfiguration getConfig() {
+        return config;
+    }
+
+    public TeiidMarshallerProvider getTeiidMarshallerProvider() {
+        return teiidMarshallerProvider;
     }
 
     @Override

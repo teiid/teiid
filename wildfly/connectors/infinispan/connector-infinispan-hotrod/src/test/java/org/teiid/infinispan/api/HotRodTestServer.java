@@ -20,21 +20,19 @@ package org.teiid.infinispan.api;
 import javax.resource.ResourceException;
 
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.cache.Index;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
-import org.teiid.resource.adapter.infinispan.hotrod.InfinispanConnectionImpl;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory;
 import org.teiid.resource.spi.BasicConnectionFactory;
 
 public class HotRodTestServer {
     private HotRodServer server;
     private DefaultCacheManager defaultCacheManager;
-    private BasicConnectionFactory<InfinispanConnectionImpl> connectionFactory;
+    private BasicConnectionFactory<InfinispanManagedConnectionFactory.InfinispanResourceConnection> connectionFactory;
 
     public HotRodTestServer(int port) {
         ConfigurationBuilder c = getConfigurationBuilder();

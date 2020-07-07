@@ -20,15 +20,26 @@ package org.teiid.resource.adapter.infinispan.hotrod;
 import javax.resource.ResourceException;
 
 import org.infinispan.transaction.lookup.WildflyTransactionManagerLookup;
+import org.teiid.infinispan.api.BaseInfinispanConnection;
 import org.teiid.infinispan.api.InfinispanConfiguration;
 import org.teiid.infinispan.api.InfinispanConnectionFactory;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.TranslatorException;
 
 
 public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFactory implements InfinispanConfiguration {
     private static final long serialVersionUID = -4791974803005018658L;
+
+    public static class InfinispanResourceConnection extends BaseInfinispanConnection implements ResourceConnection {
+
+        public InfinispanResourceConnection(InfinispanConnectionFactory icf)
+                throws TranslatorException {
+            super(icf);
+        }
+
+    }
 
     private String remoteServerList;
     private String cacheName;
@@ -72,18 +83,18 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     }
 
     @Override
-    public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
+    public BasicConnectionFactory<InfinispanResourceConnection> createConnectionFactory()
             throws ResourceException {
         try {
-            return new BasicConnectionFactory<InfinispanConnectionImpl>() {
+            return new BasicConnectionFactory<InfinispanResourceConnection>() {
                 private static final long serialVersionUID = 273357440758948926L;
                 InfinispanConnectionFactory icf = new InfinispanConnectionFactory(InfinispanManagedConnectionFactory.this, new WildflyTransactionManagerLookup());
 
                 @Override
-                public InfinispanConnectionImpl getConnection()
+                public InfinispanResourceConnection getConnection()
                         throws ResourceException {
                     try {
-                        return new InfinispanConnectionImpl(icf.getConnection());
+                        return new InfinispanResourceConnection(icf);
                     } catch (TranslatorException e) {
                         throw new ResourceException(e);
                     }

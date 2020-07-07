@@ -18,13 +18,14 @@
 
 package org.teiid.resource.adapter.cassandra;
 
+import javax.resource.ResourceException;
+
 import org.teiid.cassandra.CassandraConfiguration;
+import org.teiid.cassandra.CassandraConnectionFactory;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.resource.spi.ResourceConnection;
-
-import javax.resource.ResourceException;
 
 public class CassandraManagedConnectionFactory extends BasicManagedConnectionFactory implements CassandraConfiguration {
 
@@ -40,9 +41,11 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
     @Override
     @SuppressWarnings("serial")
     public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
+        CassandraConnectionFactory connectionFactory = new CassandraConnectionFactory(this);
+
         return new BasicConnectionFactory<ResourceConnection>() {
             public ResourceConnection getConnection() throws ResourceException {
-                return new CassandraConnectionImpl(CassandraManagedConnectionFactory.this);
+                return new CassandraConnectionImpl(connectionFactory);
             }
         };
     }
