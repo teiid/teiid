@@ -20,41 +20,47 @@ package org.teiid.resource.adapter.simpledb;
 
 import javax.resource.ResourceException;
 
+import com.amazonaws.services.simpledb.AmazonSimpleDB;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.resource.spi.ResourceConnection;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.simpledb.api.BaseSimpleDBConfiguration;
+import org.teiid.translator.simpledb.api.SimpleDBConnectionFactory;
+import org.teiid.translator.simpledb.api.SimpleDBConnectionImpl;
 
-public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFactory {
+public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFactory implements BaseSimpleDBConfiguration {
 
     private static final long serialVersionUID = -1346340853914009086L;
+
+    private static class SimpleDBResourceConnection extends SimpleDBConnectionImpl implements ResourceConnection {
+
+        public SimpleDBResourceConnection(AmazonSimpleDB amazonSimpleDBClient) {
+            super(amazonSimpleDBClient);
+        }
+    }
 
     private String accessKey;
     private String secretAccessKey;
 
     @Override
-    @SuppressWarnings("serial")
-    public BasicConnectionFactory<SimpleDBConnectionImpl> createConnectionFactory()
-            throws ResourceException {
-        return new BasicConnectionFactory<SimpleDBConnectionImpl>() {
+    public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
+        SimpleDBConnectionFactory simpleDBConnectionFactory;
+        try {
+            simpleDBConnectionFactory = new SimpleDBConnectionFactory(SimpleDBManagedConnectionFactory.this);
+            return new BasicConnectionFactory<ResourceConnection>() {
 
-            @Override
-            public SimpleDBConnectionImpl getConnection()
-                    throws ResourceException {
-                return new SimpleDBConnectionImpl(accessKey, secretAccessKey);
-            }
-
-        };
+                @Override
+                public ResourceConnection getConnection() throws ResourceException {
+                    return new SimpleDBResourceConnection(simpleDBConnectionFactory.getS3Client());
+                }
+            };
+        } catch (TranslatorException e) {
+            throw new ResourceException(e);
+        }
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
     public String getAccessKey() {
         return accessKey;
     }
@@ -63,6 +69,7 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
         this.accessKey = accessKey;
     }
 
+    @Override
     public String getSecretAccessKey() {
         return secretAccessKey;
     }
@@ -70,5 +77,4 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
     public void setSecretAccessKey(String secretAccessKey) {
         this.secretAccessKey = secretAccessKey;
     }
-
 }
