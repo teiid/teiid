@@ -84,7 +84,7 @@ connect
 /profile=full-ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=required, module-options=[("password-stacking"=>"useFirstPass")]) 
-/profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=required, module-options={"password-stacking"=>"useFirstPass","roles"=>"odata"})
+/profile=full-ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=Identity:add(code=RealmDirect, flag=required, module-options={"password-stacking"=>"useFirstPass","roles"=>"odata"})
 
 :restart-servers(blocking=true)
 
