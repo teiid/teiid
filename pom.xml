@@ -544,6 +544,17 @@
    <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.force.api</groupId>
+                <artifactId>force-wsc</artifactId>
+                <version>45.1.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.jackson</groupId>
+                        <artifactId>jackson-mapper-asl</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-codec</artifactId>
                 <version>${version.io.netty.netty-codec}</version>
