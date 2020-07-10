@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-ws</artifactId>
-        </dependency>        
+        </dependency>
     </dependencies>
 
     <build>

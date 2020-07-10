@@ -1684,11 +1684,6 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
-                <artifactId>simpledb-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.teiid.connectors</groupId>
                 <artifactId>document-api</artifactId>
                 <version>${project.version}</version>
             </dependency>

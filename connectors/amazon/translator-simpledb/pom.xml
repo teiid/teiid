@@ -20,12 +20,12 @@
 			<artifactId>teiid-common-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.teiid.connectors</groupId>
-			<artifactId>simpledb-api</artifactId>
-		</dependency>
-		<dependency>
 		    <groupId>com.amazonaws</groupId>
 		    <artifactId>aws-java-sdk-simpledb</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-core</artifactId>
 		</dependency>
 	</dependencies>
 	<build>
