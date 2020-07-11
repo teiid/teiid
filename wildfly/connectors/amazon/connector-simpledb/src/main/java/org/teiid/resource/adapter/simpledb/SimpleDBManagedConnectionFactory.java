@@ -29,6 +29,8 @@ import org.teiid.translator.simpledb.api.BaseSimpleDBConfiguration;
 import org.teiid.translator.simpledb.api.SimpleDBConnectionFactory;
 import org.teiid.translator.simpledb.api.SimpleDBConnectionImpl;
 
+import java.util.Objects;
+
 public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFactory implements BaseSimpleDBConfiguration {
 
     private static final long serialVersionUID = -1346340853914009086L;
@@ -76,5 +78,22 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
 
     public void setSecretAccessKey(String secretAccessKey) {
         this.secretAccessKey = secretAccessKey;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj)
+            return true;
+        if(!(obj instanceof SimpleDBManagedConnectionFactory)) {
+            return false;
+        }
+        SimpleDBManagedConnectionFactory other = (SimpleDBManagedConnectionFactory) obj;
+        return Objects.equals(accessKey, other.accessKey)
+                && Objects.equals(secretAccessKey, other.secretAccessKey);
     }
 }

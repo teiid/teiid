@@ -739,6 +739,17 @@ public class IntegrationTestDeployment {
     }
 
     @Test
+    public void testCreateSimpleDBSource() throws AdminException {
+        Properties p = new Properties();
+        p.setProperty("AccessKey", "123");
+        p.setProperty("SecretAccessKey", "abc");
+        p.setProperty("class-name", "org.teiid.resource.adapter.simpledb.SimpleDBManagedConnectionFactory");
+
+        admin.createDataSource("my-simpledb", "simpledb", p);
+        admin.deleteDataSource("my-simpledb");
+    }
+
+    @Test
     public void testCreateCassandraSource() throws AdminException {
         Properties p = new Properties();
         p.setProperty("Address", "localhost");
