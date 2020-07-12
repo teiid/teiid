@@ -7,7 +7,6 @@
         <artifact name="${org.teiid.wildfly.connectors:connector-s3}"/>
         <artifact name="${org.teiid.connectors:file-s3}"/>
         <artifact name="${com.amazonaws:aws-java-sdk-s3}"/>
-        <artifact name="${com.amazonaws:aws-java-sdk-core}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
@@ -25,5 +24,6 @@
         <module name="com.fasterxml.jackson.core.jackson-annotations"/>
         <module name="org.apache.httpcomponents.core"/>
         <module name="org.joda.time"/>
+        <module name="com.amazonaws" />
     </dependencies>
 </module>

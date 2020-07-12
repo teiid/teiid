@@ -18,9 +18,10 @@
 
 package org.teiid.resource.adapter.simpledb;
 
+import java.util.Objects;
+
 import javax.resource.ResourceException;
 
-import com.amazonaws.services.simpledb.AmazonSimpleDB;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.resource.spi.ResourceConnection;
@@ -29,7 +30,7 @@ import org.teiid.translator.simpledb.api.BaseSimpleDBConfiguration;
 import org.teiid.translator.simpledb.api.SimpleDBConnectionFactory;
 import org.teiid.translator.simpledb.api.SimpleDBConnectionImpl;
 
-import java.util.Objects;
+import com.amazonaws.services.simpledb.AmazonSimpleDB;
 
 public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFactory implements BaseSimpleDBConfiguration {
 
@@ -47,9 +48,8 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
 
     @Override
     public BasicConnectionFactory<ResourceConnection> createConnectionFactory() throws ResourceException {
-        SimpleDBConnectionFactory simpleDBConnectionFactory;
         try {
-            simpleDBConnectionFactory = new SimpleDBConnectionFactory(SimpleDBManagedConnectionFactory.this);
+            SimpleDBConnectionFactory simpleDBConnectionFactory = new SimpleDBConnectionFactory(SimpleDBManagedConnectionFactory.this);
             return new BasicConnectionFactory<ResourceConnection>() {
 
                 @Override

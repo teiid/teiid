@@ -5,6 +5,7 @@
     </properties>
     
     <resources>
+        <artifact name="${com.amazonaws:aws-java-sdk-simpledb}"/>
         <artifact name="${org.teiid.connectors:translator-simpledb}"/>
     </resources>
 
@@ -14,5 +15,6 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
+        <module name="com.amazonaws" />
     </dependencies>
 </module>

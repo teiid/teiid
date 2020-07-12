@@ -35,6 +35,12 @@
             <type>zip</type>
         </dependency>
         <dependency>
+            <groupId>org.teiid.wildfly.connectors</groupId>
+            <artifactId>feature-pack-amazon</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-file</artifactId>
         </dependency>

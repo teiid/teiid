@@ -18,15 +18,20 @@
 
 package org.teiid.translator.simpledb.api;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.translator.TranslatorException;
+
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.simpledb.AmazonSimpleDB;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
-import org.teiid.translator.TranslatorException;
 
 public class SimpleDBConnectionFactory {
-    private BaseSimpleDBConfiguration simpleDBConfig;
+    private final BaseSimpleDBConfiguration simpleDBConfig;
+    private final AWSStaticCredentialsProvider awsStaticCredentialsProvider;
     private AmazonSimpleDB simpleDBClient;
 
     public SimpleDBConnectionFactory(BaseSimpleDBConfiguration simpleDBConfig) throws TranslatorException {
@@ -39,14 +44,25 @@ public class SimpleDBConnectionFactory {
         }
 
         AWSCredentials credentials = new BasicAWSCredentials(simpleDBConfig.getAccessKey(), simpleDBConfig.getSecretAccessKey());
-        simpleDBClient = AmazonSimpleDBClient
-                            .builder()
-                            .standard()
-                            .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                            .build();
+        awsStaticCredentialsProvider = new AWSStaticCredentialsProvider(credentials);
+        try {
+            getS3Client();
+        } catch (SdkClientException e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Failed to make initial simpledb connection", e); //$NON-NLS-1$
+        }
     }
 
     public AmazonSimpleDB getS3Client() {
+        if (simpleDBClient == null) {
+            synchronized (this) {
+                if (simpleDBClient == null) {
+                    simpleDBClient = AmazonSimpleDBClient
+                            .builder()
+                            .withCredentials(awsStaticCredentialsProvider)
+                            .build();
+                }
+            }
+        }
         return simpleDBClient;
     }
 

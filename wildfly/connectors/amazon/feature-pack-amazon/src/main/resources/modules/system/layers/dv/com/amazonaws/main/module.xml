@@ -5,20 +5,19 @@
     </properties>
     
     <resources>
-        <artifact name="${com.amazonaws:aws-java-sdk-simpledb}"/>
         <artifact name="${com.amazonaws:aws-java-sdk-core}"/>
     </resources>
     
     <dependencies>
         <module name="javax.api" />
         <module name="javax.resource.api" />
-        <module name="com.fasterxml.jackson.core.jackson-core"/>
-        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
-        <module name="com.fasterxml.jackson.core.jackson-databind"/>
-        <module name="com.fasterxml.jackson.dataformat.cbor"/>
-        <module name="org.joda.time"/>
-        <module name="org.apache.commons.logging" />
-        <module name="org.apache.httpcomponents" />
-        <module name="org.apache.commons.codec" />
+        <module name="com.fasterxml.jackson.core.jackson-core" export="true"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations" export="true"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind" export="true"/>
+        <module name="com.fasterxml.jackson.dataformat.cbor" export="true"/>
+        <module name="org.joda.time" export="true"/>
+        <module name="org.apache.commons.logging" export="true"/>
+        <module name="org.apache.httpcomponents" export="true"/>
+        <module name="org.apache.commons.codec" export="true"/>
     </dependencies>
 </module>
