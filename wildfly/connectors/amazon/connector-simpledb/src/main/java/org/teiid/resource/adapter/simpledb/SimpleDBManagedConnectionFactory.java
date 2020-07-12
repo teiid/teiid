@@ -54,7 +54,7 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
 
                 @Override
                 public ResourceConnection getConnection() throws ResourceException {
-                    return new SimpleDBResourceConnection(simpleDBConnectionFactory.getS3Client());
+                    return new SimpleDBResourceConnection(simpleDBConnectionFactory.getSimpleDBClient());
                 }
             };
         } catch (TranslatorException e) {

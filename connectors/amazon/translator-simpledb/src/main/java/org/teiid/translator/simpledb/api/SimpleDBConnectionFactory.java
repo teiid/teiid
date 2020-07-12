@@ -46,13 +46,13 @@ public class SimpleDBConnectionFactory {
         AWSCredentials credentials = new BasicAWSCredentials(simpleDBConfig.getAccessKey(), simpleDBConfig.getSecretAccessKey());
         awsStaticCredentialsProvider = new AWSStaticCredentialsProvider(credentials);
         try {
-            getS3Client();
+            getSimpleDBClient();
         } catch (SdkClientException e) {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Failed to make initial simpledb connection", e); //$NON-NLS-1$
         }
     }
 
-    public AmazonSimpleDB getS3Client() {
+    public AmazonSimpleDB getSimpleDBClient() {
         if (simpleDBClient == null) {
             synchronized (this) {
                 if (simpleDBClient == null) {
@@ -66,7 +66,7 @@ public class SimpleDBConnectionFactory {
         return simpleDBClient;
     }
 
-    public BaseSimpleDBConfiguration getS3Config() {
+    public BaseSimpleDBConfiguration getSimpleDBConfig() {
         return simpleDBConfig;
     }
 }
