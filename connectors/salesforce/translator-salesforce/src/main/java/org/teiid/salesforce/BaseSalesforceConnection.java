@@ -47,15 +47,31 @@ import org.teiid.translator.salesforce.execution.DeletedObject;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
-import com.sforce.async.*;
-import com.sforce.soap.partner.*;
+import com.sforce.async.AsyncApiException;
+import com.sforce.async.BatchInfo;
+import com.sforce.async.BatchInfoList;
+import com.sforce.async.BatchRequest;
+import com.sforce.async.BatchResult;
+import com.sforce.async.BatchStateEnum;
+import com.sforce.async.BulkConnection;
+import com.sforce.async.CSVReader;
+import com.sforce.async.ConcurrencyMode;
+import com.sforce.async.ContentType;
+import com.sforce.async.JobInfo;
+import com.sforce.async.JobStateEnum;
+import com.sforce.async.OperationEnum;
+import com.sforce.async.QueryResultList;
+import com.sforce.soap.partner.DeleteResult;
+import com.sforce.soap.partner.DeletedRecord;
+import com.sforce.soap.partner.DescribeGlobalResult;
+import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.Error;
-import com.sforce.soap.partner.fault.InvalidFieldFault;
-import com.sforce.soap.partner.fault.InvalidIdFault;
-import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
-import com.sforce.soap.partner.fault.InvalidSObjectFault;
-import com.sforce.soap.partner.fault.MalformedQueryFault;
-import com.sforce.soap.partner.fault.UnexpectedErrorFault;
+import com.sforce.soap.partner.GetDeletedResult;
+import com.sforce.soap.partner.GetUpdatedResult;
+import com.sforce.soap.partner.PartnerConnection;
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.SaveResult;
+import com.sforce.soap.partner.UpsertResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectionException;
 import com.sforce.ws.ConnectorConfig;
@@ -199,18 +215,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                 partnerConnection.setMruHeader(false);
                 qr = partnerConnection.query(queryString);
             }
-        } catch (InvalidFieldFault e) {
-            throw new TranslatorException(e);
-        } catch (MalformedQueryFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidSObjectFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidIdFault e) {
-            throw new TranslatorException(e);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidQueryLocatorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         } finally {
@@ -229,12 +233,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         partnerConnection.setQueryOptions(batchSize);
         try {
             return partnerConnection.queryMore(queryLocator);
-        } catch (InvalidFieldFault e) {
-            throw new TranslatorException(e);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidQueryLocatorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         } finally {
@@ -247,8 +245,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         DeleteResult[] results = null;
         try {
             results = partnerConnection.delete(ids);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         }
@@ -284,14 +280,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         UpsertResult[] results;
         try {
             results = partnerConnection.upsert(ID_FIELD_NAME, objects);
-        } catch (InvalidFieldFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidSObjectFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidIdFault e) {
-            throw new TranslatorException(e);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         }
@@ -313,14 +301,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         SaveResult[] result;
         try {
             result = partnerConnection.create(objects);
-        } catch (InvalidFieldFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidSObjectFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidIdFault e) {
-            throw new TranslatorException(e);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         }
@@ -338,14 +318,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         SaveResult[] result;
             try {
                 result = partnerConnection.update(params.toArray(new SObject[params.size()]));
-            } catch (InvalidFieldFault e) {
-                throw new TranslatorException(e);
-            } catch (InvalidSObjectFault e) {
-                throw new TranslatorException(e);
-            } catch (InvalidIdFault e) {
-                throw new TranslatorException(e);
-            } catch (UnexpectedErrorFault e) {
-                throw new TranslatorException(e);
             } catch (ConnectionException e) {
                 throw new TranslatorException(e);
             }
@@ -383,10 +355,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             GetUpdatedResult updated;
             try {
                 updated = partnerConnection.getUpdated(objectType, startDate, endDate);
-            } catch (InvalidSObjectFault e) {
-                throw new TranslatorException(e);
-            } catch (UnexpectedErrorFault e) {
-                throw new TranslatorException(e);
             } catch (ConnectionException e) {
                 throw new TranslatorException(e);
             }
@@ -401,10 +369,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             GetDeletedResult deleted;
             try {
                 deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
-            } catch (InvalidSObjectFault e) {
-                throw new TranslatorException(e);
-            } catch (UnexpectedErrorFault e) {
-                throw new TranslatorException(e);
             } catch (ConnectionException e) {
                 throw new TranslatorException(e);
             }
@@ -428,16 +392,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
         try {
             return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
-        } catch (InvalidFieldFault e) {
-            throw new TranslatorException(e);
-        } catch (MalformedQueryFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidSObjectFault e) {
-            throw new TranslatorException(e);
-        } catch (InvalidIdFault e) {
-            throw new TranslatorException(e);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         }
@@ -447,8 +401,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeGlobalResult getObjects() throws TranslatorException {
         try {
             return partnerConnection.describeGlobal();
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         }
@@ -457,10 +409,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
         try {
             return partnerConnection.describeSObjects(objectName);
-        } catch (InvalidSObjectFault e) {
-            throw new TranslatorException(e);
-        } catch (UnexpectedErrorFault e) {
-            throw new TranslatorException(e);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
         }

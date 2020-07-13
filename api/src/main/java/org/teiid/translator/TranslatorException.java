@@ -62,11 +62,23 @@ public class TranslatorException extends TeiidException{
      * @param e An exception to chain to this exception
      */
     public TranslatorException(Throwable e) {
-        super(e);
+        this(e, getMessage(e));
     }
 
     public TranslatorException(BundleUtil.Event event, Throwable e) {
-        super(event, e);
+        this(event, e, getMessage(e));
+    }
+
+    private static String getMessage(Throwable e) {
+        if (e == null) {
+            return null;
+        }
+        String message = e.getMessage();
+        if (message != null) {
+            return message;
+        }
+        //the class name can sometimes help the user not dig for the full stacktrace
+        return e.getClass().toString();
     }
 
     public TranslatorException(BundleUtil.Event event, Throwable e, String message) {
