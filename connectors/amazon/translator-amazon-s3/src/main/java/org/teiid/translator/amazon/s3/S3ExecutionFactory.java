@@ -39,6 +39,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.ws.WSConnection;
+import org.teiid.util.CharsetUtils;
 
 @Translator(name="amazon-s3", description="Amazon S3 Translator, reads contents of files or writes to them")
 public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
@@ -74,7 +75,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     }
 
     public void setEncoding(String encoding) {
-        this.encoding = Charset.forName(encoding);
+        this.encoding = CharsetUtils.getCharset(encoding);
     }
 
     @TranslatorProperty(display="Amazon Access Key",advanced=true)
