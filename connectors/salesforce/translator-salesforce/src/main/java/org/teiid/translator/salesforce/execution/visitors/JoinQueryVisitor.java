@@ -158,10 +158,8 @@ public class JoinQueryVisitor extends SelectVisitor {
                 && this.parentName != null) {
             queryString.append(parentName);
             queryString.append('.');
-            queryString.append(ref.getMetadataObject().getSourceName());
-        } else {
-            super.appendColumnReference(queryString, ref);
         }
+        super.appendColumnReference(queryString, ref);
     }
 
     public boolean isChildToParentJoin() {

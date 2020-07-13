@@ -18,7 +18,10 @@
 
 package org.teiid.translator.salesforce.execution;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.sql.Time;
@@ -70,7 +73,7 @@ public class TestQueryExecutionImpl {
         QueryResult finalQr = new QueryResult();
         finalQr.setRecords(new SObject[] {so});
         finalQr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Account.Name FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Name FROM Account", 0, false)).toReturn(qr);
         Mockito.stub(sfc.queryMore(null, 0)).toReturn(finalQr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
@@ -92,7 +95,7 @@ public class TestQueryExecutionImpl {
         so1.addField("Account", so);
         qr.setRecords(new SObject[] {so1});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Account.Name, Contact.Id FROM Contact WHERE Contact.AccountId != NULL", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Account.Name, Id FROM Contact WHERE AccountId != NULL", 0, false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "contact id"), qei.next());
@@ -112,7 +115,7 @@ public class TestQueryExecutionImpl {
         so.addField("Contacts", so1);
         qr.setRecords(new SObject[] {so});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Account.Name, (SELECT Contact.Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "contact id"), qei.next());
@@ -136,7 +139,7 @@ public class TestQueryExecutionImpl {
         so.addField("ChildAccounts", so2);
         qr.setRecords(new SObject[] {so});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Account.Name, (SELECT Account.Id FROM ChildAccounts) FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM ChildAccounts) FROM Account", 0, false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "account id1"), qei.next());
@@ -164,7 +167,7 @@ public class TestQueryExecutionImpl {
         Select command = (Select)translationUtility.parseCommand("select Name from Account where id = 'abc'"); //$NON-NLS-1$
         SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
 
-        Mockito.stub(sfc.retrieve("Account.Name", "Account", Arrays.asList("abc"))).toReturn(new SObject[] {null});
+        Mockito.stub(sfc.retrieve("Name", "Account", Arrays.asList("abc"))).toReturn(new SObject[] {null});
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertNull(qei.next());
@@ -227,7 +230,7 @@ public class TestQueryExecutionImpl {
             }
         });
 
-        Mockito.when(connection.addBatch("SELECT Account.Name FROM Account", jobInfo)).thenReturn(info);
+        Mockito.when(connection.addBatch("SELECT Name FROM Account", jobInfo)).thenReturn(info);
 
         ExecutionContext mock = Mockito.mock(ExecutionContext.class);
         Mockito.stub(mock.getSourceHints()).toReturn(Arrays.asList("bulk"));

@@ -26,8 +26,20 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
@@ -147,7 +159,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
             ColumnReference cr = (ColumnReference)lExpr;
             Column column = cr.getMetadataObject();
             if (column != null && (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType()))) {
-                appendMultiselectIn(column, criteria);
+                appendMultiselectIn(cr, criteria);
             } else {
                 appendCriteria(criteria);
             }
@@ -215,9 +227,11 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         criteriaBuffer.add("IN"); //$NON-NLS-1$
     }
 
-    private void appendMultiselectIn( Column column,
+    private void appendMultiselectIn( ColumnReference column,
                                       In criteria ) {
-        criteriaBuffer.add(column.getSourceName());
+        StringBuilder sb = new StringBuilder();
+        appendColumnReference(sb, column);
+        criteriaBuffer.add(sb.toString());
         criteriaBuffer.add(SPACE);
         if (criteria.isNegated()) {
             criteriaBuffer.add(EXCLUDES);
@@ -262,8 +276,6 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 
     void appendColumnReference(StringBuilder queryString,
             ColumnReference ref) {
-        queryString.append(ref.getMetadataObject().getParent().getSourceName());
-        queryString.append('.');
         queryString.append(ref.getMetadataObject().getSourceName());
     }
 
