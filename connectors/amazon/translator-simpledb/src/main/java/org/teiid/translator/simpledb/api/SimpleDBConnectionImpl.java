@@ -1,13 +1,11 @@
 /*
- * Copyright Red Hat, Inc. and/or its affiliates
- * and other contributors as indicated by the @author tags and
- * the COPYRIGHT.txt file distributed with this work.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,48 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.resource.adapter.simpledb;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.resource.ResourceException;
-
-import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.metadata.Column;
-import org.teiid.resource.spi.BasicConnection;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.simpledb.api.SimpleDBConnection;
-import org.teiid.translator.simpledb.api.SimpleDBDataTypeManager;
+package org.teiid.translator.simpledb.api;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.simpledb.AmazonSimpleDB;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
 import com.amazonaws.services.simpledb.model.*;
 import com.amazonaws.services.simpledb.util.SimpleDBUtils;
+import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.Column;
+import org.teiid.translator.TranslatorException;
 
-public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBConnection {
-    private AmazonSimpleDBClient client;
-    private List<String> domains;
+import java.util.*;
 
-    public SimpleDBConnectionImpl(String accessKey, String secretAccessKey) {
-        this.client = new AmazonSimpleDBClient(new BasicAWSCredentials(accessKey, secretAccessKey));
-    }
+public class SimpleDBConnectionImpl implements SimpleDBConnection {
+    private AmazonSimpleDB amazonSimpleDBClient;
 
-    public void close() throws ResourceException {
-
+    public SimpleDBConnectionImpl(AmazonSimpleDB amazonSimpleDBClient) {
+        this.amazonSimpleDBClient = amazonSimpleDBClient;
     }
 
     @Override
     public void createDomain(String domainName) throws TranslatorException {
         try {
-            this.client.createDomain(new CreateDomainRequest(domainName));
+            this.amazonSimpleDBClient.createDomain(new CreateDomainRequest(domainName));
         } catch (AmazonServiceException e) {
             throw new TranslatorException(e);
         } catch (AmazonClientException e) {
@@ -67,10 +49,7 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
     @Override
     public void deleteDomain(String domainName) throws TranslatorException {
         try {
-            this.client.deleteDomain(new DeleteDomainRequest(domainName));
-            if (this.domains.contains(domainName)) {
-                this.domains.remove(domainName);
-            }
+            this.amazonSimpleDBClient.deleteDomain(new DeleteDomainRequest(domainName));
         } catch (AmazonServiceException e) {
             throw new TranslatorException(e);
         } catch (AmazonClientException e) {
@@ -80,128 +59,21 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
 
     @Override
     public List<String> getDomains() throws TranslatorException {
-        return client.listDomains().getDomainNames();
+        return amazonSimpleDBClient.listDomains().getDomainNames();
     }
 
     @Override
     public Set<SimpleDBAttribute> getAttributeNames(String domainName) throws TranslatorException {
         DomainMetadataRequest domainMetadataRequest = new DomainMetadataRequest(domainName);
-        DomainMetadataResult metadataResult = client.domainMetadata(domainMetadataRequest);
+        DomainMetadataResult metadataResult = amazonSimpleDBClient.domainMetadata(domainMetadataRequest);
         int attributesCount = metadataResult.getAttributeNameCount();
-        SelectResult selectResult = client.select(new SelectRequest("SELECT * FROM " + SimpleDBUtils.quoteName(domainName))); //$NON-NLS-1$
+        SelectResult selectResult = amazonSimpleDBClient.select(new SelectRequest("SELECT * FROM " + SimpleDBUtils.quoteName(domainName))); //$NON-NLS-1$
         return getAttributeNamesFromSelectResult(selectResult, attributesCount);
     }
 
-    /**
-     * Removes item with given ItemName from domain
-     */
-    @Override
-    public int performDelete(String domainName, String selectExpression) throws TranslatorException {
-        try {
-            List<DeletableItem> deleteItems = new ArrayList<DeletableItem>();
-            int count = 0;
-            String nextToken = null;
-            do {
-                SelectResult result = performSelect(selectExpression, nextToken);
-                nextToken = result.getNextToken();
-                Iterator<Item> iter = result.getItems().iterator();
-                while (iter.hasNext()) {
-                    Item item = iter.next();
-                    deleteItems.add(new DeletableItem(item.getName(), null));
-                    count++;
-                    if (count%25 == 0) {
-                        BatchDeleteAttributesRequest request = new BatchDeleteAttributesRequest(domainName, deleteItems);
-                        this.client.batchDeleteAttributes(request);
-                        deleteItems.clear();
-                    }
-                }
-                // http://docs.aws.amazon.com/AmazonSimpleDB/latest/DeveloperGuide/SDB_API_BatchDeleteAttributes.html
-                // 25 limit we may need to batch; but if batch atomicity is gone
-                if (!deleteItems.isEmpty()) {
-                    BatchDeleteAttributesRequest request = new BatchDeleteAttributesRequest(domainName, deleteItems);
-                    this.client.batchDeleteAttributes(request);
-                }
-            } while (nextToken != null);
-            return count;
-        } catch (AmazonServiceException e) {
-            throw new TranslatorException(e);
-        } catch (AmazonClientException e) {
-            throw new TranslatorException(e);
-        }
-    }
-
-    /**
-     * Performs select expression. This expression must be in format which is understandable to SimpleDB database
-     */
-    @Override
-    public SelectResult performSelect(String selectExpression, String nextToken) throws TranslatorException{
-        try {
-            SelectRequest selectRequest = new SelectRequest(selectExpression);
-            if (nextToken != null) {
-                selectRequest.setNextToken(nextToken);
-            }
-            selectRequest.setConsistentRead(true);
-            return client.select(selectRequest);
-        } catch (AmazonServiceException e) {
-            throw new TranslatorException(e);
-        } catch (AmazonClientException e) {
-            throw new TranslatorException(e);
-        }
-    }
-
-    /**
-     *  Performs update on given domain and items
-     * @param domainName
-     * @param updateAttributes
-     */
-    @Override
-    public int performUpdate(String domainName, Map<String, Object> updateAttributes, String selectExpression) throws TranslatorException {
-        try {
-            List<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
-            for (Map.Entry<String, Object> column : updateAttributes.entrySet()) {
-                addAttribute(column.getKey(), column.getValue(), attributes);
-            }
-
-            List<ReplaceableItem> updateItems = new ArrayList<ReplaceableItem>();
-            int count = 0;
-            String nextToken = null;
-            do {
-                SelectResult result = performSelect(selectExpression, nextToken);
-                nextToken = result.getNextToken();
-                Iterator<Item> iter = result.getItems().iterator();
-                while (iter.hasNext()) {
-                    Item item = iter.next();
-                    updateItems.add(new ReplaceableItem(item.getName(), attributes));
-                    count++;
-                    if (count%25 == 0) {
-                        executeBatch(domainName, updateItems);
-                        updateItems.clear();
-                    }
-                }
-                executeBatch(domainName, updateItems);
-            } while (nextToken != null);
-            return count;
-        } catch (AmazonServiceException e) {
-            throw new TranslatorException(e);
-        } catch (AmazonClientException e) {
-            throw new TranslatorException(e);
-        }
-    }
-
-    /**
-     *  Inserts item into given domain.
-     */
     @Override
     public int performInsert(String domainName, List<Column> columns, Iterator<? extends List<?>> valueList) throws TranslatorException {
         try {
-            if (this.domains == null) {
-                this.domains = getDomains();
-            }
-
-            if (!this.domains.contains(domainName)) {
-                createDomain(domainName);
-            }
-
             int count = 0;
             List<ReplaceableItem> insertItems = new ArrayList<ReplaceableItem>();
             while(valueList.hasNext()) {
@@ -238,10 +110,100 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
         }
     }
 
+    @Override
+    public SelectResult performSelect(String selectExpression, String nextToken) throws TranslatorException {
+        try {
+            SelectRequest selectRequest = new SelectRequest(selectExpression);
+            if (nextToken != null) {
+                selectRequest.setNextToken(nextToken);
+            }
+            selectRequest.setConsistentRead(true);
+            return amazonSimpleDBClient.select(selectRequest);
+        } catch (AmazonServiceException e) {
+            throw new TranslatorException(e);
+        } catch (AmazonClientException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public int performUpdate(String domainName, Map<String, Object> updateAttributes, String selectExpression) throws TranslatorException {
+        try {
+            List<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
+            for (Map.Entry<String, Object> column : updateAttributes.entrySet()) {
+                addAttribute(column.getKey(), column.getValue(), attributes);
+            }
+
+            List<ReplaceableItem> updateItems = new ArrayList<ReplaceableItem>();
+            int count = 0;
+            String nextToken = null;
+            do {
+                SelectResult result = performSelect(selectExpression, nextToken);
+                nextToken = result.getNextToken();
+                Iterator<Item> iter = result.getItems().iterator();
+                while (iter.hasNext()) {
+                    Item item = iter.next();
+                    updateItems.add(new ReplaceableItem(item.getName(), attributes));
+                    count++;
+                    if (count%25 == 0) {
+                        executeBatch(domainName, updateItems);
+                        updateItems.clear();
+                    }
+                }
+                executeBatch(domainName, updateItems);
+            } while (nextToken != null);
+            return count;
+        } catch (AmazonServiceException e) {
+            throw new TranslatorException(e);
+        } catch (AmazonClientException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public int performDelete(String domainName, String selectExpression) throws TranslatorException {
+        try {
+            List<DeletableItem> deleteItems = new ArrayList<DeletableItem>();
+            int count = 0;
+            String nextToken = null;
+            do {
+                SelectResult result = performSelect(selectExpression, nextToken);
+                nextToken = result.getNextToken();
+                Iterator<Item> iter = result.getItems().iterator();
+                while (iter.hasNext()) {
+                    Item item = iter.next();
+                    deleteItems.add(new DeletableItem(item.getName(), null));
+                    count++;
+                    if (count%25 == 0) {
+                        BatchDeleteAttributesRequest request = new BatchDeleteAttributesRequest(domainName, deleteItems);
+                        this.amazonSimpleDBClient.batchDeleteAttributes(request);
+                        deleteItems.clear();
+                    }
+                }
+                // http://docs.aws.amazon.com/AmazonSimpleDB/latest/DeveloperGuide/SDB_API_BatchDeleteAttributes.html
+                // 25 limit we may need to batch; but if batch atomicity is gone
+                if (!deleteItems.isEmpty()) {
+                    BatchDeleteAttributesRequest request = new BatchDeleteAttributesRequest(domainName, deleteItems);
+                    this.amazonSimpleDBClient.batchDeleteAttributes(request);
+                }
+            } while (nextToken != null);
+            return count;
+        } catch (AmazonServiceException e) {
+            throw new TranslatorException(e);
+        } catch (AmazonClientException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public void close() {
+
+    }
+
     private void executeBatch(String domainName, List<ReplaceableItem> insertItems) {
         if (!insertItems.isEmpty()) {
             BatchPutAttributesRequest request = new BatchPutAttributesRequest(domainName, insertItems);
-            this.client.batchPutAttributes(request);
+            this.amazonSimpleDBClient.batchPutAttributes(request);
         }
     }
 

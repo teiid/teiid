@@ -31,5 +31,4 @@ public class SimpleDBResourceAdapter extends BasicResourceAdapter {
     public int hashCode() {
         return super.hashCode();
     }
-
 }

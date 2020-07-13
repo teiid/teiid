@@ -4,6 +4,8 @@
         <artifact name="org.teiid.wildfly:teiid-client-feature-pack"/>
         <!-- for hadoop client -->
         <artifact name="org.teiid.wildfly.connectors:feature-pack-accumulo"/>
+        <!-- for aws core -->
+        <artifact name="org.teiid.wildfly.connectors:feature-pack-amazon"/>
     </dependencies>
     <config>
     </config>
