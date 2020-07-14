@@ -34,12 +34,14 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -158,7 +160,7 @@ public class RuleRemoveOptionalJoins implements
         boolean isRight = optionalNode == joinNode.getLastChild();
 
         if (!isOptional && (jt == JoinType.JOIN_INNER || (jt == JoinType.JOIN_LEFT_OUTER && isRight))) {
-            usesKey = isOptionalUsingKey(joinNode, optionalNode, metadata, isRight);
+            usesKey = isOptionalUsingKey(joinNode, optionalNode, metadata, isRight, jt == JoinType.JOIN_INNER);
         }
 
         if (!isOptional && !usesKey &&
@@ -211,7 +213,7 @@ public class RuleRemoveOptionalJoins implements
     }
 
     private boolean isOptionalUsingKey(PlanNode joinNode,
-            PlanNode optionalNode, QueryMetadataInterface metadata, boolean isRight) throws
+            PlanNode optionalNode, QueryMetadataInterface metadata, boolean isRight, boolean inner) throws
             TeiidComponentException, QueryMetadataException {
         //TODO: check if key preserved to allow for more than just a single group as optional
         //for now we just look for a single group
@@ -232,9 +234,19 @@ public class RuleRemoveOptionalJoins implements
         }
         ArrayList<Object> leftIds = new ArrayList<Object>(leftExpressions.size());
         ArrayList<Object> rightIds = new ArrayList<Object>(rightExpressions.size());
+        List<ElementSymbol> nullableToFilter = new ArrayList<>(1);
         for (Expression expr : leftExpressions) {
             if (expr instanceof ElementSymbol) {
-                leftIds.add(((ElementSymbol) expr).getMetadataID());
+                ElementSymbol col = (ElementSymbol) expr;
+                Object id = col.getMetadataID();
+                leftIds.add(id);
+                if (inner) {
+                    //TODO: could deeply check whether the value can be null
+                    //the most complex case being marked in the metadata as non-null,
+                    //but having a nested outer join with this column coming
+                    //from the inner side
+                    nullableToFilter.add(col);
+                }
             }
         }
         for (Expression expr : rightExpressions) {
@@ -256,6 +268,11 @@ public class RuleRemoveOptionalJoins implements
                 List pkColumns = metadata.getElementIDsInKey(pk);
                 if ((rightIds.size() != pkColumns.size()) || !rightIds.containsAll(pkColumns)) {
                     continue;
+                }
+                for (ElementSymbol e : nullableToFilter) {
+                    IsNullCriteria inc = new IsNullCriteria(e);
+                    inc.setNegated(true);
+                    joinNode.addAsParent(RelationalPlanner.createSelectNode(inc, false));
                 }
                 if (!isRight) {
                     //match up to the replacement logic below
