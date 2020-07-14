@@ -18,7 +18,12 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -719,14 +724,52 @@ public class TestMatViews {
         assertEquals("c", rs.getString(1));
     }
 
-    public static void main(String[] args) throws Exception {
-        TestMatViews tmv = new TestMatViews();
-        for (int i = 0; i < 50; i++) {
-            tmv.setUp();
-            tmv.testInternalPollingQuery();
-            tmv.tearDown();
-            System.out.println(i);
-        }
+    @Test
+    public void testPartitionedLoadInternal() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.addSourceMapping("x", "x", null);
+        mmd.addSourceMetadata("DDL", "CREATE foreign TABLE physicalTbl (col integer, col1 string) options (updatable true);"
+                + "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "\"teiid_rel:MATVIEW_UPDATABLE\" true, "
+                + "\"teiid_rel:MATVIEW_PART_LOAD_COLUMN\" 'col1') "
+                + "AS select col, col1 from physicalTbl");
+
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+
+            @Override
+            public boolean supportsSelectDistinct() {
+                return true;
+            }
+        };
+
+        server.addTranslator("x", hcef);
+        server.deployVDB("comp", mmd);
+
+        Connection admin = server.createConnection("jdbc:teiid:comp");
+        hcef.addData("SELECT DISTINCT physicalTbl.col1 FROM physicalTbl", Arrays.asList(Arrays.asList("a"), Arrays.asList("b")));
+        hcef.addData("SELECT physicalTbl.col FROM physicalTbl WHERE physicalTbl.col1 = 'a'", Arrays.asList(Arrays.asList(1)));
+        //full load
+        hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl", Arrays.asList(Arrays.asList(1, "a"), Arrays.asList(2, "b")));
+        //single row update based upon pk
+        hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl WHERE physicalTbl.col = 1", Arrays.asList(Arrays.asList(1, "a")));
+        CallableStatement stmt = admin.prepareCall("{? = call sysadmin.loadMatView('x', 'v1')}");
+
+        stmt.execute();
+        //should succeed even if one branch is missing
+        assertEquals(1, stmt.getInt(1));
+
+        //will now complete fully
+        hcef.addData("SELECT physicalTbl.col FROM physicalTbl WHERE physicalTbl.col1 = 'b'", Arrays.asList(Arrays.asList(2)));
+        hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl WHERE physicalTbl.col = 2", Arrays.asList(Arrays.asList(2, "b")));
+        stmt.execute();
+        assertEquals(2, stmt.getInt(1));
+        admin.close();
     }
 
 }

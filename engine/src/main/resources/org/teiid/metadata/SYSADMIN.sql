@@ -223,9 +223,34 @@ BEGIN
     EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' started' || case when only_if_needed then ' if needed.' else '.' end);        
     
     IF (targetSchemaName IS NULL)
-    BEGIN        
-        rowsUpdated = (EXECUTE SYSADMIN.refreshMatView(VARIABLES.fullViewName, loadMatView.invalidate));
-        EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' completed. Rows updated = ' || VARIABLES.rowsUpdated);        
+    BEGIN     
+        DECLARE string partColumn = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = 'teiid_rel:MATVIEW_PART_LOAD_COLUMN');
+        
+        IF (partColumn IS NULL)
+        BEGIN
+            rowsUpdated = (EXECUTE SYSADMIN.refreshMatView(VARIABLES.fullViewName, loadMatView.invalidate));
+            EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' completed. Rows updated = ' || VARIABLES.rowsUpdated);        
+        END
+        ELSE
+        BEGIN ATOMIC
+            partColumn = '"' || replace(partColumn, '"', '""') || '"';
+            DECLARE string partValues = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = 'teiid_rel:MATVIEW_PART_LOAD_VALUES');
+            IF (partValues IS NULL)
+                partValues = 'SELECT DISTINCT(' || viewName || '.' || partColumn || ') FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+                         
+            VARIABLES.rowsUpdated = 0;
+            EXECUTE IMMEDIATE partValues as source string INTO #partValues; 
+            LOOP ON (SELECT source from #partValues) AS sources
+            BEGIN
+                IF (source IS NULL)
+                    CONTINUE;
+                DECLARE integer result_rows = (EXECUTE sysadmin.updateMatView(schemaName, viewName, partColumn || ' = ''' || replace(cast(sources.source as string), '''', '''''') || ''''));
+                IF (result_rows > 0)
+                    VARIABLES.rowsUpdated = VARIABLES.rowsUpdated + result_rows;
+            EXCEPTION e
+                EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'WARN', msg=>e.exception);
+            END
+        END
         RETURN rowsUpdated;
     EXCEPTION e
         rowsUpdated = -2;
@@ -472,9 +497,6 @@ BEGIN
                 IF (interrowUpdated > 0)
                 BEGIN
                     rowsUpdated = rowsUpdated + interrowUpdated;
-                END ELSE
-                BEGIN
-                    rowsUpdated = interrowUpdated;
                 END
             END
             EXECUTE sysadmin.logMsg(context=>'org.teiid.PROCESSOR.MATVIEWS', level=>'INFO', msg=>'Criteria based Update of Materialization of view ' || updateMatView.schemaName || '.' || updateMatView.viewName || ' is completed.'); 	       
