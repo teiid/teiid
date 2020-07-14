@@ -18,7 +18,11 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.util.Arrays;
@@ -592,7 +596,7 @@ public class TestTempTables extends TempTableTestHarness {
         assertNotNull(id);
         assertNotNull(this.metadata.getPrimaryKey(id));
 
-        hdm.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 = 1", new List[] {Arrays.asList("a")});
+        hdm.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 IS NOT NULL AND g_0.e2 = 1", new List[] {Arrays.asList("a")});
         hdm.addData("DELETE FROM g1 WHERE g1.e1 = 'a'", new List[] {Arrays.asList(1)});
 
         execute("delete from v where e2 = (select max(e2) from x as z where e3 = z.e3)", new List[] {Arrays.asList(1)}, TestOptimizer.getGenericFinder()); //$NON-NLS-1$

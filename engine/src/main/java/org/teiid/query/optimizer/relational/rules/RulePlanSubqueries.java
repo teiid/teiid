@@ -58,7 +58,20 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.GroupBy;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
@@ -652,7 +665,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             throws TeiidComponentException, QueryMetadataException {
         if (rightExpr instanceof ElementSymbol) {
             ElementSymbol es = (ElementSymbol)rightExpr;
-            if (metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL)) {
+            if (metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL) || metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL_UNKNOWN)) {
                 return false;
             }
             if (!isSimpleJoin(query)) {
