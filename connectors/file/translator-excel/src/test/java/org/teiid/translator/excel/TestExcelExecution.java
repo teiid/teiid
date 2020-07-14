@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.excel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -275,24 +275,6 @@ public class TestExcelExecution {
 
         ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
         assertEquals("[[John], [Jane], [Sarah], [Rocky], [Total]]", results.toString());
-    }
-
-    @Test
-    public void testExecutionLimit() throws Exception {
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
-
-        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 3,1");
-        assertEquals("[[Sarah]]", results.toString());
-    }
-
-    @Test
-    public void testExecutionLimit2() throws Exception {
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
-
-        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 1");
-        assertEquals("[[John]]", results.toString());
     }
 
     @Test

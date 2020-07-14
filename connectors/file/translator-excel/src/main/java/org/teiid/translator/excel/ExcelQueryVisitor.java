@@ -21,8 +21,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
-import org.teiid.language.*;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.In;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.SetClause;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
@@ -234,16 +244,6 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
     @Override
     public void visit(Literal obj) {
         this.onGoingExpression.push(obj.getValue());
-    }
-
-    @Override
-    public void visit(Limit obj) {
-        int offset = obj.getRowOffset();
-        if (offset != 0) {
-            this.firstDataRowNumber = offset + this.firstDataRowNumber;
-        }
-        this.filters.add(new CompareFilter(this.firstDataRowNumber, Operator.GE));
-        this.filters.add(new CompareFilter(this.firstDataRowNumber+obj.getRowLimit(), Operator.LT));
     }
 
     public static boolean isPartOfPrimaryKey(Column column) {
