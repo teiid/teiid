@@ -80,16 +80,6 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
     }
 
     @Override
-    public boolean supportsRowLimit() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsRowOffset() {
-        return true;
-    }
-
-    @Override
     public boolean supportsOnlyLiteralComparison() {
         return true;
     }
