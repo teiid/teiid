@@ -188,13 +188,13 @@ BEGIN
 	
 	IF (uid IS NULL)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || 'was not found';
+		RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || ' was not found';
 	END
 	
 	DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
 	IF (NOT isMaterialized)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || 'is not declared as Materialized View in Metadata';
+		RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || ' is not declared as Materialized View in Metadata';
 	END		  
 
     DECLARE string ownerVdbName = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_NAME');
@@ -435,13 +435,13 @@ BEGIN
 	
 	IF (uid IS NULL)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || 'not found';
+		RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || ' not found';
 	END
 	
 	DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
 	IF (NOT isMaterialized)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || 'is not declared as Materialized View in Metadata';
+		RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || ' is not declared as Materialized View in Metadata';
 	END		
 
     DECLARE string ownerVdbName = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_NAME');
@@ -575,13 +575,13 @@ BEGIN
         
     IF (uid IS NULL)
     BEGIN
-        RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || 'was not found';
+        RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || ' was not found';
     END
     
     DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
     IF (NOT isMaterialized)
     BEGIN
-        RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || 'is not declared as Materialized View in Metadata';
+        RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || ' is not declared as Materialized View in Metadata';
     END       
 
     DECLARE string ownerVdbName = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_NAME');
