@@ -89,5 +89,6 @@
      <module>ldap</module>
      <module>infinispan</module>
      <module>misc</module>
+      <module>file/translator-parquet</module>
   </modules>
 </project>

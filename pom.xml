@@ -1056,6 +1056,11 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.parquet</groupId>
+                <artifactId>parquet-hadoop</artifactId>
+                <version>1.11.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.olingo</groupId>
                 <artifactId>odata-commons-api</artifactId>
                 <version>${version.org.apache.olingo}</version>
@@ -1612,6 +1617,11 @@
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
                 <artifactId>translator-excel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-parquet</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
