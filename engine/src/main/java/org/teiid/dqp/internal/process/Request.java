@@ -197,6 +197,11 @@ public class Request {
 
         VDBMetaData vdbMetadata = workContext.getVDB();
         metadata = vdbMetadata.getAttachment(QueryMetadataInterface.class);
+        if (this.workContext.isDerived()) {
+            //derived should operate like a procedure scope and execute with
+            //design time metadata
+            metadata = metadata.getDesignTimeMetadata();
+        }
         globalTables = vdbMetadata.getAttachment(GlobalTableStore.class);
 
         if (metadata == null) {
