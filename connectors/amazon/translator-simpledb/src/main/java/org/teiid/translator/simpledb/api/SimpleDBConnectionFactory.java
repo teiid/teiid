@@ -39,11 +39,11 @@ public class SimpleDBConnectionFactory {
         if(simpleDBConfig.getAccessKey() == null) {
             throw new TranslatorException("Access key can't be null.");
         }
-        if(simpleDBConfig.getSecretAccessKey() == null) {
+        if(simpleDBConfig.getSecretKey() == null) {
             throw new TranslatorException("Secret key can't be null.");
         }
 
-        AWSCredentials credentials = new BasicAWSCredentials(simpleDBConfig.getAccessKey(), simpleDBConfig.getSecretAccessKey());
+        AWSCredentials credentials = new BasicAWSCredentials(simpleDBConfig.getAccessKey(), simpleDBConfig.getSecretKey());
         awsStaticCredentialsProvider = new AWSStaticCredentialsProvider(credentials);
         try {
             getSimpleDBClient();

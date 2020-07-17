@@ -18,9 +18,5 @@ package org.teiid.translator.simpledb.api;
 public interface BaseSimpleDBConfiguration {
     public String getAccessKey();
 
-    default public String getSecretKey() {
-        return getSecretAccessKey();
-    }
-
-    public String getSecretAccessKey();
+    public String getSecretKey();
 }

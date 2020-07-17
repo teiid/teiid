@@ -72,6 +72,10 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
     }
 
     @Override
+    public String getSecretKey() {
+        return getSecretAccessKey();
+    }
+
     public String getSecretAccessKey() {
         return secretAccessKey;
     }
@@ -82,7 +86,7 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return Objects.hashCode(accessKey);
     }
 
     @Override
