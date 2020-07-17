@@ -41,6 +41,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
+import org.teiid.query.optimizer.relational.PlanToProcessConverter;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
@@ -179,6 +180,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                         Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
                         for (Expression symbol : outputElements) {
                             if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
+                                 //if the capabilities are invalid, we may be effectively masking a problem
+                                 PlanToProcessConverter.checkForValidCapabilities(modelId, metadata, capFinder);
                                  throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
                             }
                         }

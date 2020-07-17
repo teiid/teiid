@@ -18,7 +18,17 @@
 
 package org.teiid.query.optimizer.relational;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -52,15 +62,62 @@ import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
-import org.teiid.query.processor.relational.*;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.ArrayTableNode;
+import org.teiid.query.processor.relational.DependentAccessNode;
+import org.teiid.query.processor.relational.DependentProcedureAccessNode;
+import org.teiid.query.processor.relational.DependentProcedureExecutionNode;
+import org.teiid.query.processor.relational.DupRemoveNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
+import org.teiid.query.processor.relational.GroupingNode;
+import org.teiid.query.processor.relational.InsertPlanExecutionNode;
+import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.processor.relational.LimitNode;
+import org.teiid.query.processor.relational.MergeJoinStrategy;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
+import org.teiid.query.processor.relational.NestedTableJoinStrategy;
+import org.teiid.query.processor.relational.NullNode;
+import org.teiid.query.processor.relational.ObjectTableNode;
+import org.teiid.query.processor.relational.PlanExecutionNode;
+import org.teiid.query.processor.relational.ProjectIntoNode;
+import org.teiid.query.processor.relational.ProjectNode;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.processor.relational.SelectNode;
+import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.SortUtility.Mode;
+import org.teiid.query.processor.relational.TextTableNode;
+import org.teiid.query.processor.relational.UnionAllNode;
+import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ArrayTable;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.Create;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.Drop;
+import org.teiid.query.sql.lang.FilteredCommand;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.TableFunctionReference;
+import org.teiid.query.sql.lang.TextTable;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -337,19 +394,11 @@ public class PlanToProcessConverter {
                     Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
                     Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
                     if (modelID != null) {
-                        String fullName = metadata.getFullName(modelID);
-                        if (!capFinder.isValid(fullName)) {
-                            //TODO: we ideally want to handle the partial resutls case here differently
-                            //      by adding a null node / and a source warning
-                            //      for now it's just as easy to say that the user needs to take steps to
-                            //      return static capabilities
-                            SourceCapabilities caps = capFinder.findCapabilities(fullName);
-                            Exception cause = null;
-                            if (caps != null) {
-                                cause = (Exception) caps.getSourceProperty(Capability.INVALID_EXCEPTION);
-                            }
-                            throw new QueryPlannerException(QueryPlugin.Event.TEIID30498, cause, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30498, fullName));
-                        }
+                        //TODO: we ideally want to handle the partial results case here differently
+                        //      by adding a null node / and a source warning
+                        //      for now it's just as easy to say that the user needs to take steps to
+                        //      return static capabilities
+                        checkForValidCapabilities(modelID, metadata, capFinder);
                     }
                     EvaluatableVisitor ev = null;
                     if(node.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
@@ -724,6 +773,23 @@ public class PlanToProcessConverter {
         }
 
         return processNode;
+    }
+
+    /**
+     * If the capabilities for the given model are invalid, this will throw the original exception
+     */
+    public static void checkForValidCapabilities(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+            throws TeiidComponentException, QueryMetadataException,
+            QueryPlannerException {
+        String fullName = metadata.getFullName(modelID);
+        if (!capFinder.isValid(fullName)) {
+            SourceCapabilities caps = capFinder.findCapabilities(fullName);
+            Exception cause = null;
+            if (caps != null) {
+                cause = (Exception) caps.getSourceProperty(Capability.INVALID_EXCEPTION);
+            }
+            throw new QueryPlannerException(QueryPlugin.Event.TEIID30498, cause, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30498, fullName));
+        }
     }
 
     private void validateAggregateFunctionEvaluation(AggregateSymbol as) throws QueryPlannerException {
