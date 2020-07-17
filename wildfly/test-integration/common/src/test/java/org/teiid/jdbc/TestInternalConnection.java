@@ -18,7 +18,8 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
@@ -199,6 +200,38 @@ public class TestInternalConnection {
             ps.setInt(1, 1);
             ps.execute();
             conn.commit();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+
+    /**
+     * Within the scope of the function, all design time metadata should be visible
+     */
+    @Test public void testInternalLocalHidden() throws Exception {
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.setSecurityHelper(new ThreadLocalSecurityHelper());
+        es.start(config);
+        String hiddenVdb = "<vdb name=\"test\" version=\"1\">"
+                + "<model name=\"hidden\" type=\"VIRTUAL\" visible=\"false\"><metadata type=\"DDL\"><![CDATA["
+                + "CREATE VIEW helloworld as SELECT 'HELLO WORLD';"
+                + "]]></metadata></model>"
+                + "<model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA["
+                + "CREATE function func (val integer) returns string options (JAVA_CLASS '"+TestInternalConnection.class.getName()+"',  JAVA_METHOD 'doSomething');]]> </metadata></model>"
+                + "</vdb>";
+        es.deployVDB(new ByteArrayInputStream(hiddenVdb.getBytes()));
+        Connection conn = null;
+        try {
+            TeiidDriver driver = es.getDriver();
+            conn = driver.connect("jdbc:teiid:test", null);
+            //execute multiple to check for an id conflict
+            ResultSet rs = conn.createStatement().executeQuery("select func(2)");
+            rs.next();
+            assertEquals("anonymous@teiid-securityHELLO WORLD2", rs.getString(1));
+            ResultSetMetaData metadata = rs.getMetaData();
+            assertNotNull(metadata.getColumnName(1));
         } finally {
             if (conn != null) {
                 conn.close();
