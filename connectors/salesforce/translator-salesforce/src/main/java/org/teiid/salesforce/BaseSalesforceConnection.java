@@ -159,18 +159,23 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             s = s.substring(index+1, end);
             return Long.valueOf(s);
         } catch (NumberFormatException e) {
+            checkValid();
             throw new TranslatorException(e);
         } catch (MalformedURLException e) {
+            checkValid();
             throw new TranslatorException(e);
         } catch (UnsupportedEncodingException e) {
+            checkValid();
             throw new TranslatorException(e);
         } catch (IOException e) {
+            checkValid();
             throw new TranslatorException(e);
         } finally {
             if (is != null) {
                 try {
                     is.close();
                 } catch (IOException e) {
+                    checkValid();
                 }
             }
         }
@@ -442,10 +447,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
 
     }
 
-    public boolean isAlive() {
-        return checkValid();
-    }
-
     @Override
     public JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws TranslatorException {
         try {
@@ -521,6 +522,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                             switch (batchInfoItem.getState()) {
                             case Failed:
                             case NotProcessed:
+                                checkValid();
                                 throw new TranslatorException(batchInfoItem.getStateMessage());
                             case Completed:
                                 anyComplete = true;
@@ -543,6 +545,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                     case Queued:
                     throwDataNotAvailable(info);
                      default:
+                        checkValid();
                         throw new TranslatorException(batch.getStateMessage());
                 }
             } catch (AsyncApiException e) {
@@ -602,6 +605,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             switch (bi.getState()) {
             case Failed:
             case NotProcessed:
+                checkValid();
                 throw new TranslatorException(bi.getStateMessage());
             case Completed:
                 if (completedId == null) {
@@ -642,6 +646,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                     try {
                         inputStream.close();
                     } catch (IOException e) {
+                        checkValid();
                     }
                 }
             };
