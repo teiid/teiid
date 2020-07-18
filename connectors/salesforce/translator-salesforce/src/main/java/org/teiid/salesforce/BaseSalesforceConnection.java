@@ -92,6 +92,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     private P partnerConnection;
     private C config;
 
+    private volatile boolean valid = false;
+
     public BaseSalesforceConnection(T salesforceConfig) throws AsyncApiException, ConnectionException {
         config = createConnectorConfig(salesforceConfig);
         partnerConnection = login(salesforceConfig, config);
@@ -109,7 +111,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         partnerConnection.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
         bulkConnection = new BulkConnection(config);
         // Test the connection.
-        partnerConnection.getUserInfo();
+        checkValid();
         restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
@@ -117,6 +119,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
 
     protected BaseSalesforceConnection(P partnerConnection) {
         this.partnerConnection = partnerConnection;
+        checkValid();
     }
 
     /**
@@ -126,6 +129,10 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
      * @throws ConnectionException
      */
     protected abstract P login(T salesforceConfig, C connectorConfig) throws AsyncApiException, ConnectionException;
+
+    public boolean isValid() {
+        return valid;
+    }
 
     @Override
     public Long getCardinality(String sobject) throws TranslatorException {
@@ -183,16 +190,18 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         return in;
     }
 
-    public boolean isValid() {
+    public boolean checkValid() {
         if(partnerConnection != null) {
             try {
                 partnerConnection.getServerTimestamp();
-                return true;
+                valid = true;
+                return valid;
             } catch (Throwable t) {
                 LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Caught Throwable in isAlive", t); //$NON-NLS-1$
             }
         }
-        return false;
+        valid = false;
+        return valid;
     }
 
     protected P getPartnerConnection() {
@@ -215,7 +224,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                 partnerConnection.setMruHeader(false);
                 qr = partnerConnection.query(queryString);
             }
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         } finally {
             partnerConnection.clearMruHeader();
@@ -233,7 +243,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         partnerConnection.setQueryOptions(batchSize);
         try {
             return partnerConnection.queryMore(queryLocator);
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         } finally {
             partnerConnection.clearQueryOptions();
@@ -245,7 +256,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         DeleteResult[] results = null;
         try {
             results = partnerConnection.delete(ids);
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         }
 
@@ -269,6 +281,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
         }
         if(!allGood) {
+            checkValid();
             throw new TranslatorException(errorMessages.toString());
         }
         return results.length;
@@ -280,11 +293,13 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         UpsertResult[] results;
         try {
             results = partnerConnection.upsert(ID_FIELD_NAME, objects);
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         }
         for (UpsertResult result : results) {
             if(!result.isSuccess()) {
+                checkValid();
                 throw new TranslatorException(result.getErrors()[0].getMessage());
             }
         }
@@ -301,7 +316,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         SaveResult[] result;
         try {
             result = partnerConnection.create(objects);
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         }
         return analyzeResult(result);
@@ -318,7 +334,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         SaveResult[] result;
             try {
                 result = partnerConnection.update(params.toArray(new SObject[params.size()]));
-            } catch (ConnectionException e) {
+            } catch (Exception e) {
+                checkValid();
                 throw new TranslatorException(e);
             }
         return analyzeResult(result);
@@ -345,6 +362,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     private int analyzeResult(SaveResult[] results) throws TranslatorException {
         for (SaveResult result : results) {
             if(!result.isSuccess()) {
+                checkValid();
                 throw new TranslatorException(result.getErrors()[0].getMessage());
             }
         }
@@ -355,7 +373,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             GetUpdatedResult updated;
             try {
                 updated = partnerConnection.getUpdated(objectType, startDate, endDate);
-            } catch (ConnectionException e) {
+            } catch (Exception e) {
+                checkValid();
                 throw new TranslatorException(e);
             }
             UpdatedResult result = new UpdatedResult();
@@ -369,7 +388,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             GetDeletedResult deleted;
             try {
                 deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
-            } catch (ConnectionException e) {
+            } catch (Exception e) {
+                checkValid();
                 throw new TranslatorException(e);
             }
             DeletedResult result = new DeletedResult();
@@ -392,7 +412,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
         try {
             return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         }
 
@@ -401,7 +422,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeGlobalResult getObjects() throws TranslatorException {
         try {
             return partnerConnection.describeGlobal();
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -409,7 +431,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
         try {
             return partnerConnection.describeSObjects(objectName);
-        } catch (ConnectionException e) {
+        } catch (Exception e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -420,7 +443,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     }
 
     public boolean isAlive() {
-        return isValid();
+        return checkValid();
     }
 
     @Override
@@ -444,6 +467,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
             return info;
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -455,6 +479,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
             return request.completeRequest().getId();
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -465,6 +490,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             BatchInfo batch = this.bulkConnection.createBatchFromStream(job, new ByteArrayInputStream(query.getBytes(Charset.forName("UTF-8")))); //$NON-NLS-1$
             return new BatchResultInfo(batch.getId());
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -520,6 +546,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                         throw new TranslatorException(batch.getStateMessage());
                 }
             } catch (AsyncApiException e) {
+                checkValid();
                 throw new TranslatorException(e);
             }
         }
@@ -535,6 +562,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             info.resetWaitCount();
             return result;
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -608,6 +636,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                 public List<String> nextRecord() throws IOException {
                     return reader.nextRecord();
                 }
+
                 @Override
                 public void close() {
                     try {
@@ -625,6 +654,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         try {
             return this.bulkConnection.closeJob(jobId);
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -642,6 +672,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
             return results;
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }
@@ -651,6 +682,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         try {
             this.bulkConnection.abortJob(job.getId());
         } catch (AsyncApiException e) {
+            checkValid();
             throw new TranslatorException(e);
         }
     }

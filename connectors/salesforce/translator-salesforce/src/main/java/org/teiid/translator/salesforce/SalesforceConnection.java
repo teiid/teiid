@@ -104,7 +104,7 @@ public interface SalesforceConnection extends Connection {
 
     public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException;
 
-    public boolean isValid();
+    public boolean checkValid();
 
     public int delete(String[] ids) throws TranslatorException ;
 
