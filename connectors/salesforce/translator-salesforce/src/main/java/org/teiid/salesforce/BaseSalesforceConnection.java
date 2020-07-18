@@ -196,10 +196,11 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         return in;
     }
 
+    @Override
     public boolean checkValid() {
         if(partnerConnection != null) {
             try {
-                partnerConnection.getServerTimestamp();
+                partnerConnection.getUserInfo();
                 valid = true;
                 return valid;
             } catch (Throwable t) {
