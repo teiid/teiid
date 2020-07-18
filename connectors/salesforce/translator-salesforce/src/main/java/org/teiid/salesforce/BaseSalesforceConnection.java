@@ -110,9 +110,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         // It was provided by SF and should not be changed.
         partnerConnection.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
         bulkConnection = new BulkConnection(config);
+        restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         // Test the connection.
         checkValid();
-        restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     protected abstract C createConnectorConfig(T salesforceConfig) throws ConnectionException;
@@ -136,6 +136,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
 
     @Override
     public Long getCardinality(String sobject) throws TranslatorException {
+        try {
         InputStream is = null;
         try {
             is = doRestHttpGet(new URL(restEndpoint + "/query/?explain=select+id+from+" + URLEncoder.encode(sobject, "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
@@ -179,6 +180,10 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                 }
             }
         }
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     private InputStream doRestHttpGet(URL url) throws IOException {
@@ -214,7 +219,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     }
 
     public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
-
+        try {
         if(batchSize > 2000) {
             batchSize = 2000;
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
@@ -230,16 +235,20 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                 qr = partnerConnection.query(queryString);
             }
         } catch (Exception e) {
-            checkValid();
             throw new TranslatorException(e);
         } finally {
             partnerConnection.clearMruHeader();
             partnerConnection.clearQueryOptions();
         }
         return qr;
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException {
+        try {
         if(batchSize > 2000) {
             batchSize = 2000;
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
@@ -249,20 +258,22 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         try {
             return partnerConnection.queryMore(queryLocator);
         } catch (Exception e) {
-            checkValid();
             throw new TranslatorException(e);
         } finally {
             partnerConnection.clearQueryOptions();
         }
-
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public int delete(String[] ids) throws TranslatorException {
+        try {
         DeleteResult[] results = null;
         try {
             results = partnerConnection.delete(ids);
         } catch (Exception e) {
-            checkValid();
             throw new TranslatorException(e);
         }
 
@@ -286,20 +297,23 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
         }
         if(!allGood) {
-            checkValid();
             throw new TranslatorException(errorMessages.toString());
         }
         return results.length;
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public int upsert(DataPayload data) throws TranslatorException {
+        try {
         SObject toCreate = toUpdateSObject(new ArrayList<>(), data);
         SObject[] objects = new SObject[] {toCreate};
         UpsertResult[] results;
         try {
             results = partnerConnection.upsert(ID_FIELD_NAME, objects);
         } catch (Exception e) {
-            checkValid();
             throw new TranslatorException(e);
         }
         for (UpsertResult result : results) {
@@ -309,9 +323,14 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
         }
         return results.length;
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public int create(DataPayload data) throws TranslatorException {
+        try {
         SObject toCreate = new SObject();
         toCreate.setType(data.getType());
         for (DataPayload.Field field : data.getMessageElements()) {
@@ -322,13 +341,17 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         try {
             result = partnerConnection.create(objects);
         } catch (Exception e) {
-            checkValid();
             throw new TranslatorException(e);
         }
         return analyzeResult(result);
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public int update(List<DataPayload> updateDataList) throws TranslatorException {
+        try {
         List<SObject> params = new ArrayList<SObject>(updateDataList.size());
         List<String> nullFields = new ArrayList<>();
         for(int i = 0; i < updateDataList.size(); i++) {
@@ -340,10 +363,13 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             try {
                 result = partnerConnection.update(params.toArray(new SObject[params.size()]));
             } catch (Exception e) {
-                checkValid();
                 throw new TranslatorException(e);
             }
         return analyzeResult(result);
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public static SObject toUpdateSObject(List<String> nullFields, DataPayload data) {
@@ -365,36 +391,44 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     }
 
     private int analyzeResult(SaveResult[] results) throws TranslatorException {
+        try {
         for (SaveResult result : results) {
             if(!result.isSuccess()) {
-                checkValid();
                 throw new TranslatorException(result.getErrors()[0].getMessage());
             }
         }
         return results.length;
+        }catch(Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws TranslatorException {
+            try {
             GetUpdatedResult updated;
             try {
                 updated = partnerConnection.getUpdated(objectType, startDate, endDate);
             } catch (Exception e) {
-                checkValid();
                 throw new TranslatorException(e);
             }
             UpdatedResult result = new UpdatedResult();
             result.setLatestDateCovered(updated.getLatestDateCovered());
             result.setIDs(Arrays.asList(updated.getIds()));
             return result;
+            }catch(Throwable e) {
+                checkValid();
+                throw e;
+            }
     }
 
     public DeletedResult getDeleted(String objectName, Calendar startCalendar,
             Calendar endCalendar) throws TranslatorException {
+            try {
             GetDeletedResult deleted;
             try {
                 deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
             } catch (Exception e) {
-                checkValid();
                 throw new TranslatorException(e);
             }
             DeletedResult result = new DeletedResult();
@@ -412,12 +446,16 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
             result.setResultRecords(resultRecords);
             return result;
+            }catch(Throwable e) {
+                checkValid();
+                throw e;
+            }
     }
 
     public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
         try {
             return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             checkValid();
             throw new TranslatorException(e);
         }
@@ -427,7 +465,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeGlobalResult getObjects() throws TranslatorException {
         try {
             return partnerConnection.describeGlobal();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             checkValid();
             throw new TranslatorException(e);
         }
@@ -436,7 +474,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
         try {
             return partnerConnection.describeSObjects(objectName);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             checkValid();
             throw new TranslatorException(e);
         }
@@ -470,6 +508,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         } catch (AsyncApiException e) {
             checkValid();
             throw new TranslatorException(e);
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
@@ -482,6 +523,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         } catch (AsyncApiException e) {
             checkValid();
             throw new TranslatorException(e);
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
@@ -493,11 +537,15 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         } catch (AsyncApiException e) {
             checkValid();
             throw new TranslatorException(e);
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
     @Override
     public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws TranslatorException {
+        try {
         if (info.getResultList() == null && info.getPkBatches() == null) {
             try {
                 BatchInfo batch = this.bulkConnection.getBatchInfo(jobId, info.getBatchId());
@@ -522,7 +570,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                             switch (batchInfoItem.getState()) {
                             case Failed:
                             case NotProcessed:
-                                checkValid();
                                 throw new TranslatorException(batchInfoItem.getStateMessage());
                             case Completed:
                                 anyComplete = true;
@@ -545,11 +592,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                     case Queued:
                     throwDataNotAvailable(info);
                      default:
-                        checkValid();
                         throw new TranslatorException(batch.getStateMessage());
                 }
             } catch (AsyncApiException e) {
-                checkValid();
                 throw new TranslatorException(e);
             }
         }
@@ -565,8 +610,11 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             info.resetWaitCount();
             return result;
         } catch (AsyncApiException e) {
-            checkValid();
             throw new TranslatorException(e);
+        }
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
@@ -578,6 +626,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
 
     private void getNextPkChunkResultList(String jobId,
             BatchResultInfo info) throws AsyncApiException, TranslatorException {
+        try {
         Map<String, BatchInfo> batches = info.getPkBatches();
         if (batches.isEmpty()) {
             return; //terminal condition
@@ -605,7 +654,6 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             switch (bi.getState()) {
             case Failed:
             case NotProcessed:
-                checkValid();
                 throw new TranslatorException(bi.getStateMessage());
             case Completed:
                 if (completedId == null) {
@@ -623,10 +671,15 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         }
         QueryResultList list = this.bulkConnection.getQueryResultList(jobId, completedId);
         info.setResultList(list.getResult());
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     private BulkBatchResult nextBulkBatch(String jobId, BatchResultInfo info)
             throws AsyncApiException {
+        try {
         int index = info.getAndIncrementResultNum();
         if (index < info.getResultList().length) {
             String resultId = info.getResultList()[index];
@@ -646,12 +699,17 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                     try {
                         inputStream.close();
                     } catch (IOException e) {
+                        //bacause stream closing error it is strange behavior and may be need check
                         checkValid();
                     }
                 }
             };
         }
         return null;
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
+        }
     }
 
     @Override
@@ -661,6 +719,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         } catch (AsyncApiException e) {
             checkValid();
             throw new TranslatorException(e);
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
@@ -679,6 +740,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         } catch (AsyncApiException e) {
             checkValid();
             throw new TranslatorException(e);
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
@@ -689,6 +753,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         } catch (AsyncApiException e) {
             checkValid();
             throw new TranslatorException(e);
+        } catch (Throwable e) {
+            checkValid();
+            throw e;
         }
     }
 
