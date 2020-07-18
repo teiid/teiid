@@ -160,16 +160,12 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             s = s.substring(index+1, end);
             return Long.valueOf(s);
         } catch (NumberFormatException e) {
-            checkValid();
             throw new TranslatorException(e);
         } catch (MalformedURLException e) {
-            checkValid();
             throw new TranslatorException(e);
         } catch (UnsupportedEncodingException e) {
-            checkValid();
             throw new TranslatorException(e);
         } catch (IOException e) {
-            checkValid();
             throw new TranslatorException(e);
         } finally {
             if (is != null) {
