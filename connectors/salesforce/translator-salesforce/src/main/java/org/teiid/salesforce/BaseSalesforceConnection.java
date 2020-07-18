@@ -450,7 +450,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
         try {
             return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
-        }catch (ConnectionException e) { 
+        }catch (ConnectionException e) {
             checkValid();
             throw new TranslatorException(e);
         }catch (Throwable e) {
@@ -463,7 +463,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeGlobalResult getObjects() throws TranslatorException {
         try {
             return partnerConnection.describeGlobal();
-        }catch (ConnectionException e) { 
+        }catch (ConnectionException e) {
             checkValid();
             throw new TranslatorException(e);
         }catch (Throwable e) {
@@ -475,7 +475,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
         try {
             return partnerConnection.describeSObjects(objectName);
-        }catch (ConnectionException e) { 
+        }catch (ConnectionException e) {
             checkValid();
             throw new TranslatorException(e);
         }catch (Throwable e) {
