@@ -18,11 +18,16 @@
 package org.teiid.translator.parquet;
 
 import org.teiid.file.VirtualFileConnection;
+import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 public class ParquetMetadataProcessor implements MetadataProcessor<VirtualFileConnection> {
 
+
+    @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Parquet File Name", description="Parquet File name, use file name pattern if more than one file in the parent directory", required=true)
+    public static final String FILE = MetadataFactory.PARQUET_PREFIX+"FILE"; //$NON-NLS-1$
 
     @Override
     public void process(MetadataFactory metadataFactory, VirtualFileConnection connection) throws TranslatorException {

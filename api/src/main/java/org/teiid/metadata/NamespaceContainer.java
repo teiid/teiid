@@ -38,6 +38,7 @@ public class NamespaceContainer implements Serializable {
     private static final String TEIID_ODATA = "teiid_odata"; //$NON-NLS-1$
     private static final String TEIID_ACCUMULO = "teiid_accumulo"; //$NON-NLS-1$
     private static final String TEIID_EXCEL = "teiid_excel"; //$NON-NLS-1$
+    private static final String TEIID_PARQUET = "teiid_parquet"; //$NON-NLS-1$
     private static final String TEIID_JPA = "teiid_jpa"; //$NON-NLS-1$
     private static final String TEIID_HBASE = "teiid_hbase"; //$NON-NLS-1$
     private static final String TEIID_SPATIAL = "teiid_spatial"; //$NON-NLS-1$
@@ -53,6 +54,7 @@ public class NamespaceContainer implements Serializable {
     public static final String ODATA_PREFIX = TEIID_ODATA+":"; //$NON-NLS-1$
     public static final String ACCUMULO_PREFIX = TEIID_ACCUMULO+":"; //$NON-NLS-1$
     public static final String EXCEL_PREFIX = TEIID_EXCEL+":"; //$NON-NLS-1$
+    public static final String PARQUET_PREFIX = TEIID_PARQUET+":"; //$NON-NLS-1$
     public static final String JPA_PREFIX = TEIID_JPA+":"; //$NON-NLS-1$
     public static final String HBASE_PREFIX = TEIID_HBASE+":"; //$NON-NLS-1$
     public static final String SPATIAL_PREFIX = TEIID_SPATIAL+":"; //$NON-NLS-1$

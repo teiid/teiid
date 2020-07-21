@@ -100,9 +100,6 @@ public class BaseParquetExecution implements Execution {
            File localFile = createTempFile(parquetFileStream);
            Path path = new Path(localFile.toURI());
            String extension = getExtension(localFile.getName());
-           if (extension != "parquet") {
-               throw new TranslatorException(ParquetPlugin.Event.TEIID23000, ParquetPlugin.Util.gs(ParquetPlugin.Event.TEIID23000));
-           }
            Configuration config = new Configuration();
            reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
            schema = reader.getFooter().getFileMetaData().getSchema();
@@ -135,7 +132,6 @@ public class BaseParquetExecution implements Execution {
     }
 
     public Group nextRow() throws TranslatorException, DataNotAvailableException {
-        while(true){
             try {
                 Group row = nextRowInternal();
                 if (row == null) {
@@ -145,7 +141,6 @@ public class BaseParquetExecution implements Execution {
             } catch (IOException e) {
                 throw new TranslatorException(e);
             }
-        }
     }
 
     private Group nextRowInternal() throws IOException, TranslatorException {

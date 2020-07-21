@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import org.teiid.language.NamedTable;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
@@ -35,14 +36,9 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
 
     private Table table;
     private String parquetPath;
-    private int firstDataRowNumber;
 
     public List<Integer> getProjectedColumns() {
         return projectedColumns;
-    }
-
-    public int getFirstDataRowNumber() {
-        return firstDataRowNumber;
     }
 
     public ArrayList<TranslatorException> getExceptions() {
@@ -55,6 +51,12 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
 
     public String getParquetPath() {
         return parquetPath;
+    }
+
+    @Override
+    public void visit(NamedTable obj) {
+        this.table = obj.getMetadataObject();
+        this.parquetPath = this.table.getProperty(ParquetMetadataProcessor.FILE);
     }
 
 }

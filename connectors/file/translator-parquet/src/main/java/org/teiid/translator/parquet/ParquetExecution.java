@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.parquet.example.data.Group;
+import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Select;
@@ -58,28 +59,32 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
         int fieldCount = row.getType().getFieldCount();
         for (int field = 0; field < fieldCount; field++) {
             int valueCount = row.getFieldRepetitionCount(field);
-
             Type fieldType = row.getType().getType(field);
+            PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
             String fieldName = fieldType.getName();
             for (int index = 0; index < valueCount; index++) {
-                switch (fieldName) {
-                    case "INT96":
+                switch (type) {
+                    case INT96:
                         output.add(row.getInt96(field, index));
                         break;
-                    case "INT":
+                    case INT64:
+                        output.add(row.getLong(field, index));
+                        break;
+                    case INT32:
                         output.add(row.getInteger(field, index));
                         break;
-                    case "BOOLEAN":
+                    case BOOLEAN:
                         output.add(row.getBoolean(field, index));
                         break;
-                    case "FLOAT":
+                    case FLOAT:
                         output.add(row.getFloat(field, index));
                         break;
-                    case "DOUBLE":
+                    case DOUBLE:
                         output.add(row.getDouble(field, index));
                         break;
-                    case "BYTE_ARRAY":
+                    case BINARY:
                         output.add(row.getBinary(field,index));
+                        break;
                 }
             }
         }
