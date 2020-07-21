@@ -20,6 +20,12 @@ package org.teiid.translator.parquet;
 
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -41,12 +47,6 @@ import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicInteger;
-
 
 public class BaseParquetExecution implements Execution {
     @SuppressWarnings("unused")
@@ -64,6 +64,7 @@ public class BaseParquetExecution implements Execution {
     private MessageType schema;
     private RecordReader<Group> rowIterator;
     private MessageColumnIO columnIO;
+    private long pageRowCount;
 
     public BaseParquetExecution(ExecutionContext executionContext,
                                 RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) {
@@ -84,7 +85,10 @@ public class BaseParquetExecution implements Execution {
     @Override
     public void execute() throws TranslatorException {
         this.parquetFiles = VirtualFileConnection.Util.getFiles(this.visitor.getParquetPath(), this.connection, true);
-        this.rowIterator = readParquetFile(parquetFiles[fileCount.getAndIncrement()]);
+        VirtualFile nextParquetFile = getNextParquetFile();
+        if (nextParquetFile != null) {
+            this.rowIterator = readParquetFile(nextParquetFile);
+        }
     }
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
@@ -99,12 +103,12 @@ public class BaseParquetExecution implements Execution {
        try {
            File localFile = createTempFile(parquetFileStream);
            Path path = new Path(localFile.toURI());
-           String extension = getExtension(localFile.getName());
            Configuration config = new Configuration();
            reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
            schema = reader.getFooter().getFileMetaData().getSchema();
            columnIO = new ColumnIOFactory().getColumnIO(schema);
            PageReadStore pages = reader.readNextRowGroup();
+           pageRowCount = pages.getRowCount();
            return columnIO.getRecordReader(pages, new GroupRecordConverter(schema));
        } catch (IOException e){
            throw new TranslatorException(e);
@@ -144,40 +148,31 @@ public class BaseParquetExecution implements Execution {
     }
 
     private Group nextRowInternal() throws IOException, TranslatorException {
-        Group row = rowIterator.read();
-        if(row != null) {
-            return row;
-        }
-        try {
-            PageReadStore nextRowGroup = this.reader.readNextRowGroup();
-            if(nextRowGroup != null){
-                PageReadStore pages = reader.readNextRowGroup();
-                this.rowIterator = columnIO.getRecordReader(pages, new GroupRecordConverter(schema));
-                row = this.rowIterator.read();
-                return row;
-            }
-            while(true) {
+        while (rowIterator != null) {
+            if (pageRowCount-- <= 0) {
                 this.rowIterator = null;
-                VirtualFile nextParquetFile = getNextParquetFile();
-                if (nextParquetFile == null) {
-                    break;
-                }
-                this.rowIterator = readParquetFile(nextParquetFile);
-                row = this.rowIterator.read();
-                if(row != null){
-                    break;
+                PageReadStore nextRowGroup = this.reader.readNextRowGroup();
+                if(nextRowGroup == null){
+                    VirtualFile nextParquetFile = getNextParquetFile();
+                    if (nextParquetFile == null) {
+                        return null;
+                    }
+                    this.rowIterator = readParquetFile(nextParquetFile);
+                    continue;
                 }
             }
-            return row;
-        } catch (IOException e)
-        {
-            throw new TranslatorException(e);
+            return rowIterator.read();
         }
+
+        return null;
     }
 
-    protected VirtualFile getNextParquetFile() throws TranslatorException {
-        if (this.parquetFiles.length > this.fileCount.get()) {
-            return this.parquetFiles[this.fileCount.getAndIncrement()];
+    protected VirtualFile getNextParquetFile() {
+        while (this.parquetFiles.length > this.fileCount.get()) {
+            VirtualFile f = this.parquetFiles[this.fileCount.getAndIncrement()];
+            if ("parquet".equals(getExtension(f.getName()))) {
+                return f;
+            }
         }
         return null;
     }
