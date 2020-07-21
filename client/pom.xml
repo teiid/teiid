@@ -22,26 +22,10 @@
 	<description>Contains the packages related to communication, administrative api,
     sessioning and transport level messaging.</description>
     
-    <build>
-        <plugins>
-            <!-- Specify the compiler options and settings -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <showDeprecation>false</showDeprecation>
-                    <showWarnings>false</showWarnings>
-                    <compilerArguments>
-                        <source>1.8</source>
-                        <target>1.8</target>
-                    </compilerArguments>
-                </configuration>
-            </plugin>
-        </plugins>   
-    </build>
-     
+    <properties>
+        <project.build.targetJdk>8</project.build.targetJdk>
+    </properties>
+    
     <dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>

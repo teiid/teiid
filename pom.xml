@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.basepom</groupId>
         <artifactId>basepom-oss</artifactId>
-        <version>30</version>
+        <version>32</version>
     </parent>
     
     <modelVersion>4.0.0</modelVersion>
@@ -20,8 +20,6 @@
 	    
 	    <victims.updates>weekly</victims.updates>
             
-        <jdk.min.version>1.8</jdk.min.version>
-        
         <basepom.git-id.skip>false</basepom.git-id.skip>
         <basepom.check.skip-license>true</basepom.check.skip-license>
         <basepom.check.skip-spotbugs>true</basepom.check.skip-spotbugs>
@@ -50,8 +48,8 @@
         <!-- since we auto-release, we want to push the changes -->
         <basepom.release.push-changes>true</basepom.release.push-changes>
         
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.systemJdk>9</project.build.systemJdk>
+        <project.build.targetJdk>8</project.build.targetJdk>
 
         <derby.version>10.2.1.6</derby.version>
         <mysql.connector.version>5.1.5</mysql.connector.version>
@@ -233,7 +231,8 @@
         <properties>
             <basepom.check.skip-dependency-versions-check>false</basepom.check.skip-dependency-versions-check>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
-            <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
+            <!-- with basepom 32 this is now running as expected and there's a lot to correct -->
+            <basepom.check.fail-javadoc>false</basepom.check.fail-javadoc>
         </properties>
         </profile>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->

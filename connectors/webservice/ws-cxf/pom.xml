@@ -21,6 +21,17 @@
               <type>pom</type>
               <scope>import</scope>
             </dependency>
+            <dependency>
+              <groupId>org.apache.cxf</groupId>
+              <artifactId>cxf-rt-security</artifactId>
+              <version>${version.org.apache.cxf}</version>
+              <exclusions>
+                 <exclusion>
+                    <artifactId>stax-ex</artifactId>
+                    <groupId>org.jvnet.staxex</groupId>
+                 </exclusion>
+              </exclusions>
+        </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>

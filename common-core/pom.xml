@@ -11,24 +11,10 @@
 	<description>Core shared library</description>
 	<properties>
 	   <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
+       <project.build.targetJdk>8</project.build.targetJdk>
 	</properties>
 	<build>
 		<plugins>
-		    <!-- Specify the compiler options and settings -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <showDeprecation>false</showDeprecation>
-                    <showWarnings>false</showWarnings>
-                    <compilerArguments>
-                        <source>1.8</source>
-                        <target>1.8</target>
-                    </compilerArguments>
-                </configuration>
-            </plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>

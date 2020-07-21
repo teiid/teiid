@@ -1,7 +1,7 @@
 language: java
 sudo: false
 jdk:
-    - openjdk8
+    - openjdk9
     - openjdk11
 stages:
   - name: script
@@ -19,7 +19,7 @@ deploy:
   skip_cleanup: true
   on:
     branch: master
-    jdk: openjdk8
+    jdk: openjdk9
 notifications:
   webhooks:
     urls:
