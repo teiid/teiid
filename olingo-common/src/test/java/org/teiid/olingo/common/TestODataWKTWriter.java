@@ -18,12 +18,11 @@
 
 package org.teiid.olingo.common;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmGeometryPolygon;
 import org.junit.Test;
-
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
@@ -57,7 +56,7 @@ public class TestODataWKTWriter {
         org.apache.olingo.commons.api.edm.geo.Polygon olingoPolygon = (org.apache.olingo.commons.api.edm.geo.Polygon) EdmGeometryPolygon.getInstance().valueOfString(uriValue, null, null, null, null, null, EdmGeometryPolygon.getInstance().getDefaultType());
 
         assertEquals(0, olingoPolygon.getExterior().iterator().next().getX(), 0);
-        assertEquals(1, olingoPolygon.getInterior().iterator().next().getX(), 0);
+        assertEquals(1, olingoPolygon.getInterior(0).iterator().next().getX(), 0);
     }
 
 }

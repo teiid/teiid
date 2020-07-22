@@ -108,10 +108,9 @@ class Olingo2Teiid {
             Polygon polygon) throws AssertionError {
         Coordinate[] coords = convertLineStringToPoints(polygon.getExterior());
         LinearRing shell = GeometryUtils.GEOMETRY_FACTORY.createLinearRing(coords);
-        LinearRing[] holes = null;
-        if (polygon.getInterior() != null && polygon.getInterior().isEmpty()) {
-            holes = new LinearRing[1];
-            holes[0] = GeometryUtils.GEOMETRY_FACTORY.createLinearRing(convertLineStringToPoints(polygon.getExterior()));
+        LinearRing[] holes = new LinearRing[polygon.getNumberOfInteriorRings()];
+        for (int i = 0; i < polygon.getNumberOfInteriorRings(); i++) {
+            holes[i] = GeometryUtils.GEOMETRY_FACTORY.createLinearRing(convertLineStringToPoints(polygon.getInterior(i)));
         }
         return GeometryUtils.GEOMETRY_FACTORY.createPolygon(shell, holes);
     }

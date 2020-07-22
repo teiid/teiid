@@ -18,7 +18,6 @@
 package org.teiid.olingo.common;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.olingo.commons.api.edm.geo.Geospatial;
@@ -98,15 +97,19 @@ class JTS2OlingoBridge {
 
     private org.apache.olingo.commons.api.edm.geo.Polygon convertPolygon(
             Polygon polygon) throws AssertionError {
-        if (polygon.getNumInteriorRing() > 1) {
-            throw new AssertionError("Polygons with more than 1 interior rings are not supported by olingo"); //$NON-NLS-1$
+        List<org.apache.olingo.commons.api.edm.geo.LineString> interior = new ArrayList<>(polygon.getNumInteriorRing());
+        for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+            interior.add(convertLineString(polygon.getInteriorRingN(i).getCoordinates()));
         }
-        List<org.apache.olingo.commons.api.edm.geo.Point> interior = Collections.emptyList();
-        if (polygon.getNumInteriorRing() == 1) {
-            interior = convertLineStringToPoints(polygon.getInteriorRingN(1).getCoordinates());
-        }
-        List<org.apache.olingo.commons.api.edm.geo.Point> exterior = convertLineStringToPoints(polygon.getExteriorRing().getCoordinates());
+        org.apache.olingo.commons.api.edm.geo.LineString exterior = convertLineString(polygon.getExteriorRing().getCoordinates());
         return new org.apache.olingo.commons.api.edm.geo.Polygon(dimension, srid, interior, exterior);
+    }
+
+    private org.apache.olingo.commons.api.edm.geo.LineString convertLineString(
+            Coordinate[] lineString) {
+        ArrayList<org.apache.olingo.commons.api.edm.geo.Point> points = convertLineStringToPoints(
+                lineString);
+        return new org.apache.olingo.commons.api.edm.geo.LineString(dimension, srid, points);
     }
 
     private ArrayList<org.apache.olingo.commons.api.edm.geo.Point> convertLineStringToPoints(
@@ -116,6 +119,7 @@ class JTS2OlingoBridge {
             org.apache.olingo.commons.api.edm.geo.Point p = new org.apache.olingo.commons.api.edm.geo.Point(dimension, srid);
             p.setX(c.x);
             p.setY(c.y);
+            points.add(p);
         }
         return points;
     }
