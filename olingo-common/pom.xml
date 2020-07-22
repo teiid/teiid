@@ -17,12 +17,6 @@
     <name>teiid-olingo-common</name>
     <description>Teiid OData4 Common module</description>
     
-    <properties>
-	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
-	    -->
-        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
-    </properties>
-    
     <dependencies>
 
         <dependency>
@@ -48,11 +42,6 @@
         <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-commons-core</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
         </dependency>
         
         <dependency>
