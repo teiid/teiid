@@ -31,7 +31,16 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,9 +52,22 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.BatchSerializer;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.client.util.ExceptionUtil;
-import org.teiid.common.buffer.*;
+import org.teiid.common.buffer.AutoCleanupUtil;
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
+import org.teiid.common.buffer.BatchManager;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.Cache;
+import org.teiid.common.buffer.CacheEntry;
+import org.teiid.common.buffer.CacheKey;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.LobManager;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
+import org.teiid.common.buffer.STree;
+import org.teiid.common.buffer.Serializer;
+import org.teiid.common.buffer.StorageManager;
+import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
@@ -744,7 +766,12 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
         }
         if (this.storageManager != null) {
             long max = this.storageManager.getMaxStorageSpace();
-            this.maxFileStoreLength  = (max/maxActivePlans)>>2;
+            /* previously linearly subdividing the max filestore length
+             * meant that you would need to set high amounts of storage
+             * to accommodate a single large filestore. since we'll kill sessions based
+             * upon memory usage, we now divide the space more loosely
+             */
+            this.maxFileStoreLength  = max/(long)Math.pow(Math.max(4, maxActivePlans), .6);
             //note the increase of the storage / memory buffer values here to normalize to heap estimates
             //batches in serialized form are much more compact
 

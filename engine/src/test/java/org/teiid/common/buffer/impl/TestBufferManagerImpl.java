@@ -18,7 +18,8 @@
 
 package org.teiid.common.buffer.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,7 +78,7 @@ public class TestBufferManagerImpl {
         bufferManager.setCache(new MemoryStorageManager() {
             @Override
             public long getMaxStorageSpace() {
-                return 640;
+                return 59; //only about 1/6th will be usable by a single file store
             }
         });
         bufferManager.setMaxActivePlans(20);
