@@ -17,7 +17,8 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -2980,20 +2981,17 @@ public class TestODataIntegration {
     }
 
     @Test public void testGeometry() throws Exception {
-        String ddl = "CREATE foreign table geo (id integer primary key, location string);"
-                + "CREATE view geo_view (id integer primary key,"
-                + "location geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'point'))"
-                + " AS select id, ST_GEOMFROMTEXT(location) from geo;";
+        String ddl = "CREATE view geo_view (id integer primary key,"
+                + "location geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'point'),"
+                + "poly geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'polygon'))"
+                + " AS select 1, ST_GEOMFROMTEXT('POINT (1 3)'), ST_GEOMFROMTEXT('POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),\n" +
+                "(20 30, 35 35, 30 20, 20 30))');";
 
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("phy");
+        mmd.setModelType(Type.VIRTUAL);
         mmd.addSourceMetadata("ddl", ddl);
-        mmd.addSourceMapping("x", "x", null);
-        HardCodedExecutionFactory hef = new HardCodedExecutionFactory();
 
-        hef.addData("SELECT geo.id, geo.location FROM geo", Arrays.asList(Arrays.asList(1, "POINT (1 3)")));
-
-        teiid.addTranslator("x", hef);
         teiid.deployVDB("northwind", mmd);
 
         ContentResponse response = http.GET(baseURL + "/northwind/phy/geo_view");
@@ -3001,7 +2999,7 @@ public class TestODataIntegration {
 
         JsonNode node = getJSONNode(response);
         String value = node.get("value").toString();
-        assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]}}]", value);
+        assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]},\"poly\":{\"type\":\"Polygon\",\"coordinates\":[[[35.0,10.0],[45.0,45.0],[15.0,40.0],[10.0,20.0],[35.0,10.0]],[[20.0,30.0],[35.0,35.0],[30.0,20.0],[20.0,30.0]]]}}]", value);
 
         response = http.GET(baseURL + "/northwind/phy/$metadata");
         assertTrue(response.getContentAsString(), response.getContentAsString().contains("<Property Name=\"location\" "
