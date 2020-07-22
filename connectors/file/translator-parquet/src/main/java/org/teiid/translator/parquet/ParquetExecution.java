@@ -83,6 +83,10 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
                         output.add(row.getDouble(field, index));
                         break;
                     case BINARY:
+                        if ("STRING".equals(fieldType.getLogicalTypeAnnotation().toString())){
+                            output.add(row.getBinary(field, index).toStringUsingUTF8());
+                            break;
+                        }
                         output.add(row.getBinary(field,index));
                         break;
                 }
