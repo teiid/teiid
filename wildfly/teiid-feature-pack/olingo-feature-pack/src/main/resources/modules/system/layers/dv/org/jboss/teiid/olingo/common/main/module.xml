@@ -13,6 +13,7 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid" />
         <module name="org.jboss.teiid.api"/>
+        <module name="org.locationtech.jts"/>
     </dependencies>
 
 </module>

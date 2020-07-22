@@ -18,7 +18,10 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -229,7 +232,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
                 "        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" +
                 "         <metadata type=\"DDL\"><![CDATA[\n" +
                 "                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY);\n" +
-                "                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
+                "                CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
                 "        ]]> </metadata>\n" +
                 "    </model>\n" +
                 "</vdb>";
@@ -363,5 +366,43 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 
         response = client.put(new ByteArrayInputStream(gzipData));
         assertEquals("The request should succeed.", 304, response.getStatus());
+    }
+
+    @Test
+    public void testOdataGeo() throws Exception {
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<vdb name=\"Loopy\" version=\"1\">\n" +
+                "    <model name=\"MarketData\">\n" +
+                "        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" +
+                "         <metadata type=\"DDL\"><![CDATA[\n" +
+                "            CREATE view geo_view (id integer primary key," +
+                "            location geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'point'))" +
+                "            AS select 1, ST_POINT(1.0, 2.0);" +
+                "        ]]> </metadata>\n" +
+                "    </model>\n" +
+                "</vdb>";
+
+        admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
+
+        WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        Response response = client.invoke("GET", null);
+
+        int statusCode = response.getStatus();
+        assertEquals(200, statusCode);
+
+        client = WebClient.create("http://localhost:8080/odata4/loopy/MarketData/geo_view");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes()));
+        client.header("Content-Type", "application/json");
+
+        response = client.get();
+
+        String result = ObjectConverterUtil.convertToString((InputStream)response.getEntity());
+
+        assertTrue(result.contains("\"value\":[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,2.0]}}]"));
+
+        admin.undeploy("loopy-vdb.xml");
     }
 }
