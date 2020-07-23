@@ -702,7 +702,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
         FileStore delegate = this.storageManager.createFileStore(name);
 
-        ConstraintedFileStore wrapper = new ConstraintedFileStore(delegate, this);
+        ConstrainedFileStore wrapper = new ConstrainedFileStore(delegate, this);
 
         wrapper.setMaxLength(this.maxFileStoreLength);
         CommandContext cc = CommandContext.getThreadLocalContext();

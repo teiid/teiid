@@ -30,7 +30,7 @@ import org.teiid.query.QueryPlugin;
  * It removes the implementation for several methods that aren't needed above the
  * buffer manager and removes any synchronization.
  */
-class ConstraintedFileStore extends FileStore {
+class ConstrainedFileStore extends FileStore {
 
     private static final int SESSION_KILLING_RETRIES = 3;
 
@@ -39,7 +39,7 @@ class ConstraintedFileStore extends FileStore {
     private long maxLength = Long.MAX_VALUE;
     private SessionKiller killer;
 
-    ConstraintedFileStore(FileStore delegate, SessionKiller killer) {
+    ConstrainedFileStore(FileStore delegate, SessionKiller killer) {
         this.delegate = delegate;
         this.killer = killer;
     }
