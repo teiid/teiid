@@ -18,8 +18,10 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.optimizer.TestOptimizer.*;
+import static org.junit.Assert.fail;
+import static org.teiid.query.optimizer.TestOptimizer.checkNodeTypes;
+import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
+import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
 
 import java.util.Arrays;
 import java.util.Collections;

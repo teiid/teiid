@@ -18,7 +18,18 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import java.util.*;
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.RandomAccess;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -31,17 +42,49 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.BulkCommand;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Condition;
 import org.teiid.language.DerivedColumn;
+import org.teiid.language.DerivedTable;
+import org.teiid.language.Exists;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.In;
+import org.teiid.language.InsertValueSource;
+import org.teiid.language.IsDistinct;
+import org.teiid.language.IsNull;
+import org.teiid.language.Join;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedProcedureCall;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.Parameter;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SearchedWhenClause;
 import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.language.SubqueryComparison;
 import org.teiid.language.SubqueryComparison.Quantifier;
+import org.teiid.language.SubqueryIn;
+import org.teiid.language.TableReference;
 import org.teiid.language.WindowSpecification;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
@@ -51,16 +94,40 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.GroupBy;
 import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.IsDistinctCriteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.NotCriteria;
 import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetClause;
+import org.teiid.query.sql.lang.SetClauseList;
+import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.AliasSymbol;
@@ -814,9 +881,12 @@ public class LanguageBridgeFactory {
             params.add(translate(args[i]));
         }
         String name = function.getName();
-        if (function.getFunctionDescriptor() != null) {
-            name = function.getFunctionDescriptor().getName();
-            if (!supportsConcat2 && function.getFunctionDescriptor().getMethod().getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.CONCAT2)) {
+        FunctionMethod method = null;
+        FunctionDescriptor functionDescriptor = function.getFunctionDescriptor();
+        if (functionDescriptor != null) {
+            method = functionDescriptor.getMethod();
+            name = functionDescriptor.getName();
+            if (!supportsConcat2 && method.getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.CONCAT2)) {
                 Expression[] newArgs = new Expression[args.length];
 
                 boolean useCase = true;
@@ -853,7 +923,7 @@ public class LanguageBridgeFactory {
                 caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
                 return translate(caseExpr);
             }
-            if (function.getFunctionDescriptor().getMethod().getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.TIMESTAMPADD)
+            if (method.getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.TIMESTAMPADD)
                     && function.getArg(1).getType() == DataTypeManager.DefaultDataClasses.LONG) {
                 //TEIID-5406 only allow integer literal pushdown for backwards compatibility
                 if (params.get(1) instanceof Literal) {
@@ -869,11 +939,17 @@ public class LanguageBridgeFactory {
                             Arrays.asList(params.get(1), new Literal(DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataClasses.STRING)), DataTypeManager.DefaultDataClasses.INTEGER));
                 }
             }
+
+            if (function.getPushdownFunction() != null) {
+                method = function.getPushdownFunction();
+                name = method.getName();
+            }
+
             //check for translator pushdown functions, and use the name in source if possible
-            if (function.getFunctionDescriptor().getMethod().getNameInSource() != null &&
-                    (CoreConstants.SYSTEM_MODEL.equals(function.getFunctionDescriptor().getSchema())
-                            || (function.getFunctionDescriptor().getMethod().getParent() != null && function.getFunctionDescriptor().getMethod().getParent().isPhysical()))) {
-                name = function.getFunctionDescriptor().getMethod().getNameInSource();
+            if (method.getNameInSource() != null &&
+                    (CoreConstants.SYSTEM_MODEL.equals(functionDescriptor.getSchema())
+                            || (method.getParent() != null && method.getParent().isPhysical()))) {
+                name = method.getNameInSource();
             }
         } else {
             name = Symbol.getShortName(name);
@@ -882,9 +958,7 @@ public class LanguageBridgeFactory {
         //if there is any ambiguity in the function name it will be up to the translator logic to check the
         //metadata
         org.teiid.language.Function result = new org.teiid.language.Function(name, params, function.getType());
-        if (function.getFunctionDescriptor() != null) {
-            result.setMetadataObject(function.getFunctionDescriptor().getMethod());
-        }
+        result.setMetadataObject(method);
         return result;
     }
 

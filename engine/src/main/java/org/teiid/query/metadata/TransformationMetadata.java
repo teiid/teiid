@@ -22,7 +22,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.script.ScriptContext;
@@ -31,6 +41,7 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -46,10 +57,21 @@ import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
@@ -1138,6 +1160,23 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public void setLongRanks(boolean longRanks) {
         this.longRanks = longRanks;
+    }
+
+    @Override
+    public FunctionMethod getPushdownFunction(Object modelID, String fullName) {
+        if (vdbMetaData == null || !(modelID instanceof Schema)) {
+            return null;
+        }
+        Schema schema = (Schema)modelID;
+        ModelMetaData model = vdbMetaData.getModel(schema.getName());
+        if (model == null) {
+            return null;
+        }
+        PushdownFunctions functions = model.getAttachment(PushdownFunctions.class);
+        if (functions == null) {
+            return null;
+        }
+        return functions.get(fullName);
     }
 
 }

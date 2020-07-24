@@ -60,7 +60,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private FunctionMethod method;
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
     private boolean hasWrappedArgs;
-    private boolean calledWithVarArgArrayParam; //TODO: could store this on the function and pass to invoke
 
     // This is transient as it would be useless to invoke this method in
     // a different VM.  This function descriptor can be used to look up
@@ -205,6 +204,10 @@ public class FunctionDescriptor implements Serializable, Cloneable {
      * @return Result of invoking the function
      */
     public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException, BlockedException {
+        return invokeFunction(values, context, functionTarget, false);
+    }
+
+    public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget, boolean calledWithVarArgArrayParam) throws FunctionExecutionException, BlockedException {
         if (!isNullDependent()) {
             for (int i = requiresContext?1:0; i < values.length; i++) {
                 if (values[i] == null) {
@@ -335,14 +338,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             }
         }
         return result;
-    }
-
-    public boolean isCalledWithVarArgArrayParam() {
-        return calledWithVarArgArrayParam;
-    }
-
-    public void setCalledWithVarArgArrayParam(boolean calledWithVarArgArrayParam) {
-        this.calledWithVarArgArrayParam = calledWithVarArgArrayParam;
     }
 
     public boolean isSystemFunction(String name) {

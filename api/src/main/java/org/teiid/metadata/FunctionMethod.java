@@ -53,6 +53,7 @@ import org.teiid.core.util.HashCodeUtil;
 public class FunctionMethod extends AbstractMetadataRecord {
 
     public static final String SYSTEM_NAME = AbstractMetadataRecord.RELATIONAL_PREFIX + "system-name"; //$NON-NLS-1$
+    public static final String VIRTUAL_FUNCTION = AbstractMetadataRecord.RELATIONAL_PREFIX + "virtual-function"; //$NON-NLS-1$
 
     private static final long serialVersionUID = -8039086494296455152L;
 

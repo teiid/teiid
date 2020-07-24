@@ -46,11 +46,37 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.BetweenCriteria;
+import org.teiid.query.sql.lang.BinaryComparison;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.ExpressionCriteria;
+import org.teiid.query.sql.lang.GroupContext;
+import org.teiid.query.sql.lang.IsDistinctCriteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.SetClause;
+import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.proc.ExceptionExpression;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Array;
+import org.teiid.query.sql.symbol.CaseExpression;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.DerivedColumn;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.QueryString;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.XMLCast;
+import org.teiid.query.sql.symbol.XMLExists;
+import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.XMLSerialize;
 
 
 public class ResolverVisitor extends LanguageVisitor {
@@ -796,8 +822,7 @@ public class ResolverVisitor extends LanguageVisitor {
         if (fd.getMethod().isVarArgs()
                 && fd.getTypes().length == types.length
                 && library.isVarArgArrayParam(fd.getMethod(), types, types.length - 1, fd.getTypes()[types.length - 1])) {
-            fd = fd.clone();
-            fd.setCalledWithVarArgArrayParam(true);
+            function.setCalledWithVarArgArrayParam(true);
         }
 
         if(FunctionLibrary.isConvert(function)) {

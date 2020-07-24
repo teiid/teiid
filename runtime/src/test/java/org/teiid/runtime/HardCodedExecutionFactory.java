@@ -192,4 +192,8 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
         return commands;
     }
 
+    public void clearData() {
+        this.dataMap.clear();
+    }
+
 }
