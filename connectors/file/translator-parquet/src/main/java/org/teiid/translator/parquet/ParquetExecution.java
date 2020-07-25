@@ -18,6 +18,7 @@
 
 package org.teiid.translator.parquet;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,44 +55,74 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
         return projectRow(row);
     }
 
-    List<Object> projectRow(Group row) {
+    List<Object> projectRow(Group row) throws TranslatorException {
         ArrayList<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
         int fieldCount = row.getType().getFieldCount();
         for (int field = 0; field < fieldCount; field++) {
-            int valueCount = row.getFieldRepetitionCount(field);
             Type fieldType = row.getType().getType(field);
-            PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
-            String fieldName = fieldType.getName();
-            for (int index = 0; index < valueCount; index++) {
-                switch (type) {
-                    case INT96:
-                        output.add(row.getInt96(field, index));
-                        break;
-                    case INT64:
-                        output.add(row.getLong(field, index));
-                        break;
-                    case INT32:
-                        output.add(row.getInteger(field, index));
-                        break;
-                    case BOOLEAN:
-                        output.add(row.getBoolean(field, index));
-                        break;
-                    case FLOAT:
-                        output.add(row.getFloat(field, index));
-                        break;
-                    case DOUBLE:
-                        output.add(row.getDouble(field, index));
-                        break;
-                    case BINARY:
-                        if ("STRING".equals(fieldType.getLogicalTypeAnnotation().toString())){
-                            output.add(row.getBinary(field, index).toStringUsingUTF8());
-                            break;
-                        }
-                        output.add(row.getBinary(field,index));
-                        break;
+            int valueCount = row.getFieldRepetitionCount(field);
+            if(valueCount > 1){
+                throw new TranslatorException("We don't support non annotated types as of now.");
+            }
+            try {
+                if ("LIST".equals(fieldType.getLogicalTypeAnnotation().toString())) {
+                    output.add(getList(row.getGroup(field, 0)));
+                    continue;
                 }
+            } catch (NullPointerException e) {
+                //continue to check for primitive types
+            }
+            if(!fieldType.isPrimitive()) {
+                throw new TranslatorException("We don't support any logical type other than LIST as of now.");
+            }
+            PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
+            for (int index = 0; index < valueCount; index++) {
+                output.add(getPrimitiveTypeObject(type, field, index, row, fieldType));
             }
         }
         return output;
+    }
+
+    private ArrayList getList(Group group) throws TranslatorException {
+        ArrayList<Object> outputList = new ArrayList();
+        int fieldCount = group.getType().getFieldCount();
+        for (int field = 0; field < fieldCount; field++) {
+            int valueCount = group.getFieldRepetitionCount(field);
+            for (int index = 0; index < valueCount; index++) {
+                Group listGroup = group.getGroup(field, index);
+                Type fieldType = listGroup.getType().getType(0);
+                if(!fieldType.isPrimitive()) {
+                    throw new TranslatorException("We don't support any logical types in a list.");
+                }
+                PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
+                outputList.add(getPrimitiveTypeObject(type, 0, 0, listGroup, fieldType));
+            }
+        }
+        return outputList;
+    }
+
+    Object getPrimitiveTypeObject(PrimitiveType.PrimitiveTypeName primitiveTypeName, int field, int index, Group row, Type fieldType) {
+        switch (primitiveTypeName) {
+            case INT96:
+                byte[] bytes = row.getInt96(field, index).getBytesUnsafe();
+                BigInteger bigInteger = new BigInteger(bytes);
+                return bigInteger;
+            case INT64:
+                return row.getLong(field, index);
+            case INT32:
+                return row.getInteger(field, index);
+            case BOOLEAN:
+                return row.getBoolean(field, index);
+            case FLOAT:
+                return row.getFloat(field, index);
+            case DOUBLE:
+                return row.getDouble(field, index);
+            case BINARY:
+                if ("STRING".equals(fieldType.getLogicalTypeAnnotation().toString())) {
+                    return row.getBinary(field, index).toStringUsingUTF8();
+                }
+                return row.getBinary(field, index);
+        }
+        return null;
     }
 }
