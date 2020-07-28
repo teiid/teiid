@@ -127,7 +127,7 @@ public class OlingoBridge {
                 continue;
             }
             final ODataSchemaInfo info = infoMap.get(s.getName());
-            ODataSchemaBuilder.buildNavigationProperties(s, info.entityTypes, info.entitySets, new SchemaResolver() {
+            ODataSchemaBuilder.buildNavigationProperties(s, info, new SchemaResolver() {
 
                 @Override
                 public ODataSchemaInfo getSchemaInfo(String name) {
