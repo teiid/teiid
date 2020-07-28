@@ -17,5 +17,6 @@
  */
 package org.teiid.translator.dynamodb;
 
-public interface DynamoDBConnection {
+public class DynamoDBConnectionImpl implements DynamoDBConnection {
+
 }

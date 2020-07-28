@@ -17,5 +17,8 @@
  */
 package org.teiid.translator.dynamodb;
 
-public class DynamoDBConfiguration {
+public interface DynamoDBConfiguration {
+    public String getAccessKey();
+
+    public String getSecretKey();
 }
