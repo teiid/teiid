@@ -37,7 +37,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Insert;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.OrderBy;
+import org.teiid.language.Parameter;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.SetQuery;
+import org.teiid.language.SortSpecification;
+import org.teiid.language.WindowFunction;
+import org.teiid.language.WindowSpecification;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -100,6 +120,17 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
                 return m.group(1);
             }
             return nameInSource;
+        }
+
+        @Override
+        protected String getRuntimeType(int type, String typeName,
+                int precision) {
+            //TEIID-5949 - without this we default to object for datatimeoffet
+            //conversion to timestamp looses the offset
+            if ("datetimeoffset".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                return TypeFacility.RUNTIME_NAMES.STRING;
+            }
+            return super.getRuntimeType(type, typeName, precision);
         }
     }
 
