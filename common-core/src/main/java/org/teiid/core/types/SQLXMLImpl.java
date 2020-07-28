@@ -170,4 +170,28 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
         throw SqlUtil.createFeatureNotSupportedException();
     }
 
+    /**
+     * For a given blob try to determine the length without fully reading an inputstream
+     * @return the length or -1 if it cannot be determined
+     */
+    public static long quickLength(SQLXML xml) {
+        if (xml instanceof XMLType) {
+            XMLType x = (XMLType)xml;
+            long length = x.getLength();
+            if (length != -1) {
+                return length;
+            }
+            return quickLength(x.getReference());
+        }
+        if (xml instanceof SQLXMLImpl) {
+            SQLXMLImpl x = (SQLXMLImpl)xml;
+            try {
+                return x.getStreamFactory().getLength();
+            } catch (SQLException e) {
+                return -1;
+            }
+        }
+        return -1;
+    }
+
 }

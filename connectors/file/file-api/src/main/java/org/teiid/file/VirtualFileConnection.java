@@ -28,6 +28,19 @@ import org.teiid.translator.TranslatorException;
  */
 public interface VirtualFileConnection extends Connection {
 
+    public static class FileMetadata {
+        private Long size;
+
+        public Long size() {
+            return size;
+        }
+
+        public FileMetadata size(Long s) {
+            this.size = s;
+            return this;
+        }
+    }
+
     /**
      * Return a list of files by a given file pattern
      * @param namePattern - the syntax and pattern.  The wildcard character * is supported in the filename only.
@@ -35,6 +48,15 @@ public interface VirtualFileConnection extends Connection {
      * @throws TranslatorException
      */
     VirtualFile[] getFiles(String namePattern) throws TranslatorException;
+
+    /**
+     * Add a file
+     * @param fileMetadata Additional metadata about the file to be created.  May not be used/supported by all file sources.
+     * @throws TranslatorException
+     */
+    default void add(InputStream in, String path, FileMetadata fileMetadata) throws TranslatorException {
+        add(in, path);
+    }
 
     /**
      * Add a file

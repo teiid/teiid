@@ -18,19 +18,25 @@
 
 package org.teiid.translator.file;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.file.JavaVirtualFile;
 import org.teiid.file.VirtualFileConnection;
+import org.teiid.file.VirtualFileConnection.FileMetadata;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -80,6 +86,26 @@ public class TestFileExecutionFactory {
             count++;
         }
         assertEquals(1, count);
+    }
+
+    @Test public void testSaveFileLength() throws Exception {
+        FileExecutionFactory fef = new FileExecutionFactory();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "text", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        fef.getMetadata(mf, null);
+        Procedure p = mf.getSchema().getProcedure(FileExecutionFactory.SAVEFILE);
+        VirtualFileConnection fc = Mockito.mock(VirtualFileConnection.class);
+        int length = 100;
+        BlobType blob = new BlobType(new byte[length]);
+        Call call = fef.getLanguageFactory().createCall(FileExecutionFactory.SAVEFILE, Arrays.asList(
+                new Argument(Direction.IN, new Literal("path", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null),
+                new Argument(Direction.IN, new Literal(blob, TypeFacility.RUNTIME_TYPES.BLOB), TypeFacility.RUNTIME_TYPES.BLOB, null)), p);
+        ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
+        pe.execute();
+        ArgumentCaptor<FileMetadata> argument = ArgumentCaptor.forClass(FileMetadata.class);
+        Mockito.verify(fc).add(Mockito.any(InputStream.class), Mockito.eq("path"), argument.capture());
+        FileMetadata fm = argument.getValue();
+        assertEquals(Long.valueOf(length), fm.size());
+        assertNull(pe.next());
     }
 
 }

@@ -34,9 +34,11 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
+import org.teiid.file.VirtualFileConnection.FileMetadata;
 import org.teiid.language.Call;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -82,17 +84,24 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Vi
                 }
                 LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Saving", filePath); //$NON-NLS-1$
                 InputStream is = null;
+                Long length = null;
+                FileMetadata metadata = new FileMetadata();
                 try {
                     if (file instanceof SQLXML){
                         is = ((SQLXML)file).getBinaryStream();
+                        length = SQLXMLImpl.quickLength((SQLXML)file);
                     } else if (file instanceof Clob) {
                         is = new ReaderInputStream(((Clob)file).getCharacterStream(), encoding);
                     } else if (file instanceof Blob) {
                         is = ((Blob)file).getBinaryStream();
+                        length = BlobImpl.quickLength((Blob)file);
                     } else {
                         throw new TranslatorException(UTIL.getString("unknown_type")); //$NON-NLS-1$
                     }
-                    this.conn.add(is, filePath);
+                    if (length != null && length != -1) {
+                        metadata.size(length);
+                    }
+                    this.conn.add(is, filePath, metadata);
                 } catch (SQLException | TranslatorException e) {
                     throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
                 }

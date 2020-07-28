@@ -17,9 +17,14 @@
  */
 package org.teiid.resource.adapter.ftp;
 
-import static org.apache.commons.net.ftp.FTP.*;
-import static org.apache.commons.net.ftp.FTPClient.*;
-import static org.teiid.core.util.Assertion.*;
+import static org.apache.commons.net.ftp.FTP.ASCII_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTP.EBCDIC_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
+import static org.apache.commons.net.ftp.FTPClient.ACTIVE_LOCAL_DATA_CONNECTION_MODE;
+import static org.apache.commons.net.ftp.FTPClient.PASSIVE_LOCAL_DATA_CONNECTION_MODE;
+import static org.teiid.core.util.Assertion.assertTrue;
+import static org.teiid.core.util.Assertion.isNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +47,6 @@ import org.apache.commons.net.util.TrustManagerUtils;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.file.ftp.FtpConfiguration;
-import org.teiid.file.ftp.FtpFileConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
@@ -421,7 +425,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory i
             @Override
             public FtpFileConnectionImpl getConnection() throws ResourceException {
                 try {
-                    return new FtpFileConnectionImpl(new FtpFileConnection(configuration()));
+                    return new FtpFileConnectionImpl(configuration());
                 } catch (TranslatorException e) {
                     throw new ResourceException(e);
                 }

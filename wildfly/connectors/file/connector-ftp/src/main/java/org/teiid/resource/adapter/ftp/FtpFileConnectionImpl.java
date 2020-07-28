@@ -17,43 +17,27 @@
  */
 package org.teiid.resource.adapter.ftp;
 
-import java.io.InputStream;
-
 import javax.resource.ResourceException;
 
-import org.teiid.file.VirtualFileConnection;
+import org.teiid.file.ftp.FtpConfiguration;
 import org.teiid.file.ftp.FtpFileConnection;
-import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ResourceConnection;
 import org.teiid.translator.TranslatorException;
 
-public class FtpFileConnectionImpl extends BasicConnection implements VirtualFileConnection {
+public class FtpFileConnectionImpl extends FtpFileConnection implements ResourceConnection {
 
-    private FtpFileConnection delegate;
-    public FtpFileConnectionImpl(FtpFileConnection conn) {
-        this.delegate = conn;
+    public FtpFileConnectionImpl(FtpConfiguration config)
+            throws TranslatorException {
+        super(config);
     }
 
     @Override
     public void close() throws ResourceException {
         try {
-            this.delegate.close();
-        } catch (TranslatorException e) {
-            throw new ResourceException(e.getCause());
+            super.close();
+        } catch (Exception e) {
+            throw new ResourceException(e);
         }
     }
 
-    @Override
-    public org.teiid.file.VirtualFile[] getFiles(String namePattern) throws TranslatorException {
-        return delegate.getFiles(namePattern);
-    }
-
-    @Override
-    public void add(InputStream in, String path) throws TranslatorException {
-       this.delegate.add(in, path);
-    }
-
-    @Override
-    public boolean remove(String path) throws TranslatorException {
-        return this.delegate.remove(path);
-    }
 }

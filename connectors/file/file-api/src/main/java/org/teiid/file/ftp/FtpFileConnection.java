@@ -113,12 +113,8 @@ public class FtpFileConnection implements VirtualFileConnection {
     }
 
     @Override
-    public void close() throws TranslatorException {
-        try {
-            this.closeable.close();
-        } catch (IOException e) {
-            throw new TranslatorException(e);
-        }
+    public void close() throws Exception {
+        this.closeable.close();
     }
 
     @Override

@@ -181,4 +181,32 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
     public void truncate(long len) throws SQLException {
         throw SqlUtil.createFeatureNotSupportedException();
     }
+
+    /**
+     * For a given blob try to determine the length without fully reading an inputstream
+     * @return the length or -1 if it cannot be determined
+     */
+    public static long quickLength(Blob b) {
+        if (b instanceof BlobType) {
+            BlobType blob = (BlobType)b;
+            long length = blob.getLength();
+            if (length != -1) {
+                return length;
+            }
+            return quickLength(blob.getReference());
+        }
+        if (b instanceof BlobImpl) {
+            BlobImpl blob = (BlobImpl)b;
+            try {
+                return blob.getStreamFactory().getLength();
+            } catch (SQLException e) {
+                return -1;
+            }
+        }
+        try {
+            return b.length();
+        } catch (SQLException e) {
+            return -1;
+        }
+    }
 }

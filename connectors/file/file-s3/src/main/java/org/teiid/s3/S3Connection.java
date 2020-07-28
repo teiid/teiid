@@ -164,9 +164,21 @@ public class S3Connection implements VirtualFileConnection {
     }
 
     @Override
-    public void add(InputStream inputStream, String s) throws TranslatorException {
+    public void add(InputStream in, String path) throws TranslatorException {
+        add(in, path, null);
+    }
+
+    @Override
+    public void add(InputStream inputStream, String s, FileMetadata fileMetadata)
+            throws TranslatorException {
         ObjectMetadata metadata = new ObjectMetadata();
         try{
+            if (fileMetadata != null) {
+                Long size = fileMetadata.size();
+                if (size != null) {
+                    metadata.setContentLength(size);
+                }
+            }
             PutObjectRequest request = new PutObjectRequest(s3Config.getBucket(), s, inputStream, metadata);
             if(s3Config.getSseKey() != null) {
                 request.withSSECustomerKey(new SSECustomerKey(s3Config.getSseKey()).withAlgorithm(s3Config.getSseAlgorithm()));
