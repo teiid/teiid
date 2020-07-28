@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Date;
 import java.util.LinkedHashSet;
@@ -367,6 +367,56 @@ public class TestMongoDBMetadataProcessor {
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');";
+        assertEquals(expected, metadataDDL.replace("\t", "    "));
+    }
+
+    @Test
+    public void testEmbeddedList() throws TranslatorException {
+        MongoDBMetadataProcessor mp = new MongoDBMetadataProcessor();
+
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "mongodb", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        MongoDBConnection conn = Mockito.mock(MongoDBConnection.class);
+        DBCollection tableDBCollection = Mockito.mock(DBCollection.class);
+        LinkedHashSet<String> tables = new LinkedHashSet<String>();
+        tables.add("table");
+
+        DB db = Mockito.mock(DB.class);
+
+        BasicDBList list = new BasicDBList();
+
+        BasicDBObject child = new BasicDBObject();
+        child.append("col1", "one");
+        child.append("col2", "two");
+        list.add(child);
+
+        BasicDBObject row = new BasicDBObject();
+        row.append("_id", 1);
+        row.append("col1", list);
+
+        Mockito.stub(db.getCollectionNames()).toReturn(tables);
+        Mockito.stub(db.getCollection(Mockito.eq("table"))).toReturn(tableDBCollection);
+
+        DBCursor tableCursor = Mockito.mock(DBCursor.class);
+        Mockito.when(tableCursor.hasNext()).thenReturn(true).thenReturn(false);
+        Mockito.when(tableCursor.next()).thenReturn(row);
+        Mockito.when(tableDBCollection.find()).thenReturn(tableCursor);
+
+        Mockito.stub(conn.getDatabase()).toReturn(db);
+
+        mp.process(mf, conn);
+
+        String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        String expected = "CREATE FOREIGN TABLE \"table\" (\n" +
+                "    \"_id\" integer,\n" +
+                "    CONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table');\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE col1 (\n" +
+                "    col1 string,\n" +
+                "    col2 string,\n" +
+                "    table__id integer OPTIONS (UPDATABLE FALSE),\n" +
+                "    FOREIGN KEY(table__id) REFERENCES \"table\" \n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=col1');";
         assertEquals(expected, metadataDDL.replace("\t", "    "));
     }
 }

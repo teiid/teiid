@@ -183,22 +183,23 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     private Column addColumn(MetadataFactory metadataFactory, Table table, String columnKey, Object value) {
         Column column = null;
 
-        if (columnKey.equals(ID)) {
-            if (value instanceof BasicDBObject) {
+        if (value instanceof BasicDBObject) {
+            if (columnKey.equals(ID)) {
+                ArrayList<String> columns = new ArrayList<String>();
                 BasicDBObject compositeKey = (BasicDBObject)value;
                 for (String key:compositeKey.keySet()) {
                     column = addColumn(metadataFactory, table, key, compositeKey.get(key));
                     column.setUpdatable(true);
+                    columns.add(key);
                 }
-            }
-        }
-
-        if (!columnKey.equals(ID) && value instanceof BasicDBObject) {
-            // embedded doc - one to one
-            Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value, table);
-            if (childTable != null) {
-                childTable.setProperty(MERGE, table.getName());
-                childTable.setProperty(ASSOSIATION, MergeDetails.Association.ONE.name());
+                metadataFactory.addPrimaryKey("PK0", columns, table); //$NON-NLS-1$
+            } else {
+                // embedded doc - one to one
+                Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value, table);
+                if (childTable != null) {
+                    childTable.setProperty(MERGE, table.getName());
+                    childTable.setProperty(ASSOSIATION, MergeDetails.Association.ONE.name());
+                }
             }
         }
         else if (value instanceof BasicDBList) {
@@ -214,10 +215,11 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 }
                 else {
                     column = table.getColumnByName(columnKey);
-                    String dataType = getDataType(basicDBList.get(0))+"[]"; //$NON-NLS-1$
+                    Object nestedValue = basicDBList.get(0);
+                    String dataType = getDataType(nestedValue)+"[]"; //$NON-NLS-1$
                     if (column == null) {
                         column = metadataFactory.addColumn(columnKey, dataType, table);
-                        setNativeType(column, null);
+                        setNativeType(column, nestedValue);
                     } else if (!column.getRuntimeType().equals(dataType)) {
                         //type conflict
                         MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
@@ -252,18 +254,8 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
 
         // create a PK out of _id
-        if (columnKey.equals(ID)) {
-            if (value instanceof BasicDBObject) {
-                BasicDBObject compositeKey = (BasicDBObject)value;
-                ArrayList<String> columns = new ArrayList<String>();
-                for (String key:compositeKey.keySet()) {
-                    columns.add(key);
-                }
-                metadataFactory.addPrimaryKey("PK0", columns, table); //$NON-NLS-1$
-            }
-            else {
-                metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
-            }
+        if (columnKey.equals(ID) && !(value instanceof BasicDBObject)) {
+            metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
         }
         return column;
     }
