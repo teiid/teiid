@@ -82,6 +82,7 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.Trigger;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.MaterializationMetadataRepository.Scope;
@@ -321,6 +322,12 @@ public class MetadataValidator {
 
                 }
 
+                QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+                PushdownFunctions pushdownFunctions = null;
+                if (schema.isPhysical()) {
+                    pushdownFunctions = new PushdownFunctions();
+                    model.addAttachment(PushdownFunctions.class, pushdownFunctions);
+                }
                 for (FunctionMethod func:schema.getFunctions().values()) {
                     for (FunctionParameter param : func.getInputParameters()) {
                         if (param.isVarArg() && param != func.getInputParameters().get(func.getInputParameterCount() -1)) {
@@ -329,6 +336,27 @@ public class MetadataValidator {
                     }
                     if (func.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN) && !model.isSource()) {
                         metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31078, func.getFullName(), model.getName()));
+                    }
+
+                    if (pushdownFunctions != null) {
+                        String virtualName = func.getProperty(FunctionMethod.VIRTUAL_FUNCTION);
+
+                        if (virtualName != null) {
+                            Class<?>[] types = new Class[func.getInputParameterCount()];
+                            int i = 0;
+                            for (FunctionParameter fp : func.getInputParameters()) {
+                                types[i++] = fp.getJavaType();
+                            }
+                            FunctionDescriptor virtualFunction = metadata.getFunctionLibrary().findFunction(virtualName, types);
+                            //if it exists and is a proper match, add it to the pushdown mapping
+                            if (virtualFunction != null
+                                    //&& !virtualFunction.getMethod().getParent().isPhysical() -- sys/sysadmin are physical, so we won't check this just yet
+                                    && !(func.isVarArgs() ^ virtualFunction.getMethod().isVarArgs())) {
+                                pushdownFunctions.put(virtualName, func);
+                            } else {
+                                metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31305, virtualName, func.getFullName()), func);
+                            }
+                        }
                     }
                 }
             }

@@ -31,6 +31,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -539,6 +540,11 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     @Override
     public List<? extends Object> getModelIDs() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public FunctionMethod getPushdownFunction(Object modelID, String fullName) {
+        return null;
     }
 
 }

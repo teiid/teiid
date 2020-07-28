@@ -21,6 +21,7 @@ package org.teiid.query.sql.symbol;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
@@ -41,6 +42,9 @@ public class Function implements NamedExpression {
     private FunctionDescriptor descriptor;
     private boolean implicit = false;
     private boolean eval = true;
+
+    private boolean calledWithVarArgArrayParam;
+    private FunctionMethod pushdownFunction;
 
     /**
      * Construct a function with function name and array of arguments.  For
@@ -231,6 +235,8 @@ public class Function implements NamedExpression {
             copy.makeImplicit();
         }
         copy.eval = this.eval;
+        copy.calledWithVarArgArrayParam = this.calledWithVarArgArrayParam;
+        copy.pushdownFunction = this.pushdownFunction;
         return copy;
     }
 
@@ -252,6 +258,22 @@ public class Function implements NamedExpression {
 
     public void setEval(boolean eval) {
         this.eval = eval;
+    }
+
+    public boolean isCalledWithVarArgArrayParam() {
+        return calledWithVarArgArrayParam;
+    }
+
+    public void setCalledWithVarArgArrayParam(boolean calledWithVarArgArrayParam) {
+        this.calledWithVarArgArrayParam = calledWithVarArgArrayParam;
+    }
+
+    public FunctionMethod getPushdownFunction() {
+        return pushdownFunction;
+    }
+
+    public void setPushdownFunction(FunctionMethod pushdownFunction) {
+        this.pushdownFunction = pushdownFunction;
     }
 
 }

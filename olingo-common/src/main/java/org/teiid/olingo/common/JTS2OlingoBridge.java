@@ -52,9 +52,7 @@ class JTS2OlingoBridge {
             return result;
         } else if (geometry instanceof LineString) {
             LineString lineString = (LineString) geometry;
-            ArrayList<org.apache.olingo.commons.api.edm.geo.Point> points = convertLineStringToPoints(lineString.getCoordinates());
-            org.apache.olingo.commons.api.edm.geo.LineString result = new org.apache.olingo.commons.api.edm.geo.LineString(dimension, srid, points);
-            return result;
+            return convertLineString(lineString.getCoordinates());
         } else if (geometry instanceof Polygon) {
             Polygon polygon = (Polygon) geometry;
             return convertPolygon(polygon);
@@ -68,7 +66,7 @@ class JTS2OlingoBridge {
             List<org.apache.olingo.commons.api.edm.geo.LineString> lineStrings = new ArrayList<>(multiLineString.getNumGeometries());
             for (int i = 0; i < multiLineString.getNumGeometries(); i++) {
                 LineString lineString = (LineString)multiLineString.getGeometryN(i);
-                lineStrings.add(new org.apache.olingo.commons.api.edm.geo.LineString(dimension, srid, convertLineStringToPoints(lineString.getCoordinates())));
+                lineStrings.add(convertLineString(lineString.getCoordinates()));
             }
             org.apache.olingo.commons.api.edm.geo.MultiLineString result = new org.apache.olingo.commons.api.edm.geo.MultiLineString(dimension, srid, lineStrings);
             return result;

@@ -287,6 +287,14 @@ public class CapabilitiesUtil {
                     return (schema == null
                             && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPDIFF));
                 } else {
+                    FunctionMethod functionMethod = metadata.getPushdownFunction(modelID, fullName);
+                    if (functionMethod != null) {
+                        //it's not great that we're setting this as a side-effect, but
+                        //it's easier that attempting to re-associate at the connector
+                        //or another level
+                        function.setPushdownFunction(functionMethod);
+                        return true;
+                    }
                     return false ;
                 }
             }
