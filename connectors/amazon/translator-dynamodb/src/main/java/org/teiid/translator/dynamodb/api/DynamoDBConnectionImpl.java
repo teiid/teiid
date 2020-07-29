@@ -69,7 +69,7 @@ public class DynamoDBConnectionImpl implements DynamoDBConnection {
     }
 
     @Override
-    public List<AttributeDefinition> getAttributeNames(String tableName) throws TranslatorException {
+    public List<AttributeDefinition> getTableAttributeNames(String tableName) throws TranslatorException {
         DescribeTableRequest describeTableRequest = new DescribeTableRequest();
         describeTableRequest.setTableName(tableName);
         try {
