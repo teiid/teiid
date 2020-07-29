@@ -22,6 +22,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.*;
 import org.teiid.translator.TranslatorException;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DynamoDBConnectionImpl implements DynamoDBConnection {
@@ -37,9 +39,15 @@ public class DynamoDBConnectionImpl implements DynamoDBConnection {
     }
 
     @Override
-    public void createTable(String tableName) throws TranslatorException {
-        CreateTableRequest createTableRequest = new CreateTableRequest();
-        createTableRequest.setTableName(tableName);
+    public void createTable(String tableName, List<KeySchemaElement> keySchema, List<AttributeDefinition> attributeDefinitions) throws TranslatorException {
+        CreateTableRequest createTableRequest = new CreateTableRequest()
+                .withTableName(tableName)
+                .withAttributeDefinitions(attributeDefinitions)
+                .withKeySchema(keySchema)
+                .withProvisionedThroughput(new ProvisionedThroughput()
+                        .withReadCapacityUnits(5L)
+                        .withWriteCapacityUnits(6L));
+
         try {
             this.dynamoDBClient
                     .createTable(createTableRequest);
@@ -72,5 +80,12 @@ public class DynamoDBConnectionImpl implements DynamoDBConnection {
         } catch(AmazonClientException exception) {
             throw new TranslatorException(exception);
         }
+    }
+
+    @Override
+    public List<String> getTableNames() throws TranslatorException {
+        return this.dynamoDBClient
+                .listTables()
+                .getTableNames();
     }
 }

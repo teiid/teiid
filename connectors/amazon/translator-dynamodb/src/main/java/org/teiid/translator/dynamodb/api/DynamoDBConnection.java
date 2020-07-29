@@ -24,7 +24,8 @@ import org.teiid.translator.TranslatorException;
 import java.util.List;
 
 public interface DynamoDBConnection extends Connection {
-    public void createTable(String tableName) throws TranslatorException;
+    public void createTable(String tableName, List<KeySchemaElement> keySchema, List<AttributeDefinition> attributeDefinitions) throws TranslatorException;
     public void deleteTable(String tableName) throws TranslatorException;
     public List<AttributeDefinition> getAttributeNames(String tableName) throws TranslatorException;
+    public List<String> getTableNames() throws TranslatorException;
 }
