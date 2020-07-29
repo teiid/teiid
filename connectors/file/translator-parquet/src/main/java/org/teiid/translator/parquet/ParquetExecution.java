@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -56,13 +57,13 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
     }
 
     List<Object> projectRow(Group row) throws TranslatorException {
-        ArrayList<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
+        final List<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
         int fieldCount = row.getType().getFieldCount();
         for (int field = 0; field < fieldCount; field++) {
             Type fieldType = row.getType().getType(field);
             int valueCount = row.getFieldRepetitionCount(field);
-            if(valueCount > 1){
-                throw new TranslatorException("We don't support non annotated types as of now.");
+            if("REPEATED".equals(fieldType.getRepetition().toString())){
+                output.add(getRepeatedList(row, field));
             }
             try {
                 if ("LIST".equals(fieldType.getLogicalTypeAnnotation().toString())) {
@@ -75,6 +76,9 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
             if(!fieldType.isPrimitive()) {
                 throw new TranslatorException("We don't support any logical type other than LIST as of now.");
             }
+            if(valueCount == 0) {
+                output.add(null);
+            }
             PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
             for (int index = 0; index < valueCount; index++) {
                 output.add(getPrimitiveTypeObject(type, field, index, row, fieldType));
@@ -83,7 +87,7 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
         return output;
     }
 
-    private ArrayList getList(Group group) throws TranslatorException {
+    private ArrayImpl getList(Group group) throws TranslatorException {
         ArrayList<Object> outputList = new ArrayList();
         int fieldCount = group.getType().getFieldCount();
         for (int field = 0; field < fieldCount; field++) {
@@ -98,7 +102,25 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
                 outputList.add(getPrimitiveTypeObject(type, 0, 0, listGroup, fieldType));
             }
         }
-        return outputList;
+        return new ArrayImpl(outputList.toArray());
+    }
+
+    private ArrayImpl getRepeatedList(Group row, int field) throws TranslatorException {
+        ArrayList<Object> outputList = new ArrayList();
+        int valueCount = row.getFieldRepetitionCount(field);
+        for (int index = 0; index < valueCount; index++) {
+            Group listGroup = row.getGroup(field, index);
+            Type fieldType = listGroup.getType().getType(0);
+            if(!fieldType.isPrimitive()) {
+                throw new TranslatorException("We don't support any logical types in a list.");
+            }
+            if(listGroup.getFieldRepetitionCount(0) == 0){
+                outputList.add(null);
+            }
+            PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
+            outputList.add(getPrimitiveTypeObject(type, 0, 0, listGroup, fieldType));
+        }
+        return new ArrayImpl(outputList.toArray());
     }
 
     Object getPrimitiveTypeObject(PrimitiveType.PrimitiveTypeName primitiveTypeName, int field, int index, Group row, Type fieldType) {

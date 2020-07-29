@@ -50,33 +50,34 @@ public class TestParquetExecution {
 
     @Test
     public void testParquetExecutionWithListAsAColumn() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-                "	ROW_ID integer ,\n" +
-                "	column1 string ,\n" +
-                "	column2 string ,\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	column1 integer[] OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '1'),\n" +
+                "	column2 integer OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '2'),\n" +
+                "	column3 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '3'),\n" +
+                "	column4 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '4'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(column2)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
 
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
         Mockito.stub(connection.getFiles("people.parquet")).toReturn(JavaVirtualFile.getFiles("people.parquet", new File(UnitTestUtil.getTestDataPath(), "people.parquet")));
 
-        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        ArrayList results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[[21232, 98989, 9898999], 1, Phelps, Michael], [[21999, 98909, 809809], 2, Marie, Anne]]", results.toString());
     }
 
     @Test
     public void testParquetExecution() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-                "	ROW_ID integer ,\n" +
-                "	column1 string ,\n" +
-                "	column2 string ,\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	column1 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '1'),\n" +
+                "	column2 integer OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '2'),\n" +
+                "	column3 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '3'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(column1)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
 
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
         Mockito.stub(connection.getFiles("people1.parquet")).toReturn(JavaVirtualFile.getFiles("people1.parquet", new File(UnitTestUtil.getTestDataPath(), "people1.parquet")));
 
-        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        ArrayList results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[Aditya, 1, Sharma], [Animesh, 2, Sharma], [Shradha, 3, Khapra]]", results.toString());
     }
 }

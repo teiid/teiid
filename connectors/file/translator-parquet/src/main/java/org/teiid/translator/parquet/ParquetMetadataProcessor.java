@@ -18,6 +18,7 @@
 package org.teiid.translator.parquet;
 
 import org.teiid.file.VirtualFileConnection;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -28,6 +29,9 @@ public class ParquetMetadataProcessor implements MetadataProcessor<VirtualFileCo
 
     @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Parquet File Name", description="Parquet File name, use file name pattern if more than one file in the parent directory", required=true)
     public static final String FILE = MetadataFactory.PARQUET_PREFIX+"FILE"; //$NON-NLS-1$
+
+    @ExtensionMetadataProperty(applicable= Column.class, datatype=Integer.class, display="Column Number", description="Column number, where the column information is defined.", required=true)
+    public static final String COLUMN_NUMBER = MetadataFactory.PARQUET_PREFIX+"COLUMN_NUMBER"; //$NON-NLS-1$
 
     @Override
     public void process(MetadataFactory metadataFactory, VirtualFileConnection connection) throws TranslatorException {

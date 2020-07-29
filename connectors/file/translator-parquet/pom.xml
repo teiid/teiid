@@ -12,6 +12,7 @@
 
     <properties>
         <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+        <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
     </properties>
 
     <dependencies>

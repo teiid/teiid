@@ -19,7 +19,6 @@
 package org.teiid.translator.parquet;
 
 import org.teiid.file.VirtualFileConnection;
-import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -46,46 +45,10 @@ public class ParquetExecutionFactory extends ExecutionFactory<ConnectionFactory,
         return ex;
     }
 
-    @Override
-    public ParquetUpdateExecution createUpdateExecution(Command command,
-                                                        ExecutionContext executionContext, RuntimeMetadata metadata,
-                                                        VirtualFileConnection connection) throws TranslatorException {
-        ParquetUpdateExecution ex = new ParquetUpdateExecution(command, executionContext, metadata, connection, this.isImmutable());
-        return ex;
-    }
 
     @Override
     public MetadataProcessor<VirtualFileConnection> getMetadataProcessor(){
         return new ParquetMetadataProcessor();
     }
 
-    @Override
-    public boolean supportsCompareCriteriaEquals() {
-        return true; // only on ROW_ID
-    }
-
-    @Override
-    public boolean supportsCompareCriteriaOrdered() {
-        return true; //Only on ROW_ID
-    }
-
-    @Override
-    public boolean supportsRowLimit() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsRowOffset() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsOnlyLiteralComparison() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsInCriteria() {
-        return true;
-    }
 }

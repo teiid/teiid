@@ -21,8 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.NamedTable;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
@@ -57,6 +60,29 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
     public void visit(NamedTable obj) {
         this.table = obj.getMetadataObject();
         this.parquetPath = this.table.getProperty(ParquetMetadataProcessor.FILE);
+    }
+
+    @Override
+    public void visit(ColumnReference obj) {
+        this.onGoingExpression.add(obj.getMetadataObject());
+    }
+
+    @Override
+    public void visit(DerivedColumn obj) {
+        visitNode(obj.getExpression());
+
+        createProjectedColumn();
+    }
+
+    private void createProjectedColumn() {
+        Column column = (Column) this.onGoingExpression.pop();
+        String str = column.getProperty(ParquetMetadataProcessor.COLUMN_NUMBER, false);
+
+        if (str == null) {
+            this.exceptions.add(new TranslatorException(ParquetPlugin.Event.TEIID23007, ParquetPlugin.Util.gs(ParquetPlugin.Event.TEIID23007, column.getName())));
+            return;
+        }
+        this.projectedColumns.add(Integer.valueOf(str));
     }
 
 }

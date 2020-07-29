@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
@@ -38,6 +39,7 @@ import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.Type;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.LanguageObject;
@@ -106,15 +108,25 @@ public class BaseParquetExecution implements Execution {
            Configuration config = new Configuration();
            reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
            schema = reader.getFooter().getFileMetaData().getSchema();
-           columnIO = new ColumnIOFactory().getColumnIO(schema);
+           MessageType filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumns());
+           columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
            PageReadStore pages = reader.readNextRowGroup();
            pageRowCount = pages.getRowCount();
-           return columnIO.getRecordReader(pages, new GroupRecordConverter(schema));
+           return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema));
        } catch (IOException e){
            throw new TranslatorException(e);
        }
     }
 
+    private MessageType getFilteredSchema(MessageType schema, List<Integer> onGoingExpression) {
+        List<Type> allColumns = schema.getFields();
+        List<Type> selectedColumns = new ArrayList<>();
+        for(int column: onGoingExpression){
+            selectedColumns.add(allColumns.get(column-1));
+        }
+        MessageType filteredSchema = new MessageType(schema.getName(), selectedColumns);
+        return filteredSchema;
+    }
 
 
     private String getExtension(String name) {
