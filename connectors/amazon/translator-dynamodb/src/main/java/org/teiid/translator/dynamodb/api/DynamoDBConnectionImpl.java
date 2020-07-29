@@ -22,8 +22,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.model.*;
 import org.teiid.translator.TranslatorException;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class DynamoDBConnectionImpl implements DynamoDBConnection {
