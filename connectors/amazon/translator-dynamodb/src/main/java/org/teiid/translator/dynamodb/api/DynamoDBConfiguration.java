@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.teiid.translator.dynamodb;
+package org.teiid.translator.dynamodb.api;
 
-public class DynamoDBConnectionImpl implements DynamoDBConnection {
+public interface DynamoDBConfiguration {
+    public String getAccessKey();
 
+    public String getSecretKey();
 }
