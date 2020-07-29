@@ -17,7 +17,14 @@
  */
 package org.teiid.translator.dynamodb.api;
 
+import com.amazonaws.services.dynamodbv2.model.*;
 import org.teiid.resource.api.Connection;
+import org.teiid.translator.TranslatorException;
+
+import java.util.List;
 
 public interface DynamoDBConnection extends Connection {
+    public void createTable(String tableName) throws TranslatorException;
+    public void deleteTable(String tableName) throws TranslatorException;
+    public List<AttributeDefinition> getAttributeNames(String tableName) throws TranslatorException;
 }

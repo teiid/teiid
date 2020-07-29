@@ -17,10 +17,60 @@
  */
 package org.teiid.translator.dynamodb.api;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.model.*;
+import org.teiid.translator.TranslatorException;
+
+import java.util.List;
+
 public class DynamoDBConnectionImpl implements DynamoDBConnection {
+    private AmazonDynamoDB dynamoDBClient;
+
+    public DynamoDBConnectionImpl(AmazonDynamoDB dynamoDBClient) {
+        this.dynamoDBClient = dynamoDBClient;
+    }
 
     @Override
     public void close() throws Exception {
 
+    }
+
+    @Override
+    public void createTable(String tableName) throws TranslatorException {
+        CreateTableRequest createTableRequest = new CreateTableRequest();
+        createTableRequest.setTableName(tableName);
+        try {
+            this.dynamoDBClient
+                    .createTable(createTableRequest);
+        } catch(AmazonClientException exception) {
+            throw new TranslatorException(exception);
+        }
+    }
+
+    @Override
+    public void deleteTable(String tableName) throws TranslatorException {
+        DeleteTableRequest deleteTableRequest = new DeleteTableRequest();
+        deleteTableRequest.setTableName(tableName);
+        try {
+            this.dynamoDBClient
+                    .deleteTable(deleteTableRequest);
+        } catch(AmazonClientException exception) {
+            throw new TranslatorException(exception);
+        }
+    }
+
+    @Override
+    public List<AttributeDefinition> getAttributeNames(String tableName) throws TranslatorException {
+        DescribeTableRequest describeTableRequest = new DescribeTableRequest();
+        describeTableRequest.setTableName(tableName);
+        try {
+            return this.dynamoDBClient
+                    .describeTable(describeTableRequest)
+                    .getTable()
+                    .getAttributeDefinitions();
+        } catch(AmazonClientException exception) {
+            throw new TranslatorException(exception);
+        }
     }
 }
