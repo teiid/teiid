@@ -17,7 +17,11 @@
  */
 package org.teiid.deployers;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_CHARARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT2VECTOR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_OIDARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_OIDVECTOR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TEXTARRAY;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -85,6 +89,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         super(modelName, 1, modelName, dataTypes, new Properties(), null);
         add_pg_namespace();
         add_pg_class();
+        add_pg_tables();
         add_pg_attribute();
         add_pg_type();
         add_pg_index();
@@ -313,6 +318,23 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                 "FROM (SYS.KeyColumns as kc INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name) LEFT OUTER JOIN " + //$NON-NLS-1$
                 "pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE kc.keytype in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
         t.setSelectTransformation(transformation);
+        return t;
+    }
+
+    private Table add_pg_tables() {
+        Table t = createView("pg_tables"); //$NON-NLS-1$
+        addColumn("schemaname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("tablename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("tableowner", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("tablespace", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("hasindexes", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+        addColumn("hasrules", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+        //currently false - see pg_triggers
+        addColumn("hastriggers", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+
+        t.setSelectTransformation("select schemaname, name, 'teiid', null, " //$NON-NLS-1$
+                + "exists (select 1 from SYS.Keys WHERE type = 'Index' and TableUID = UID), false, false from SYS.Tables WHERE isPhysical"); //$NON-NLS-1$
+
         return t;
     }
 

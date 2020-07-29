@@ -1,6 +1,8 @@
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -370,5 +372,10 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
         }
 
         server.undeployVDB("test");
+    }
+
+    @Test public void test_PG_TABLES()  throws Exception {
+        execute("select * FROM pg_tables"); //$NON-NLS-1$
+        TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
     }
 }
