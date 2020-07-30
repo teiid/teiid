@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.simpledb.visitors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -150,7 +150,7 @@ public class TestSimpleDBExecution {
         UpdateExecution exec = translator.createUpdateExecution(cmd, context, Mockito.mock(RuntimeMetadata.class), connection);
         exec.execute();
 
-        Mockito.verify(connection).deleteDomain("item");
+        Mockito.verify(connection).performDelete("item", "SELECT itemName() FROM `item`");
     }
 
     @Test

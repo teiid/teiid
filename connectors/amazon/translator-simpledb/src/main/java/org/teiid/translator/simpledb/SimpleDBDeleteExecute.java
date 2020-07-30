@@ -39,21 +39,16 @@ public class SimpleDBDeleteExecute implements UpdateExecution {
 
     public void execute() throws TranslatorException {
         String domainName = SimpleDBMetadataProcessor.getName(this.visitor.getTable());
-        if (this.visitor.getCriteria() != null) {
-            this.updatedCount = this.connection.performDelete(domainName, buildSelect());
-        }
-        else {
-            // this is domain delete. otherwise this could be lot of items. deleted count can
-            // not be measured.
-            this.connection.deleteDomain(domainName);
-        }
+        this.updatedCount = this.connection.performDelete(domainName, buildSelect());
     }
 
     private String buildSelect() {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ").append(SimpleDBMetadataProcessor.ITEM_NAME); //$NON-NLS-1$
         sb.append(" FROM ").append(SimpleDBMetadataProcessor.getQuotedName(this.visitor.getTable())); //$NON-NLS-1$
-        sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
+        if (this.visitor.getCriteria() != null) {
+            sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
+        }
         return sb.toString();
     }
 
