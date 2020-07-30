@@ -35,7 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.DispatcherType;
 
@@ -2985,7 +2987,41 @@ public class TestODataIntegration {
                 + "location geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'point'),"
                 + "poly geometry options (\"teiid_spatial:coord_dimension\" 2, \"teiid_spatial:srid\" 4326, \"teiid_spatial:type\" 'polygon'))"
                 + " AS select 1, ST_GEOMFROMTEXT('POINT (1 3)'), ST_GEOMFROMTEXT('POLYGON ((35 10, 45 45, 15 40, 10 20, 35 10),\n" +
-                "(20 30, 35 35, 30 20, 20 30))');";
+                "(20 30, 35 35, 30 20, 20 30))');"
+                + "CREATE view geo_view_multipolygon \n" +
+                "(id integer primary key,\n" +
+                "   location geometry options \n" +
+                "   (\"teiid_spatial:coord_dimension\" 2, \n" +
+                "    \"teiid_spatial:srid\" 4326,\n" +
+                "    \"teiid_spatial:type\" 'multipolygon')\n" +
+                ")\n" +
+                "AS select 1, ST_GeomFromEWKT('SRID=4326;MULTIPOLYGON (((30 20, 45 40, 10 40, 30 20)),\n" +
+                "((15 5, 40 10, 10 20, 5 10, 15 5)))');"
+                + "CREATE view geo_view_polygon \n" +
+                "(id integer primary key,\n" +
+                "   location geometry options \n" +
+                "   (\"teiid_spatial:coord_dimension\" 2, \n" +
+                "    \"teiid_spatial:srid\" 4326,\n" +
+                "    \"teiid_spatial:type\" 'polygon')\n" +
+                ")\n" +
+                "AS select 1, ST_GeomFromEWKT('SRID=4326;POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))');"
+                + "CREATE view geo_view_multilinestring\n" +
+                "(id integer primary key,\n" +
+                "   location geometry options \n" +
+                "   (\"teiid_spatial:coord_dimension\" 2, \n" +
+                "    \"teiid_spatial:srid\" 4326,\n" +
+                "    \"teiid_spatial:type\" 'multilinestring')\n" +
+                ")\n" +
+                "as select 1, ST_GeomFromEWKT('SRID=4326;MULTILINESTRING ((10 10, 20 20, 10 40),\n" +
+                "(40 40, 30 30, 40 20, 30 10))');"
+                + "CREATE view geo_view_multipoint \n" +
+                "(id integer primary key,\n" +
+                "   location geometry options \n" +
+                "   (\"teiid_spatial:coord_dimension\" 2, \n" +
+                "    \"teiid_spatial:srid\" 4326,\n" +
+                "    \"teiid_spatial:type\" 'multipoint')\n" +
+                ")\n" +
+                "AS select 1, ST_GEOMfromEWKT('SRID=4326;MULTIPOINT ((10 40), (40 30), (20 20), (30 10))');";
 
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("phy");
@@ -2994,16 +3030,37 @@ public class TestODataIntegration {
 
         teiid.deployVDB("northwind", mmd);
 
-        ContentResponse response = http.GET(baseURL + "/northwind/phy/geo_view");
+        String url = "/northwind/phy/geo_view";
+        String value = get(url);
+        assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]},\"poly\":{\"type\":\"Polygon\",\"coordinates\":[[[35.0,10.0],[45.0,45.0],[15.0,40.0],[10.0,20.0],[35.0,10.0]],[[20.0,30.0],[35.0,35.0],[30.0,20.0],[20.0,30.0]]]}}]", value);
+
+        ContentResponse response = http.GET(baseURL + "/northwind/phy/$metadata");
+        assertTrue(response.getContentAsString(), response.getContentAsString().contains("<Property Name=\"location\" "
+                + "Type=\"Edm.GeometryPoint\" SRID=\"4326\">"));
+
+
+        value = get("/northwind/phy/geo_view_multipolygon");
+        assertEquals("[{\"id\":1,\"location\":{\"type\":\"MultiPolygon\",\"coordinates\":[[[[30.0,20.0],[45.0,40.0],[10.0,40.0],[30.0,20.0]]],[[[15.0,5.0],[40.0,10.0],[10.0,20.0],[5.0,10.0],[15.0,5.0]]]]}}]", value);
+
+        value = get("/northwind/phy/geo_view_polygon");
+        assertEquals("[{\"id\":1,\"location\":{\"type\":\"Polygon\",\"coordinates\":[[[30.0,10.0],[40.0,40.0],[20.0,40.0],[10.0,20.0],[30.0,10.0]]]}}]", value);
+
+        value = get("/northwind/phy/geo_view_multilinestring");
+        assertEquals("[{\"id\":1,\"location\":{\"type\":\"MultiLineString\",\"coordinates\":[[[10.0,10.0],[20.0,20.0],[10.0,40.0]],[[40.0,40.0],[30.0,30.0],[40.0,20.0],[30.0,10.0]]]}}]", value);
+
+        value = get("/northwind/phy/geo_view_multipoint");
+        assertEquals("[{\"id\":1,\"location\":{\"type\":\"MultiPoint\",\"coordinates\":[[10.0,40.0],[40.0,30.0],[20.0,20.0],[30.0,10.0]]}}]", value);
+    }
+
+    private String get(String url)
+            throws InterruptedException, ExecutionException, TimeoutException,
+            IOException, JsonProcessingException {
+        ContentResponse response = http.GET(baseURL + url);
         assertEquals(200, response.getStatus());
 
         JsonNode node = getJSONNode(response);
         String value = node.get("value").toString();
-        assertEquals("[{\"id\":1,\"location\":{\"type\":\"Point\",\"coordinates\":[1.0,3.0]},\"poly\":{\"type\":\"Polygon\",\"coordinates\":[[[35.0,10.0],[45.0,45.0],[15.0,40.0],[10.0,20.0],[35.0,10.0]],[[20.0,30.0],[35.0,35.0],[30.0,20.0],[20.0,30.0]]]}}]", value);
-
-        response = http.GET(baseURL + "/northwind/phy/$metadata");
-        assertTrue(response.getContentAsString(), response.getContentAsString().contains("<Property Name=\"location\" "
-                + "Type=\"Edm.GeometryPoint\" SRID=\"4326\">"));
+        return value;
     }
 
     @Test public void testGeography() throws Exception {
