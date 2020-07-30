@@ -17,11 +17,13 @@
  */
 package org.teiid.translator.dynamodb;
 
+import org.teiid.language.Command;
+import org.teiid.language.Delete;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.api.ConnectionFactory;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.Translator;
+import org.teiid.translator.*;
 import org.teiid.translator.dynamodb.api.DynamoDBConnection;
+import org.teiid.translator.dynamodb.execution.DynamoDBDeleteExecute;
 
 @Translator(name = "dynamodb", description = "Translator for Dynamo DB")
 public class DynamoDBExecutionFactory extends ExecutionFactory<ConnectionFactory, DynamoDBConnection> {
@@ -29,5 +31,14 @@ public class DynamoDBExecutionFactory extends ExecutionFactory<ConnectionFactory
     @Override
     public MetadataProcessor<DynamoDBConnection> getMetadataProcessor() {
         return new DynamoDBMetadataProcessor();
+    }
+
+    @Override
+    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, DynamoDBConnection connection) throws TranslatorException {
+        if(command instanceof Delete) {
+            return new DynamoDBDeleteExecute(command, connection);
+        } else {
+            throw new TranslatorException("Just DELETE are supported");
+        }
     }
 }

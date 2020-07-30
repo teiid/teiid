@@ -17,6 +17,8 @@
  */
 package org.teiid.translator.dynamodb;
 
+import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
@@ -26,5 +28,9 @@ public class DynamoDBMetadataProcessor implements MetadataProcessor<DynamoDBConn
     @Override
     public void process(MetadataFactory metadataFactory, DynamoDBConnection connection) throws TranslatorException {
 
+    }
+
+    public static String getName(AbstractMetadataRecord record) {
+        return SQLStringVisitor.getRecordName(record);
     }
 }
