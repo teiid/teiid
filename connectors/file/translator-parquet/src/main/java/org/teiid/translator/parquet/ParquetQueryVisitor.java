@@ -31,17 +31,15 @@ import org.teiid.translator.TranslatorException;
 
 public class ParquetQueryVisitor extends HierarchyVisitor {
 
-    public static int ROW_ID_INDEX = -1;
-
     protected Stack<Object> onGoingExpression = new Stack<Object>();
-    private List<Integer> projectedColumns = new ArrayList<Integer>();
+    private List<String> projectedColumnNames = new ArrayList<String>();
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
     private Table table;
     private String parquetPath;
 
-    public List<Integer> getProjectedColumns() {
-        return projectedColumns;
+    public List<String> getProjectedColumnNames() {
+        return projectedColumnNames;
     }
 
     public ArrayList<TranslatorException> getExceptions() {
@@ -76,13 +74,7 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
 
     private void createProjectedColumn() {
         Column column = (Column) this.onGoingExpression.pop();
-        String str = column.getProperty(ParquetMetadataProcessor.COLUMN_NUMBER, false);
-
-        if (str == null) {
-            this.exceptions.add(new TranslatorException(ParquetPlugin.Event.TEIID23007, ParquetPlugin.Util.gs(ParquetPlugin.Event.TEIID23007, column.getName())));
-            return;
-        }
-        this.projectedColumns.add(Integer.valueOf(str));
+        this.projectedColumnNames.add(column.getSourceName());
     }
 
 }

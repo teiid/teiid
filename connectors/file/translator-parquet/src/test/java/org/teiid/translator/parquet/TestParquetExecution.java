@@ -51,11 +51,11 @@ public class TestParquetExecution {
     @Test
     public void testParquetExecutionWithListAsAColumn() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	column1 integer[] OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '1'),\n" +
-                "	column2 integer OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '2'),\n" +
-                "	column3 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '3'),\n" +
-                "	column4 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '4'),\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(column2)\n" +
+                "	contacts integer[] ,\n" +
+                "	id integer ,\n" +
+                "	last string ,\n" +
+                "	name string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
 
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
@@ -68,10 +68,10 @@ public class TestParquetExecution {
     @Test
     public void testParquetExecution() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	column1 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '1'),\n" +
-                "	column2 integer OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '2'),\n" +
-                "	column3 string OPTIONS (\"teiid_parquet:COLUMN_NUMBER\" '3'),\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(column1)\n" +
+                "	firstname string ,\n" +
+                "	id integer ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
 
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);

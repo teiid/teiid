@@ -57,7 +57,7 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
     }
 
     List<Object> projectRow(Group row) throws TranslatorException {
-        final List<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
+        final List<Object> output = new ArrayList<Object>();
         int fieldCount = row.getType().getFieldCount();
         for (int field = 0; field < fieldCount; field++) {
             Type fieldType = row.getType().getType(field);
@@ -65,13 +65,9 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
             if("REPEATED".equals(fieldType.getRepetition().toString())){
                 output.add(getRepeatedList(row, field));
             }
-            try {
-                if ("LIST".equals(fieldType.getLogicalTypeAnnotation().toString())) {
-                    output.add(getList(row.getGroup(field, 0)));
-                    continue;
-                }
-            } catch (NullPointerException e) {
-                //continue to check for primitive types
+            if (fieldType.getLogicalTypeAnnotation() != null && "LIST".equals(fieldType.getLogicalTypeAnnotation().toString())) {
+                output.add(getList(row.getGroup(field, 0)));
+                continue;
             }
             if(!fieldType.isPrimitive()) {
                 throw new TranslatorException("We don't support any logical type other than LIST as of now.");
@@ -79,9 +75,9 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
             if(valueCount == 0) {
                 output.add(null);
             }
-            PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
-            for (int index = 0; index < valueCount; index++) {
-                output.add(getPrimitiveTypeObject(type, field, index, row, fieldType));
+            else {
+                PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
+                output.add(getPrimitiveTypeObject(type, field, 0, row, fieldType));
             }
         }
         return output;
@@ -143,7 +139,11 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
                 if ("STRING".equals(fieldType.getLogicalTypeAnnotation().toString())) {
                     return row.getBinary(field, index).toStringUsingUTF8();
                 }
-                return row.getBinary(field, index);
+                bytes = row.getBinary(field, index).getBytesUnsafe();
+                return bytes;
+            case FIXED_LEN_BYTE_ARRAY:
+                bytes = row.getBinary(field, index).getBytesUnsafe();
+                return bytes;
         }
         return null;
     }

@@ -108,7 +108,7 @@ public class BaseParquetExecution implements Execution {
            Configuration config = new Configuration();
            reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
            schema = reader.getFooter().getFileMetaData().getSchema();
-           MessageType filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumns());
+           MessageType filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
            columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
            PageReadStore pages = reader.readNextRowGroup();
            pageRowCount = pages.getRowCount();
@@ -118,11 +118,11 @@ public class BaseParquetExecution implements Execution {
        }
     }
 
-    private MessageType getFilteredSchema(MessageType schema, List<Integer> onGoingExpression) {
+    private MessageType getFilteredSchema(MessageType schema, List<String> expectedColumnNames) {
         List<Type> allColumns = schema.getFields();
         List<Type> selectedColumns = new ArrayList<>();
-        for(int column: onGoingExpression){
-            selectedColumns.add(allColumns.get(column-1));
+        for(String columnName: expectedColumnNames) {
+            selectedColumns.add(allColumns.get(schema.getFieldIndex(columnName)));
         }
         MessageType filteredSchema = new MessageType(schema.getName(), selectedColumns);
         return filteredSchema;
