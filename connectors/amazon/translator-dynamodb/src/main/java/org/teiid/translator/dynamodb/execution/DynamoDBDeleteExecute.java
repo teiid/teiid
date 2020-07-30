@@ -52,12 +52,6 @@ public class DynamoDBDeleteExecute implements UpdateExecution {
     @Override
     public void execute() throws TranslatorException {
         String tableName = DynamoDBMetadataProcessor.getName(this.deleteVisitor.getTable());
-        if (this.deleteVisitor.getWhere() == null) {
-            // this is table delete. otherwise this could be lot of items. deleted count can
-            // not be measured.
-            this.dynamoDBConnection.deleteTable(tableName);
-        } else {
 
-        }
     }
 }
