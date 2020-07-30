@@ -9,6 +9,7 @@
         <artifact name="${org.apache.cxf:cxf-rt-transports-http-hc}"/>
         <artifact name="${org.apache.cxf:cxf-rt-rs-security-oauth}"/>
         <artifact name="${org.apache.cxf:cxf-rt-rs-security-oauth2}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-rs-json-basic}"/>
         <artifact name="${org.apache.cxf:cxf-rt-rs-security-oauth2-saml}"/>
         <resource-root path="."/>
     </resources>
