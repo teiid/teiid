@@ -32,4 +32,6 @@ public interface DynamoDBConnection extends Connection {
     public List<AttributeDefinition> getTableAttributeNames(String tableName) throws TranslatorException;
 
     public List<String> getTableNames() throws TranslatorException;
+
+    public QueryResult executeSelect(QueryRequest queryRequest);
 }

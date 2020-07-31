@@ -18,7 +18,16 @@
 package org.teiid.translator.dynamodb.execution;
 
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.translator.TranslatorException;
+
+import java.util.ArrayList;
 
 public class DynamoDBSQLVisitor extends SQLStringVisitor {
+    private ArrayList<TranslatorException> translatorExceptions = new ArrayList<TranslatorException>();
 
+    public void checkExceptions() throws TranslatorException {
+        if (!this.translatorExceptions.isEmpty()) {
+            throw this.translatorExceptions.get(0);
+        }
+    }
 }

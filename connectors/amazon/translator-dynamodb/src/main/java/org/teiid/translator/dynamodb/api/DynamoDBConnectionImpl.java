@@ -33,7 +33,6 @@ public class DynamoDBConnectionImpl implements DynamoDBConnection {
 
     @Override
     public void close() throws Exception {
-
     }
 
     @Override
@@ -85,5 +84,12 @@ public class DynamoDBConnectionImpl implements DynamoDBConnection {
         return this.dynamoDBClient
                 .listTables()
                 .getTableNames();
+    }
+
+    @Override
+    public QueryResult executeSelect(QueryRequest queryRequest) {
+        System.out.println(queryRequest);
+        QueryResult queryResult = dynamoDBClient.query(queryRequest);
+        return queryResult;
     }
 }
