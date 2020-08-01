@@ -149,7 +149,7 @@ public class TestODBCSocketTransport {
     @Before public void setUp() throws Exception {
         String database = "parts";
         TRANSACTION_MANAGER.reset();
-        connect("parts");
+        connect(database);
     }
 
     private void connect(String database, Map.Entry<String, String>... props) throws SQLException {

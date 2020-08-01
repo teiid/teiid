@@ -105,6 +105,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         add_pg_inherits();
         add_pg_stats();
         add_pg_constraint();
+        add_pg_tablespace();
+        add_pg_roles();
+        add_pg_rewrite();
 
         //limited emulation of information_schema
         add_infoSchemaTables();
@@ -147,6 +150,51 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         addFunction("current_schemas", "current_schemas"); //$NON-NLS-1$ //$NON-NLS-2$
         addFunction("pg_get_indexdef", "pg_get_indexdef"); //$NON-NLS-1$ //$NON-NLS-2$
         addFunction("array_to_string", "array_to_string").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+        addFunction("pg_total_relation_size", "pg_total_relation_size"); //$NON-NLS-1$ //$NON-NLS-2$
+        addFunction("pg_relation_size", "pg_relation_size"); //$NON-NLS-1$ //$NON-NLS-2$
+        addFunction("pg_stat_get_numscans", "pg_stat_get_numscans"); //$NON-NLS-1$ //$NON-NLS-2$
+        addFunction("pg_get_ruledef", "pg_get_ruledef"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    private Table add_pg_rewrite() {
+        Table t = createView("pg_rewrite"); //$NON-NLS-1$
+
+        addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("ev_class", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("rulename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+
+        String transformation = "SELECT null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+
+        return t;
+    }
+
+    private Table add_pg_tablespace() {
+        Table t = createView("pg_tablespace"); //$NON-NLS-1$
+
+        addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("spcname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("spcowner", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        //actually a struct array
+        addColumn("spcacl", "string[]", t); //$NON-NLS-1$ //$NON-NLS-2$
+        addColumn("spcoptions", "string[]", t); //$NON-NLS-1$ //$NON-NLS-2$
+
+        String transformation = "SELECT null, null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+
+        return t;
+    }
+
+    private Table add_pg_roles() {
+        Table t = createView("pg_roles"); //$NON-NLS-1$
+
+        addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("rolname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+
+        String transformation = "SELECT null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+
+        return t;
     }
 
     private Table add_pg_constraint() {
@@ -358,6 +406,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         //     If this is an index, the access method used (B-tree, hash, etc.)
         addColumn("relam", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 
+        addColumn("reltablespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+
         // Number of rows in the table. This is only an estimate used by the planner. It is updated
         // by VACUUM, ANALYZE, and a few DDL commands such as CREATE INDEX
         addColumn("reltuples", DataTypeManager.DefaultDataTypes.FLOAT, t); //$NON-NLS-1$
@@ -383,9 +433,12 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 
         String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
                 "pg_catalog.getOid(t1.SchemaUID) as relnamespace, " + //$NON-NLS-1$
+                //TODO: starting with pg 9.1 f is used for foreign, once we update our reported version
+                //we can use that
                 "convert((CASE t1.isPhysical WHEN true THEN 'r' ELSE 'v' END), char) as relkind," + //$NON-NLS-1$
                 "0 as relowner, " + //$NON-NLS-1$
                 "0 as relam, " + //$NON-NLS-1$
+                "0 as reltablespace, " + //$NON-NLS-1$
                 "convert(0, float) as reltuples, " + //$NON-NLS-1$
                 "0 as relpages, " + //$NON-NLS-1$
                 "false as relhasrules, " + //$NON-NLS-1$
@@ -397,6 +450,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                 "convert('i', char) as relkind," + //$NON-NLS-1$
                 "0 as relowner, " + //$NON-NLS-1$
                 "0 as relam, " + //$NON-NLS-1$
+                "0 as reltablespace, " + //$NON-NLS-1$
                 "convert(0, float) as reltuples, " + //$NON-NLS-1$
                 "0 as relpages, " + //$NON-NLS-1$
                 "false as relhasrules, " + //$NON-NLS-1$
@@ -1123,6 +1177,22 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                         }
                     })
                     .collect(Collectors.toList()), delim);
+        }
+
+        public static Long pg_total_relation_size(Integer reloid) {
+            return null;
+        }
+
+        public static Long pg_relation_size(Integer reloid) {
+            return null;
+        }
+
+        public static Long pg_stat_get_numscans(Integer reloid) {
+            return 0L;
+        }
+
+        public static String pg_get_ruledef(Integer ruleoid) {
+            return null;
         }
 
         //public static int lo_open(int lobjId, int mode) {

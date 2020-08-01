@@ -18,6 +18,9 @@
 
 package org.teiid.query.function;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -31,12 +34,10 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
 
+public class TestResolvedFunctions {
 
-public class TestResolvedFunctions extends TestCase {
-
-    public void testPowerIntegers() throws Exception {
+    @Test public void testPowerIntegers() throws Exception {
 
         String sql = "power(10, 10)"; //$NON-NLS-1$
 
@@ -44,14 +45,14 @@ public class TestResolvedFunctions extends TestCase {
         assertEquals(DataTypeManager.DefaultDataClasses.BIG_INTEGER, getFunctionResult(sql).getClass());
     }
 
-    public void testPowerDoubles() throws Exception {
+    @Test public void testPowerDoubles() throws Exception {
 
         String sql = "power(10.01, 10.01)"; //$NON-NLS-1$
 
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
 
-    public void testPowerFloats() throws Exception {
+    @Test public void testPowerFloats() throws Exception {
 
         String sql = "power(convert(10.01, float), convert(10.01, float))"; //$NON-NLS-1$
 
@@ -59,7 +60,7 @@ public class TestResolvedFunctions extends TestCase {
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
 
-    public void testPowerBigInteger() throws Exception {
+    @Test public void testPowerBigInteger() throws Exception {
 
         String sql = "power(convert(10.01, BigInteger), 10)"; //$NON-NLS-1$
 
@@ -67,7 +68,7 @@ public class TestResolvedFunctions extends TestCase {
     }
 
     //there should only be one signature for ceiling. The float argument will be converted to a double
-    public void testCeilingFloat() throws Exception {
+    @Test public void testCeilingFloat() throws Exception {
 
         String sql = "ceiling(convert(10.01, float))"; //$NON-NLS-1$
 
@@ -75,25 +76,32 @@ public class TestResolvedFunctions extends TestCase {
     }
 
     //same as above
-    public void testFloorFloat() throws Exception {
+    @Test public void testFloorFloat() throws Exception {
 
         String sql = "floor(convert(10.01, float))"; //$NON-NLS-1$
 
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
 
-    public void testCurrentDate() throws Exception {
+    @Test public void testCurrentDate() throws Exception {
 
         String sql = "current_date()"; //$NON-NLS-1$
 
         assertEquals(DataTypeManager.DefaultDataClasses.DATE, getFunctionResult(sql).getClass());
     }
 
-    public void testCharLength() throws Exception {
+    @Test public void testCharLength() throws Exception {
 
         String sql = "char_length('a')"; //$NON-NLS-1$
 
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, getFunctionResult(sql).getClass());
+    }
+
+    @Test public void testSessionUser() throws Exception {
+
+        String sql = "session_user"; //$NON-NLS-1$
+
+        assertEquals("user", getFunctionResult(sql));
     }
 
     private Object getFunctionResult(String sql) throws QueryParserException,
@@ -102,7 +110,9 @@ public class TestResolvedFunctions extends TestCase {
                                               TeiidComponentException, QueryResolverException {
         Expression expr = QueryParser.getQueryParser().parseExpression(sql);
         ResolverVisitor.resolveLanguageObject(expr, RealMetadataFactory.example1Cached());
-        Evaluator eval = new Evaluator(null, null, new CommandContext());
+        CommandContext context = new CommandContext();
+        context.setUserName("user");
+        Evaluator eval = new Evaluator(null, null, context);
         return eval.evaluate(expr, null);
     }
 

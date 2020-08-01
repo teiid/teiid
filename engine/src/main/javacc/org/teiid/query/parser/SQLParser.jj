@@ -4777,7 +4777,8 @@ Expression function(ParseInfo info) :
     (   (funcToken = <CURRENT_TIMESTAMP>| funcToken = <CURRENT_TIME>)
     	[<LPAREN> intVal = intVal() <RPAREN> {args.add(new Constant(intVal));}]
     )
-	)		
+    |   (funcToken = <SESSION_USER> {funcName = "user"; args.add(new Constant(false));})
+    )		
 	{
 		if(funcName == null) { 
 			funcName = funcToken.image;
