@@ -68,7 +68,7 @@ public class TestJBossSecurityHelper extends TestCase {
     }
 
     public void testAuthenticate() throws Exception {
-        Credentials credentials = new Credentials("pass1".toCharArray());
+        Credentials credentials = new Credentials("pass1");
 
         String domains = "testFile";
 
@@ -129,7 +129,7 @@ public class TestJBossSecurityHelper extends TestCase {
 
         }
 
-        SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1"), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
         if (securityEnabled) {
             Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject());
         }

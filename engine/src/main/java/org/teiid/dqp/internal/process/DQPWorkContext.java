@@ -33,6 +33,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
+import javax.net.ssl.SSLSession;
 import javax.security.auth.Subject;
 
 import org.teiid.adminapi.DataPolicy;
@@ -150,6 +151,7 @@ public class DQPWorkContext implements Serializable {
     private boolean local = true;
 
     private boolean derived;
+    private SSLSession sslSession;
 
     public DQPWorkContext() {
     }
@@ -405,5 +407,13 @@ public class DQPWorkContext implements Serializable {
      */
     public boolean isDerived() {
         return this.derived;
+    }
+
+    public SSLSession getSSLSession() {
+        return sslSession;
+    }
+
+    public void setSSLSession(SSLSession sslSession) {
+        this.sslSession = sslSession;
     }
 }

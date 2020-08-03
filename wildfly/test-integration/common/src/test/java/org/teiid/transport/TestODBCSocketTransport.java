@@ -18,7 +18,12 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
@@ -58,6 +63,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.TestEmbeddedServer;
@@ -73,6 +79,7 @@ public class TestODBCSocketTransport {
         LEGACY,//how the test was originally written
         ENABLED,
         WANT,
+        SSL_AUTH,
         LOGIN,
         DISABLED
     }
@@ -83,6 +90,7 @@ public class TestODBCSocketTransport {
         FakeServer server;
 
         public void start(Mode mode) throws Exception {
+            AuthenticationType type = AuthenticationType.USERPASSWORD;
             SocketConfiguration config = new SocketConfiguration();
             SSLConfiguration sslConfig = new SSLConfiguration();
             switch (mode) {
@@ -96,6 +104,9 @@ public class TestODBCSocketTransport {
                 sslConfig.setKeystoreFilename(UnitTestUtil.getTestDataFile("keystore.jks").getAbsolutePath());
                 sslConfig.setKeystorePassword("password");
                 break;
+            case SSL_AUTH:
+                //we'll just reuse want, but this should probably be ClientAuth.NEED
+                type = AuthenticationType.SSL;
             case WANT:
                 sslConfig.setMode(SSLConfiguration.ENABLED);
                 sslConfig.setAuthenticationMode(ClientAuth.WANT);
@@ -114,9 +125,11 @@ public class TestODBCSocketTransport {
             config.setPortNumber(addr.getPort());
             server = new FakeServer(false);
             EmbeddedConfiguration ec = new EmbeddedConfiguration();
+            ec.setAuthenticationType(type);
             ec.setTransactionManager(TRANSACTION_MANAGER);
             server.start(ec, false);
             LogonImpl logon = Mockito.mock(LogonImpl.class);
+            Mockito.stub(logon.getSessionService()).toReturn(server.getSessionService());
             odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
             odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
             if (mode == Mode.LEGACY) {

@@ -25,6 +25,9 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
+
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ExceptionUtil;
@@ -146,8 +149,13 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
         return false;
     }
 
-    public void onConnection() throws CommunicationException {
+    @Override
+    public void onConnection(SSLEngine sslEngine) throws CommunicationException {
         Handshake handshake = new Handshake();
+        if (sslEngine != null) {
+            SSLSession session = sslEngine.getSession();
+            this.workContext.setSSLSession(session);
+        }
         handshake.setAuthType(csr.getAuthenticationType());
         if (usingEncryption) {
             keyGen = new DhKeyGenerator();

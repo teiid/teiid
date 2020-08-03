@@ -109,9 +109,9 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
             AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
             if (authManager != null) {
                 Principal userPrincipal = new SimplePrincipal(baseUsername);
-                String credString = credentials==null?null:credentials.getCredentials();
-                isValid = authManager.isValid(userPrincipal, credString, subject);
-                securityContext = createSecurityContext(domain, userPrincipal, credString, subject);
+                Object cred = credentials==null?null:credentials.getCredentials();
+                isValid = authManager.isValid(userPrincipal, cred, subject);
+                securityContext = createSecurityContext(domain, userPrincipal, cred, subject);
                 LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", baseUsername, "\" in security domain", domain}); //$NON-NLS-1$ //$NON-NLS-2$
             }
 

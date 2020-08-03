@@ -17,7 +17,10 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BPCHAR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.PG_TYPE_VARCHAR;
+import static org.teiid.odbc.PGUtil.convertType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -39,6 +42,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.SSLEngine;
+
 import org.ietf.jgss.GSSCredential;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -56,6 +61,7 @@ import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.StatementImpl;
@@ -224,7 +230,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     }
 
     @Override
-    public void initialize(Properties props) {
+    public void initialize(Properties props, SocketAddress remoteAddress,
+            SSLEngine sslEngine) {
         this.props = props;
         this.client.initialized(this.props);
 
@@ -240,12 +247,28 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             return;
         }
 
-        if (authType.equals(AuthenticationType.USERPASSWORD)) {
+        switch (authType) {
+        case USERPASSWORD:
             this.client.useClearTextAuthentication();
-        }
-        else if (authType.equals(AuthenticationType.GSS)) {
+            break;
+        case GSS:
             this.client.useAuthenticationGSS();
-        } else {
+            break;
+        case SSL:
+            java.util.Properties info = new java.util.Properties();
+            if (sslEngine != null) {
+                info.put(LocalProfile.SSL_SESSION, sslEngine.getSession());
+            }
+            try {
+                info.put(TeiidURL.CONNECTION.USER_NAME, user);
+                //ssl auth should "logon" without sending an additional challenge
+                logon(database, remoteAddress, info, null);
+            } catch (SQLException e) {
+                errorOccurred(e);
+                terminate();
+            }
+            break;
+        default:
             throw new AssertionError("Unsupported Authentication Type"); //$NON-NLS-1$
         }
     }
@@ -260,7 +283,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     }
 
     @Override
-    public void logon(String databaseName, String user, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress) {
+    public void logon(String databaseName, String user,
+            NullTerminatedStringDataInputStream data,
+            SocketAddress remoteAddress) {
         try {
             java.util.Properties info = new java.util.Properties();
             info.put(TeiidURL.CONNECTION.USER_NAME, user);
@@ -293,54 +318,57 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                 throw new AssertionError("Unsupported Authentication Type"); //$NON-NLS-1$
             }
 
-            // this is local connection
-            String url = "jdbc:teiid:"+databaseName; //$NON-NLS-1$
-
-            if (password != null) {
-                info.put(TeiidURL.CONNECTION.PASSWORD, password);
-            }
-            String applicationName = this.props.getProperty(PgBackendProtocol.APPLICATION_NAME);
-            if (applicationName == null) {
-                applicationName = PgBackendProtocol.DEFAULT_APPLICATION_NAME;
-                this.props.put(PgBackendProtocol.APPLICATION_NAME, applicationName);
-            }
-            info.put(TeiidURL.CONNECTION.APP_NAME, applicationName);
-
-            if (remoteAddress instanceof InetSocketAddress) {
-                //we currently don't pass a hostname resolver as
-                //this is typically the hostname of the load balancer
-                SocketServerConnection.updateConnectionProperties(info, ((InetSocketAddress)remoteAddress).getAddress(), false, null);
-            }
-
-            this.connection =  driver.connect(url, info);
-            //Propagate so that we can use in pg methods
-            SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
-            sm.addAttachment(ODBCServerRemoteImpl.class, this);
-            setConnectionProperties(this.connection);
-            Enumeration<?> keys = this.props.propertyNames();
-            while (keys.hasMoreElements()) {
-                String key = (String)keys.nextElement();
-                this.connection.setExecutionProperty(key, this.props.getProperty(key));
-            }
-            StatementImpl s = this.connection.createStatement();
-            try {
-                s.execute("select teiid_session_set('resolve_groupby_positional', true), teiid_session_set('pg_column_names', true)"); //$NON-NLS-1$
-            } finally {
-                s.close();
-            }
-            this.client.authenticationSucess((int)((secretKey>>32)&BIT_MASK), (int)(secretKey&BIT_MASK));
-            ready();
-            remotes.put(secretKey, this);
-        } catch (SQLException e) {
-            errorOccurred(e);
-            terminate();
-        } catch(LogonException e) {
-            errorOccurred(e);
-            terminate();
-        } catch (IOException e) {
+            logon(databaseName, remoteAddress, info, password);
+        } catch (SQLException|LogonException|IOException e) {
             errorOccurred(e);
             terminate();
         }
+    }
+
+    private void logon(String databaseName, SocketAddress remoteAddress,
+            java.util.Properties info, String password) throws SQLException {
+        // this is local connection
+        String url = "jdbc:teiid:"+databaseName; //$NON-NLS-1$
+
+        if (password != null) {
+            info.put(TeiidURL.CONNECTION.PASSWORD, password);
+        }
+        //since we can't mark this as local ahead of time, we must not allow
+        //passthrough with no subject
+        info.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false"); //$NON-NLS-1$
+        String applicationName = this.props.getProperty(PgBackendProtocol.APPLICATION_NAME);
+        if (applicationName == null) {
+            applicationName = PgBackendProtocol.DEFAULT_APPLICATION_NAME;
+            this.props.put(PgBackendProtocol.APPLICATION_NAME, applicationName);
+        }
+        info.put(TeiidURL.CONNECTION.APP_NAME, applicationName);
+
+        if (remoteAddress instanceof InetSocketAddress) {
+            //we currently don't pass a hostname resolver as
+            //this is typically the hostname of the load balancer
+            SocketServerConnection.updateConnectionProperties(info, ((InetSocketAddress)remoteAddress).getAddress(), false, null);
+        }
+
+        this.connection =  driver.connect(url, info);
+        //Propagate so that we can use in pg methods
+        SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
+        sm.addAttachment(ODBCServerRemoteImpl.class, this);
+        setConnectionProperties(this.connection);
+        Enumeration<?> keys = this.props.propertyNames();
+        while (keys.hasMoreElements()) {
+            String key = (String)keys.nextElement();
+            this.connection.setExecutionProperty(key, this.props.getProperty(key));
+        }
+        StatementImpl s = this.connection.createStatement();
+        try {
+            s.execute("select teiid_session_set('resolve_groupby_positional', true), teiid_session_set('pg_column_names', true)"); //$NON-NLS-1$
+        } finally {
+            s.close();
+        }
+
+        this.client.authenticationSucess((int)((secretKey>>32)&BIT_MASK), (int)(secretKey&BIT_MASK));
+        ready();
+        remotes.put(secretKey, this);
     }
 
     @Override

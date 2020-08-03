@@ -145,7 +145,8 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
     private void onConnection(Channel channel) throws Exception {
         ChannelListener listener = this.listeners.get(channel);
         if (listener != null) {
-            listener.onConnection();
+            SslHandler sslHandler = channel.pipeline().get(SslHandler.class);
+            listener.onConnection(sslHandler != null?sslHandler.engine():null );
         }
     }
 

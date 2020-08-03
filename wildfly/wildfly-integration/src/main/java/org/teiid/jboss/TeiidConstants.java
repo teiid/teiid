@@ -503,7 +503,7 @@ public class TeiidConstants {
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(AuthenticationType.USERPASSWORD.name()))
-        .setAllowedValues(new ModelNode(AuthenticationType.USERPASSWORD.name()), new ModelNode(AuthenticationType.GSS.name()))
+        .setAllowedValues(new ModelNode(AuthenticationType.USERPASSWORD.name()), new ModelNode(AuthenticationType.GSS.name()), new ModelNode(AuthenticationType.SSL.name()))
         .build();
 
     public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)

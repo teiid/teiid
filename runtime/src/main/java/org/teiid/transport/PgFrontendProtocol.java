@@ -42,6 +42,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.ssl.SslHandler;
 
 /**
  * Represents the messages going from PG ODBC Client --&gt; back end Server
@@ -222,7 +223,8 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         props.setProperty("integer_datetimes", "on");
         props.setProperty("DateStyle", "ISO");
         props.setProperty("TimeZone", Calendar.getInstance().getTimeZone().getDisplayName());
-        this.odbcProxy.initialize(props);
+        SslHandler sslHandler = (SslHandler)channel.pipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY);
+        this.odbcProxy.initialize(props, channel.remoteAddress(), sslHandler != null ? sslHandler.engine() : null);
         return message;
     }
 
