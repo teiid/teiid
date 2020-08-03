@@ -29,6 +29,7 @@ import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
+import org.teiid.transport.SSLConfiguration.ClientAuth;
 import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
@@ -535,8 +536,8 @@ public class TeiidConstants {
         .setXmlName(Element.SSL_AUTH_MODE_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
         .setRequired(false)
-        .setDefaultValue(new ModelNode(SSLConfiguration.ONEWAY))
-        .setAllowedValues(SSLConfiguration.ONEWAY, SSLConfiguration.TWOWAY, SSLConfiguration.ANONYMOUS)
+        .setDefaultValue(new ModelNode(ClientAuth.NONE.name()))
+        .setAllowedValues(SSLConfiguration.ONEWAY, SSLConfiguration.TWOWAY, SSLConfiguration.ANONYMOUS, ClientAuth.NEED.name(), ClientAuth.NONE.name(), ClientAuth.WANT.name())
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();
 
