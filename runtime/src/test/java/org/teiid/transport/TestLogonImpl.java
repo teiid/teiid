@@ -95,7 +95,7 @@ public class TestLogonImpl {
     public void testLogonAuthenticationType() throws Exception {
         VDBRepository repo = Mockito.mock(VDBRepository.class);
         VDBMetaData vdb = new VDBMetaData();
-        vdb.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
+        vdb.addProperty(SessionServiceImpl.Authentication.GSS.getPatternKey(), "GSS");
         vdb.setName("name");
         vdb.setVersion(1);
         vdb.setStatus(Status.ACTIVE);
@@ -157,7 +157,7 @@ public class TestLogonImpl {
 
         // if no preference then choose USERPASSWORD
         VDBMetaData metadata = addVdb(repo, "name1", "SC", AuthenticationType.USERPASSWORD.name());
-        metadata.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
+        metadata.addProperty(SessionServiceImpl.Authentication.GSS.getPatternKey(), "GSS");
         DQPWorkContext.setWorkContext(new DQPWorkContext());
         impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
         p = buildProperties("fred", "name1");
@@ -188,8 +188,8 @@ public class TestLogonImpl {
         result = impl.logon(p);
         assertEquals(AuthenticationType.GSS, result.getProperty("authType"));
 
-        // doesn't match gss pattern
-        metadata.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
+        // doesn't match gss patternKey
+        metadata.addProperty(SessionServiceImpl.Authentication.GSS.getPatternKey(), "GSS");
         DQPWorkContext.setWorkContext(new DQPWorkContext());
         impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
         p = buildProperties(null, "name1");

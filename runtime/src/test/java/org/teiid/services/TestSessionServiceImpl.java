@@ -1,6 +1,8 @@
 package org.teiid.services;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.Properties;
 
@@ -182,7 +184,7 @@ public class TestSessionServiceImpl {
         vdb.setVersion(1);
         vdb.setStatus(Status.ACTIVE);
         vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
-        vdb.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "x");
+        vdb.addProperty(SessionServiceImpl.Authentication.GSS.getPatternKey(), "x");
         Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 
         ssi.setVDBRepository(repo);

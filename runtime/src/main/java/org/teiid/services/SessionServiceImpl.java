@@ -23,6 +23,7 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -67,8 +68,28 @@ import org.teiid.vdb.runtime.VDBKey;
  * This class serves as the primary implementation of the Session Service.
  */
 public class SessionServiceImpl implements SessionService {
-    public static final String GSS_PATTERN_PROPERTY = "gss-pattern"; //$NON-NLS-1$
-    public static final String PASSWORD_PATTERN_PROPERTY = "password-pattern"; //$NON-NLS-1$
+
+    public enum Authentication {
+        GSS("gss-patternKey", AuthenticationType.GSS),  //$NON-NLS-1$
+        SSL("ssl-patternKey", AuthenticationType.SSL), //$NON-NLS-1$
+        PASSWORD("password-patternKey", AuthenticationType.USERPASSWORD); //$NON-NLS-1$
+
+        String patternKey;
+        AuthenticationType type;
+
+        private Authentication(String pattern, AuthenticationType type) {
+            this.patternKey = pattern;
+            this.type = type;
+        }
+
+        public String getPatternKey() {
+            return patternKey;
+        }
+
+        public AuthenticationType getType() {
+            return type;
+        }
+    }
     public static final String SECURITY_DOMAIN_PROPERTY = "security-domain"; //$NON-NLS-1$
     public static final String AUTHENTICATION_TYPE_PROPERTY = "authentication-type"; //$NON-NLS-1$
     public static final String MAX_SESSIONS_PER_USER = "max-sessions-per-user"; //$NON-NLS-1$
@@ -441,36 +462,58 @@ public class SessionServiceImpl implements SessionService {
         return securityHelper;
     }
 
+    /**
+     * Caches the information related to vdb specific authentication
+     */
+    private static class AuthenticationPatterns extends HashMap<Authentication, Pattern> {
+        AuthenticationType defaultType;
+
+        public AuthenticationPatterns(VDBMetaData vdb) {
+            String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
+            if (typeProperty != null) {
+                defaultType = AuthenticationType.valueOf(typeProperty);
+            }
+            for (Authentication auth : Authentication.values()) {
+                String p = vdb.getPropertyValue(auth.getPatternKey());
+                if (p != null) {
+                    this.put(auth, Pattern.compile(p));
+                }
+            }
+        }
+
+        AuthenticationType findMatch(String username) {
+            for (Authentication auth : Authentication.values()) {
+                Pattern p = get(auth);
+                if (p != null && p.matcher(username).matches()) {
+                    return auth.getType();
+                }
+            }
+            return defaultType;
+        }
+    }
+
     @Override
     public AuthenticationType getAuthenticationType(String vdbName, String version, String userName) throws LogonException {
         if (userName == null) {
             userName = CoreConstants.DEFAULT_ANON_USERNAME;
         }
         if (vdbName != null) {
-            VDB vdb = null;
+            VDBMetaData vdb = null;
             try {
                 vdb = getActiveVDB(vdbName, version);
             } catch (SessionServiceException e) {
                 throw new LogonException(e);
             }
             if (vdb != null) {
-                String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
-
-                //TODO: cache the patterns
-
-                if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
-                    return AuthenticationType.GSS;
+                AuthenticationPatterns patterns = vdb.getAttachment(AuthenticationPatterns.class);
+                if (patterns == null) {
+                    patterns = new AuthenticationPatterns(vdb);
+                    vdb.addAttachment(AuthenticationPatterns.class, patterns);
                 }
 
-                String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
-
-                if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
-                    return AuthenticationType.USERPASSWORD;
-                }
-
-                String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
-                if (typeProperty != null) {
-                    return AuthenticationType.valueOf(typeProperty);
+                AuthenticationType result = patterns.findMatch(userName);
+                if (result != null) {
+                    return result;
                 }
             }
         }
