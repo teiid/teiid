@@ -18,9 +18,9 @@
 package org.teiid.translator.parquet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
@@ -34,12 +34,14 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
     private List<String> projectedColumnNames = new ArrayList<String>();
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
+    public HashMap<String, String> getColumnValues() {
+        return columnValues;
+    }
+
+    private HashMap<String, String> columnValues = new HashMap<>();
+
     private Table table;
     private String parquetPath;
-    private String path = "";
-    private AtomicInteger columnCount = new AtomicInteger();
-    private String[] partitionedColumnArray;
-    boolean flag = true;
 
     public List<String> getProjectedColumnNames() {
         return projectedColumnNames;
@@ -87,10 +89,6 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
         }
         else {
             if (this.table.getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME).equals("directory")) {
-                if(flag) {
-                    this.partitionedColumnArray = getPartitionedColumns(this.table.getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
-                    flag = false;
-                }
                 directoryBasedPartitioning(obj);
             } else {
                 // TODO: File Based Partitioning
@@ -109,20 +107,6 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
         String columnName = column.getSourceName();
         visitNode(obj.getRightExpression());
         String columnValue = (String) this.onGoingExpression.pop();
-        while(this.columnCount.get() < partitionedColumnArray.length && !partitionedColumnArray[this.columnCount.getAndIncrement()].equals(columnName)){
-            path += "/*";
-        }
-        path += "/" + columnValue;
-        if(partitionedColumnArray.length == this.columnCount.get()){
-            path += "/*";
-            parquetPath += path;
-        }
+        columnValues.put(columnName, columnValue);
     }
-
-    private String[] getPartitionedColumns(String partitionedColumns) {
-        String[] partitionedColumnList;
-        partitionedColumnList = partitionedColumns.split(",");
-        return partitionedColumnList;
-    }
-
 }

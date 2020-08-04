@@ -86,11 +86,30 @@ public class BaseParquetExecution implements Execution {
 
     @Override
     public void execute() throws TranslatorException {
-        this.parquetFiles = VirtualFileConnection.Util.getFiles(this.visitor.getParquetPath(), this.connection, true);
+        String path = this.visitor.getParquetPath();
+        if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME) != null && this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME).equals("directory")){
+            path += getDirectoryPath(this.visitor.getColumnValues(), this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
+        }
+        this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true);
         VirtualFile nextParquetFile = getNextParquetFile();
         if (nextParquetFile != null) {
             this.rowIterator = readParquetFile(nextParquetFile);
         }
+    }
+
+    private String getDirectoryPath(HashMap<String, String> columnValues, String partitionedColumns) {
+      String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
+      String path = "";
+      for(int i = 0; i < partitionedColumnsArray.length; i++){
+          if(columnValues.containsKey(partitionedColumnsArray[i])){
+              path += "/" + columnValues.get(partitionedColumnsArray[i]);
+          }
+          else {
+              path += "/*";
+          }
+      }
+      path += "/*";
+      return path;
     }
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
@@ -187,6 +206,12 @@ public class BaseParquetExecution implements Execution {
             }
         }
         return null;
+    }
+
+    private String[] getPartitionedColumns(String partitionedColumns) {
+        String[] partitionedColumnList;
+        partitionedColumnList = partitionedColumns.split(",");
+        return partitionedColumnList;
     }
 
     @Override
