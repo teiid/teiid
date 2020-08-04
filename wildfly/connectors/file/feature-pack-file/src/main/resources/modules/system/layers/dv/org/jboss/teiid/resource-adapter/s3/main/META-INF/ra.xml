@@ -33,10 +33,9 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.s3.S3ManagedConnectionFactory</managedconnectionfactory-class>
 
             <config-property>
-               <description>{$display:"S3 Endpoint"}</description>
+               <description>{$display:"S3 Endpoint",$description:"If specified it is expected to be the full service endpoint containing protocol, service, region, and hostname information as applicable."}</description>
                <config-property-name>Endpoint</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>https://s3.amazonaws.com</config-property-value>
             </config-property>
             
             <config-property>
@@ -58,10 +57,9 @@
             </config-property>
             
             <config-property>
-               <description>{$display:"Region"}</description>
+               <description>{$display:"Region",$description:"If endpoint is not specified, this is the AWS region. If endpoint is specified, this is the signer region override only and does not affect the endpoint."}</description>
                <config-property-name>Region</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-               <config-property-value>US-EAST-1</config-property-value>
             </config-property>
             
             <config-property>

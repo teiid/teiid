@@ -26,12 +26,6 @@ public interface S3Configuration {
 
     String getBucket();
 
-    /**
-     * The optional region.  May also be specified in the endpoint url for some s3 services.
-     * @return
-     */
-    String getRegion();
-
     String getSseAlgorithm();
 
     /**
@@ -40,6 +34,17 @@ public interface S3Configuration {
      */
     String getSseKey();
 
+    /**
+     * If specified it is expected to be the full service endpoint containing protocol, service, region, and hostname information as applicable.
+     * @return
+     */
     String getEndpoint();
+
+    /**
+     * If endpoint is not specified, this is the AWS region.
+     * <br>If endpoint is specified, this is the signer region override only and does not affect the endpoint.
+     * @return
+     */
+    String getRegion();
 
 }

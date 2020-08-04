@@ -46,10 +46,14 @@ public class S3ConnectionFactory {
         AWSCredentials credentials = new BasicAWSCredentials(s3Config.getAccessKey(), s3Config.getSecretKey());
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.setSignerOverride("AWSS3V4SignerType");
-        s3Client = AmazonS3ClientBuilder
-                .standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Config.getEndpoint(), s3Config.getRegion()))
-                .withPathStyleAccessEnabled(true)
+        AmazonS3ClientBuilder standard = AmazonS3ClientBuilder
+                .standard();
+        if (s3Config.getEndpoint() != null) {
+            standard = standard.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Config.getEndpoint(), s3Config.getRegion()));
+        } else if (s3Config.getRegion() != null) {
+            standard = standard.withRegion(s3Config.getRegion());
+        }
+        s3Client = standard.withPathStyleAccessEnabled(true)
                 .withClientConfiguration(clientConfiguration)
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();

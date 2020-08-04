@@ -49,10 +49,10 @@ public class S3ManagedConnectionFactory extends BasicManagedConnectionFactory im
     private String accessKey;
     private String secretKey;
     private String bucket;
-    private String region = "US-EAST-1"; //$NON-NLS-1$
+    private String region;
     private String sseAlgorithm = "AES256"; //$NON-NLS-1$
     private String sseKey;   // base64-encoded key
-    private String endpoint = "https://s3.amazonaws.com"; //$NON-NLS-1$
+    private String endpoint;
 
     @Override
     public BasicConnectionFactory<ResourceConnection> createConnectionFactory()
