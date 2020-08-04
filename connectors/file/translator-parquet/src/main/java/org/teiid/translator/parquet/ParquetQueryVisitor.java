@@ -20,10 +20,9 @@ package org.teiid.translator.parquet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.NamedTable;
+import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Table;
@@ -37,6 +36,10 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
 
     private Table table;
     private String parquetPath;
+    private String path = "";
+    private AtomicInteger columnCount = new AtomicInteger();
+    private String[] partitionedColumnArray;
+    boolean flag = true;
 
     public List<String> getProjectedColumnNames() {
         return projectedColumnNames;
@@ -75,6 +78,51 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
     private void createProjectedColumn() {
         Column column = (Column) this.onGoingExpression.pop();
         this.projectedColumnNames.add(column.getSourceName());
+    }
+
+    @Override
+    public void visit(Comparison obj) {
+        if(this.table.getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME) == null){
+            // TODO: Row filtering
+        }
+        else {
+            if (this.table.getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME).equals("directory")) {
+                if(flag) {
+                    this.partitionedColumnArray = getPartitionedColumns(this.table.getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
+                    flag = false;
+                }
+                directoryBasedPartitioning(obj);
+            } else {
+                // TODO: File Based Partitioning
+            }
+        }
+    }
+
+    @Override
+    public void visit(Literal obj) {
+        this.onGoingExpression.push(obj.getValue());
+    }
+
+    private void directoryBasedPartitioning(Comparison obj) {
+        visitNode(obj.getLeftExpression());
+        Column column = (Column)this.onGoingExpression.pop();
+        String columnName = column.getSourceName();
+        visitNode(obj.getRightExpression());
+        String columnValue = (String) this.onGoingExpression.pop();
+        while(this.columnCount.get() < partitionedColumnArray.length && !partitionedColumnArray[this.columnCount.getAndIncrement()].equals(columnName)){
+            path += "/*";
+        }
+        path += "/" + columnValue;
+        if(partitionedColumnArray.length == this.columnCount.get()){
+            path += "/*";
+            parquetPath += path;
+        }
+    }
+
+    private String[] getPartitionedColumns(String partitionedColumns) {
+        String[] partitionedColumnList;
+        partitionedColumnList = partitionedColumns.split(",");
+        return partitionedColumnList;
     }
 
 }

@@ -51,4 +51,14 @@ public class ParquetExecutionFactory extends ExecutionFactory<ConnectionFactory,
         return new ParquetMetadataProcessor();
     }
 
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+        return true;
+    }
+
 }
