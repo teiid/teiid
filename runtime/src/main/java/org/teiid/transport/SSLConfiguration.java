@@ -40,7 +40,7 @@ public class SSLConfiguration {
 
     public enum ClientAuth {
         NONE(ONEWAY),
-        WANT("want_client"), //$NON-NLS-1$
+        WANT(null),
         NEED(TWOWAY);
 
         private String oldValue;
@@ -158,7 +158,7 @@ public class SSLConfiguration {
 
     public void setAuthenticationMode(String value) {
         for (ClientAuth auth : ClientAuth.values()) {
-            if (auth.name().equals(value) || auth.oldValue.equals(value)) {
+            if (auth.name().equals(value) || value.equals(auth.oldValue)) {
                 this.authenticationMode = auth;
                 return;
             }
