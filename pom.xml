@@ -119,7 +119,7 @@
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.net.sourceforge.saxon>9.8.0-14</version.net.sourceforge.saxon>
         <version.noggit>0.6</version.noggit>
-        <version.postgresql>42.1.4</version.postgresql>
+        <version.postgresql>42.2.13</version.postgresql>
         <version.proj4j>0.1.0</version.proj4j>
 
         <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
@@ -1400,6 +1400,12 @@
                 <artifactId>postgresql</artifactId>
                 <version>${version.postgresql}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.osgi</groupId>
+                        <artifactId>org.osgi.enterprise</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
