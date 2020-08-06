@@ -34,11 +34,11 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
     private List<String> projectedColumnNames = new ArrayList<String>();
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-    public HashMap<String, String> getColumnValues() {
-        return columnValues;
+    public HashMap<String, Comparison> getColumnPredicates() {
+        return columnPredicates;
     }
 
-    private HashMap<String, String> columnValues = new HashMap<>();
+    private HashMap<String, Comparison> columnPredicates = new HashMap<>();
 
     private Table table;
     private String parquetPath;
@@ -84,16 +84,10 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
 
     @Override
     public void visit(Comparison obj) {
-        if(this.table.getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME) == null){
-            // TODO: Row filtering
-        }
-        else {
-            if (this.table.getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME).equals("directory")) {
-                directoryBasedPartitioning(obj);
-            } else {
-                // TODO: File Based Partitioning
-            }
-        }
+        ColumnReference cr = (ColumnReference) obj.getLeftExpression();
+        Column column = cr.getMetadataObject();
+        String columnName = column.getSourceName();
+        columnPredicates.put(columnName, obj);
     }
 
     @Override
@@ -101,12 +95,4 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
         this.onGoingExpression.push(obj.getValue());
     }
 
-    private void directoryBasedPartitioning(Comparison obj) {
-        visitNode(obj.getLeftExpression());
-        Column column = (Column)this.onGoingExpression.pop();
-        String columnName = column.getSourceName();
-        visitNode(obj.getRightExpression());
-        String columnValue = (String) this.onGoingExpression.pop();
-        columnValues.put(columnName, columnValue);
-    }
 }

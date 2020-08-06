@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,7 +43,9 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
+import org.teiid.language.Comparison;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.Literal;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
@@ -88,7 +91,7 @@ public class BaseParquetExecution implements Execution {
     public void execute() throws TranslatorException {
         String path = this.visitor.getParquetPath();
         if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME) != null && this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME).equals("directory")){
-            path += getDirectoryPath(this.visitor.getColumnValues(), this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
+            path += getDirectoryPath(this.visitor.getColumnPredicates(), this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
         }
         this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true);
         VirtualFile nextParquetFile = getNextParquetFile();
@@ -97,19 +100,48 @@ public class BaseParquetExecution implements Execution {
         }
     }
 
-    private String getDirectoryPath(HashMap<String, String> columnValues, String partitionedColumns) {
-      String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
-      String path = "";
-      for(int i = 0; i < partitionedColumnsArray.length; i++){
-          if(columnValues.containsKey(partitionedColumnsArray[i])){
-              path += "/" + columnValues.get(partitionedColumnsArray[i]);
+    private String getDirectoryPath(HashMap<String, Comparison> predicates, String partitionedColumns) throws TranslatorException {
+        String path = ""; // because we are only supporting the equality comparison as of now, otherwise we would return a list of paths to iterate over
+        String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
+        for(int i = 0; i < partitionedColumnsArray.length; i++){
+          if(predicates.containsKey(partitionedColumnsArray[i])) {
+              Comparison predicate = predicates.get(partitionedColumnsArray[i]);
+              Literal l = (Literal) predicate.getRightExpression();
+              path += "/" + partitionedColumnsArray[i] + "=";
+              switch (predicate.getOperator()) {
+                  case EQ:
+                      switch (l.getType().getName()){
+                          case "java.lang.String":
+                              path += (String) l.getValue();
+                              break;
+                          case "java.math.BigInteger":
+                              BigInteger value = (BigInteger) l.getValue();
+                              path += value.toString();
+                              break;
+                          case "java.lang.Long":
+                              Long longValue = (Long) l.getValue();
+                              path += longValue.toString();
+                              break;
+                          case "java.lang.Integer":
+                              Integer intValue = (Integer) l.getValue();
+                              path += intValue.toString();
+                              break;
+                          case "java.lang.Boolean":
+                              Boolean boolValue = (Boolean) l.getValue();
+                              path += boolValue.toString();
+                              break;
+                          default:
+                              throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
+                      }
+                      break;
+                  default: throw new TranslatorException("Only equal comparison is allowed");
+              }
           }
           else {
               path += "/*";
           }
-      }
-      path += "/*";
-      return path;
+        }
+    return path + "/*";
     }
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
