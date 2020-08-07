@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.teiid.wildfly</groupId>
-        <version>15.0.0</version>
+        <version>15.0.1-SNAPSHOT</version>
 	</parent>
 	<licenses>
         <license>
