@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>15.0.0-SNAPSHOT</version>
+      <version>16.0.0-SNAPSHOT</version>
   </parent>
   <groupId>org.teiid.connectors</groupId>
   <artifactId>ldap</artifactId>
