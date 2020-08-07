@@ -1,5 +1,4 @@
 language: java
-sudo: false
 jdk:
     - openjdk9
     - openjdk11
@@ -16,7 +15,6 @@ cache:
 deploy:
   provider: script
   script: "mvn -P dev,wildfly deploy -q"
-  skip_cleanup: true
   on:
     branch: master
     jdk: openjdk9
