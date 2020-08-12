@@ -4,7 +4,7 @@
 	<parent>
         <groupId>org.teiid.wildfly.connectors</groupId>
 		<artifactId>ldap</artifactId>
-		<version>13.1.2</version>
+		<version>13.1.3-SNAPSHOT</version>
 	</parent>
     <artifactId>feature-pack-ldap</artifactId>
     <name>Teiid Connector ldap Feature Pack</name>
