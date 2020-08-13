@@ -18,7 +18,8 @@
 
 package org.teiid.json;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -62,6 +63,11 @@ public class TestJsonPath {
     @Test public void testJsonPathValueDefiniteArray() throws Exception {
         String result = JsonPathFunctionMethods.jsonPathValue(new ClobImpl(EXAMPLE), "$.store.book", false);
         assertEquals("[{\"category\":\"reference\",\"author\":\"Nigel Rees\",\"title\":\"Sayings of the Century\",\"price\":8.95},{\"category\":\"fiction\",\"author\":\"Evelyn Waugh\",\"title\":\"Sword of Honour\",\"price\":12.99},{\"category\":\"fiction\",\"author\":\"Herman Melville\",\"title\":\"Moby Dick\",\"isbn\":\"0-553-21311-3\",\"price\":8.99},{\"category\":\"fiction\",\"author\":\"J. R. R. Tolkien\",\"title\":\"The Lord of the Rings\",\"isbn\":\"0-395-19395-8\",\"price\":22.99}]", result);
+    }
+
+    @Test public void testJsonPathValueDefiniteSingle() throws Exception {
+        String result = JsonPathFunctionMethods.jsonPathValue(new ClobImpl(EXAMPLE), "$.store.book[1]", false);
+        assertEquals("{\"category\":\"fiction\",\"author\":\"Evelyn Waugh\",\"title\":\"Sword of Honour\",\"price\":12.99}", result);
     }
 
     @Test public void testJsonPathValueIndefiniteArray() throws Exception {
@@ -179,4 +185,5 @@ public class TestJsonPath {
 
         TestProcessor.helpProcess(plan, hdm, expected);
     }
+
 }

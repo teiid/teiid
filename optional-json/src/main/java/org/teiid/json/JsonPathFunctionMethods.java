@@ -25,6 +25,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.BundleUtil;
@@ -44,6 +45,7 @@ import com.jayway.jsonpath.Option;
 
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONAwareEx;
+import net.minidev.json.JSONObject;
 
 @TeiidFunctions(category=FunctionCategoryConstants.JSON)
 public class JsonPathFunctionMethods {
@@ -80,6 +82,9 @@ public class JsonPathFunctionMethods {
         }
         if (result instanceof JSONAwareEx) {
             return ((JSONAwareEx)result).toJSONString();
+        }
+        if (result instanceof Map) {
+            return JSONObject.toJSONString((Map)result);
         }
         return result.toString();
     }
@@ -161,19 +166,19 @@ public class JsonPathFunctionMethods {
     private static Object[] buildRow(Object value, Configuration conf, JsonPath[] paths, int row) {
         DocumentContext dc = JsonPath.parse(value, conf);
 
-        Object[] values = new Object[paths.length==0?1:paths.length];
-
-        for (int j = 0; j < paths.length; j++) {
-            if (paths[j] == null) {
-                values[j] = row;
-            } else {
-                Object colValue = dc.read(paths[j]);
-                values[j] = getTeiidValue(colValue);
+        Object[] values = null;
+        if (paths.length==0) {
+            values = new Object[] {getTeiidValue(value)};
+        } else {
+            values = new Object[paths.length];
+            for (int j = 0; j < paths.length; j++) {
+                if (paths[j] == null) {
+                    values[j] = row;
+                } else {
+                    Object colValue = dc.read(paths[j]);
+                    values[j] = getTeiidValue(colValue);
+                }
             }
-        }
-
-        if (paths.length == 0) {
-            values[0] = getTeiidValue(value);
         }
 
         return values;
