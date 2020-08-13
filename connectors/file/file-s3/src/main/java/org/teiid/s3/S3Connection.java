@@ -106,13 +106,18 @@ public class S3Connection implements VirtualFileConnection {
         String[] stringArray = pattern.split(STAR);
         int prevIndex = 0;
         for(String sub: stringArray){
-            if(key.indexOf(sub, prevIndex) != -1){
-                prevIndex = key.indexOf(sub, prevIndex) + sub.length();
+            int index = key.indexOf(sub, prevIndex);
+            int indexOfNextSlash = key.indexOf(SLASH, prevIndex);
+            if(index != -1 && (indexOfNextSlash == -1 || indexOfNextSlash >= index)){
+                prevIndex = index + sub.length();
             } else {
                 return false;
             }
         }
         if(key.indexOf(SLASH, prevIndex) != -1){
+            return false;
+        }
+        if(!pattern.endsWith("*") && !key.endsWith(stringArray[stringArray.length - 1])){
             return false;
         }
         return true;
