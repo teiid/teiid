@@ -77,10 +77,10 @@ public class TestS3Connection {
 
     @Test
     public void testMatchString() {
-//        Assert.assertTrue(s3Connection.matchString("folder1/sample", "folder1/samp*"));
-//        Assert.assertTrue(s3Connection.matchString("dddd", "dd*d"));
-//        Assert.assertTrue(s3Connection.matchString("folder1/sample", "folder1/*le"));
-//        Assert.assertFalse(s3Connection.matchString("folder1/sample", "folder1/san*"));
+        Assert.assertTrue(s3Connection.matchString("folder1/sample", "folder1/samp*"));
+        Assert.assertTrue(s3Connection.matchString("dddd", "dd*d"));
+        Assert.assertTrue(s3Connection.matchString("folder1/sample", "folder1/*le"));
+        Assert.assertFalse(s3Connection.matchString("folder1/sample", "folder1/san*"));
         Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/day=Monday"));
         Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/month=*/*/day=Monday"));
         Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/*"));
