@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,11 +33,15 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
+import org.apache.parquet.filter2.compat.FilterCompat;
+import org.apache.parquet.filter2.predicate.FilterApi;
+import org.apache.parquet.filter2.predicate.FilterPredicate;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
+import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.teiid.file.VirtualFile;
@@ -51,6 +54,8 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+
+import static org.apache.parquet.filter2.predicate.Operators.*;
 
 
 public class BaseParquetExecution implements Execution {
@@ -67,6 +72,7 @@ public class BaseParquetExecution implements Execution {
     private AtomicInteger fileCount = new AtomicInteger();
     private ParquetFileReader reader;
     private MessageType schema;
+    private MessageType filteredSchema;
     private RecordReader<Group> rowIterator;
     private MessageColumnIO columnIO;
     private long pageRowCount;
@@ -106,29 +112,18 @@ public class BaseParquetExecution implements Execution {
         for(int i = 0; i < partitionedColumnsArray.length; i++){
           if(predicates.containsKey(partitionedColumnsArray[i])) {
               Comparison predicate = predicates.get(partitionedColumnsArray[i]);
+              predicates.remove(partitionedColumnsArray[i]);
               Literal l = (Literal) predicate.getRightExpression();
               path += "/" + partitionedColumnsArray[i] + "=";
               switch (predicate.getOperator()) {
                   case EQ:
                       switch (l.getType().getName()){
                           case "java.lang.String":
-                              path += (String) l.getValue();
-                              break;
                           case "java.math.BigInteger":
-                              BigInteger value = (BigInteger) l.getValue();
-                              path += value.toString();
-                              break;
                           case "java.lang.Long":
-                              Long longValue = (Long) l.getValue();
-                              path += longValue.toString();
-                              break;
                           case "java.lang.Integer":
-                              Integer intValue = (Integer) l.getValue();
-                              path += intValue.toString();
-                              break;
                           case "java.lang.Boolean":
-                              Boolean boolValue = (Boolean) l.getValue();
-                              path += boolValue.toString();
+                              path += l.getValue().toString();
                               break;
                           default:
                               throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
@@ -144,6 +139,91 @@ public class BaseParquetExecution implements Execution {
     return path + "/*";
     }
 
+    private FilterCompat.Filter getRowGroupFilter(HashMap<String, Comparison> columnPredicates) throws TranslatorException {
+        if(columnPredicates.size() == 0){
+            return null;
+        }
+//        FilterCompat.Filter rowGroupFilter;
+//        LongColumn column1 = FilterApi.longColumn("id");
+//        long l=3;
+//        Column column2 = FilterApi.longColumn("jk");
+//        FilterPredicate predicate =  FilterApi.eq(column2, l);
+//        FilterPredicate predicate1 = FilterApi.and(predicate, )
+        int flag = 1;
+        FilterCompat.Filter rowGroupFilter;
+        Iterator hashMapIterator = columnPredicates.entrySet().iterator();
+        while(hashMapIterator.hasNext()){
+            Map.Entry mapElement = (Map.Entry) hashMapIterator.next();
+            String columnName = (String) mapElement.getKey();
+            Comparison comparison = (Comparison) mapElement.getValue();
+            Literal l = (Literal) comparison.getRightExpression();
+            Column column;
+            switch (comparison.getRightExpression().getType().getName()){
+                case "java.lang.String":
+                case "BinaryType":
+                    column = FilterApi.binaryColumn(columnName);
+                    break;
+                case "java.lang.Long":
+                    column = FilterApi.longColumn(columnName);
+                    break;
+                case "java.lang.Integer":
+                    column = FilterApi.intColumn(columnName);
+                    break;
+                case "java.lang.Boolean":
+                    column = FilterApi.booleanColumn(columnName);
+                    break;
+                case "java.lang.Double":
+                    column = FilterApi.doubleColumn(columnName);
+                    break;
+                case "java.lang.Float":
+                    column =FilterApi.floatColumn(columnName);
+                    break;
+                default:
+                    throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
+            }
+            switch (comparison.getOperator()){
+                case EQ:
+//                    FilterPredicate filterPredicate = FilterApi.eq(column, (Binary) getParquetValue(columnName, l, comparison));
+                    break;
+                case NE:
+//                    filterPredicate =
+                    break;
+                case LT:
+                    break;
+                case LE:
+                    break;
+                case GT:
+                    break;
+                case GE:
+                    break;
+            }
+        }
+        return null;
+    }
+
+    private Object getParquetValue(String columnName, Literal l, Comparison comparison) throws TranslatorException {
+        switch (comparison.getRightExpression().getType().getName()){
+            case "java.lang.String":
+                Binary binary = Binary.fromString((String) l.getValue());
+                return binary;
+            case "java.lang.Long":
+                break;
+            case "java.lang.Integer":
+                break;
+            case "java.lang.Boolean":
+                break;
+            case "java.lang.Double":
+                break;
+            case "java.lang.Float":
+                break;
+            case "BinaryType":
+                break;
+            default:
+                throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
+        }
+        return null;
+    }
+
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
         try (InputStream parquetFileStream = parquetFile.openInputStream(!immutable)) {
            return readParquetFile(parquetFile, parquetFileStream);
@@ -157,9 +237,13 @@ public class BaseParquetExecution implements Execution {
            File localFile = createTempFile(parquetFileStream);
            Path path = new Path(localFile.toURI());
            Configuration config = new Configuration();
+//           LongColumn column = FilterApi.longColumn("id");
+//           long l=3;
+//           FilterCompat.Filter rowGroupFilter = FilterCompat.get(FilterApi.lt(column, l));
+           FilterCompat.Filter rowGroupFilter = getRowGroupFilter(this.visitor.getColumnPredicates());
            reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
            schema = reader.getFooter().getFileMetaData().getSchema();
-           MessageType filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
+           filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
            columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
            PageReadStore pages = reader.readNextRowGroup();
            pageRowCount = pages.getRowCount();
@@ -222,6 +306,9 @@ public class BaseParquetExecution implements Execution {
                     }
                     this.rowIterator = readParquetFile(nextParquetFile);
                     continue;
+                } else{
+                    this.pageRowCount = nextRowGroup.getRowCount();
+                    this.rowIterator = columnIO.getRecordReader(nextRowGroup, new GroupRecordConverter(filteredSchema));
                 }
             }
             return rowIterator.read();

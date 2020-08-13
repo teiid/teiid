@@ -97,4 +97,20 @@ public class TestParquetExecution {
         ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January'");
         Assert.assertEquals("[[Michael], [Anne]]",results.toString());
     }
+
+    @Test
+    public void testParquetExecutionWithProjectedColumns() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id integer ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("people1.parquet")).toReturn(JavaVirtualFile.getFiles("people1.parquet", new File(UnitTestUtil.getTestDataPath(), "people1.parquet")));
+
+        ArrayList results = helpExecute(ddl, connection, "select firstname, lastname from Table1");
+        Assert.assertEquals("[[Aditya, Sharma], [Animesh, Sharma], [Shradha, Khapra]]", results.toString());
+    }
 }
