@@ -61,4 +61,13 @@ public class ParquetExecutionFactory extends ExecutionFactory<ConnectionFactory,
         return true;
     }
 
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsNotCriteria() {
+        return true;
+    }
 }

@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -148,7 +148,6 @@ public class BaseParquetExecution implements Execution {
         if(columnPredicates.size() == 0){
             return null;
         }
-        FilterCompat.Filter rowGroupFilter;
         Iterator hashMapIterator = columnPredicates.entrySet().iterator();
         FilterPredicate preFilterPredicate = null, filterPredicate = null;
         while(hashMapIterator.hasNext()){

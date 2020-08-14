@@ -129,4 +129,21 @@ public class TestParquetExecution {
         ArrayList results = helpExecute(ddl, connection, "select firstname, lastname from Table1 WHERE firstname='Aditya'");
         Assert.assertEquals("[[Aditya, Sharma]]", results.toString());
     }
+
+    @Test
+    public void testParquetExecutionWithDirectoryBasedPartitioningAndRowFilter() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	id integer ,\n" +
+                "	\"month\" string ,\n" +
+                "	name string ,\n" +
+                "	\"year\" long ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONING_SCHEME\" 'directory', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("dir/year=2019/month=January/*")).toReturn(JavaVirtualFile.getFiles("dir/year=2019/month=January/2019January.parquet", new File(UnitTestUtil.getTestDataPath(), "dir/year=2019/month=January/2019January.parquet")));
+
+        ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January' and name='Michael'");
+        Assert.assertEquals("[[Michael]]",results.toString());
+    }
 }
