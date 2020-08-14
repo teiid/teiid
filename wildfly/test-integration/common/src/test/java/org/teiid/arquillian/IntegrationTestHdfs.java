@@ -22,9 +22,12 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.sql.ResultSet;
@@ -61,14 +64,7 @@ public class IntegrationTestHdfs extends AbstractMMQueryTestCase {
     @BeforeClass
     public static void setup() throws Exception {
         admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
-        System.setProperty("hadoop.home.dir", "/");
-        File baseDir = new File(UnitTestUtil.getTestScratchPath(), "miniHDFS");
-        Configuration conf = new Configuration();
-        conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath());
-        //conf.setBoolean("dfs.webhdfs.enabled", true);
-        MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
-        cluster = builder.manageNameDfsDirs(true).manageDataDfsDirs(true).format(true).build();
-        cluster.waitClusterUp();
+        startMiniCluster(0);
 
         Properties props = new Properties();
         props.setProperty("FsUri", "hdfs://localhost:" + cluster.getNameNodePort());
@@ -88,6 +84,18 @@ public class IntegrationTestHdfs extends AbstractMMQueryTestCase {
         admin.deploy("hdfs-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 
         assertTrue(AdminUtil.waitForVDBLoad(admin, "hdfs", 1));
+    }
+
+    private static void startMiniCluster(int port) throws IOException {
+        System.setProperty("hadoop.home.dir", "/");
+        File baseDir = new File(UnitTestUtil.getTestScratchPath(), "miniHDFS");
+        Configuration conf = new Configuration();
+        conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath());
+        conf.setBoolean("dfs.webhdfs.enabled", true);
+        MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(conf);
+        cluster = builder.manageNameDfsDirs(true).manageDataDfsDirs(true)
+                .format(true).nameNodePort(port).nameNodeHttpPort(port==0?0:(port+1)).build();
+        cluster.waitClusterUp();
     }
 
     @AfterClass
@@ -171,6 +179,10 @@ public class IntegrationTestHdfs extends AbstractMMQueryTestCase {
         //list directory
         virtualFiles = getFiles("/user/aditya/");
         assertEquals(3, virtualFiles.size());
+    }
+
+    public static void main(String[] args) throws IOException {
+        startMiniCluster(9000);
     }
 
 }

@@ -19,16 +19,13 @@
 package org.teiid.file;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.OverlappingFileLockException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.PathMatcher;
 import java.nio.file.attribute.FileTime;
 import java.util.Map;
 
@@ -39,14 +36,31 @@ import org.teiid.core.types.InputStreamFactory.StorageMode;
 public class JavaVirtualFile implements VirtualFile {
 
     private final File f;
+    private final String path;
 
     public JavaVirtualFile(File f) {
         this.f = f;
+        this.path = f.getPath();
+    }
+
+    public JavaVirtualFile(File f, String path) {
+        this.f = f;
+        this.path = path;
     }
 
     @Override
     public String getName() {
         return f.getName();
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return f.isDirectory();
+    }
+
+    @Override
+    public String getPath() {
+        return path;
     }
 
     @Override
@@ -94,53 +108,6 @@ public class JavaVirtualFile implements VirtualFile {
     @Override
     public InputStreamFactory createInputStreamFactory() {
         return new FileInputStreamFactory(f);
-    }
-
-    public static VirtualFile[] getFiles(String location, File datafile) {
-        if (datafile.isDirectory()) {
-            return convert(datafile.listFiles());
-        }
-
-        if (datafile.exists()) {
-            return new VirtualFile[] {new JavaVirtualFile(datafile)};
-        }
-
-        File parentDir = datafile.getParentFile();
-
-        if (parentDir == null || !parentDir.exists()) {
-            return null;
-        }
-
-        if (location.contains("*")) { //$NON-NLS-1$
-            //for backwards compatibility support any wildcard, but no escapes or other glob searches
-            location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-
-            final PathMatcher matcher =
-                    FileSystems.getDefault().getPathMatcher("glob:" + location); //$NON-NLS-1$
-
-            FileFilter fileFilter = new FileFilter() {
-
-                @Override
-                public boolean accept(File pathname) {
-                    return pathname.isFile() && matcher.matches(FileSystems.getDefault().getPath(pathname.getName()));
-                }
-            };
-
-            return convert(parentDir.listFiles(fileFilter));
-        }
-
-        return null;
-    }
-
-    public static VirtualFile[] convert(File[] files) {
-        VirtualFile[] result = new VirtualFile[files.length];
-        for (int i = 0; i < files.length; i++) {
-            result[i] = new JavaVirtualFile(files[i]);
-        }
-        return result;
     }
 
     @Override

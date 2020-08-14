@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -47,6 +48,16 @@ public class FtpFileConnection implements VirtualFileConnection {
         @Override
         public String getName() {
             return file.getName();
+        }
+
+        @Override
+        public String getPath() {
+            return file.getPathName();
+        }
+
+        @Override
+        public boolean isDirectory() {
+            return file.isDirectory();
         }
 
         @Override
@@ -120,8 +131,21 @@ public class FtpFileConnection implements VirtualFileConnection {
     @Override
     public org.teiid.file.VirtualFile[] getFiles(String pattern) {
         VirtualFile file = this.getFile(pattern);
+        if (file.isDirectory()) {
+            List<VirtualFile> children = file.getChildren();
+            org.teiid.file.VirtualFile[] result = new org.teiid.file.VirtualFile[children.size()];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = new JBossVirtualFile(children.get(i));
+            }
+            return result;
+        }
         if(file.exists()) {
             return new org.teiid.file.VirtualFile[]{new JBossVirtualFile(file)};
+        }
+
+        if (pattern.contains("*")) { //$NON-NLS-1$
+            //could be implemented with a recursive search from the root
+            throw new IllegalArgumentException("glob searches are not yet supported with ftp"); //$NON-NLS-1$
         }
 
         return null;

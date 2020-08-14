@@ -42,9 +42,18 @@ public interface VirtualFileConnection extends Connection {
     }
 
     /**
-     * Return a list of files by a given file pattern
-     * @param namePattern - the syntax and pattern.  The wildcard character * is supported in the filename only.
-     * @return
+     * Return an array of files by a given file pattern
+     *
+     * @param namePattern
+     *            - the syntax and pattern. The wildcard character * will
+     *            initially be treated as a literal match (there is currently no
+     *            escaping supported), then as a non-recursive glob search. <br>
+     *            For example the search /* would return all of the top level
+     *            directory contents - but not expand that to any
+     *            subdirectories. The wildcard may be used in both directories
+     *            and filenames.
+     * @return the virtual files found or null if a non-glob file match could
+     *         not be found
      * @throws TranslatorException
      */
     VirtualFile[] getFiles(String namePattern) throws TranslatorException;

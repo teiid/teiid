@@ -42,8 +42,23 @@ public class S3VirtualFile implements VirtualFile {
     }
 
     @Override
-    public String getName() {
+    public String getPath() {
         return summary.getKey();
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return false;
+    }
+
+    @Override
+    public String getName() {
+        String key = summary.getKey();
+        int index = key.lastIndexOf('/');
+        if (index != -1) {
+            return key.substring(index + 1);
+        }
+        return key;
     }
 
     @Override

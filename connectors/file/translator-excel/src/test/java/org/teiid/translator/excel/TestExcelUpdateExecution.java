@@ -18,9 +18,9 @@
 
 package org.teiid.translator.excel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,12 +41,12 @@ public class TestExcelUpdateExecution {
     @Test
     public void testDeleteAll() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getFile("names.xls"));
 
         int[] results = helpExecute(TestExcelExecution.commonDDL, connection, "delete from Sheet1", true, "scratch_file.xls");
         assertArrayEquals(new int[] {6}, results);
 
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("scratch_file.xls", new File(UnitTestUtil.getTestScratchPath(), "scratch_file.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getStratchFile("scratch_file.xls"));
 
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals(Collections.emptyList(), result);
@@ -55,12 +55,12 @@ public class TestExcelUpdateExecution {
     @Test
     public void testDeleteSome() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getFile("names.xls"));
 
         int[] results = helpExecute(TestExcelExecution.commonDDL, connection, "delete from Sheet1 WHERE ROW_ID < 16", true, "scratch_file.xls");
         assertArrayEquals(new int[] {2}, results);
 
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("scratch_file.xls", new File(UnitTestUtil.getTestScratchPath(), "scratch_file.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getStratchFile("scratch_file.xls"));
 
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals("[[16, Matt, Liek, 13.0, null], [17, Sarah, Byne, 10.0, null], [18, Rocky, Dog, 3.0, null], [19, Total, null, 26.0, null]]", result.toString());
@@ -69,12 +69,12 @@ public class TestExcelUpdateExecution {
     @Test
     public void testInsert() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getFile("names.xls"));
 
         int[] results = helpExecute(TestExcelExecution.commonDDL, connection, "insert into sheet1 (FirstName, Age) values ('Prince', 55)", true, "scratch_file.xls");
         assertArrayEquals(new int[] {1}, results);
 
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("scratch_file.xls", new File(UnitTestUtil.getTestScratchPath(), "scratch_file.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getStratchFile("scratch_file.xls"));
 
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals(7, result.size());
@@ -84,12 +84,12 @@ public class TestExcelUpdateExecution {
     @Test
     public void testUpdate() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getFile("names.xls"));
 
         int[] results = helpExecute(TestExcelExecution.commonDDL, connection, "update sheet1 set age = 12 where row_id = 17", true, "scratch_file.xls");
         assertArrayEquals(new int[] {1}, results);
 
-        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("scratch_file.xls", new File(UnitTestUtil.getTestScratchPath(), "scratch_file.xls")));
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(TestExcelExecution.getStratchFile("scratch_file.xls"));
 
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals("[[14, John, Doe, 44.0, null], [15, Jane, Smith, 40.0, null], [16, Matt, Liek, 13.0, null], [17, Sarah, Byne, 12.0, null], [18, Rocky, Dog, 3.0, null], [19, Total, null, 112.0, null]]", result.toString());
