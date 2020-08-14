@@ -35,7 +35,7 @@ import com.amazonaws.services.s3.model.SSECustomerKey;
 
 public class S3Connection implements VirtualFileConnection {
 
-    private static final String STAR = "*"; //$NON-NLS-1$
+    private static final String STAR = "\\*"; //$NON-NLS-1$
     private static final String SLASH = "/"; //$NON-NLS-1$
 
     private final S3Configuration s3Config;
@@ -103,32 +103,24 @@ public class S3Connection implements VirtualFileConnection {
     }
 
     protected boolean matchString(String key, String pattern) {
-        String slicedKey, slicedPattern;
-        if(key.contains(SLASH)) {
-            slicedKey = key.substring(key.lastIndexOf(SLASH) + 1);
+        String[] stringArray = pattern.split(STAR);
+        int prevIndex = 0;
+        for(String sub: stringArray){
+            int index = key.indexOf(sub, prevIndex);
+            int indexOfNextSlash = key.indexOf(SLASH, prevIndex);
+            if(index != -1 && (indexOfNextSlash == -1 || indexOfNextSlash >= index)){
+                prevIndex = index + sub.length();
+            } else {
+                return false;
+            }
         }
-        else {
-            slicedKey = key;
+        if(key.indexOf(SLASH, prevIndex) != -1){
+            return false;
         }
-        if(pattern.contains(SLASH)) {
-            slicedPattern = pattern.substring(pattern.lastIndexOf(SLASH) + 1);
+        if(!pattern.endsWith("*") && !key.endsWith(stringArray[stringArray.length - 1])){
+            return false;
         }
-        else {
-            slicedPattern = pattern;
-        }
-        if(slicedPattern.endsWith(STAR)) {
-            return slicedKey.startsWith(slicedPattern.substring(0, slicedPattern.length() - 1));
-        }
-        else if (slicedPattern.startsWith(STAR)) {
-            return slicedKey.endsWith(slicedPattern.substring(1));
-        }
-        else {
-            String begin, end;
-            int index0fAsterisk = slicedPattern.indexOf(STAR);
-            begin = slicedPattern.substring(0, index0fAsterisk);
-            end = slicedPattern.substring(index0fAsterisk+1);
-            return slicedKey.startsWith(begin) && slicedKey.endsWith(end) && (slicedPattern.lastIndexOf(end) > slicedPattern.indexOf(begin)+begin.length() - 1);
-        }
+        return true;
     }
 
     private VirtualFile[] convert(String s) {
