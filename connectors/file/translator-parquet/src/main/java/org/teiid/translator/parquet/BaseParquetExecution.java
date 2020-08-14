@@ -24,12 +24,16 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
@@ -44,6 +48,7 @@ import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
+import org.teiid.core.types.BinaryType;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Comparison;
@@ -143,85 +148,89 @@ public class BaseParquetExecution implements Execution {
         if(columnPredicates.size() == 0){
             return null;
         }
-//        FilterCompat.Filter rowGroupFilter;
-//        LongColumn column1 = FilterApi.longColumn("id");
-//        long l=3;
-//        Column column2 = FilterApi.longColumn("jk");
-//        FilterPredicate predicate =  FilterApi.eq(column2, l);
-//        FilterPredicate predicate1 = FilterApi.and(predicate, )
-        int flag = 1;
         FilterCompat.Filter rowGroupFilter;
         Iterator hashMapIterator = columnPredicates.entrySet().iterator();
+        FilterPredicate preFilterPredicate = null, filterPredicate = null;
         while(hashMapIterator.hasNext()){
             Map.Entry mapElement = (Map.Entry) hashMapIterator.next();
             String columnName = (String) mapElement.getKey();
             Comparison comparison = (Comparison) mapElement.getValue();
             Literal l = (Literal) comparison.getRightExpression();
             Column column;
+            Comparable value;
             switch (comparison.getRightExpression().getType().getName()){
                 case "java.lang.String":
-                case "BinaryType":
                     column = FilterApi.binaryColumn(columnName);
+                    value = Binary.fromString((String) l.getValue());
+                    break;
+                case "org.teiid.core.types.BinaryType":
+                    column = FilterApi.binaryColumn(columnName);
+                    BinaryType binaryType = (BinaryType) l.getValue();
+                    value = Binary.fromConstantByteArray(binaryType.getBytes());
                     break;
                 case "java.lang.Long":
                     column = FilterApi.longColumn(columnName);
+                    value = (Long) l.getValue();
                     break;
                 case "java.lang.Integer":
                     column = FilterApi.intColumn(columnName);
+                    value = (Integer) l.getValue();
                     break;
                 case "java.lang.Boolean":
                     column = FilterApi.booleanColumn(columnName);
+                    value = (Boolean) l.getValue();
                     break;
                 case "java.lang.Double":
                     column = FilterApi.doubleColumn(columnName);
+                    value = (Double) l.getValue();
                     break;
                 case "java.lang.Float":
                     column =FilterApi.floatColumn(columnName);
+                    value = (Float) l.getValue();
                     break;
                 default:
                     throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
             }
-            switch (comparison.getOperator()){
-                case EQ:
-//                    FilterPredicate filterPredicate = FilterApi.eq(column, (Binary) getParquetValue(columnName, l, comparison));
-                    break;
-                case NE:
-//                    filterPredicate =
-                    break;
-                case LT:
-                    break;
-                case LE:
-                    break;
-                case GT:
-                    break;
-                case GE:
-                    break;
+            try{
+                switch (comparison.getOperator()){
+                    case EQ:
+                        Method eq = FilterApi.class.getMethod("eq", Column.class, Comparable.class);
+                        filterPredicate = (FilterPredicate)eq.invoke(null, column, value);
+                        break;
+                    case NE:
+                        Method notEq = FilterApi.class.getMethod("notEq", Column.class, Comparable.class);
+                        filterPredicate = (FilterPredicate)notEq.invoke(null, column, value);
+                        break;
+                    case LT:
+                        Method lt = FilterApi.class.getMethod("lt", Column.class, Comparable.class);
+                        filterPredicate = (FilterPredicate)lt.invoke(null, column, value);
+                        break;
+                    case LE:
+                        Method ltEq = FilterApi.class.getMethod("ltEq", Column.class, Comparable.class);
+                        filterPredicate = (FilterPredicate)ltEq.invoke(null, column, value);
+                        break;
+                    case GT:
+                        Method gt = FilterApi.class.getMethod("gt", Column.class, Comparable.class);
+                        filterPredicate = (FilterPredicate)gt.invoke(null, column, value);
+                        break;
+                    case GE:
+                        Method gtEq = FilterApi.class.getMethod("gtEq", Column.class, Comparable.class);
+                        filterPredicate = (FilterPredicate)gtEq.invoke(null, column, value);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + comparison.getOperator());
+                }
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e){
+                throw new TranslatorException(e);
+            }
+            if(preFilterPredicate == null){
+                preFilterPredicate = filterPredicate;
+            }else {
+                preFilterPredicate = FilterApi.and(preFilterPredicate, filterPredicate);
             }
         }
-        return null;
-    }
-
-    private Object getParquetValue(String columnName, Literal l, Comparison comparison) throws TranslatorException {
-        switch (comparison.getRightExpression().getType().getName()){
-            case "java.lang.String":
-                Binary binary = Binary.fromString((String) l.getValue());
-                return binary;
-            case "java.lang.Long":
-                break;
-            case "java.lang.Integer":
-                break;
-            case "java.lang.Boolean":
-                break;
-            case "java.lang.Double":
-                break;
-            case "java.lang.Float":
-                break;
-            case "BinaryType":
-                break;
-            default:
-                throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
-        }
-        return null;
+        assert filterPredicate != null;
+        return FilterCompat.get(filterPredicate);
     }
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
@@ -237,17 +246,22 @@ public class BaseParquetExecution implements Execution {
            File localFile = createTempFile(parquetFileStream);
            Path path = new Path(localFile.toURI());
            Configuration config = new Configuration();
-//           LongColumn column = FilterApi.longColumn("id");
-//           long l=3;
-//           FilterCompat.Filter rowGroupFilter = FilterCompat.get(FilterApi.lt(column, l));
            FilterCompat.Filter rowGroupFilter = getRowGroupFilter(this.visitor.getColumnPredicates());
-           reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
+           if(rowGroupFilter == null){
+               reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
+           }else {
+               reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config), ParquetReadOptions.builder().withRecordFilter(rowGroupFilter).build());
+           }
            schema = reader.getFooter().getFileMetaData().getSchema();
            filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
            columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
            PageReadStore pages = reader.readNextRowGroup();
            pageRowCount = pages.getRowCount();
-           return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema));
+           if(rowGroupFilter == null) {
+               return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema));
+           }else {
+               return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema), rowGroupFilter);
+           }
        } catch (IOException e){
            throw new TranslatorException(e);
        }
