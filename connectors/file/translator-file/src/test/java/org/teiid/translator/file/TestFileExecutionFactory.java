@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -35,6 +34,7 @@ import org.mockito.Mockito;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.file.JavaVirtualFile;
+import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.file.VirtualFileConnection.FileMetadata;
 import org.teiid.language.Argument;
@@ -56,7 +56,7 @@ public class TestFileExecutionFactory {
         fef.getMetadata(mf, null);
         Procedure p = mf.getSchema().getProcedure("getTextFiles");
         VirtualFileConnection fc = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(fc.getFiles("*.txt")).toReturn(JavaVirtualFile.getFiles("*.txt", new File(UnitTestUtil.getTestDataPath(), "*.txt")));
+        Mockito.stub(fc.getFiles("*.txt")).toReturn(new VirtualFile[]{new JavaVirtualFile(UnitTestUtil.getTestDataFile("file.txt")), new JavaVirtualFile(UnitTestUtil.getTestDataFile("file1.txt"))});
         Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
         ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
         pe.execute();
@@ -72,20 +72,6 @@ public class TestFileExecutionFactory {
             count++;
         }
         assertEquals(2, count);
-
-
-        call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
-        pe = fef.createProcedureExecution(call, null, null, fc);
-        Mockito.stub(fc.getFiles("*1*")).toReturn(JavaVirtualFile.getFiles("*1*", new File(UnitTestUtil.getTestDataPath(), "*1*")));
-        pe.execute();
-        count = 0;
-        while (true) {
-            if (pe.next() == null) {
-                break;
-            }
-            count++;
-        }
-        assertEquals(1, count);
     }
 
     @Test public void testSaveFileLength() throws Exception {

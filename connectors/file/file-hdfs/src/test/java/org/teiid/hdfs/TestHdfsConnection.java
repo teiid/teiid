@@ -38,7 +38,7 @@ import org.teiid.translator.TranslatorException;
  * this was initially written against the full set of hadoop jars. using the shaded client it won't work
  * see https://issues.apache.org/jira/browse/HADOOP-15924?page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel&focusedCommentId=16685144#comment-16685144
  * an integration test was created instead.
- * this can still be used, but requires setting up an hdfs instance
+ * this can still be used, but requires setting up an hdfs instance.  See IntegrationTestHdfs.main
  */
 @Ignore
 @SuppressWarnings("nls")
@@ -86,17 +86,30 @@ public class TestHdfsConnection {
 
     @Test
     public void testSearch() throws TranslatorException {
+        CONNECTION.remove("/user/aditya/afile.txt");
+        CONNECTION.remove("/user/aditya/bfile.txt");
+        CONNECTION.remove("/user/aditya/otherfile");
         VirtualFile[] virtualFiles = CONNECTION.getFiles("/user/aditya/*.txt");
-        assertNull(virtualFiles);
+        assertTrue(virtualFiles == null || virtualFiles.length == 0);
         addFile("/user/aditya/afile.txt");
         addFile("/user/aditya/bfile.txt");
         addFile("/user/aditya/otherfile");
         //only text files
         virtualFiles = CONNECTION.getFiles("/user/aditya/*.txt");
         assertEquals(2, virtualFiles.length);
+        assertFalse(virtualFiles[0].isDirectory());
+        assertTrue(virtualFiles[0].getPath().startsWith("/user/aditya/"));
         //list directory
         virtualFiles = CONNECTION.getFiles("/user/aditya/");
         assertEquals(3, virtualFiles.length);
+
+        virtualFiles = CONNECTION.getFiles("/*/a*");
+        assertEquals(1, virtualFiles.length);
+        assertTrue(virtualFiles[0].isDirectory());
+
+        virtualFiles = CONNECTION.getFiles("/*/*/*other*");
+        assertEquals(1, virtualFiles.length);
+        assertFalse(virtualFiles[0].isDirectory());
     }
 
     @AfterClass

@@ -61,6 +61,16 @@ public class TestVirtualFile {
             public long getCreationTime() {
                 return 0;
             }
+
+            @Override
+            public String getPath() {
+                return null;
+            }
+
+            @Override
+            public boolean isDirectory() {
+                return false;
+            }
         };
 
         assertEquals(StorageMode.OTHER, vf.createInputStreamFactory().getStorageMode());

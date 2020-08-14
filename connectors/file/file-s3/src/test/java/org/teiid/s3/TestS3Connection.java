@@ -35,6 +35,7 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+@SuppressWarnings("nls")
 public class TestS3Connection {
 
     private  S3Connection s3Connection;

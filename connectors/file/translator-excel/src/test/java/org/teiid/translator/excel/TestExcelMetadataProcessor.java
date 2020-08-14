@@ -17,15 +17,12 @@
  */
 package org.teiid.translator.excel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.util.Properties;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.core.util.UnitTestUtil;
-import org.teiid.file.JavaVirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.function.FunctionTree;
@@ -48,7 +45,7 @@ public class TestExcelMetadataProcessor {
         String xlsName = props.getProperty("importer.excelFileName");
         MetadataFactory mf = new MetadataFactory("vdb", 1, "people", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles(xlsName)).toReturn(JavaVirtualFile.getFiles(xlsName, new File(UnitTestUtil.getTestDataPath(), xlsName)));
+        Mockito.stub(connection.getFiles(xlsName)).toReturn(TestExcelExecution.getFile(xlsName));
         translator.getMetadata(mf, connection);
 
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));

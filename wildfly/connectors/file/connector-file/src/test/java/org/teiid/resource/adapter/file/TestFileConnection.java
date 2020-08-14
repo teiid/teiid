@@ -18,7 +18,10 @@
 
 package org.teiid.resource.adapter.file;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
@@ -30,6 +33,18 @@ import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestFileConnection {
+
+    @Test public void testGetFile() throws Exception {
+        FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
+        fmcf.setParentDirectory(UnitTestUtil.getTestDataPath());
+        BasicConnectionFactory bcf = fmcf.createConnectionFactory();
+        FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
+        VirtualFile[] files = fc.getFiles("foo.txt");
+        assertEquals("foo.txt", files[0].getPath());
+        //make sure it works with a leading /
+        files = fc.getFiles("/foo.txt");
+        assertEquals("foo.txt", files[0].getPath());
+    }
 
     @Test public void testFileMapping() throws Exception {
         FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
@@ -69,6 +84,7 @@ public class TestFileConnection {
         VirtualFile[] files = fc.getFiles("*.txt");
         assertEquals(1, files.length);
         assertEquals("foo.txt", files[0].getName());
+        assertEquals("foo.txt", files[0].getPath());
 
         files = fc.getFiles("*.911");
         assertEquals(0, files.length);
@@ -76,11 +92,42 @@ public class TestFileConnection {
 
     @Test public void testFileDoesntExist() throws Exception {
         FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
-        fmcf.setParentDirectory(UnitTestUtil.getTestDataPath()+"xyz");
+        fmcf.setParentDirectory(UnitTestUtil.getTestDataPath());
         BasicConnectionFactory bcf = fmcf.createConnectionFactory();
         FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
-        VirtualFile[] files = fc.getFiles("*.txt");
+        VirtualFile[] files = fc.getFiles("missing-dir");
         assertNull(files);
+    }
+
+    @Test public void testFilePathGlob() throws Exception {
+        FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
+        fmcf.setParentDirectory(UnitTestUtil.getTestDataPath());
+        BasicConnectionFactory bcf = fmcf.createConnectionFactory();
+        FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
+        VirtualFile[] files = fc.getFiles("year=*");
+        assertEquals(2, files.length);
+
+        //match on a partial directory
+        files = fc.getFiles("year=202*/*");
+        assertEquals(1, files.length);
+        assertFalse(files[0].isDirectory());
+
+        //no match on the file extension
+        files = fc.getFiles("year=202*/*.other");
+        assertEquals(0, files.length);
+
+        //nested file
+        files = fc.getFiles("*/*/*");
+        assertEquals(1, files.length);
+        assertEquals("year=2019/nested/nested-child-2019.txt", files[0].getPath());
+
+        //.. is a literal glob match, so this can't escape the parent
+        files = fc.getFiles("../*");
+        assertEquals(0, files.length);
+
+        files = fc.getFiles("year=*");
+        assertEquals(2, files.length);
+        assertTrue(files[0].isDirectory());
     }
 
 }

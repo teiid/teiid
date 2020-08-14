@@ -32,6 +32,15 @@ public interface VirtualFile {
      */
     String getName();
 
+    boolean isDirectory();
+
+    /**
+     * The full virtual path to the file including file name
+     * It is not well-defined if this must start with a leading /
+     * @return
+     */
+    String getPath();
+
     /**
      * The {@link InputStreamFactory} for utilizing this file as a blob or clob in the
      * engine.

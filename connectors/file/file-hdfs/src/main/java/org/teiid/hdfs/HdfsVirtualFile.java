@@ -23,6 +23,7 @@ import java.io.OutputStream;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.teiid.file.VirtualFile;
 
 public class HdfsVirtualFile implements VirtualFile {
@@ -33,6 +34,16 @@ public class HdfsVirtualFile implements VirtualFile {
     public HdfsVirtualFile(FileSystem fileSystem, FileStatus fileStatus) {
         this.fileSystem = fileSystem;
         this.fileStatus = fileStatus;
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return fileStatus.isDirectory();
+    }
+
+    @Override
+    public String getPath() {
+        return Path.getPathWithoutSchemeAndAuthority(fileStatus.getPath()).toString();
     }
 
     @Override

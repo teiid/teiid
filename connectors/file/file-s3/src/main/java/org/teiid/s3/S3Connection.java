@@ -19,6 +19,7 @@ package org.teiid.s3;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
@@ -35,7 +36,7 @@ import com.amazonaws.services.s3.model.SSECustomerKey;
 
 public class S3Connection implements VirtualFileConnection {
 
-    private static final String STAR = "\\*"; //$NON-NLS-1$
+    private static final char STAR = '*'; //$NON-NLS-1$
     private static final String SLASH = "/"; //$NON-NLS-1$
 
     private final S3Configuration s3Config;
@@ -64,34 +65,27 @@ public class S3Connection implements VirtualFileConnection {
             }
             return convert(s);
         }
-        String parentPath = ""; //$NON-NLS-1$
-        if(s.contains(SLASH)) {
-            parentPath = s.substring(0, s.lastIndexOf(SLASH) + 1);
-        }
-
-        if(!isDirectory(parentPath)) {
-            return null;
-        }
-        if(s.contains(STAR))
-        {
-            return globSearch(parentPath, s);
-        }
-        return null;
+        return globSearch(s);
     }
 
-    private VirtualFile[] globSearch(String parentPath, String s) {
+    private VirtualFile[] globSearch(String s) {
+        int firstStar = s.indexOf(STAR);
+        if (firstStar == -1) {
+            return null;
+        }
+        String parentPath = s.substring(0, firstStar);
+        String remainingPath = s.substring(firstStar, s.length());
         ArrayList<S3VirtualFile> s3VirtualFiles = new ArrayList<>();
         ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                 .withBucketName(s3Config.getBucket())
-                .withPrefix(parentPath)
-                .withDelimiter(SLASH);
+                .withPrefix(parentPath);
         ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
+        Pattern pattern = convertPathToPattern(remainingPath);
         while(objectListing != null) {
             for(S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
-                if(!s3ObjectSummary.getKey().endsWith(SLASH)) {
-                    if(matchString(s3ObjectSummary.getKey(), s)) {
-                        s3VirtualFiles.add(new S3VirtualFile(s3Client, s3ObjectSummary, s3Config));
-                    }
+                //make sure the remaining path matches
+                if(pattern.matcher(s3ObjectSummary.getKey().substring(parentPath.length())).matches()) {
+                    s3VirtualFiles.add(new S3VirtualFile(s3Client, s3ObjectSummary, s3Config));
                 }
             }
             if(!objectListing.isTruncated()) {
@@ -102,25 +96,37 @@ public class S3Connection implements VirtualFileConnection {
         return s3VirtualFiles.toArray(new VirtualFile[s3VirtualFiles.size()]);
     }
 
-    protected boolean matchString(String key, String pattern) {
-        String[] stringArray = pattern.split(STAR);
-        int prevIndex = 0;
-        for(String sub: stringArray){
-            int index = key.indexOf(sub, prevIndex);
-            int indexOfNextSlash = key.indexOf(SLASH, prevIndex);
-            if(index != -1 && (indexOfNextSlash == -1 || indexOfNextSlash >= index)){
-                prevIndex = index + sub.length();
-            } else {
-                return false;
+    protected boolean matchString(String key, String remainingPath) {
+        Pattern pattern = convertPathToPattern(remainingPath);
+        return pattern.matcher(key).matches();
+    }
+
+    /**
+     * Converts the path to a regex pattern.
+     * @param remainingPath
+     * @return
+     */
+    private Pattern convertPathToPattern(String remainingPath) {
+        StringBuilder builder = new StringBuilder();
+        for (int index = 0; index < remainingPath.length(); index++) {
+            int startIndex = index;
+            index = remainingPath.indexOf(STAR, index);
+            int endIndex = index;
+            if (index == -1) {
+                endIndex = remainingPath.length();
             }
+            String literal = remainingPath.substring(startIndex, endIndex);
+            builder.append(Pattern.quote(literal));
+            if (index == -1) {
+                break;
+            }
+            //replace the star
+            builder.append("[^/]*"); //$NON-NLS-1$
         }
-        if(key.indexOf(SLASH, prevIndex) != -1){
-            return false;
-        }
-        if(!pattern.endsWith("*") && !key.endsWith(stringArray[stringArray.length - 1])){
-            return false;
-        }
-        return true;
+        //match to the end
+        builder.append("$"); //$NON-NLS-1$
+        Pattern pattern = Pattern.compile(builder.toString());
+        return pattern;
     }
 
     private VirtualFile[] convert(String s) {
