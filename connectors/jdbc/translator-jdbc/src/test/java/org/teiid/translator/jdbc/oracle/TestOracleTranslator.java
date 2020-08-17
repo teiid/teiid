@@ -18,7 +18,8 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -576,6 +577,15 @@ public class TestOracleTranslator {
 
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
+    }
+
+    @Test public void testDayOfWeek() throws Exception {
+        String input = "SELECT dayofweek(datevalue) FROM bqt1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT (trunc(SmallA.DateValue) - trunc(SmallA.DateValue,'IW') + 1) FROM SmallA"; //$NON-NLS-1$
+
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
+                        input,
+                        EMPTY_CONTEXT, null, output);
     }
 
     /** defect 21775 */
