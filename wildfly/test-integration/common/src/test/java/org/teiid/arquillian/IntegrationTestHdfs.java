@@ -173,11 +173,15 @@ public class IntegrationTestHdfs extends AbstractMMQueryTestCase {
         addFile("/user/aditya/afile.txt");
         addFile("/user/aditya/bfile.txt");
         addFile("/user/aditya/otherfile");
+        addFile("/users/x/file");
         //only text files
         virtualFiles = getFiles("/user/aditya/*.txt");
         assertEquals(2, virtualFiles.size());
         //list directory
         virtualFiles = getFiles("/user/aditya/");
+        assertEquals(3, virtualFiles.size());
+
+        virtualFiles = getFiles("/u*/*/");
         assertEquals(3, virtualFiles.size());
     }
 
