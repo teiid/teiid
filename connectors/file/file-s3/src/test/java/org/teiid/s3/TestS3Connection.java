@@ -66,14 +66,14 @@ public class TestS3Connection {
         List<S3ObjectSummary> objectSummaryList = new ArrayList<>();
         S3ObjectSummary summary1 = Mockito.mock(S3ObjectSummary.class);
         S3ObjectSummary summary2 = Mockito.mock(S3ObjectSummary.class);
-        Mockito.when(summary1.getKey()).thenReturn("");
-        Mockito.when(summary2.getKey()).thenReturn("");
+        Mockito.when(summary1.getKey()).thenReturn("folder1/folder2/file");
+        Mockito.when(summary2.getKey()).thenReturn("folder1/folder2/file1");
         objectSummaryList.add(summary1);
         objectSummaryList.add(summary2);
         Mockito.when(objectListing.getObjectSummaries()).thenReturn(objectSummaryList);
         VirtualFile[] virtualFiles = s3Connection.getFiles("folder1/folder2");
         Assert.assertEquals(2, virtualFiles.length);
-        virtualFiles = s3Connection.getFiles("");
+        virtualFiles = s3Connection.getFiles("folder1/folder2/");
         Assert.assertEquals(2, virtualFiles.length);
     }
 
