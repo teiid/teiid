@@ -18,7 +18,11 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_DECIMAL;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 
 import java.io.Reader;
 import java.sql.CallableStatement;
@@ -42,12 +46,40 @@ import java.util.TreeSet;
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Array;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.Insert;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.OrderBy;
+import org.teiid.language.Parameter;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SearchedWhenClause;
+import org.teiid.language.Select;
+import org.teiid.language.SetQuery;
 import org.teiid.language.SetQuery.Operation;
+import org.teiid.language.TableReference;
+import org.teiid.language.With;
+import org.teiid.language.WithItem;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
@@ -64,7 +96,16 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.TypeFacility.RUNTIME_CODES;
-import org.teiid.translator.jdbc.*;
+import org.teiid.translator.jdbc.AliasModifier;
+import org.teiid.translator.jdbc.ConvertModifier;
+import org.teiid.translator.jdbc.ExtractFunctionModifier;
+import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetadataProcessor;
+import org.teiid.translator.jdbc.JDBCPlugin;
+import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import org.teiid.util.Version;
 
 
@@ -179,7 +220,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("IW"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new TemplateFunctionModifier("(trunc(",0,") - trunc(",0,",'IW') + 1)"));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "INSTR", true)); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$
