@@ -65,6 +65,10 @@ public class HdfsConnection implements VirtualFileConnection {
         }
 
         if(location.contains("*")){ //$NON-NLS-1$
+            if (location.endsWith("/")) { //$NON-NLS-1$
+                //directory means all files underneath
+                location = location + "*"; //$NON-NLS-1$
+            }
             location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
             location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
             location = location.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$

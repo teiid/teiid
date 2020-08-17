@@ -85,6 +85,8 @@ public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConn
                 }
                 else if (extension.equalsIgnoreCase("xlsx")) { //$NON-NLS-1$
                     workbook = new XSSFWorkbook(xlsFileStream);
+                } else {
+                    throw new TranslatorException("unknown file extension"); //$NON-NLS-1$
                 }
                 int sheetCount = workbook.getNumberOfSheets();
                 for (int i = 0; i < sheetCount; i++) {

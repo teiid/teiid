@@ -118,7 +118,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Vi
                     throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
                 }
             } else {
-                this.files = VirtualFileConnection.Util.getFiles(filePath, this.conn, exceptionIfFileNotFound);
+                this.files = VirtualFileConnection.Util.getFiles(filePath, this.conn, exceptionIfFileNotFound, false);
                 LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
                 String name = command.getProcedureName();
                 if(name.equalsIgnoreCase(GETTEXTFILES)) {

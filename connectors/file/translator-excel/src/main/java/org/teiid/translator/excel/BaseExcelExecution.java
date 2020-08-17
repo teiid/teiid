@@ -95,7 +95,7 @@ public class BaseExcelExecution implements Execution {
 
     @Override
     public void execute() throws TranslatorException {
-        this.xlsFiles = VirtualFileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection, true);
+        this.xlsFiles = VirtualFileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection, true, false);
         this.rowIterator = readXLSFile(xlsFiles[fileCount.getAndIncrement()]);
     }
 

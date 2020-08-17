@@ -18,6 +18,9 @@
 package org.teiid.file;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.resource.api.Connection;
@@ -91,11 +94,17 @@ public interface VirtualFileConnection extends Connection {
          * Gets the file or files, if the path is a directory, at the given path.
          * Note the path can only refer to a single directory - directories are not recursively scanned.
          * @param exceptionIfFileNotFound
-         * @return
+         * @return the files or may be null if not found
          */
-        public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound) throws TranslatorException {
+        public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound, boolean includeDirectories) throws TranslatorException {
             VirtualFile[] files = fc.getFiles(location);
-            if (files == null && exceptionIfFileNotFound) {
+            if (!includeDirectories && files != null) {
+                Collection<VirtualFile> filtered = Arrays.asList(files).stream().filter((f)->!f.isDirectory()).collect(Collectors.toList());
+                if (filtered.size() != files.length) {
+                    files = filtered.toArray(new VirtualFile[filtered.size()]);
+                }
+            }
+            if (exceptionIfFileNotFound && (files == null || files.length == 0) ) {
                 throw new TranslatorException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
             }
 
