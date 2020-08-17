@@ -36,8 +36,8 @@ import com.amazonaws.services.s3.model.SSECustomerKey;
 
 public class S3Connection implements VirtualFileConnection {
 
-    private static final char STAR = '*'; //$NON-NLS-1$
-    private static final String SLASH = "/"; //$NON-NLS-1$
+    private static final char STAR = '*';
+    static final String SLASH = "/"; //$NON-NLS-1$
 
     private final S3Configuration s3Config;
     private final AmazonS3 s3Client;
@@ -52,29 +52,17 @@ public class S3Connection implements VirtualFileConnection {
         if (s == null) {
             return null;
         }
-        if(s3Client.doesObjectExist(s3Config.getBucket(), s)){
-            ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                    .withBucketName(s3Config.getBucket())
-                    .withPrefix(s);
-            ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
-            return new VirtualFile[] {new S3VirtualFile(s3Client, objectListing.getObjectSummaries().get(0), s3Config)};
-        }
-        if(isDirectory(s)){
-            if(!s.isEmpty() && !s.endsWith(SLASH)) {
-                s += SLASH;
-            }
-            return convert(s);
-        }
-        return globSearch(s);
+        return search(s);
     }
 
-    private VirtualFile[] globSearch(String s) {
+    private VirtualFile[] search(String s) {
         int firstStar = s.indexOf(STAR);
-        if (firstStar == -1) {
-            return null;
+        String parentPath = s;
+        String remainingPath = ""; //$NON-NLS-1$
+        if (firstStar != -1) {
+            parentPath = s.substring(0, firstStar);
+            remainingPath = s.substring(firstStar, s.length());
         }
-        String parentPath = s.substring(0, firstStar);
-        String remainingPath = s.substring(firstStar, s.length());
         ArrayList<S3VirtualFile> s3VirtualFiles = new ArrayList<>();
         ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                 .withBucketName(s3Config.getBucket())
@@ -83,8 +71,15 @@ public class S3Connection implements VirtualFileConnection {
         Pattern pattern = convertPathToPattern(remainingPath);
         while(objectListing != null) {
             for(S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
-                //make sure the remaining path matches
-                if(pattern.matcher(s3ObjectSummary.getKey().substring(parentPath.length())).matches()) {
+                String remainingKey = s3ObjectSummary.getKey().substring(parentPath.length());
+                //make sure the remaining path matches - special case if empty
+                if ((remainingPath.isEmpty() && (parentPath.endsWith(SLASH)
+                        || remainingKey.startsWith(SLASH)) && remainingKey.lastIndexOf('/') < 1)
+                        || pattern.matcher(remainingKey).matches()) {
+                    if (s.equals(s3ObjectSummary.getKey()) && !s.endsWith(SLASH)) {
+                        //single literal match for compatibility with default file handling
+                        return new VirtualFile[] {new S3VirtualFile(s3Client, s3ObjectSummary, s3Config)};
+                    }
                     s3VirtualFiles.add(new S3VirtualFile(s3Client, s3ObjectSummary, s3Config));
                 }
             }
@@ -96,17 +91,12 @@ public class S3Connection implements VirtualFileConnection {
         return s3VirtualFiles.toArray(new VirtualFile[s3VirtualFiles.size()]);
     }
 
-    protected boolean matchString(String key, String remainingPath) {
-        Pattern pattern = convertPathToPattern(remainingPath);
-        return pattern.matcher(key).matches();
-    }
-
     /**
      * Converts the path to a regex pattern.
      * @param remainingPath
      * @return
      */
-    private Pattern convertPathToPattern(String remainingPath) {
+    Pattern convertPathToPattern(String remainingPath) {
         StringBuilder builder = new StringBuilder();
         for (int index = 0; index < remainingPath.length(); index++) {
             int startIndex = index;
@@ -127,38 +117,6 @@ public class S3Connection implements VirtualFileConnection {
         builder.append("$"); //$NON-NLS-1$
         Pattern pattern = Pattern.compile(builder.toString());
         return pattern;
-    }
-
-    private VirtualFile[] convert(String s) {
-        ArrayList<S3VirtualFile> s3VirtualFiles = new ArrayList<>();
-        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName(s3Config.getBucket())
-                .withPrefix(s)
-                .withDelimiter(SLASH);
-        ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
-        while(objectListing != null) {
-            for(S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
-                if(!s3ObjectSummary.getKey().endsWith(SLASH)) {
-                    s3VirtualFiles.add(new S3VirtualFile(s3Client,s3ObjectSummary, s3Config));
-                }
-            }
-            if(!objectListing.isTruncated()) {
-                break;
-            }
-            objectListing = s3Client.listNextBatchOfObjects(objectListing);
-        }
-        return s3VirtualFiles.toArray(new VirtualFile[s3VirtualFiles.size()]);
-    }
-
-    private boolean isDirectory(String s) {
-        if(!s.endsWith(SLASH)) {
-            s += SLASH;
-        }
-        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
-                .withBucketName(s3Config.getBucket())
-                .withPrefix(s);
-        ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
-        return objectListing.getObjectSummaries().size() > 0;
     }
 
     @Override

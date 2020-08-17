@@ -20,6 +20,7 @@ package org.teiid.s3;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -78,23 +79,28 @@ public class TestS3Connection {
 
     @Test
     public void testMatchString() {
-        Assert.assertTrue(s3Connection.matchString("folder1/sample", "folder1/samp*"));
-        Assert.assertTrue(s3Connection.matchString("dddd", "dd*d"));
-        Assert.assertTrue(s3Connection.matchString("folder1/sample", "folder1/*le"));
-        Assert.assertFalse(s3Connection.matchString("folder1/sample", "folder1/san*"));
-        Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/day=Monday"));
-        Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/month=*/*/day=Monday"));
-        Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/*"));
-        Assert.assertFalse(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/day=Mondays"));
-        Assert.assertFalse(s3Connection.matchString("year=2020/month=January/week=1/day=Monday/page=1", "year=2020/*/*/*"));
-        Assert.assertTrue(s3Connection.matchString("year=2020/month=January/week=1/day=Monday", "year=2020/month=*Jan*/*/day=Mo*day"));
-        Assert.assertFalse(s3Connection.matchString("year=2020/month=January/jkl=fyz/week=1/day=Monday", "year=2020/month=*/*/day=Monday"));
-        Assert.assertFalse(s3Connection.matchString("year=2020/month=January/week=1/day=Mondays", "year=2020/*/*/day=Monday"));
+        Assert.assertTrue(matchString("folder1/sample", "folder1/samp*"));
+        Assert.assertTrue(matchString("dddd", "dd*d"));
+        Assert.assertTrue(matchString("folder1/sample", "folder1/*le"));
+        Assert.assertFalse(matchString("folder1/sample", "folder1/san*"));
+        Assert.assertTrue(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/day=Monday"));
+        Assert.assertTrue(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/month=*/*/day=Monday"));
+        Assert.assertTrue(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/*"));
+        Assert.assertFalse(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/day=Mondays"));
+        Assert.assertFalse(matchString("year=2020/month=January/week=1/day=Monday/page=1", "year=2020/*/*/*"));
+        Assert.assertTrue(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/month=*Jan*/*/day=Mo*day"));
+        Assert.assertFalse(matchString("year=2020/month=January/jkl=fyz/week=1/day=Monday", "year=2020/month=*/*/day=Monday"));
+        Assert.assertFalse(matchString("year=2020/month=January/week=1/day=Mondays", "year=2020/*/*/day=Monday"));
     }
 
     @After
     public void close() throws Exception {
         s3Connection.close();
+    }
+
+    protected boolean matchString(String key, String remainingPath) {
+        Pattern pattern = s3Connection.convertPathToPattern(remainingPath);
+        return pattern.matcher(key).matches();
     }
 
 }
