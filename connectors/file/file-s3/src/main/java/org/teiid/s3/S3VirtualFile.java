@@ -43,22 +43,26 @@ public class S3VirtualFile implements VirtualFile {
 
     @Override
     public String getPath() {
-        return summary.getKey();
+        String result = summary.getKey();
+        if (isDirectory()) {
+            return result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 
     @Override
     public boolean isDirectory() {
-        return false;
+        return summary.getKey().endsWith(S3Connection.SLASH);
     }
 
     @Override
     public String getName() {
-        String key = summary.getKey();
-        int index = key.lastIndexOf('/');
+        String path = getPath();
+        int index = path.lastIndexOf('/');
         if (index != -1) {
-            return key.substring(index + 1);
+            return path.substring(index + 1);
         }
-        return key;
+        return path;
     }
 
     @Override

@@ -32,7 +32,8 @@ import com.amazonaws.SdkClientException;
 /**
  * @See https://docs.min.io/docs/minio-docker-quickstart-guide.html to launch a backend for this test
  */
- @Ignore
+@SuppressWarnings("nls")
+@Ignore
 public class IntegrationTestS3 {
 
     private  S3Connection s3Connection;
@@ -85,19 +86,43 @@ public class IntegrationTestS3 {
 
     @Test
     public void testSearch() throws SdkClientException, TranslatorException {
+        s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/directory/file");
         s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/directory/file.txt");
         s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/directory/file2.txt");
+        s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/directory/x/filex.txt");
+        s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/directory/*/filex.txt");
         s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/otherdir/file3.txt");
         s3Connection.add(new ByteArrayInputStream(new byte[0]), "some/nested/directory/file4.txt");
 
-        //can't include directories
         org.teiid.file.VirtualFile[] files = s3Connection.getFiles("some");
         assertEquals(0, files.length);
+
+        files = s3Connection.getFiles("some/directory/file");
+        assertEquals(1, files.length);
+        assertEquals("some/directory/file", files[0].getPath());
+
+        files = s3Connection.getFiles("some/directory");
+        assertEquals(3, files.length);
+
+        files = s3Connection.getFiles("some/directory/");
+        assertEquals(3, files.length);
+
+        files = s3Connection.getFiles("some/directory*");
+        assertEquals(0, files.length);
+
+        files = s3Connection.getFiles("some/directory/*");
+        assertEquals(3, files.length);
+        assertEquals("some/directory/file", files[0].getPath());
 
         //exact match
         files = s3Connection.getFiles("some/directory/file.txt");
         assertEquals(1, files.length);
         assertEquals("some/directory/file.txt", files[0].getPath());
+
+        //corner case - still an exact match as we don't support escaping
+        files = s3Connection.getFiles("some/directory/*/filex.txt");
+        assertEquals(1, files.length);
+        assertEquals("some/directory/*/filex.txt", files[0].getPath());
 
         //search across siblings
         files = s3Connection.getFiles("some/*/*.txt");
@@ -108,7 +133,6 @@ public class IntegrationTestS3 {
         assertEquals(1, files.length);
         assertEquals("file4.txt", files[0].getName());
     }
-
 
     @After
     public void close() throws Exception {
