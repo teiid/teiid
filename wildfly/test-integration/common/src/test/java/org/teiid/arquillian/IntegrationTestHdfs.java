@@ -182,7 +182,7 @@ public class IntegrationTestHdfs extends AbstractMMQueryTestCase {
         assertEquals(3, virtualFiles.size());
 
         virtualFiles = getFiles("/u*/a*/");
-        assertEquals(4, virtualFiles.size());
+        assertEquals(3, virtualFiles.size());
     }
 
     public static void main(String[] args) throws IOException {

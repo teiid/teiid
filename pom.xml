@@ -41,8 +41,6 @@
 	    <basepom.failsafe.reuse-vm>true</basepom.failsafe.reuse-vm>
 	    <!-- takes a really long time -->
         <basepom.check.skip-dependency-versions-check>true</basepom.check.skip-dependency-versions-check>
-        <dep.plugin.surefire.version>2.21.0</dep.plugin.surefire.version> <!-- SUREFIRE-1422 -->
-        <dep.plugin.failsafe.version>2.21.0</dep.plugin.failsafe.version> <!-- SUREFIRE-1422 -->
         <!-- end from syndesis.io -->
         
         <!-- since we auto-release, we want to push the changes -->
