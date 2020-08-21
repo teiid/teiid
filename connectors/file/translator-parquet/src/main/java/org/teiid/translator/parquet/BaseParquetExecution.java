@@ -63,7 +63,7 @@ import org.teiid.translator.TranslatorException;
 import static org.apache.parquet.filter2.predicate.Operators.*;
 
 
-public class BaseParquetExecution implements Execution {
+public class BaseParquetExecution implements Execution {                                                                                        
     @SuppressWarnings("unused")
     protected ExecutionContext executionContext;
     @SuppressWarnings("unused")
@@ -81,6 +81,7 @@ public class BaseParquetExecution implements Execution {
     private RecordReader<Group> rowIterator;
     private MessageColumnIO columnIO;
     private long pageRowCount;
+    private HashMap<String, String> partitionedColumnsValue;
 
     public BaseParquetExecution(ExecutionContext executionContext,
                                 RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) {
@@ -101,10 +102,10 @@ public class BaseParquetExecution implements Execution {
     @Override
     public void execute() throws TranslatorException {
         String path = this.visitor.getParquetPath();
-        if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME) != null && this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONING_SCHEME).equals("directory")){
+        if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS) != null) {
             path += getDirectoryPath(this.visitor.getColumnPredicates(), this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
         }
-        this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true);
+        this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true, true);
         VirtualFile nextParquetFile = getNextParquetFile();
         if (nextParquetFile != null) {
             this.rowIterator = readParquetFile(nextParquetFile);
@@ -120,21 +121,18 @@ public class BaseParquetExecution implements Execution {
               predicates.remove(partitionedColumnsArray[i]);
               Literal l = (Literal) predicate.getRightExpression();
               path += "/" + partitionedColumnsArray[i] + "=";
-              switch (predicate.getOperator()) {
-                  case EQ:
-                      switch (l.getType().getName()){
-                          case "java.lang.String":
-                          case "java.math.BigInteger":
-                          case "java.lang.Long":
-                          case "java.lang.Integer":
-                          case "java.lang.Boolean":
-                              path += l.getValue().toString();
-                              break;
-                          default:
-                              throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
-                      }
-                      break;
-                  default: throw new TranslatorException("Only equal comparison is allowed");
+              if(predicate.getOperator() == Comparison.Operator.EQ){
+                  switch (l.getType().getName()){
+                      case "java.lang.String":
+                      case "java.math.BigInteger":
+                      case "java.lang.Long":
+                      case "java.lang.Integer":
+                      case "java.lang.Boolean":
+                          path += l.getValue().toString();
+                          break;
+                      default:
+                          throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
+                  }
               }
           }
           else {
@@ -146,7 +144,7 @@ public class BaseParquetExecution implements Execution {
 
     private FilterCompat.Filter getRowGroupFilter(HashMap<String, Comparison> columnPredicates) throws TranslatorException {
         if(columnPredicates.size() == 0){
-            return null;
+            return FilterCompat.NOOP;
         }
         Iterator hashMapIterator = columnPredicates.entrySet().iterator();
         FilterPredicate preFilterPredicate = null, filterPredicate = null;
@@ -191,34 +189,8 @@ public class BaseParquetExecution implements Execution {
                     throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
             }
             try{
-                switch (comparison.getOperator()){
-                    case EQ:
-                        Method eq = FilterApi.class.getMethod("eq", Column.class, Comparable.class);
-                        filterPredicate = (FilterPredicate)eq.invoke(null, column, value);
-                        break;
-                    case NE:
-                        Method notEq = FilterApi.class.getMethod("notEq", Column.class, Comparable.class);
-                        filterPredicate = (FilterPredicate)notEq.invoke(null, column, value);
-                        break;
-                    case LT:
-                        Method lt = FilterApi.class.getMethod("lt", Column.class, Comparable.class);
-                        filterPredicate = (FilterPredicate)lt.invoke(null, column, value);
-                        break;
-                    case LE:
-                        Method ltEq = FilterApi.class.getMethod("ltEq", Column.class, Comparable.class);
-                        filterPredicate = (FilterPredicate)ltEq.invoke(null, column, value);
-                        break;
-                    case GT:
-                        Method gt = FilterApi.class.getMethod("gt", Column.class, Comparable.class);
-                        filterPredicate = (FilterPredicate)gt.invoke(null, column, value);
-                        break;
-                    case GE:
-                        Method gtEq = FilterApi.class.getMethod("gtEq", Column.class, Comparable.class);
-                        filterPredicate = (FilterPredicate)gtEq.invoke(null, column, value);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + comparison.getOperator());
-                }
+                Method m = FilterApi.class.getMethod(getMethodName(comparison.getOperator()), Column.class, Comparable.class);
+                filterPredicate = (FilterPredicate)m.invoke(null, column, value);
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e){
                 throw new TranslatorException(e);
             }
@@ -232,6 +204,18 @@ public class BaseParquetExecution implements Execution {
         return FilterCompat.get(filterPredicate);
     }
 
+    private String getMethodName(Comparison.Operator operator) throws TranslatorException {
+        switch (operator){
+            case EQ: return "eq";
+            case GT: return "gt";
+            case LT: return "lt";
+            case GE: return "gtEq";
+            case LE: return "ltEq";
+            case NE: return "NotEq";
+            default: throw new TranslatorException("Unexpected value: " + operator);
+        }
+    }
+
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
         try (InputStream parquetFileStream = parquetFile.openInputStream(!immutable)) {
            return readParquetFile(parquetFile, parquetFileStream);
@@ -242,28 +226,32 @@ public class BaseParquetExecution implements Execution {
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile, InputStream parquetFileStream) throws TranslatorException {
        try {
+//           partitionedColumnsValue = getPartitionedColumnsValues(parquetFile);
            File localFile = createTempFile(parquetFileStream);
            Path path = new Path(localFile.toURI());
            Configuration config = new Configuration();
            FilterCompat.Filter rowGroupFilter = getRowGroupFilter(this.visitor.getColumnPredicates());
-           if(rowGroupFilter == null){
-               reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config));
-           }else {
-               reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config), ParquetReadOptions.builder().withRecordFilter(rowGroupFilter).build());
-           }
+           reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config), ParquetReadOptions.builder().withRecordFilter(rowGroupFilter).build());
            schema = reader.getFooter().getFileMetaData().getSchema();
            filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
            columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
            PageReadStore pages = reader.readNextRowGroup();
            pageRowCount = pages.getRowCount();
-           if(rowGroupFilter == null) {
-               return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema));
-           }else {
-               return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema), rowGroupFilter);
-           }
+           return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema), rowGroupFilter);
        } catch (IOException e){
            throw new TranslatorException(e);
        }
+    }
+
+    private HashMap<String, String> getPartitionedColumnsValues(VirtualFile parquetFile) {
+        HashMap<String, String> hm = new HashMap<>();
+        String path = parquetFile.getPath();
+        String[] columns = path.split("/");
+        for(int i = 0; i < columns.length; i++){
+            int indexOfEquals = columns[i].indexOf("=");
+            hm.put(columns[i].substring(0, indexOfEquals), columns[i].substring(indexOfEquals));
+        }
+        return hm;
     }
 
     private MessageType getFilteredSchema(MessageType schema, List<String> expectedColumnNames) {
@@ -272,8 +260,7 @@ public class BaseParquetExecution implements Execution {
         for(String columnName: expectedColumnNames) {
             selectedColumns.add(allColumns.get(schema.getFieldIndex(columnName)));
         }
-        MessageType filteredSchema = new MessageType(schema.getName(), selectedColumns);
-        return filteredSchema;
+        return new MessageType(schema.getName(), selectedColumns);
     }
 
 
@@ -319,10 +306,9 @@ public class BaseParquetExecution implements Execution {
                     }
                     this.rowIterator = readParquetFile(nextParquetFile);
                     continue;
-                } else{
-                    this.pageRowCount = nextRowGroup.getRowCount();
-                    this.rowIterator = columnIO.getRecordReader(nextRowGroup, new GroupRecordConverter(filteredSchema));
                 }
+                this.pageRowCount = nextRowGroup.getRowCount();
+                this.rowIterator = columnIO.getRecordReader(nextRowGroup, new GroupRecordConverter(filteredSchema));
             }
             return rowIterator.read();
         }

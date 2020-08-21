@@ -37,13 +37,10 @@ import org.teiid.translator.TranslatorException;
 
 public class ParquetExecution extends BaseParquetExecution implements ResultSetExecution {
 
-    private Class<?>[] expectedColumnTypes;
-
     public ParquetExecution(Select query, ExecutionContext executionContext,
                             RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable)
             throws TranslatorException {
         super(executionContext, metadata, connection, immutable);
-        this.expectedColumnTypes = query.getColumnTypes();
         visit(query);
     }
 
@@ -59,6 +56,7 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
     List<Object> projectRow(Group row) throws TranslatorException {
         final List<Object> output = new ArrayList<Object>();
         int fieldCount = row.getType().getFieldCount();
+
         for (int field = 0; field < fieldCount; field++) {
             Type fieldType = row.getType().getType(field);
             int valueCount = row.getFieldRepetitionCount(field);
@@ -84,7 +82,7 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
     }
 
     private ArrayImpl getList(Group group) throws TranslatorException {
-        ArrayList<Object> outputList = new ArrayList();
+        ArrayList<Object> outputList = new ArrayList<Object>();
         int fieldCount = group.getType().getFieldCount();
         for (int field = 0; field < fieldCount; field++) {
             int valueCount = group.getFieldRepetitionCount(field);

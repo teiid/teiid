@@ -29,9 +29,6 @@ public class ParquetMetadataProcessor implements MetadataProcessor<VirtualFileCo
     @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Parquet File Name", description="Parquet File name, use file name pattern if more than one file in the parent directory", required=true)
     public static final String FILE = MetadataFactory.PARQUET_PREFIX+"FILE"; //$NON-NLS-1$
 
-    @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Partitioning Scheme Name", description="Partitioning Scheme Name, used to describe the partitioning scheme the parquet files follow", required=false)
-    public static final String PARTITIONING_SCHEME = MetadataFactory.PARQUET_PREFIX+"PARTITIONING_SCHEME"; //$NON-NLS-1$
-
     @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Partitioned Columns", description="Partitioning Scheme Name, used to describe the partitioning scheme the parquet files follow", required=false)
     public static final String PARTITIONED_COLUMNS = MetadataFactory.PARQUET_PREFIX+"PARTITIONED_COLUMNS"; //$NON-NLS-1$
 
