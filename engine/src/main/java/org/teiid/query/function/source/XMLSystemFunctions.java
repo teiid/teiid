@@ -18,7 +18,17 @@
 
 package org.teiid.query.function.source;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FilterWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
+import java.io.Reader;
+import java.io.SequenceInputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -63,8 +73,21 @@ import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.*;
+import org.teiid.core.types.BaseLob;
+import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.StandardXMLTranslator;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLTranslator;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
@@ -515,7 +538,20 @@ public class XMLSystemFunctions {
 
     private static void addElement(final String name, Writer writer, XMLEventWriter eventWriter, XMLEventFactory eventFactory,
             Evaluator.NameValuePair<String> namespaces[], Evaluator.NameValuePair<?> attributes[], List<?> contents) throws XMLStreamException, IOException, TransformerException {
-        eventWriter.add(eventFactory.createStartElement("", null, name)); //$NON-NLS-1$
+        String uri = null;
+        if (namespaces != null) {
+            //need to determine the uri before creating the start element
+            for (Evaluator.NameValuePair<String> nameValuePair : namespaces) {
+                if (nameValuePair.name == null) {
+                    if (nameValuePair.value == null) {
+                        uri = XMLConstants.NULL_NS_URI;
+                    } else {
+                        uri = nameValuePair.value;
+                    }
+                }
+            }
+        }
+        eventWriter.add(eventFactory.createStartElement("", uri, name)); //$NON-NLS-1$
         if (namespaces != null) {
             for (Evaluator.NameValuePair<String> nameValuePair : namespaces) {
                 if (nameValuePair.name == null) {

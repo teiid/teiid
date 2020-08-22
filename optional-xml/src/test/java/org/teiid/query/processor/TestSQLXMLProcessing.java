@@ -18,8 +18,16 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.doProcess;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.processPreparedStatement;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
+import static org.teiid.query.processor.TestProcessor.setParameterValues;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
@@ -87,6 +95,35 @@ public class TestSQLXMLProcessing {
 
         List<?>[] expected = new List<?>[] {
                 Arrays.asList("<foo>&lt;bar&gt;<bar1/></foo>"),
+        };
+
+        process(sql, expected);
+    }
+
+    @Test public void testXmlElementNamespaces() throws Exception {
+        String sql = "SELECT xmlelement(NAME x, XMLNAMESPACES(no DEFAULT)"
+                + ", 'a')"; //$NON-NLS-1$
+
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("<x xmlns=\"\">a</x>"),
+        };
+
+        process(sql, expected);
+
+        sql = "SELECT xmlelement(NAME x, XMLNAMESPACES(DEFAULT 'http://abc')"
+                + ", 'a')"; //$NON-NLS-1$
+
+        expected = new List<?>[] {
+                Arrays.asList("<x xmlns=\"http://abc\">a</x>"),
+        };
+
+        process(sql, expected);
+
+        sql = "SELECT xmlelement(NAME x, XMLNAMESPACES('http://abc' as x, no default, 'http://def' as y)"
+                + ", 'a')"; //$NON-NLS-1$
+
+        expected = new List<?>[] {
+                Arrays.asList("<x xmlns:x=\"http://abc\" xmlns=\"\" xmlns:y=\"http://def\">a</x>"),
         };
 
         process(sql, expected);
