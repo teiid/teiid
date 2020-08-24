@@ -8,9 +8,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.file.JavaVirtualFile;
 import org.teiid.file.JavaVirtualFileConnection;
-import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -59,8 +57,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
 
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("people.parquet")).toReturn(TestParquetExecution.getFile("people.parquet"));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[[21232, 98989, 9898999], 1, Phelps, Michael], [[21999, 98909, 809809], 2, Marie, Anne]]", results.toString());
@@ -91,8 +88,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("dir/year=2019/month=January/*")).toReturn(TestParquetExecution.getFile("dir/year=2019/month=January/2019January.parquet"));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January'");
         Assert.assertEquals("[[Michael], [Anne]]",results.toString());
@@ -107,8 +103,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
 
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("people1.parquet")).toReturn(TestParquetExecution.getFile("people1.parquet"));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select firstname, lastname from Table1");
         Assert.assertEquals("[[Aditya, Sharma], [Animesh, Sharma], [Shradha, Khapra]]", results.toString());
@@ -123,8 +118,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
 
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("people1.parquet")).toReturn(TestParquetExecution.getFile("people1.parquet"));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select firstname, lastname from Table1 WHERE firstname='Aditya'");
         Assert.assertEquals("[[Aditya, Sharma]]", results.toString());
@@ -140,16 +134,10 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("dir/year=2019/month=January/*")).toReturn(TestParquetExecution.getFile("dir/year=2019/month=January/2019January.parquet"));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January' and name='Michael'");
         Assert.assertEquals("[[Michael]]",results.toString());
     }
-
-    static VirtualFile[] getFile(String name) {
-        return new JavaVirtualFile[] {new JavaVirtualFile(UnitTestUtil.getTestDataFile(name))};
-    }
-
 
 }
