@@ -26,9 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -40,6 +43,7 @@ import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.filter2.compat.FilterCompat;
 import org.apache.parquet.filter2.predicate.FilterApi;
 import org.apache.parquet.filter2.predicate.FilterPredicate;
+import org.apache.parquet.filter2.predicate.Operators.Column;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.ColumnIOFactory;
@@ -60,10 +64,8 @@ import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
-import static org.apache.parquet.filter2.predicate.Operators.*;
 
-
-public class BaseParquetExecution implements Execution {                                                                                        
+public class BaseParquetExecution implements Execution {
     @SuppressWarnings("unused")
     protected ExecutionContext executionContext;
     @SuppressWarnings("unused")
@@ -105,7 +107,7 @@ public class BaseParquetExecution implements Execution {
         if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS) != null) {
             path += getDirectoryPath(this.visitor.getColumnPredicates(), this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS));
         }
-        this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true, true);
+        this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true, false);
         VirtualFile nextParquetFile = getNextParquetFile();
         if (nextParquetFile != null) {
             this.rowIterator = readParquetFile(nextParquetFile);

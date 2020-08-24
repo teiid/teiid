@@ -1,11 +1,15 @@
 package org.teiid.translator.parquet;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.file.JavaVirtualFile;
+import org.teiid.file.JavaVirtualFileConnection;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
@@ -14,10 +18,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TestParquetExecution {
 
@@ -75,8 +75,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
 
-        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-        Mockito.stub(connection.getFiles("people1.parquet")).toReturn(TestParquetExecution.getFile("people1.parquet"));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[Aditya, 1, Sharma], [Animesh, 2, Sharma], [Shradha, 3, Khapra]]", results.toString());
