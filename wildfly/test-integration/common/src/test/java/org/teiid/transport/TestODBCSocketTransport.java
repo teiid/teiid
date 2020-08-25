@@ -574,6 +574,7 @@ public class TestODBCSocketTransport {
         p.setProperty("password", "testpassword");
         p.setProperty("ssl", "true");
         p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
+        p.setProperty("sslhostnameverifier", TestODBCSSL.AllowAllHostnameVerifier.class.getName());
         conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
         Statement s = conn.createStatement();
         assertTrue(s.execute("select * from sys.tables order by name"));
@@ -878,12 +879,12 @@ public class TestODBCSocketTransport {
         final Statement s = conn.createStatement();
         ForkJoinPool.commonPool().execute(() -> {
             try {
-                Thread.sleep(300);
+                Thread.sleep(100);
                 s.cancel();
             } catch (SQLException | InterruptedException e) {
             }
         });
-        s.execute("SELECT t1.* from sys.tables t1, sys.tables t2, sys.tables t3");
+        s.execute("SELECT t1.* from sys.tables t1, sys.tables t2, sys.tables t3, sys.tables t4");
     }
 
     @Test public void testConstraintDef() throws Exception {

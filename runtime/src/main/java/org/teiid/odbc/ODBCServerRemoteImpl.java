@@ -177,10 +177,21 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             + "join ( select s.r, (current_schemas(false))[s.r] as nspname                    from generate_series(1, array_upper(current_schemas(false), 1)) as s(r) ) as r          using ( nspname )        ) as sp     " //$NON-NLS-1$
             + "ON sp.nspoid = typnamespace  WHERE typname = $1  ORDER BY sp.r, pg_type.oid DESC LIMIT 1"; //$NON-NLS-1$
 
+    //added for pg jdbc 42.2.13
+    public static final String TYPE_QUERY_2 = "SELECT typinput='array_in'::regproc as is_array, typtype, typname   FROM pg_catalog.pg_type   LEFT JOIN (select ns.oid as nspoid, ns.nspname, r.r           from pg_namespace as ns           " //$NON-NLS-1$
+            + "join ( select s.r, (current_schemas(false))[s.r] as nspname                    from generate_series(1, array_upper(current_schemas(false), 1)) as s(r) ) as r          using ( nspname )        ) as sp     " //$NON-NLS-1$
+            + "ON sp.nspoid = typnamespace  WHERE typname = $1  ORDER BY sp.r, pg_type.oid DESC"; //$NON-NLS-1$
+
     private static final String PK_QUERY = "SELECT NULL AS TABLE_CAT, n.nspname AS TABLE_SCHEM,   ct.relname AS TABLE_NAME, a.attname AS COLUMN_NAME,   (i.keys).n AS KEY_SEQ, ci.relname AS PK_NAME " //$NON-NLS-1$
             + "FROM pg_catalog.pg_class ct   JOIN pg_catalog.pg_attribute a ON (ct.oid = a.attrelid)   JOIN pg_catalog.pg_namespace n ON (ct.relnamespace = n.oid)   JOIN (SELECT i.indexrelid, i.indrelid, i.indisprimary, " //$NON-NLS-1$
             + "             information_schema._pg_expandarray(i.indkey) AS keys         FROM pg_catalog.pg_index i) i" //$NON-NLS-1$
             + "     ON (a.attnum = (i.keys).x AND a.attrelid = i.indrelid)   JOIN pg_catalog.pg_class ci ON (ci.oid = i.indexrelid) WHERE true"; //$NON-NLS-1$
+
+    //added for pg jdbc 42.2.13
+    private static final Pattern PK_QUERY_PATTERN = Pattern.compile(Pattern.quote("SELECT        result.TABLE_CAT,        result.TABLE_SCHEM,        result.TABLE_NAME,        result.COLUMN_NAME,        result.KEY_SEQ,        result.PK_NAME " //$NON-NLS-1$
+            + "FROM      (SELECT NULL AS TABLE_CAT, n.nspname AS TABLE_SCHEM,   ct.relname AS TABLE_NAME, a.attname AS COLUMN_NAME,   (information_schema._pg_expandarray(i.indkey)).n AS KEY_SEQ, ci.relname AS PK_NAME,   information_schema._pg_expandarray(i.indkey) AS KEYS, a.attnum AS A_ATTNUM FROM pg_catalog.pg_class ct   JOIN pg_catalog.pg_attribute a ON (ct.oid = a.attrelid)   JOIN pg_catalog.pg_namespace n ON (ct.relnamespace = n.oid)   JOIN pg_catalog.pg_index i ON ( a.attrelid = i.indrelid)   JOIN pg_catalog.pg_class ci ON (ci.oid = i.indexrelid) WHERE true  AND ct.relname = ") //$NON-NLS-1$
+            + "((?:'[^']*')+) " //$NON-NLS-1$
+            + Pattern.quote("AND i.indisprimary  ) result where  result.A_ATTNUM = (result.KEYS).x  ORDER BY result.table_name, result.pk_name, result.key_seq"), Pattern.DOTALL); //$NON-NLS-1$
 
     private static final String PK_REPLACEMENT_QUERY = "SELECT NULL AS TABLE_CAT, n.nspname AS TABLE_SCHEM, ct.relname AS TABLE_NAME, a.attname AS COLUMN_NAME, a.attnum AS KEY_SEQ, ci.relname AS PK_NAME\n" + //$NON-NLS-1$
             "FROM pg_catalog.pg_namespace n, pg_catalog.pg_class ct, pg_catalog.pg_class ci, pg_catalog.pg_attribute a, pg_catalog.pg_index i \n" + //$NON-NLS-1$
@@ -387,6 +398,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                 }
             }
         }
+        terminate();
     }
 
     public static void setConnectionProperties(ConnectionImpl conn)
@@ -943,10 +955,16 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             //we don't support generate_series or the natural join syntax
             if (modified.equals(TYPE_QUERY)) {
                 return "select typname like '\\_%' escape '\\', typname from pg_catalog.pg_type where typname = $1"; //$NON-NLS-1$
+            } else if (modified.equals(TYPE_QUERY_2)) {
+                return "select typname like '\\_%' escape '\\' is_array, typtype, typname from pg_catalog.pg_type where typname = $1"; //$NON-NLS-1$
             }
             //we don't support _pg_expandarray and referencing elements by name
             if (modified.startsWith(PK_QUERY)) {
                 return PK_REPLACEMENT_QUERY + modified.substring(PK_QUERY.length());
+            }
+            Matcher matcher = PK_QUERY_PATTERN.matcher(modified);
+            if (matcher.matches()) {
+                return PK_REPLACEMENT_QUERY + " and ct.relname = " + matcher.group(1) + " ORDER BY table_name, pk_name, key_seq"; //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
         else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$

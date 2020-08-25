@@ -29,6 +29,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
@@ -60,12 +62,13 @@ public class TestODBCSSL {
         p.setProperty("password", "testpassword");
         p.setProperty("ssl", "true");
         p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
+        p.setProperty("sslhostnameverifier", TestODBCSSL.AllowAllHostnameVerifier.class.getName());
         Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
         Statement s = conn.createStatement();
         assertTrue(s.execute("select * from sys.tables order by name"));
         TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 
-        p.remove("ssl");
+        p.setProperty("sslmode", "disable");
         try {
             conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
             fail("should require ssl");
@@ -102,7 +105,7 @@ public class TestODBCSSL {
         p.setProperty("password", "testpassword");
         p.setProperty("ssl", "true");
         p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
-
+        p.setProperty("sslhostnameverifier", TestODBCSSL.AllowAllHostnameVerifier.class.getName());
         //server - should work
         Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
         Statement s = conn.createStatement();
@@ -110,7 +113,7 @@ public class TestODBCSSL {
         TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 
         //no ssl - should fail
-        p.remove("ssl");
+        p.setProperty("sslmode", "disable");
         try {
             conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
             fail("should require ssl");
@@ -123,7 +126,7 @@ public class TestODBCSSL {
         p.setProperty("sslcert", UnitTestUtil.getTestDataPath() + "/selfsigned.crt");
         p.setProperty("sslkey", UnitTestUtil.getTestDataPath() + "/selfsigned.pk8");
         //sslrootcert ??
-        p.setProperty("ssl", "true");
+        p.setProperty("sslmode", "require");
         conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
     }
 
@@ -174,14 +177,21 @@ public class TestODBCSSL {
         p.setProperty("sslfactory", "org.postgresql.ssl.jdbc4.LibPQFactory");
         p.setProperty("sslcert", UnitTestUtil.getTestDataPath() + "/selfsigned.crt");
         p.setProperty("sslkey", UnitTestUtil.getTestDataPath() + "/selfsigned.pk8");
-        //sslrootcert - not needed this is selfsigned
+        p.setProperty("sslrootcert", UnitTestUtil.getTestDataPath() + "/selfsigned.crt");
         p.setProperty("ssl", "true");
-
+        p.setProperty("sslhostnameverifier", TestODBCSSL.AllowAllHostnameVerifier.class.getName());
         Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
         Statement s = conn.createStatement();
         ResultSet rs = s.executeQuery("select user()");
         rs.next();
         assertEquals("CN=Steve Hawkins, OU=org, O=jboss, L=Winston-Salem, ST=North Carolina, C=US@teiid-security", rs.getString(1));
+    }
+
+    public static class AllowAllHostnameVerifier implements HostnameVerifier {
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
     }
 
 }
