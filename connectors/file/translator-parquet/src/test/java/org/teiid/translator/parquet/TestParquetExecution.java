@@ -1,5 +1,6 @@
 package org.teiid.translator.parquet;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +9,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.file.JavaVirtualFile;
 import org.teiid.file.JavaVirtualFileConnection;
+import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -88,7 +91,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
-        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+        VirtualFileConnection connection = new JavaVirtualFileConnection((UnitTestUtil.getTestDataPath()));
 
         ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January'");
         Assert.assertEquals("[[Michael], [Anne]]",results.toString());
@@ -139,5 +142,10 @@ public class TestParquetExecution {
         ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January' and name='Michael'");
         Assert.assertEquals("[[Michael]]",results.toString());
     }
+
+    static VirtualFile[] getFile(String name) {
+        return new JavaVirtualFile[] {new JavaVirtualFile(UnitTestUtil.getTestDataFile(name))};
+    }
+
 
 }

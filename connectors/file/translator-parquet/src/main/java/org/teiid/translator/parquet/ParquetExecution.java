@@ -55,27 +55,32 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
 
     List<Object> projectRow(Group row) throws TranslatorException {
         final List<Object> output = new ArrayList<Object>();
-        int fieldCount = row.getType().getFieldCount();
-
-        for (int field = 0; field < fieldCount; field++) {
-            Type fieldType = row.getType().getType(field);
-            int valueCount = row.getFieldRepetitionCount(field);
-            if("REPEATED".equals(fieldType.getRepetition().toString())){
-                output.add(getRepeatedList(row, field));
-            }
-            if (fieldType.getLogicalTypeAnnotation() != null && "LIST".equals(fieldType.getLogicalTypeAnnotation().toString())) {
-                output.add(getList(row.getGroup(field, 0)));
-                continue;
-            }
-            if(!fieldType.isPrimitive()) {
-                throw new TranslatorException("We don't support any logical type other than LIST as of now.");
-            }
-            if(valueCount == 0) {
-                output.add(null);
-            }
-            else {
-                PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
-                output.add(getPrimitiveTypeObject(type, field, 0, row, fieldType));
+        int field = 0;
+        List<String> expectedColumnNames = this.visitor.getProjectedColumnNames();
+        for (int i = 0; i < expectedColumnNames.size(); i++) {
+            if(this.partitionedColumnsHm != null && this.partitionedColumnsHm.containsKey(expectedColumnNames.get(i))){
+                output.add(partitionedColumnsValue.get(expectedColumnNames.get(i)));
+            }else {
+                Type fieldType = row.getType().getType(field);
+                int valueCount = row.getFieldRepetitionCount(field);
+                if ("REPEATED".equals(fieldType.getRepetition().toString())) {
+                    output.add(getRepeatedList(row, field));
+                }
+                if (fieldType.getLogicalTypeAnnotation() != null && "LIST".equals(fieldType.getLogicalTypeAnnotation().toString())) {
+                    output.add(getList(row.getGroup(field, 0)));
+                    field++;
+                    continue;
+                }
+                if (!fieldType.isPrimitive()) {
+                    throw new TranslatorException("We don't support any logical type other than LIST as of now.");
+                }
+                if (valueCount == 0) {
+                    output.add(null);
+                } else {
+                    PrimitiveType.PrimitiveTypeName type = fieldType.asPrimitiveType().getPrimitiveTypeName();
+                    output.add(getPrimitiveTypeObject(type, field, 0, row, fieldType));
+                }
+                field++;
             }
         }
         return output;

@@ -26,11 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
@@ -83,7 +79,8 @@ public class BaseParquetExecution implements Execution {
     private RecordReader<Group> rowIterator;
     private MessageColumnIO columnIO;
     private long pageRowCount;
-    private HashMap<String, String> partitionedColumnsValue;
+    protected HashMap<String, String> partitionedColumnsValue;
+    protected HashMap<String, Integer> partitionedColumnsHm = new HashMap<>();
 
     public BaseParquetExecution(ExecutionContext executionContext,
                                 RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) {
@@ -115,33 +112,34 @@ public class BaseParquetExecution implements Execution {
     }
 
     private String getDirectoryPath(HashMap<String, Comparison> predicates, String partitionedColumns) throws TranslatorException {
-        String path = ""; // because we are only supporting the equality comparison as of now, otherwise we would return a list of paths to iterate over
+        StringBuilder path = new StringBuilder(); // because we are only supporting the equality comparison as of now, otherwise we would return a list of paths to iterate over
         String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
-        for(int i = 0; i < partitionedColumnsArray.length; i++){
-          if(predicates.containsKey(partitionedColumnsArray[i])) {
-              Comparison predicate = predicates.get(partitionedColumnsArray[i]);
-              predicates.remove(partitionedColumnsArray[i]);
-              Literal l = (Literal) predicate.getRightExpression();
-              path += "/" + partitionedColumnsArray[i] + "=";
-              if(predicate.getOperator() == Comparison.Operator.EQ){
-                  switch (l.getType().getName()){
-                      case "java.lang.String":
-                      case "java.math.BigInteger":
-                      case "java.lang.Long":
-                      case "java.lang.Integer":
-                      case "java.lang.Boolean":
-                          path += l.getValue().toString();
-                          break;
-                      default:
-                          throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
-                  }
-              }
-          }
-          else {
-              path += "/*";
-          }
+        for (String s : partitionedColumnsArray) {
+            partitionedColumnsHm.put(s, 1);
+            if (predicates.containsKey(s)) {
+                Comparison predicate = predicates.get(s);
+                predicates.remove(s);
+                Literal l = (Literal) predicate.getRightExpression();
+                path.append("/").append(s).append("=");
+                if (predicate.getOperator() == Comparison.Operator.EQ) {
+                    switch (l.getType().getName()) {
+                        case "java.lang.String":
+                        case "java.math.BigInteger":
+                        case "java.lang.Long":
+                        case "java.lang.Integer":
+                        case "java.lang.Boolean":
+                            path.append(l.getValue().toString());
+                            break;
+                        default:
+                            throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
+                    }
+                }
+            } else {
+                path.append("/*");
+            }
         }
-    return path + "/*";
+        path.append("/*");
+    return path.toString();
     }
 
     private FilterCompat.Filter getRowGroupFilter(HashMap<String, Comparison> columnPredicates) throws TranslatorException {
@@ -228,7 +226,9 @@ public class BaseParquetExecution implements Execution {
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile, InputStream parquetFileStream) throws TranslatorException {
        try {
-//           partitionedColumnsValue = getPartitionedColumnsValues(parquetFile);
+           if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS) != null) {
+               partitionedColumnsValue = getPartitionedColumnsValues(parquetFile);
+           }
            File localFile = createTempFile(parquetFileStream);
            Path path = new Path(localFile.toURI());
            Configuration config = new Configuration();
@@ -260,7 +260,9 @@ public class BaseParquetExecution implements Execution {
         List<Type> allColumns = schema.getFields();
         List<Type> selectedColumns = new ArrayList<>();
         for(String columnName: expectedColumnNames) {
-            selectedColumns.add(allColumns.get(schema.getFieldIndex(columnName)));
+            if(partitionedColumnsHm == null || !partitionedColumnsHm.containsKey(columnName)) {
+                selectedColumns.add(allColumns.get(schema.getFieldIndex(columnName)));
+            }
         }
         return new MessageType(schema.getName(), selectedColumns);
     }
