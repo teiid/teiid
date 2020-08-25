@@ -19,6 +19,7 @@ package org.teiid.translator.salesforce.execution;
 
 import java.util.ArrayList;
 
+import org.teiid.language.BulkCommand;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
@@ -84,6 +85,9 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
     }
 
     void execute(Condition criteria, IQueryProvidingVisitor visitor) throws TranslatorException {
+        if (((BulkCommand)command).getParameterValues() != null) {
+            throw new TranslatorException("Only bulk inserts are supported"); //$NON-NLS-1$
+        }
         int batchSize = 2000; //Salesforce limit
         int updateSize = 200; //Salesforce limit
         String[] Ids = null;
