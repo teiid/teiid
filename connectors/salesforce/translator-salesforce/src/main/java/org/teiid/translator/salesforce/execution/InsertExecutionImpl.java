@@ -20,12 +20,10 @@ package org.teiid.translator.salesforce.execution;
 
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Expression;
@@ -53,7 +51,6 @@ import com.sforce.async.SObject;
 
 
 public class InsertExecutionImpl extends AbstractUpdateExecution {
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ"); //$NON-NLS-1$
     private JobInfo activeJob;
     private List<String> batches = new ArrayList<String>();
     private Iterator<? extends List<?>> rowIter;
@@ -62,7 +59,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 
     public InsertExecutionImpl(SalesForceExecutionFactory ef, Command command,
             SalesforceConnection salesforceConnection,
-            RuntimeMetadata metadata, ExecutionContext context) throws TranslatorException {
+            RuntimeMetadata metadata, ExecutionContext context) {
         super(ef, command, salesforceConnection, metadata, context);
 
         Insert insert = (Insert)command;
@@ -99,6 +96,10 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
                 }
                 this.activeJob = getConnection().closeJob(this.activeJob.getId());
             }
+            if (this.activeJob.getState() == JobStateEnum.Aborted) {
+                throw new TranslatorException(this.activeJob.getState().name());
+            }
+            //failed still needs processed as the data is effectively committed
 
             BatchResult[] batchResult = getConnection().getBulkResults(this.activeJob, batches);
             for(BatchResult br:batchResult) {
@@ -113,8 +114,6 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
                     }
                 }
             }
-            // now process the next set of batch rows
-            this.activeJob = null;
         }
     }
 
@@ -138,16 +137,6 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
             Object val = Util.toSalesforceObjectValue(literalValue.getValue(), literalValue.getType());
             data.addField(column.getSourceName(), val);
         }
-    }
-
-    private String getStringValue(Object val, Class<?> type) {
-        if (val == null) {
-            return null;
-        }
-        if (type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-            return sdf.format(val);
-        }
-        return val.toString();
     }
 
     protected List<com.sforce.async.SObject> buildBulkRowPayload(Insert insert, Iterator<? extends List<?>> it, int rowCount) throws TranslatorException {

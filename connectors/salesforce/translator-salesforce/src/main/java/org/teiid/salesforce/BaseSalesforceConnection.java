@@ -429,7 +429,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             JobInfo job = new JobInfo();
             job.setObject(objectName);
             job.setOperation(operation);
-            job.setContentType((operation==OperationEnum.insert||operation==OperationEnum.upsert)?ContentType.XML:ContentType.CSV);
+            job.setContentType((operation!=OperationEnum.query)?ContentType.XML:ContentType.CSV);
             if (operation==OperationEnum.upsert) {
                 job.setExternalIdFieldName(ID_FIELD_NAME);
             }
@@ -452,7 +452,9 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public String addBatch(List<com.sforce.async.SObject> payload, JobInfo job) throws TranslatorException {
         try {
             BatchRequest request = this.bulkConnection.createBatch(job);
-            request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
+            for (com.sforce.async.SObject object : payload) {
+                request.addSObject(object);
+            }
             return request.completeRequest().getId();
         } catch (AsyncApiException e) {
             throw new TranslatorException(e);

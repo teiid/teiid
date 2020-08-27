@@ -17,6 +17,8 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
+import org.teiid.language.Condition;
+import org.teiid.language.Delete;
 import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
@@ -24,12 +26,26 @@ import org.teiid.translator.TranslatorException;
 
 public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 
+    private Condition where;
+
     public UpdateVisitor(RuntimeMetadata metadata) {
         super(metadata);
     }
 
     @Override
+    public void visit(Delete delete) {
+        this.where = delete.getWhere();
+        super.visit(delete);
+        try {
+            loadColumnMetadata(delete.getTable());
+        } catch (TranslatorException ce) {
+            exceptions.add(ce);
+        }
+    }
+
+    @Override
     public void visit(Update update) {
+        this.where = update.getWhere();
         // don't visit the changes or they will be in the query.
         visitNode(update.getTable());
         visitNode(update.getWhere());
@@ -57,6 +73,10 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
         result.append(table.getMetadataObject().getSourceName()).append(SPACE);
         addCriteriaString(result);
         return result.toString();
+    }
+
+    public Condition getWhere() {
+        return where;
     }
 
 }

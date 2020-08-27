@@ -32,11 +32,12 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
-import org.teiid.translator.salesforce.execution.visitors.IQueryProvidingVisitor;
-import org.teiid.translator.salesforce.execution.visitors.UpdateVisitor;
+
+import com.sforce.async.OperationEnum;
+import com.sforce.async.SObject;
 
 
-public class UpdateExecutionImpl extends AbstractUpdateExecution {
+public class UpdateExecutionImpl extends DeleteUpdateExecutionImpl {
 
     public UpdateExecutionImpl(SalesForceExecutionFactory ef, Command command,
             SalesforceConnection salesforceConnection,
@@ -45,17 +46,25 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
     }
 
     @Override
-    public void execute() throws TranslatorException {
-        UpdateVisitor visitor = new UpdateVisitor(getMetadata());
-        visitor.visit((Update)command);
-        execute(((Update)command).getWhere(), visitor);
+    protected OperationEnum getOperation() {
+        return OperationEnum.update;
     }
 
     @Override
-    protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
-            throws TranslatorException {
-        List<DataPayload> updateDataList = new ArrayList<DataPayload>();
+    protected SObject toSObject(String id) {
+        SObject so = super.toSObject(id);
+        for (SetClause clause : ((Update)command).getChanges()) {
+            ColumnReference element = clause.getSymbol();
+            Column column = element.getMetadataObject();
+            Literal l = (Literal) clause.getValue();
+            so.setField(column.getSourceName(), getStringValue(l.getValue(), l.getType()));
+        }
+        return so;
+    }
 
+    @Override
+    protected int syncProcessIds(String[] ids) throws TranslatorException {
+        List<DataPayload> updateDataList = new ArrayList<DataPayload>();
         for (int i = 0; i < ids.length; i++) {
             DataPayload data = new DataPayload();
 
@@ -71,7 +80,7 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
             data.setID(ids[i]);
             updateDataList.add(data);
         }
-
-        return getConnection().update(updateDataList);
+        return connection.update(updateDataList);
     }
+
 }

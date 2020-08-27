@@ -233,7 +233,7 @@ public class TestQueryExecutionImpl {
         Mockito.when(connection.addBatch("SELECT Name FROM Account", jobInfo)).thenReturn(info);
 
         ExecutionContext mock = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(mock.getSourceHints()).toReturn(Arrays.asList("bulk"));
+        Mockito.stub(mock.getSourceHint()).toReturn("bulk");
 
         QueryExecutionImpl execution = new QueryExecutionImpl(command, connection, Mockito.mock(RuntimeMetadata.class), mock, new SalesForceExecutionFactory());
 

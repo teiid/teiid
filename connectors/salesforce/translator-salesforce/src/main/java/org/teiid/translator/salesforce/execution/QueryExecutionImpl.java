@@ -20,12 +20,32 @@ package org.teiid.translator.salesforce.execution;
 import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
+import org.teiid.language.GroupBy;
+import org.teiid.language.Join;
+import org.teiid.language.Limit;
+import org.teiid.language.NamedTable;
+import org.teiid.language.OrderBy;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.TableReference;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -234,7 +254,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
             context.logCommand(finalQuery);
 
             if (!join && !visitor.getQueryAll()
-                    && (context.getSourceHints() != null && context.getSourceHints().contains("bulk"))) { //$NON-NLS-1$
+                    && (executionFactory.useBulk() || (context.getSourceHint() != null && context.getSourceHint().contains("bulk")))) { //$NON-NLS-1$
                 BulkValidator bulkValidator = new BulkValidator();
                 query.acceptVisitor(bulkValidator);
                 if (bulkValidator.isBulkEligible()) {

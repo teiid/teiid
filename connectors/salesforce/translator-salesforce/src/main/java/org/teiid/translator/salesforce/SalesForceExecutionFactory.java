@@ -18,7 +18,8 @@
 
 package org.teiid.translator.salesforce;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +60,8 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     private static final String INCLUDES = "includes";//$NON-NLS-1$
     private int maxInsertBatchSize = 2048;
     private boolean supportsGroupBy = true;
+    private boolean bulk;
+    private boolean hardDelete;
 
     public SalesForceExecutionFactory() {
         setSupportsOrderBy(true);
@@ -267,6 +270,24 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     @Override
     public boolean supportsAliasedTable() {
         return true;
+    }
+
+    @TranslatorProperty(display="Use Bulk By Default", description="Defaults to false. Set to true to use bulk operations when possible without requiring a bulk source hint.", advanced=true)
+    public boolean useBulk() {
+        return this.bulk;
+    }
+
+    @TranslatorProperty(display="Use Hard Delete", description="Defaults to false. Set to true to use hardDelete by default with a bulk delete.", advanced=true)
+    public boolean useHardDelete() {
+        return this.hardDelete ;
+    }
+
+    public void setUseBulk(boolean bulk) {
+        this.bulk = bulk;
+    }
+
+    public void setUseHardDelete(boolean hardDelete) {
+        this.hardDelete = hardDelete;
     }
 
 }
