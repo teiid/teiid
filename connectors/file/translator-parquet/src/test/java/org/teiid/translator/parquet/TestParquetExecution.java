@@ -1,6 +1,5 @@
 package org.teiid.translator.parquet;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,9 +8,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.file.JavaVirtualFile;
 import org.teiid.file.JavaVirtualFileConnection;
-import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -19,6 +16,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 public class TestParquetExecution {
 
@@ -91,7 +89,7 @@ public class TestParquetExecution {
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
                 ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
-        VirtualFileConnection connection = new JavaVirtualFileConnection((UnitTestUtil.getTestDataPath()));
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January'");
         Assert.assertEquals("[[Michael], [Anne]]",results.toString());
@@ -143,8 +141,66 @@ public class TestParquetExecution {
         Assert.assertEquals("[[Michael]]",results.toString());
     }
 
-    static VirtualFile[] getFile(String name) {
-        return new JavaVirtualFile[] {new JavaVirtualFile(UnitTestUtil.getTestDataFile(name))};
+    @Test
+    public void testParquetExecutionWithDirectoryBasedPartitioningAndPartitionedColumnSelect() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	id integer ,\n" +
+                "	\"month\" string ,\n" +
+                "	name string ,\n" +
+                "	\"year\" long ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select name, \"year\" from Table1 WHERE \"year\"=2019 and \"month\"='January'");
+        Assert.assertEquals("[[Michael, 2019], [Anne, 2019]]",results.toString());
+    }
+
+    @Test(expected = TranslatorException.class)
+    public void testParquetExecutionWithIllegalOperatorInPredicate() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	contacts integer[] ,\n" +
+                "	id integer ,\n" +
+                "	last string ,\n" +
+                "	name string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select * from Table1 WHERE id<>24");
+    }
+
+    @Test(expected = TranslatorException.class)
+    public void testParquetExecutionWithNonListType() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	id integer ,\n" +
+                "	last string ,\n" +
+                "	name string ,\n" +
+                "	userPreferences string,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'MapLogicalType.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select * from Table1");
+
+    }
+
+    @Test
+    public void testParquetExecutionWithRowFilterEq() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select firstname from Table1 WHERE id=1");
+        Assert.assertEquals("[[Aditya]]", results.toString());
     }
 
 

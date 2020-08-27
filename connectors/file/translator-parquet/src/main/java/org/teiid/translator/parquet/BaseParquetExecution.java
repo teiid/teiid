@@ -18,8 +18,6 @@
 
 package org.teiid.translator.parquet;
 
-
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -122,17 +120,7 @@ public class BaseParquetExecution implements Execution {
                 Literal l = (Literal) predicate.getRightExpression();
                 path.append("/").append(s).append("=");
                 if (predicate.getOperator() == Comparison.Operator.EQ) {
-                    switch (l.getType().getName()) {
-                        case "java.lang.String":
-                        case "java.math.BigInteger":
-                        case "java.lang.Long":
-                        case "java.lang.Integer":
-                        case "java.lang.Boolean":
-                            path.append(l.getValue().toString());
-                            break;
-                        default:
-                            throw new TranslatorException("Only string, biginteger, long, integer, boolean are supported.");
-                    }
+                    path.append(l.getValue().toString());
                 }
             } else {
                 path.append("/*");
@@ -247,11 +235,13 @@ public class BaseParquetExecution implements Execution {
 
     private HashMap<String, String> getPartitionedColumnsValues(VirtualFile parquetFile) {
         HashMap<String, String> hm = new HashMap<>();
-        String path = parquetFile.getPath();
+        String path = parquetFile.getPath().substring(this.visitor.getParquetPath().length());
         String[] columns = path.split("/");
         for(int i = 0; i < columns.length; i++){
-            int indexOfEquals = columns[i].indexOf("=");
-            hm.put(columns[i].substring(0, indexOfEquals), columns[i].substring(indexOfEquals));
+            if(columns[i].contains("=")){
+                int indexOfEquals = columns[i].indexOf("=");
+                hm.put(columns[i].substring(0, indexOfEquals), columns[i].substring(indexOfEquals+1));
+            }
         }
         return hm;
     }
