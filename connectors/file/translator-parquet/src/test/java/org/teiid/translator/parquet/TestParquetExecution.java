@@ -172,22 +172,6 @@ public class TestParquetExecution {
         ArrayList results = helpExecute(ddl, connection, "select * from Table1 WHERE id<>24");
     }
 
-    @Test(expected = TranslatorException.class)
-    public void testParquetExecutionWithNonListType() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	id integer ,\n" +
-                "	last string ,\n" +
-                "	name string ,\n" +
-                "	userPreferences string,\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'MapLogicalType.parquet');";
-
-        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
-
-        ArrayList results = helpExecute(ddl, connection, "select * from Table1");
-
-    }
-
     @Test
     public void testParquetExecutionWithRowFilterEq() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
@@ -199,9 +183,68 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select firstname from Table1 WHERE id=1");
-        Assert.assertEquals("[[Aditya]]", results.toString());
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id=2");
+        Assert.assertEquals("[[2, Animesh]]", results.toString());
     }
 
+    @Test
+    public void testParquetExecutionWithRowFilterGt() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>2");
+        Assert.assertEquals("[[3, Shradha]]", results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionWithRowFilterLt() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<3");
+        Assert.assertEquals("[[1, Aditya], [2, Animesh]]", results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionWithRowFilterGtEq() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>=2");
+        Assert.assertEquals("[[2, Animesh], [3, Shradha]]", results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionWithRowFilterLtEq() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<=2");
+        Assert.assertEquals("[[1, Aditya], [2, Animesh]]", results.toString());
+    }
 
 }

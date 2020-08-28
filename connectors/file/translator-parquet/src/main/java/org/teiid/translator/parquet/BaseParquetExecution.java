@@ -114,17 +114,16 @@ public class BaseParquetExecution implements Execution {
         String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
         for (String s : partitionedColumnsArray) {
             partitionedColumnsHm.put(s, 1);
+            path.append("/").append(s).append("=");
+            String value = "*";
             if (predicates.containsKey(s)) {
-                Comparison predicate = predicates.get(s);
-                predicates.remove(s);
+                Comparison predicate = predicates.remove(s);
                 Literal l = (Literal) predicate.getRightExpression();
-                path.append("/").append(s).append("=");
                 if (predicate.getOperator() == Comparison.Operator.EQ) {
-                    path.append(l.getValue().toString());
+                    value = l.getValue().toString();
                 }
-            } else {
-                path.append("/*");
             }
+            path.append(value);
         }
         path.append("/*");
     return path.toString();
@@ -134,7 +133,7 @@ public class BaseParquetExecution implements Execution {
         if(columnPredicates.size() == 0){
             return FilterCompat.NOOP;
         }
-        Iterator hashMapIterator = columnPredicates.entrySet().iterator();
+        Iterator<Map.Entry<String, Comparison>> hashMapIterator = columnPredicates.entrySet().iterator();
         FilterPredicate preFilterPredicate = null, filterPredicate = null;
         while(hashMapIterator.hasNext()){
             Map.Entry mapElement = (Map.Entry) hashMapIterator.next();
@@ -304,7 +303,11 @@ public class BaseParquetExecution implements Execution {
                 this.pageRowCount = nextRowGroup.getRowCount();
                 this.rowIterator = columnIO.getRecordReader(nextRowGroup, new GroupRecordConverter(filteredSchema));
             }
-            return rowIterator.read();
+            Group presentRow = rowIterator.read();
+            if(presentRow == null){
+                return nextRowInternal();
+            }
+            return presentRow;
         }
 
         return null;
