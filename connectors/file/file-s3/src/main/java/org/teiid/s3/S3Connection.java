@@ -56,30 +56,34 @@ public class S3Connection implements VirtualFileConnection {
     }
 
     private VirtualFile[] search(String s) {
+        //the strategy is to split the string into a prefix
+        //and then apply the remaining as a pattern match
         int firstStar = s.indexOf(STAR);
-        String parentPath = s;
+        String prefix = s;
         String remainingPath = ""; //$NON-NLS-1$
-        if (firstStar != -1) {
-            parentPath = s.substring(0, firstStar);
+        while (firstStar != -1) {
+            prefix = s.substring(0, firstStar);
             remainingPath = s.substring(firstStar, s.length());
+            if (remainingPath.length() < 2 || remainingPath.charAt(1) != STAR) {
+                break;
+            }
+            prefix += STAR; //literal star match
+            remainingPath = remainingPath.substring(2);
+            firstStar = remainingPath.indexOf(STAR);
         }
         ArrayList<S3VirtualFile> s3VirtualFiles = new ArrayList<>();
         ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
                 .withBucketName(s3Config.getBucket())
-                .withPrefix(parentPath);
+                .withPrefix(prefix);
         ObjectListing objectListing = s3Client.listObjects(listObjectsRequest);
         Pattern pattern = convertPathToPattern(remainingPath);
         while(objectListing != null) {
             for(S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
-                String remainingKey = s3ObjectSummary.getKey().substring(parentPath.length());
+                String remainingKey = s3ObjectSummary.getKey().substring(prefix.length());
                 //make sure the remaining path matches - special case if empty
-                if ((remainingPath.isEmpty() && (parentPath.endsWith(SLASH)
+                if ((remainingPath.isEmpty() && (prefix.endsWith(SLASH)
                         || remainingKey.startsWith(SLASH)) && remainingKey.lastIndexOf('/') < 1)
                         || pattern.matcher(remainingKey).matches()) {
-                    if (s.equals(s3ObjectSummary.getKey()) && !s.endsWith(SLASH)) {
-                        //single literal match for compatibility with default file handling
-                        return new VirtualFile[] {new S3VirtualFile(s3Client, s3ObjectSummary, s3Config)};
-                    }
                     s3VirtualFiles.add(new S3VirtualFile(s3Client, s3ObjectSummary, s3Config));
                 }
             }
@@ -111,7 +115,12 @@ public class S3Connection implements VirtualFileConnection {
                 break;
             }
             //replace the star
-            builder.append("[^/]*"); //$NON-NLS-1$
+            if (index < remainingPath.length() - 1 && remainingPath.charAt(index + 1) == STAR) {
+                index++;
+                builder.append("[*]"); //$NON-NLS-1$
+            } else {
+                builder.append("[^/]*"); //$NON-NLS-1$
+            }
         }
         //match to the end
         builder.append("$"); //$NON-NLS-1$

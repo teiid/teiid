@@ -20,7 +20,6 @@ package org.teiid.resource.adapter.file;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -96,7 +95,7 @@ public class TestFileConnection {
         BasicConnectionFactory bcf = fmcf.createConnectionFactory();
         FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
         VirtualFile[] files = fc.getFiles("missing-dir");
-        assertNull(files);
+        assertTrue(files == null || files.length == 0);
     }
 
     @Test public void testFilePathGlob() throws Exception {
@@ -112,6 +111,14 @@ public class TestFileConnection {
         assertEquals(1, files.length);
         assertFalse(files[0].isDirectory());
 
+        //escaped non-match
+        files = fc.getFiles("year=202**/*");
+        assertEquals(0, files.length);
+
+        //escaped match
+        files = fc.getFiles("f**le");
+        assertEquals(1, files.length);
+
         //no match on the file extension
         files = fc.getFiles("year=202*/*.other");
         assertEquals(0, files.length);
@@ -121,9 +128,8 @@ public class TestFileConnection {
         assertEquals(1, files.length);
         assertEquals("year=2019/nested/nested-child-2019.txt", files[0].getPath());
 
-        //.. is a literal glob match, so this can't escape the parent
         files = fc.getFiles("../*");
-        assertEquals(0, files.length);
+        assertEquals(5, files.length);
 
         files = fc.getFiles("year=*");
         assertEquals(2, files.length);

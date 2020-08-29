@@ -60,7 +60,7 @@ public class TestS3Connection {
     }
 
     @Test
-    public void testgetFilesAndConvert() throws TranslatorException {
+    public void testGetFilesAndConvert() throws TranslatorException {
         ObjectListing objectListing = Mockito.mock(ObjectListing.class);
         Mockito.when(amazonS3Client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(objectListing);
         List<S3ObjectSummary> objectSummaryList = new ArrayList<>();
@@ -82,6 +82,8 @@ public class TestS3Connection {
         Assert.assertTrue(matchString("folder1/sample", "folder1/samp*"));
         Assert.assertTrue(matchString("dddd", "dd*d"));
         Assert.assertTrue(matchString("folder1/sample", "folder1/*le"));
+        Assert.assertFalse(matchString("folder1/sample", "folder1/**le"));
+        Assert.assertTrue(matchString("folder1/*le", "folder1/**le"));
         Assert.assertFalse(matchString("folder1/sample", "folder1/san*"));
         Assert.assertTrue(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/*/*/day=Monday"));
         Assert.assertTrue(matchString("year=2020/month=January/week=1/day=Monday", "year=2020/month=*/*/day=Monday"));

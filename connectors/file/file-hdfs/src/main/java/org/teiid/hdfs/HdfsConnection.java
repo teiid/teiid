@@ -21,15 +21,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.IOUtils;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
@@ -49,54 +44,30 @@ public class HdfsConnection implements VirtualFileConnection {
 
     @Override
     public VirtualFile[] getFiles(String location) throws TranslatorException {
-        Path path = new Path(location);
+        String globLocation = location;
+        if (globLocation.endsWith("/")) { //$NON-NLS-1$
+            //directory means all files underneath
+            globLocation = globLocation + "*"; //$NON-NLS-1$
+        }
+        //make literal matches to metacharacters
+        globLocation = globLocation.replaceAll("[*]{2}", "[*]"); //$NON-NLS-1$ //$NON-NLS-2$
+        globLocation = globLocation.replaceAll("[?{\\[]", "\\\\$0"); //$NON-NLS-1$ //$NON-NLS-2$
+
         try {
-            FileStatus fileStatus = fileSystem.getFileStatus(path);
-            if(fileStatus.isDirectory()){
-                return convert(path);
-            }
-            if(fileStatus.isFile()) {
-                return convert(Arrays.asList(fileStatus));
-            }
-        } catch (FileNotFoundException e){
-            //ignore and see if it's a wildcard
+            FileStatus[] status = fileSystem.globStatus(new Path(globLocation));
+            return convert(status);
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
-
-        if(location.contains("*")){ //$NON-NLS-1$
-            if (location.endsWith("/")) { //$NON-NLS-1$
-                //directory means all files underneath
-                location = location + "*"; //$NON-NLS-1$
-            }
-            location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-
-            try {
-                FileStatus[] status = fileSystem.globStatus(new Path(location));
-                return convert(Arrays.asList(status));
-            } catch (IOException e) {
-                throw new TranslatorException(e);
-            }
-        }
-        return null;
     }
 
-    private VirtualFile[] convert(Path path) throws IOException {
-        RemoteIterator<LocatedFileStatus> fileStatusRemoteIterator = fileSystem.listFiles(path,false);
-        List<FileStatus> statuses = new ArrayList<>();
-        while(fileStatusRemoteIterator.hasNext()){
-            statuses.add(fileStatusRemoteIterator.next());
+    private VirtualFile[] convert(FileStatus[] status) {
+        if (status == null) {
+            return null;
         }
-        return convert(statuses);
-    }
-
-    private VirtualFile[] convert(List<FileStatus> statuses) {
-        VirtualFile[] result = new VirtualFile[statuses.size()];
+        VirtualFile[] result = new VirtualFile[status.length];
         for (int i = 0; i < result.length; i++) {
-            result[i] = new HdfsVirtualFile(fileSystem, statuses.get(i));
+            result[i] = new HdfsVirtualFile(fileSystem, status[i]);
         }
         return result;
     }

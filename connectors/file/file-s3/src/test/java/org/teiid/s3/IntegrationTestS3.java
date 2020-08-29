@@ -119,8 +119,8 @@ public class IntegrationTestS3 {
         assertEquals(1, files.length);
         assertEquals("some/directory/file.txt", files[0].getPath());
 
-        //corner case - still an exact match as we don't support escaping
-        files = s3Connection.getFiles("some/directory/*/filex.txt");
+        //escaped * match
+        files = s3Connection.getFiles("some/directory/**/filex.txt");
         assertEquals(1, files.length);
         assertEquals("some/directory/*/filex.txt", files[0].getPath());
 

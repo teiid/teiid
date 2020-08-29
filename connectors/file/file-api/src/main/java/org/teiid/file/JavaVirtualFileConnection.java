@@ -28,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.core.util.StringUtil;
 import org.teiid.translator.TranslatorException;
 
 
@@ -66,55 +65,53 @@ public class JavaVirtualFileConnection implements VirtualFileConnection {
 
         Path parentPath = parentDirectory.toPath();
 
-        if (datafile.isDirectory()) {
-            return convert(datafile.listFiles(), parentPath);
+        List<String> globParts = new ArrayList<>();
+        while (!datafile.exists() && !datafile.equals(parentPath)) {
+            String name = datafile.getName();
+            String globPath = parseGlob(name);
+            globParts.add(0, globPath);
+            datafile = datafile.getParentFile();
         }
 
-        if (datafile.exists()) {
-            return new VirtualFile[] {pathToVirtualFile(parentPath, datafile.toPath())};
-        }
+        if (globParts.isEmpty()) {
+            if (datafile.isDirectory()) {
+                return convert(datafile.listFiles(), parentPath);
+            }
 
-        if (location.contains("*")) { //$NON-NLS-1$
-
-            //for backwards compatibility support any wildcard, but no escapes or other glob searches
-            location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
-            location = location.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-
-            List<String> parts = StringUtil.split(location, "/"); //$NON-NLS-1$ //split on the file separator
-
-            try {
-                List<Iterable<Path>> toProcess = new LinkedList<>();
-                toProcess.add(Files.newDirectoryStream(parentPath, parts.get(0)));
-                for (int i = 1; i < parts.size(); i++) {
-                    int size = toProcess.size();
-                    if (size == 0) {
-                        break;
-                    }
-                    for (int j = 0;  j < size; j++) {
-                        Iterable<Path> paths = toProcess.remove(0);
-                        for (Path p : paths) {
-                            if (Files.isRegularFile(p)) {
-                                continue;
-                            }
-                            toProcess.add(Files.newDirectoryStream(p, parts.get(i)));
-                        }
-                    }
-                }
-                List<VirtualFile> result = new ArrayList<>();
-                for (Iterable<Path> paths : toProcess) {
-                    for (Path p : paths) {
-                        JavaVirtualFile f = pathToVirtualFile(parentPath, p);
-                        result.add(f);
-                    }
-                }
-                return result.toArray(new VirtualFile[result.size()]);
-            } catch (IOException e) {
-                throw new TranslatorException(e);
+            if (datafile.exists()) {
+                return new VirtualFile[] {pathToVirtualFile(parentPath, datafile.toPath())};
             }
         }
-        return null;
+
+        try {
+            List<Iterable<Path>> toProcess = new LinkedList<>();
+            toProcess.add(Files.newDirectoryStream(parentPath, globParts.get(0)));
+            for (int i = 1; i < globParts.size(); i++) {
+                int size = toProcess.size();
+                if (size == 0) {
+                    break;
+                }
+                for (int j = 0;  j < size; j++) {
+                    Iterable<Path> paths = toProcess.remove(0);
+                    for (Path p : paths) {
+                        if (Files.isRegularFile(p)) {
+                            continue;
+                        }
+                        toProcess.add(Files.newDirectoryStream(p, globParts.get(i)));
+                    }
+                }
+            }
+            List<VirtualFile> result = new ArrayList<>();
+            for (Iterable<Path> paths : toProcess) {
+                for (Path p : paths) {
+                    JavaVirtualFile f = pathToVirtualFile(parentPath, p);
+                    result.add(f);
+                }
+            }
+            return result.toArray(new VirtualFile[result.size()]);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
     }
 
     private JavaVirtualFile pathToVirtualFile(Path parentPath, Path p) {
@@ -148,6 +145,30 @@ public class JavaVirtualFileConnection implements VirtualFileConnection {
     @Override
     public void close() {
 
+    }
+
+    private String parseGlob(String location) {
+        StringBuilder part = new StringBuilder();
+        for (int i = 0; i < location.length(); i++) {
+            char c = location.charAt(i);
+            switch (c) {
+            //escape the other glob metacharacters
+            case '?':
+            case '[':
+            case '{':
+            case '\\':
+                part.append('\\');
+                break;
+            case '*':
+                if (i < location.length() -1 && location.charAt(i+1) == '*') {
+                    part.append('\\');
+                    i++;
+                }
+                break;
+            }
+            part.append(c);
+        }
+        return part.toString();
     }
 
 }

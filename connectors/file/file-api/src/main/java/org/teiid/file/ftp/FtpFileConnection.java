@@ -130,6 +130,7 @@ public class FtpFileConnection implements VirtualFileConnection {
 
     @Override
     public org.teiid.file.VirtualFile[] getFiles(String pattern) {
+        pattern = checkPattern(pattern);
         VirtualFile file = this.getFile(pattern);
         if (file.isDirectory()) {
             List<VirtualFile> children = file.getChildren();
@@ -143,12 +144,21 @@ public class FtpFileConnection implements VirtualFileConnection {
             return new org.teiid.file.VirtualFile[]{new JBossVirtualFile(file)};
         }
 
-        if (pattern.contains("*")) { //$NON-NLS-1$
-            //could be implemented with a recursive search from the root
-            throw new IllegalArgumentException("glob searches are not yet supported with ftp"); //$NON-NLS-1$
-        }
-
         return null;
+    }
+
+    static String checkPattern(String pattern) {
+        long count = pattern.chars().filter((c)->{return c == '*';}).count();
+        if (count > 0) {
+            pattern = pattern.replaceAll("[*]{2}", "[*]"); //$NON-NLS-1$ //$NON-NLS-2$
+            long newCount = pattern.chars().filter((c)->{return c == '*';}).count();
+            //check for unescaped star
+            if (newCount != count/2) {
+                //could be implemented with a recursive search from the root
+                throw new IllegalArgumentException("glob searches are not yet supported with ftp"); //$NON-NLS-1$
+            }
+        }
+        return pattern;
     }
 
     public VirtualFile getFile(String path) {
@@ -287,4 +297,5 @@ public class FtpFileConnection implements VirtualFileConnection {
     public boolean areFilesUsableAfterClose() {
         return false;
     }
+
 }
