@@ -134,7 +134,7 @@ public class JavaVirtualFileConnection implements VirtualFileConnection {
         return result;
     }
 
-    File getFile(String path) throws TranslatorException {
+    public File getFile(String path) throws TranslatorException {
         if (path == null) {
             return this.parentDirectory;
         }
