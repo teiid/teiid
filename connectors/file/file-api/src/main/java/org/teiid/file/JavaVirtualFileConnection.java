@@ -85,7 +85,7 @@ public class JavaVirtualFileConnection implements VirtualFileConnection {
 
         try {
             List<Iterable<Path>> toProcess = new LinkedList<>();
-            toProcess.add(Files.newDirectoryStream(parentPath, globParts.get(0)));
+            toProcess.add(Files.newDirectoryStream(datafile.toPath(), globParts.get(0)));
             for (int i = 1; i < globParts.size(); i++) {
                 int size = toProcess.size();
                 if (size == 0) {

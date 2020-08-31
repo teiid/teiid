@@ -128,12 +128,12 @@ public class TestFileConnection {
         assertEquals(1, files.length);
         assertEquals("year=2019/nested/nested-child-2019.txt", files[0].getPath());
 
-        files = fc.getFiles("../*");
-        assertEquals(5, files.length);
-
         files = fc.getFiles("year=*");
         assertEquals(2, files.length);
         assertTrue(files[0].isDirectory());
+
+        files = fc.getFiles("year=2020/*");
+        assertEquals(1, files.length);
     }
 
 }
