@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.Multimap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -78,7 +79,7 @@ public class BaseParquetExecution implements Execution {
     private MessageColumnIO columnIO;
     private long pageRowCount;
     protected HashMap<String, String> partitionedColumnsValue;
-    protected HashMap<String, Integer> partitionedColumnsHm = new HashMap<>();
+    protected HashSet<String> partitionedColumnsHm = new HashSet<>();
 
     public BaseParquetExecution(ExecutionContext executionContext,
                                 RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) {
@@ -109,86 +110,89 @@ public class BaseParquetExecution implements Execution {
         }
     }
 
-    private String getDirectoryPath(HashMap<String, Comparison> predicates, String partitionedColumns) throws TranslatorException {
+    private String getDirectoryPath(Multimap<String, Comparison> predicates, String partitionedColumns) throws TranslatorException {
         StringBuilder path = new StringBuilder(); // because we are only supporting the equality comparison as of now, otherwise we would return a list of paths to iterate over
         String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
         for (String s : partitionedColumnsArray) {
-            partitionedColumnsHm.put(s, 1);
+            partitionedColumnsHm.add(s);
             path.append("/").append(s).append("=");
             String value = "*";
-            if (predicates.containsKey(s)) {
-                Comparison predicate = predicates.remove(s);
+            Collection<Comparison> columnPredicates = predicates.get(s);
+            for(Comparison predicate: columnPredicates) {
                 Literal l = (Literal) predicate.getRightExpression();
                 if (predicate.getOperator() == Comparison.Operator.EQ) {
                     value = l.getValue().toString();
                 }
             }
             path.append(value);
+            predicates.removeAll(s);
         }
         path.append("/*");
-    return path.toString();
+        return path.toString();
     }
 
-    private FilterCompat.Filter getRowGroupFilter(HashMap<String, Comparison> columnPredicates) throws TranslatorException {
+    private FilterCompat.Filter getRowGroupFilter(Multimap<String, Comparison> columnPredicates) throws TranslatorException {
         if(columnPredicates.size() == 0){
             return FilterCompat.NOOP;
         }
-        Iterator<Map.Entry<String, Comparison>> hashMapIterator = columnPredicates.entrySet().iterator();
-        FilterPredicate preFilterPredicate = null, filterPredicate = null;
-        while(hashMapIterator.hasNext()){
-            Map.Entry mapElement = (Map.Entry) hashMapIterator.next();
-            String columnName = (String) mapElement.getKey();
-            Comparison comparison = (Comparison) mapElement.getValue();
-            Literal l = (Literal) comparison.getRightExpression();
-            Column column;
-            Comparable value;
-            switch (comparison.getRightExpression().getType().getName()){
-                case "java.lang.String":
-                    column = FilterApi.binaryColumn(columnName);
-                    value = Binary.fromString((String) l.getValue());
-                    break;
-                case "org.teiid.core.types.BinaryType":
-                    column = FilterApi.binaryColumn(columnName);
-                    BinaryType binaryType = (BinaryType) l.getValue();
-                    value = Binary.fromConstantByteArray(binaryType.getBytes());
-                    break;
-                case "java.lang.Long":
-                    column = FilterApi.longColumn(columnName);
-                    value = (Long) l.getValue();
-                    break;
-                case "java.lang.Integer":
-                    column = FilterApi.intColumn(columnName);
-                    value = (Integer) l.getValue();
-                    break;
-                case "java.lang.Boolean":
-                    column = FilterApi.booleanColumn(columnName);
-                    value = (Boolean) l.getValue();
-                    break;
-                case "java.lang.Double":
-                    column = FilterApi.doubleColumn(columnName);
-                    value = (Double) l.getValue();
-                    break;
-                case "java.lang.Float":
-                    column =FilterApi.floatColumn(columnName);
-                    value = (Float) l.getValue();
-                    break;
-                default:
-                    throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
+        FilterPredicate combinedFilterPredicate = null, filterPredicate;
+        for (Map.Entry<String, Collection<Comparison>> entry : columnPredicates.asMap().entrySet()) {
+            String columnName = entry.getKey();
+            Collection<Comparison> collection = entry.getValue();
+            for (Comparison comparison :
+                    collection) {
+                Literal l = (Literal) comparison.getRightExpression();
+                Column column;
+                Comparable value;
+                switch (comparison.getRightExpression().getType().getName()) {
+                    case "java.lang.String":
+                        column = FilterApi.binaryColumn(columnName);
+                        value = Binary.fromString((String) l.getValue());
+                        break;
+                    case "org.teiid.core.types.BinaryType":
+                        column = FilterApi.binaryColumn(columnName);
+                        BinaryType binaryType = (BinaryType) l.getValue();
+                        value = Binary.fromConstantByteArray(binaryType.getBytes());
+                        break;
+                    case "java.lang.Long":
+                        column = FilterApi.longColumn(columnName);
+                        value = (Long) l.getValue();
+                        break;
+                    case "java.lang.Integer":
+                        column = FilterApi.intColumn(columnName);
+                        value = (Integer) l.getValue();
+                        break;
+                    case "java.lang.Boolean":
+                        column = FilterApi.booleanColumn(columnName);
+                        value = (Boolean) l.getValue();
+                        break;
+                    case "java.lang.Double":
+                        column = FilterApi.doubleColumn(columnName);
+                        value = (Double) l.getValue();
+                        break;
+                    case "java.lang.Float":
+                        column = FilterApi.floatColumn(columnName);
+                        value = (Float) l.getValue();
+                        break;
+                    default:
+                        throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
+                }
+                try {
+                    Method m = FilterApi.class.getMethod(getMethodName(comparison.getOperator()), Column.class, Comparable.class);
+                    filterPredicate = (FilterPredicate) m.invoke(null, column, value);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    throw new TranslatorException(e);
+                }
+                if (combinedFilterPredicate == null) {
+                    combinedFilterPredicate = filterPredicate;
+                } else {
+                    combinedFilterPredicate = FilterApi.and(combinedFilterPredicate, filterPredicate);
+                }
             }
-            try{
-                Method m = FilterApi.class.getMethod(getMethodName(comparison.getOperator()), Column.class, Comparable.class);
-                filterPredicate = (FilterPredicate)m.invoke(null, column, value);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e){
-                throw new TranslatorException(e);
-            }
-            if(preFilterPredicate == null){
-                preFilterPredicate = filterPredicate;
-            }else {
-                preFilterPredicate = FilterApi.and(preFilterPredicate, filterPredicate);
-            }
+
         }
-        assert filterPredicate != null;
-        return FilterCompat.get(filterPredicate);
+        assert combinedFilterPredicate != null;
+        return FilterCompat.get(combinedFilterPredicate);
     }
 
     private String getMethodName(Comparison.Operator operator) throws TranslatorException {
@@ -198,7 +202,7 @@ public class BaseParquetExecution implements Execution {
             case LT: return "lt";
             case GE: return "gtEq";
             case LE: return "ltEq";
-            case NE: return "NotEq";
+            case NE: return "notEq";
             default: throw new TranslatorException("Unexpected value: " + operator);
         }
     }
@@ -249,7 +253,7 @@ public class BaseParquetExecution implements Execution {
         List<Type> allColumns = schema.getFields();
         List<Type> selectedColumns = new ArrayList<>();
         for(String columnName: expectedColumnNames) {
-            if(partitionedColumnsHm == null || !partitionedColumnsHm.containsKey(columnName)) {
+            if(!partitionedColumnsHm.contains(columnName)) {
                 selectedColumns.add(allColumns.get(schema.getFieldIndex(columnName)));
             }
         }

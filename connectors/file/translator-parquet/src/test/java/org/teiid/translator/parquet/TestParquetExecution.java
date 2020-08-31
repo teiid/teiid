@@ -157,21 +157,6 @@ public class TestParquetExecution {
         Assert.assertEquals("[[Michael, 2019], [Anne, 2019]]",results.toString());
     }
 
-    @Test(expected = TranslatorException.class)
-    public void testParquetExecutionWithIllegalOperatorInPredicate() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	contacts integer[] ,\n" +
-                "	id integer ,\n" +
-                "	last string ,\n" +
-                "	name string ,\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
-
-        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
-
-        ArrayList results = helpExecute(ddl, connection, "select * from Table1 WHERE id<>24");
-    }
-
     @Test
     public void testParquetExecutionWithRowFilterEq() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
@@ -245,6 +230,36 @@ public class TestParquetExecution {
 
         ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<=2");
         Assert.assertEquals("[[1, Aditya], [2, Animesh]]", results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionWithRowFilterLtNotEq() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id!=2");
+        Assert.assertEquals("[[1, Aditya], [3, Shradha]]", results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionWithRowFilterWithMultiplePredicatesOnSameColumn() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	firstname string ,\n" +
+                "	id long ,\n" +
+                "	lastname string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>1 and id<3");
+        Assert.assertEquals("[[2, Animesh]]", results.toString());
     }
 
 }

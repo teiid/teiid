@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
@@ -34,11 +36,11 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
     private List<String> projectedColumnNames = new ArrayList<String>();
     protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-    public HashMap<String, Comparison> getColumnPredicates() {
+    public Multimap<String, Comparison> getColumnPredicates() {
         return columnPredicates;
     }
 
-    private HashMap<String, Comparison> columnPredicates = new HashMap<>();
+    private Multimap<String, Comparison> columnPredicates = ArrayListMultimap.create();
 
     private Table table;
     private String parquetPath;
