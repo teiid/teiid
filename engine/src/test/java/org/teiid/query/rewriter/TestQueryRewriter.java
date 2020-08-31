@@ -18,7 +18,10 @@
 
 package org.teiid.query.rewriter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +54,19 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -1843,6 +1858,32 @@ public class TestQueryRewriter {
     @Test public void testArrayBindEligible() throws TeiidComponentException, TeiidProcessingException {
         Constant c = (Constant)helpTestRewriteExpression("(1, 2)", null, RealMetadataFactory.example1Cached());
         assertFalse(c.isBindEligible());
+    }
+
+    @Test public void testOperlappingComparison() throws QueryMetadataException, TeiidComponentException, TeiidProcessingException{
+        helpTestRewriteCriteria("pm1.g1.e1 <= '7' and pm1.g1.e1 <= '5'", "pm1.g1.e1 <= '5'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 <= '1' and pm1.g1.e1 <= '5'", "pm1.g1.e1 <= '1'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 > '7' and pm1.g1.e1 > '5'", "pm1.g1.e1 > '7'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 > '3' and pm1.g1.e1 > '5'", "pm1.g1.e1 > '5'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 >= '7' and pm1.g1.e1 >= '8'", "pm1.g1.e1 >= '8'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 >= '7' and pm1.g1.e1 >= '3'", "pm1.g1.e1 >= '7'", false); //$NON-NLS-1$ //$NON-NLS-2$
+
+        helpTestRewriteCriteria("pm1.g1.e1 >= '7' and pm1.g1.e1 > '8'", "pm1.g1.e1 > '8'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 >= '7' and pm1.g1.e1 > '4'", "pm1.g1.e1 >= '7'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 > '7' and pm1.g1.e1 >= '4'", "pm1.g1.e1 > '7'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 > '1' and pm1.g1.e1 >= '4'", "pm1.g1.e1 >= '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 >= '4' and pm1.g1.e1 > '4'", "pm1.g1.e1 >= '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 > '4' and pm1.g1.e1 >= '4'", "pm1.g1.e1 >= '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+
+        helpTestRewriteCriteria("pm1.g1.e1 <= '7' and pm1.g1.e1 < '8'", "pm1.g1.e1 <= '7'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 <= '7' and pm1.g1.e1 < '4'", "pm1.g1.e1 < '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 < '7' and pm1.g1.e1 <= '4'", "pm1.g1.e1 <= '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 < '1' and pm1.g1.e1 <= '4'", "pm1.g1.e1 < '1'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 <= '4' and pm1.g1.e1 < '4'", "pm1.g1.e1 <= '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 < '4' and pm1.g1.e1 <= '4'", "pm1.g1.e1 <= '4'", false); //$NON-NLS-1$ //$NON-NLS-2$
+
+        helpTestRewriteCriteria("pm1.g1.e1 > '7' and pm1.g1.e1 < '4'", "(pm1.g1.e1 > '7') AND (pm1.g1.e1 < '4')", false); //$NON-NLS-1$ //$NON-NLS-2$
+
     }
 
 }
