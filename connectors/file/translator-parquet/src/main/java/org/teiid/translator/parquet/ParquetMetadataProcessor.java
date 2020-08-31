@@ -23,6 +23,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+
 public class ParquetMetadataProcessor implements MetadataProcessor<VirtualFileConnection> {
 
 

@@ -24,10 +24,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.collect.Multimap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -59,6 +63,8 @@ import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
+import com.google.common.collect.Multimap;
+
 
 public class BaseParquetExecution implements Execution {
     @SuppressWarnings("unused")
@@ -73,7 +79,6 @@ public class BaseParquetExecution implements Execution {
     private VirtualFile[] parquetFiles;
     private AtomicInteger fileCount = new AtomicInteger();
     private ParquetFileReader reader;
-    private MessageType schema;
     private MessageType filteredSchema;
     private RecordReader<Group> rowIterator;
     private MessageColumnIO columnIO;
@@ -115,13 +120,13 @@ public class BaseParquetExecution implements Execution {
         String[] partitionedColumnsArray = getPartitionedColumns(partitionedColumns);
         for (String s : partitionedColumnsArray) {
             partitionedColumnsHm.add(s);
-            path.append("/").append(s).append("=");
+            path.append("/").append(s.replaceAll("[*]", "[*][*]")).append("=");
             String value = "*";
             Collection<Comparison> columnPredicates = predicates.get(s);
             for(Comparison predicate: columnPredicates) {
                 Literal l = (Literal) predicate.getRightExpression();
                 if (predicate.getOperator() == Comparison.Operator.EQ) {
-                    value = l.getValue().toString();
+                    value = l.getValue().toString().replaceAll("[*]", "[*][*]");
                 }
             }
             path.append(value);
@@ -142,8 +147,8 @@ public class BaseParquetExecution implements Execution {
             for (Comparison comparison :
                     collection) {
                 Literal l = (Literal) comparison.getRightExpression();
-                Column column;
-                Comparable value;
+                Column<?> column;
+                Comparable<?> value;
                 switch (comparison.getRightExpression().getType().getName()) {
                     case "java.lang.String":
                         column = FilterApi.binaryColumn(columnName);
@@ -209,31 +214,23 @@ public class BaseParquetExecution implements Execution {
 
     private RecordReader<Group> readParquetFile(VirtualFile parquetFile) throws TranslatorException {
         try (InputStream parquetFileStream = parquetFile.openInputStream(!immutable)) {
-           return readParquetFile(parquetFile, parquetFileStream);
+            if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS) != null) {
+                partitionedColumnsValue = getPartitionedColumnsValues(parquetFile);
+            }
+            File localFile = createTempFile(parquetFileStream);
+            Path path = new Path(localFile.toURI());
+            Configuration config = new Configuration();
+            FilterCompat.Filter rowGroupFilter = getRowGroupFilter(this.visitor.getColumnPredicates());
+            reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config), ParquetReadOptions.builder().withRecordFilter(rowGroupFilter).build());
+            MessageType schema = reader.getFooter().getFileMetaData().getSchema();
+            filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
+            columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
+            PageReadStore pages = reader.readNextRowGroup();
+            pageRowCount = pages.getRowCount();
+            return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema), rowGroupFilter);
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
-    }
-
-    private RecordReader<Group> readParquetFile(VirtualFile parquetFile, InputStream parquetFileStream) throws TranslatorException {
-       try {
-           if(this.visitor.getTable().getProperty(ParquetMetadataProcessor.PARTITIONED_COLUMNS) != null) {
-               partitionedColumnsValue = getPartitionedColumnsValues(parquetFile);
-           }
-           File localFile = createTempFile(parquetFileStream);
-           Path path = new Path(localFile.toURI());
-           Configuration config = new Configuration();
-           FilterCompat.Filter rowGroupFilter = getRowGroupFilter(this.visitor.getColumnPredicates());
-           reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config), ParquetReadOptions.builder().withRecordFilter(rowGroupFilter).build());
-           schema = reader.getFooter().getFileMetaData().getSchema();
-           filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
-           columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
-           PageReadStore pages = reader.readNextRowGroup();
-           pageRowCount = pages.getRowCount();
-           return columnIO.getRecordReader(pages, new GroupRecordConverter(filteredSchema), rowGroupFilter);
-       } catch (IOException e){
-           throw new TranslatorException(e);
-       }
     }
 
     private HashMap<String, String> getPartitionedColumnsValues(VirtualFile parquetFile) {
@@ -260,16 +257,6 @@ public class BaseParquetExecution implements Execution {
         return new MessageType(schema.getName(), selectedColumns);
     }
 
-
-    private String getExtension(String name) {
-        String extension = "";
-        int i = name.lastIndexOf('.');
-        if (i > 0) {
-            extension = name.substring(i+1);
-        }
-        return extension;
-    }
-
     private File createTempFile(InputStream parquetFileStream) throws IOException {
         File tempFile = File.createTempFile(getClass().getSimpleName(), ".tmp");
         tempFile.deleteOnExit();
@@ -280,47 +267,39 @@ public class BaseParquetExecution implements Execution {
     }
 
     public Group nextRow() throws TranslatorException, DataNotAvailableException {
-            try {
-                Group row = nextRowInternal();
-                if (row == null) {
-                    return null;
-                }
-                return row;
-            } catch (IOException e) {
-                throw new TranslatorException(e);
-            }
-    }
-
-    private Group nextRowInternal() throws IOException, TranslatorException {
-        while (rowIterator != null) {
-            if (pageRowCount-- <= 0) {
-                this.rowIterator = null;
-                PageReadStore nextRowGroup = this.reader.readNextRowGroup();
-                if(nextRowGroup == null){
-                    VirtualFile nextParquetFile = getNextParquetFile();
-                    if (nextParquetFile == null) {
-                        return null;
+        try {
+            while (rowIterator != null) {
+                if (pageRowCount-- <= 0) {
+                    this.rowIterator = null;
+                    PageReadStore nextRowGroup = this.reader.readNextRowGroup();
+                    if(nextRowGroup == null){
+                        VirtualFile nextParquetFile = getNextParquetFile();
+                        if (nextParquetFile == null) {
+                            return null;
+                        }
+                        this.rowIterator = readParquetFile(nextParquetFile);
+                        continue;
                     }
-                    this.rowIterator = readParquetFile(nextParquetFile);
+                    this.pageRowCount = nextRowGroup.getRowCount();
+                    this.rowIterator = columnIO.getRecordReader(nextRowGroup, new GroupRecordConverter(filteredSchema));
+                }
+                Group presentRow = rowIterator.read();
+                if(presentRow == null){
                     continue;
                 }
-                this.pageRowCount = nextRowGroup.getRowCount();
-                this.rowIterator = columnIO.getRecordReader(nextRowGroup, new GroupRecordConverter(filteredSchema));
+                return presentRow;
             }
-            Group presentRow = rowIterator.read();
-            if(presentRow == null){
-                return nextRowInternal();
-            }
-            return presentRow;
-        }
 
-        return null;
+            return null;
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
     }
 
     protected VirtualFile getNextParquetFile() {
         while (this.parquetFiles.length > this.fileCount.get()) {
             VirtualFile f = this.parquetFiles[this.fileCount.getAndIncrement()];
-            if ("parquet".equals(getExtension(f.getName()))) {
+            if (f.getName().endsWith(".parquet")) {
                 return f;
             }
         }

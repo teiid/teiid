@@ -1,5 +1,7 @@
 package org.teiid.translator.parquet;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +18,11 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.TranslatorException;
 
+@SuppressWarnings("nls")
 public class TestParquetExecution {
 
-    static ArrayList helpExecute(String ddl, VirtualFileConnection connection, String query) throws Exception {
+    static ArrayList<?> helpExecute(String ddl, VirtualFileConnection connection, String query) throws Exception {
         ParquetExecutionFactory translator = new ParquetExecutionFactory();
         translator.start();
 
@@ -34,7 +36,7 @@ public class TestParquetExecution {
         try {
             execution.execute();
 
-            ArrayList results = new ArrayList();
+            ArrayList<Object> results = new ArrayList<>();
             while (true) {
                 List<?> row = execution.next();
                 if (row == null) {
@@ -60,7 +62,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select * from Table1");
+        ArrayList<?> results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[[21232, 98989, 9898999], 1, Phelps, Michael], [[21999, 98909, 809809], 2, Marie, Anne]]", results.toString());
     }
 
@@ -75,7 +77,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select * from Table1");
+        ArrayList<?> results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[Aditya, 1, Sharma], [Animesh, 2, Sharma], [Shradha, 3, Khapra]]", results.toString());
     }
 
@@ -91,7 +93,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January'");
+        ArrayList<?> results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January'");
         Assert.assertEquals("[[Michael], [Anne]]",results.toString());
     }
 
@@ -106,7 +108,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select firstname, lastname from Table1");
+        ArrayList<?> results = helpExecute(ddl, connection, "select firstname, lastname from Table1");
         Assert.assertEquals("[[Aditya, Sharma], [Animesh, Sharma], [Shradha, Khapra]]", results.toString());
     }
 
@@ -121,7 +123,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select firstname, lastname from Table1 WHERE firstname='Aditya'");
+        ArrayList<?> results = helpExecute(ddl, connection, "select firstname, lastname from Table1 WHERE firstname='Aditya'");
         Assert.assertEquals("[[Aditya, Sharma]]", results.toString());
     }
 
@@ -137,7 +139,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January' and name='Michael'");
+        ArrayList<?> results = helpExecute(ddl, connection, "select name from Table1 WHERE \"year\"=2019 and \"month\"='January' and name='Michael'");
         Assert.assertEquals("[[Michael]]",results.toString());
     }
 
@@ -153,8 +155,38 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select name, \"year\" from Table1 WHERE \"year\"=2019 and \"month\"='January'");
+        ArrayList<?> results = helpExecute(ddl, connection, "select name, \"year\" from Table1 WHERE \"year\"=2019 and \"month\"='January'");
         Assert.assertEquals("[[Michael, 2019], [Anne, 2019]]",results.toString());
+    }
+
+    public void testParquetExecutionWithNePredicate() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "	contacts integer[] ,\n" +
+                "	id long ,\n" +
+                "	last string ,\n" +
+                "	name string ,\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList<?> results = helpExecute(ddl, connection, "select * from Table1 WHERE id<>2");
+        assertEquals(3, results.size());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testParquetExecutionWithInvalidType() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "   contacts integer[] ,\n" +
+                "   id integer ,\n" +
+                "   last string ,\n" +
+                "   name string ,\n" +
+                "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        helpExecute(ddl, connection, "select * from Table1 WHERE id=1");
     }
 
     @Test
@@ -168,7 +200,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id=2");
+        ArrayList<?> results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id=2");
         Assert.assertEquals("[[2, Animesh]]", results.toString());
     }
 
@@ -183,7 +215,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>2");
+        ArrayList<?> results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>2");
         Assert.assertEquals("[[3, Shradha]]", results.toString());
     }
 
@@ -198,7 +230,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<3");
+        ArrayList<?> results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<3");
         Assert.assertEquals("[[1, Aditya], [2, Animesh]]", results.toString());
     }
 
@@ -213,7 +245,7 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>=2");
+        ArrayList<?> results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>=2");
         Assert.assertEquals("[[2, Animesh], [3, Shradha]]", results.toString());
     }
 
@@ -228,38 +260,8 @@ public class TestParquetExecution {
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<=2");
+        ArrayList<?> results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id<=2");
         Assert.assertEquals("[[1, Aditya], [2, Animesh]]", results.toString());
-    }
-
-    @Test
-    public void testParquetExecutionWithRowFilterLtNotEq() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	firstname string ,\n" +
-                "	id long ,\n" +
-                "	lastname string ,\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
-
-        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
-
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id!=2");
-        Assert.assertEquals("[[1, Aditya], [3, Shradha]]", results.toString());
-    }
-
-    @Test
-    public void testParquetExecutionWithRowFilterWithMultiplePredicatesOnSameColumn() throws Exception {
-        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	firstname string ,\n" +
-                "	id long ,\n" +
-                "	lastname string ,\n" +
-                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
-
-        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
-
-        ArrayList results = helpExecute(ddl, connection, "select id,firstname from Table1 WHERE id>1 and id<3");
-        Assert.assertEquals("[[2, Animesh]]", results.toString());
     }
 
 }
