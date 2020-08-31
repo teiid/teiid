@@ -18,6 +18,7 @@
     <module>file-s3</module>
     <module>translator-file</module>
     <module>translator-excel</module>
+    <module>translator-parquet</module>
   </modules>
 
 </project>
