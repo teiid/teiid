@@ -21,7 +21,7 @@ package org.teiid.query.sql.lang;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
 
-public class ExpressionCriteria extends Criteria {
+public class ExpressionCriteria extends PredicateCriteria {
 
     private Expression expression;
 

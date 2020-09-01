@@ -18,7 +18,8 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
@@ -83,7 +84,7 @@ public class TestCalculateCostUtil {
         return joinNode;
     }
 
-    void helpTestEstimateCost(String critString, float childCost, float expectedResult, QueryMetadataInterface metadata) throws Exception {
+    public static void helpTestEstimateCost(String critString, float childCost, float expectedResult, QueryMetadataInterface metadata) throws Exception {
         Criteria crit = helpGetCriteria(critString, metadata);
         PlanNode select = RelationalPlanner.createSelectNode(crit, false);
 
