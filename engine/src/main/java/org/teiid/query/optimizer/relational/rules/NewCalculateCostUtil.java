@@ -21,8 +21,18 @@ package org.teiid.query.optimizer.relational.rules;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -44,8 +54,19 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.AbstractSetCriteria;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.NotCriteria;
+import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -942,7 +963,7 @@ public class NewCalculateCostUtil {
             }
             cost -= nextCost;
         } else {
-            cost = estimatePredicateCost(childCost, currentNode, (PredicateCriteria) crit, metadata);
+            cost = estimatePredicateCost(childCost, currentNode, crit, metadata);
 
             if (cost == UNKNOWN_VALUE) {
                 return childCost;
@@ -1019,7 +1040,7 @@ public class NewCalculateCostUtil {
      * @return
      * @since 4.3
      */
-    private static float estimatePredicateCost(float childCost, PlanNode currentNode, PredicateCriteria predicateCriteria, QueryMetadataInterface metadata)
+    private static float estimatePredicateCost(float childCost, PlanNode currentNode, Criteria predicateCriteria, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
 
         float cost = childCost;

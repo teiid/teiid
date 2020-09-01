@@ -79,6 +79,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.relational.rules.TestCalculateCostUtil;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Expression;
@@ -1208,6 +1209,11 @@ public class TestSQLXMLProcessing {
         assertNull(rm.getException());
         assertEquals(2, rm.getResultsList().size());
         tester.tearDown();
+    }
+
+    @Test public void testXmlExistsCost() throws Exception {
+        String critString = "xmlexists('/a/b' passing pm1.g1.e1)"; //$NON-NLS-1$
+        TestCalculateCostUtil.helpTestEstimateCost(critString, 1000, 1000, RealMetadataFactory.example1Cached());
     }
 
 }

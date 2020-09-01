@@ -19,9 +19,9 @@
 package org.teiid.query.sql.symbol;
 
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.PredicateCriteria;
 
-public class XMLExists extends Criteria {
+public class XMLExists extends PredicateCriteria {
 
     private XMLQuery xmlQuery;
 
