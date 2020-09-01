@@ -75,4 +75,14 @@ public class ParquetExecutionFactory extends ExecutionFactory<ConnectionFactory,
     public boolean supportsPartialFiltering() {
         return true;
     }
+
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsIsNullCriteria() {
+        return true;
+    }
 }

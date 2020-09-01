@@ -58,7 +58,7 @@ public class ParquetExecution extends BaseParquetExecution implements ResultSetE
         int field = 0;
         List<String> expectedColumnNames = this.visitor.getProjectedColumnNames();
         for (int i = 0; i < expectedColumnNames.size(); i++) {
-            if(this.partitionedColumnsHm.contains(expectedColumnNames.get(i))){
+            if(this.visitor.getPartitionedColumns().contains(expectedColumnNames.get(i))){
                 output.add(partitionedColumnsValue.get(expectedColumnNames.get(i)));
             }else {
                 Type fieldType = row.getType().getType(field);
