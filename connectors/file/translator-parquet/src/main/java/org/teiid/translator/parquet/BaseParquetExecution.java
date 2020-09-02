@@ -153,42 +153,37 @@ public class BaseParquetExecution implements Execution {
             Comparison comparison = (Comparison)condition;
             String columnName = ((ColumnReference)comparison.getLeftExpression()).getMetadataObject().getSourceName();
             Literal l = (Literal) comparison.getRightExpression();
+            Comparable<?> value = (Comparable<?>) l.getValue();
             Column<?> column;
-            Comparable<?> value = null;
             switch (comparison.getRightExpression().getType().getName()) {
                 case "java.lang.String":
                     column = FilterApi.binaryColumn(columnName);
-                    String stringValue = (String)l.getValue();
+                    String stringValue = (String)value;
                     if (stringValue != null) {
                         value = Binary.fromString(stringValue);
                     }
                     break;
                 case "org.teiid.core.types.BinaryType":
                     column = FilterApi.binaryColumn(columnName);
-                    BinaryType binaryType = (BinaryType) l.getValue();
+                    BinaryType binaryType = (BinaryType) value;
                     if (binaryType != null) {
                         value = Binary.fromConstantByteArray(binaryType.getBytes());
                     }
                     break;
                 case "java.lang.Long":
                     column = FilterApi.longColumn(columnName);
-                    value = (Long) l.getValue();
                     break;
                 case "java.lang.Integer":
                     column = FilterApi.intColumn(columnName);
-                    value = (Integer) l.getValue();
                     break;
                 case "java.lang.Boolean":
                     column = FilterApi.booleanColumn(columnName);
-                    value = (Boolean) l.getValue();
                     break;
                 case "java.lang.Double":
                     column = FilterApi.doubleColumn(columnName);
-                    value = (Double) l.getValue();
                     break;
                 case "java.lang.Float":
                     column = FilterApi.floatColumn(columnName);
-                    value = (Float) l.getValue();
                     break;
                 default:
                     throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");

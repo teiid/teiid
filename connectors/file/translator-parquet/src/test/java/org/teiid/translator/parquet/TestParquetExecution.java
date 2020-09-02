@@ -64,6 +64,9 @@ public class TestParquetExecution {
 
         ArrayList<?> results = helpExecute(ddl, connection, "select * from Table1");
         Assert.assertEquals("[[[21232, 98989, 9898999], 1, Phelps, Michael], [[21999, 98909, 809809], 2, Marie, Anne]]", results.toString());
+
+        results = helpExecute(ddl, connection, "select * from Table1 WHERE contacts = ARRAY[21232, 98989, 9898999]");
+        Assert.assertEquals("[[[21232, 98989, 9898999], 1, Phelps, Michael], [[21999, 98909, 809809], 2, Marie, Anne]]", results.toString());
     }
 
     @Test

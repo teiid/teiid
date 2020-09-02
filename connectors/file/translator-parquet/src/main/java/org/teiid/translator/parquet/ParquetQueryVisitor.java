@@ -93,7 +93,7 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
         //visit the from to initialize the partitioned columns
         visitNodes(obj.getFrom());
 
-        for (Condition c : LanguageUtil.separateCriteriaByAnd(obj.getWhere())) {
+        outer: for (Condition c : LanguageUtil.separateCriteriaByAnd(obj.getWhere())) {
             Collection<ColumnReference> cols = CollectorVisitor.collectElements(c);
             boolean partitioned = false;
             boolean nonPartitioned = false;
@@ -102,6 +102,12 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
                     partitioned = true;
                 } else {
                     nonPartitioned = true;
+                }
+                if (ref.getType().isArray()) {
+                    //we can't compare arrays with the filterapi, so the whole conjunct is bad
+                    continue outer;
+                    //TODO: we could also validate the other types here, but that's more
+                    //of a metadata error
                 }
             }
             if (partitioned && nonPartitioned) {
@@ -119,7 +125,7 @@ public class ParquetQueryVisitor extends HierarchyVisitor {
                     Column column = cr.getMetadataObject();
                     String columnName = column.getSourceName();
                     Comparison old = partitionedComparisons.put(columnName, comp);
-                    assert old == null;
+                    assert old == null; //should only be a single equality
                 }
             } else if (nonPartitioned) {
                 nonPartionedConditions.add(c);
