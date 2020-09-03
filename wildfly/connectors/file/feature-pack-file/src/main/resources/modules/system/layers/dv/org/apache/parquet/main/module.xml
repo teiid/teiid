@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.apache.parquet">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.apache.parquet:parquet-hadoop}" />
+        <artifact name="${org.apache.parquet:parquet-column}" />
+        <artifact name="${org.apache.parquet:parquet-common}" />
+        <artifact name="${org.apache.parquet:parquet-jackson}" />
+        <artifact name="${org.apache.parquet:parquet-encoding}" />
+        <artifact name="${org.apache.parquet:parquet-format-structures}" />
+        <artifact name="${org.xerial.snappy:snappy-java}" />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="org.slf4j"/>
+        <module name="org.apache.hadoop.client" services="import"/>
+    </dependencies>
+</module>

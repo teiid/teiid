@@ -1886,4 +1886,15 @@ public class TestQueryRewriter {
 
     }
 
+    @Test public void testBooleanLiteralComparisons() throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteCriteria("pm1.g1.e3 > TRUE", "1 = 0", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 > FALSE", "pm1.g1.e3 = TRUE", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 >= TRUE", "pm1.g1.e3 = TRUE", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 >= FALSE", "pm1.g1.e3 IS NOT NULL", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 < TRUE", "pm1.g1.e3 = FALSE", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 < FALSE", "1 = 0", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 <= TRUE", "pm1.g1.e3 IS NOT NULL", false); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e3 <= FALSE", "pm1.g1.e3 = FALSE", false); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
 }
