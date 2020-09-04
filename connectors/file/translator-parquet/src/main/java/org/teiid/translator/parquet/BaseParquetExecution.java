@@ -343,6 +343,8 @@ public class BaseParquetExecution implements Execution {
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new TranslatorException(e);
             }
+        } else {
+            throw new AssertionError("unexpected predicate");
         }
         return filterPredicate;
     }

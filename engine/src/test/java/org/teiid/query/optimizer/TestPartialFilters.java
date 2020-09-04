@@ -96,12 +96,27 @@ public class TestPartialFilters {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("a"), Arrays.asList("d")});
     }
 
-    @Test public void testFilterPlanningFullyPushed() throws Exception {
+    @Test public void testFilterPlanningAddingSelect() throws Exception {
         String ddl = "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), group_dn string options (nameinsource 'memberOf', \"teiid_rel:partial_filter\" true)) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
-        ProcessorPlan plan = TestOptimizer.helpPlan("select user_dn from people_groups where group_dn = 'a'", RealMetadataFactory.fromDDL(ddl, "x", "y"), new String[] {"SELECT g_0.user_dn FROM y.People_Groups AS g_0 WHERE g_0.group_dn = 'a'"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        ProcessorPlan plan = TestOptimizer.helpPlan("select user_dn from people_groups where group_dn = 'a'", RealMetadataFactory.fromDDL(ddl, "x", "y"), new String[] {"SELECT g_0.user_dn, g_0.group_dn FROM y.People_Groups AS g_0 WHERE g_0.group_dn = 'a'"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                0,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });
     }
 
     @Test public void testFilterPlanningJoin() throws Exception {

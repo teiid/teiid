@@ -59,12 +59,46 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.GroupBy;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SourceHint;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -117,8 +151,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 
                         outer: for (Criteria crit : Criteria.separateCriteriaByAnd(query.getCriteria())) {
                             for (ElementSymbol es :ElementCollectorVisitor.getElements(crit, true)) {
-                                if (Boolean.valueOf(metadata.getExtensionProperty(es.getMetadataID(), PARTIAL_PROPERTY, false))
-                                        && select.contains(es)) {
+                                if (Boolean.valueOf(metadata.getExtensionProperty(es.getMetadataID(), PARTIAL_PROPERTY, false))) {
                                      toFilter.add((Criteria) crit.clone());
                                      continue outer;
                                 }
@@ -136,6 +169,11 @@ public final class RuleCollapseSource implements OptimizerRule {
                             }
                             if (select.size() != query.getSelect().getProjectedSymbols().size()) {
                                 //correct projection
+                                for (ElementSymbol es : new ArrayList<>(select).subList(query.getSelect().getProjectedSymbols().size(), select.size())) {
+                                    if (!RuleRaiseAccess.canPushSymbol(es, true, modelId, metadata, capFinder, analysisRecord)) {
+                                        throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, es, modelId));
+                                    }
+                                }
                                 query.getSelect().setSymbols(select);
                                 accessNode.setProperty(Info.OUTPUT_COLS, new ArrayList<Expression>(select));
                             }
