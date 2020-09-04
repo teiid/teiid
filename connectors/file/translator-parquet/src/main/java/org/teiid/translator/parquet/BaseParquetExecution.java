@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +42,21 @@ import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.filter2.compat.FilterCompat;
 import org.apache.parquet.filter2.predicate.FilterApi;
 import org.apache.parquet.filter2.predicate.FilterPredicate;
+import org.apache.parquet.filter2.predicate.FilterPredicate.Visitor;
+import org.apache.parquet.filter2.predicate.Operators.And;
 import org.apache.parquet.filter2.predicate.Operators.Column;
+import org.apache.parquet.filter2.predicate.Operators.Eq;
+import org.apache.parquet.filter2.predicate.Operators.Gt;
+import org.apache.parquet.filter2.predicate.Operators.GtEq;
+import org.apache.parquet.filter2.predicate.Operators.LogicalNotUserDefined;
+import org.apache.parquet.filter2.predicate.Operators.Lt;
+import org.apache.parquet.filter2.predicate.Operators.LtEq;
+import org.apache.parquet.filter2.predicate.Operators.Not;
+import org.apache.parquet.filter2.predicate.Operators.NotEq;
+import org.apache.parquet.filter2.predicate.Operators.Or;
+import org.apache.parquet.filter2.predicate.Operators.UserDefined;
+import org.apache.parquet.filter2.predicate.Statistics;
+import org.apache.parquet.filter2.predicate.UserDefinedPredicate;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.ColumnIOFactory;
@@ -50,6 +66,8 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.file.VirtualFile;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.AndOr;
@@ -68,6 +86,134 @@ import org.teiid.translator.TranslatorException;
 
 
 public class BaseParquetExecution implements Execution {
+
+    /**
+     * Provides a simple visitation to evaluate the path filter
+     */
+    static Visitor<Boolean> FILE_PATH_VISITOR = new Visitor<Boolean>() {
+        @Override
+        public <T extends Comparable<T>> Boolean visit(
+                Eq<T> eq) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends Comparable<T>> Boolean visit(
+                NotEq<T> notEq) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends Comparable<T>> Boolean visit(
+                Lt<T> lt) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends Comparable<T>> Boolean visit(
+                LtEq<T> ltEq) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends Comparable<T>> Boolean visit(
+                Gt<T> gt) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends Comparable<T>> Boolean visit(
+                GtEq<T> gtEq) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(Not not) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T extends Comparable<T>, U extends UserDefinedPredicate<T>> Boolean visit(
+                LogicalNotUserDefined<T, U> udp) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Boolean visit(And and) {
+            return and.getLeft().accept(this) && and.getRight().accept(this);
+        }
+
+        @Override
+        public Boolean visit(Or or) {
+            return or.getLeft().accept(this) || or.getRight().accept(this);
+        }
+
+        @Override
+        public <T extends Comparable<T>, U extends UserDefinedPredicate<T>> Boolean visit(
+                UserDefined<T, U> udp) {
+            return udp.getUserDefinedPredicate().keep(null);
+        }
+    };
+
+    /**
+     * Implements predicates against the file path
+     */
+    private class FilePathPredicate extends UserDefinedPredicate implements Serializable {
+
+        private String columnName;
+        private Comparison.Operator operator;
+        private Comparable referenceValue;
+
+        public FilePathPredicate(String columnName, Operator operator, Comparable referenceValue) {
+            this.columnName = columnName;
+            this.operator = operator;
+            this.referenceValue = referenceValue;
+        }
+
+        @Override
+        public boolean acceptsNullValue() {
+            return true;
+        }
+
+        @Override
+        public boolean keep(Comparable value) {
+            Comparable currentValue = partitionedColumnsValue.get(columnName);
+            if (currentValue == null) {
+                throw new AssertionError("null partition value not expected"); //$NON-NLS-1$
+            }
+            if (referenceValue == null) {
+                //effectively the is not null check
+                return operator == Operator.NE;
+            }
+            int result = currentValue.compareTo(referenceValue);
+            switch (operator) {
+            case EQ:
+                return result == 0;
+            case GE:
+                return result >= 0;
+            case GT:
+                return result > 0;
+            case LE:
+                return result <= 0;
+            case LT:
+                return result < 0;
+            case NE:
+                return result != 0;
+            default: throw new AssertionError();
+            }
+        }
+
+        @Override
+        public boolean canDrop(Statistics statistics) {
+            return !keep(null);
+        }
+
+        @Override
+        public boolean inverseCanDrop(Statistics statistics) {
+            return keep(null);
+        }
+    }
+
     @SuppressWarnings("unused")
     protected ExecutionContext executionContext;
     @SuppressWarnings("unused")
@@ -84,8 +230,9 @@ public class BaseParquetExecution implements Execution {
     private RecordReader<Group> rowIterator;
     private MessageColumnIO columnIO;
     private long pageRowCount;
-    protected HashMap<String, String> partitionedColumnsValue;
+    protected HashMap<String, Comparable<?>> partitionedColumnsValue = new HashMap<>();
     private FilterCompat.Filter rowGroupFilter;
+    private FilterPredicate filePathFilter;
 
     public BaseParquetExecution(ExecutionContext executionContext,
                                 RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable) {
@@ -103,9 +250,15 @@ public class BaseParquetExecution implements Execution {
     public void execute() throws TranslatorException {
         String path = this.visitor.getParquetPath();
         if(!this.visitor.getPartitionedColumns().isEmpty()) {
-            path += getDirectoryPath(this.visitor.getPartitionedComparisons());
+            path = getDirectoryPath(path, this.visitor.getPartitionedComparisons());
         }
-        rowGroupFilter = getRowGroupFilter(this.visitor.getNonPartionedConditions());
+        FilterPredicate predicate = getRowGroupFilter(this.visitor.getNonPartionedConditions());
+        if (predicate == null) {
+            this.rowGroupFilter = FilterCompat.NOOP;
+        } else {
+            this.rowGroupFilter = FilterCompat.get(predicate);
+        }
+        filePathFilter = getRowGroupFilter(this.visitor.getPartitionedConditions());
         this.parquetFiles = VirtualFileConnection.Util.getFiles(path, this.connection, true, false);
         VirtualFile nextParquetFile = getNextParquetFile();
         if (nextParquetFile != null) {
@@ -113,22 +266,23 @@ public class BaseParquetExecution implements Execution {
         }
     }
 
-    private String getDirectoryPath(Map<String, Comparison> predicates) {
-        StringBuilder path = new StringBuilder(); // because we are only supporting the equality comparison as of now, otherwise we would return a list of paths to iterate over
-        for (String s : this.visitor.getPartitionedColumns()) {
-            path.append("/").append(s.replaceAll("[*]", "[*][*]")).append("=");
+    private String getDirectoryPath(String root, Map<String, Comparison> predicates) {
+        StringBuilder path = new StringBuilder(root); // because we are only supporting the equality comparison as of now, otherwise we would return a list of paths to iterate over
+        if (!root.endsWith("/")) {
+            path.append("/");
+        }
+        for (String s : this.visitor.getPartitionedColumns().keySet()) {
+            path.append(s.replaceAll("[*]", "[*][*]")).append("=");
             String value = "*";
             Comparison predicate = predicates.get(s);
             if (predicate != null) {
                 Literal l = (Literal) predicate.getRightExpression();
-                if (predicate.getOperator() == Comparison.Operator.EQ) {
-                    value = l.getValue().toString().replaceAll("[*]", "[*][*]");
-                }
+                assert predicate.getOperator() == Comparison.Operator.EQ;
+                value = l.getValue().toString().replaceAll("[*]", "[*][*]");
             }
-            //TODO: handle the other comparisons in the execution
-            path.append(value);
+            path.append(value).append("/");
         }
-        path.append("/*");
+        path.append("*");
         return path.toString();
     }
 
@@ -151,49 +305,35 @@ public class BaseParquetExecution implements Execution {
         }
         if (condition instanceof Comparison) {
             Comparison comparison = (Comparison)condition;
-            String columnName = ((ColumnReference)comparison.getLeftExpression()).getMetadataObject().getSourceName();
-            Literal l = (Literal) comparison.getRightExpression();
-            Column<?> column;
-            Comparable<?> value = null;
-            switch (comparison.getRightExpression().getType().getName()) {
-                case "java.lang.String":
-                    column = FilterApi.binaryColumn(columnName);
-                    String stringValue = (String)l.getValue();
-                    if (stringValue != null) {
-                        value = Binary.fromString(stringValue);
-                    }
-                    break;
-                case "org.teiid.core.types.BinaryType":
-                    column = FilterApi.binaryColumn(columnName);
-                    BinaryType binaryType = (BinaryType) l.getValue();
-                    if (binaryType != null) {
-                        value = Binary.fromConstantByteArray(binaryType.getBytes());
-                    }
-                    break;
-                case "java.lang.Long":
-                    column = FilterApi.longColumn(columnName);
-                    value = (Long) l.getValue();
-                    break;
-                case "java.lang.Integer":
-                    column = FilterApi.intColumn(columnName);
-                    value = (Integer) l.getValue();
-                    break;
-                case "java.lang.Boolean":
-                    column = FilterApi.booleanColumn(columnName);
-                    value = (Boolean) l.getValue();
-                    break;
-                case "java.lang.Double":
-                    column = FilterApi.doubleColumn(columnName);
-                    value = (Double) l.getValue();
-                    break;
-                case "java.lang.Float":
-                    column = FilterApi.floatColumn(columnName);
-                    value = (Float) l.getValue();
-                    break;
-                default:
-                    throw new TranslatorException("The type " + comparison.getRightExpression().getType().getName() + " is not supported for comparison.");
+            org.teiid.metadata.Column teiidCol = ((ColumnReference)comparison.getLeftExpression()).getMetadataObject();
+            String columnName = teiidCol.getSourceName();
+            if (!(comparison.getRightExpression() instanceof Literal)) {
+                throw new TranslatorException("The value " + comparison.getRightExpression() + " is not supported for comparison.");
             }
+            Literal l = (Literal) comparison.getRightExpression();
+            Comparable<?> value = (Comparable<?>) l.getValue();
+
+            if (this.visitor.getPartitionedColumns().containsKey(columnName)) {
+                Column<?> referenceCol = this.visitor.getReferenceColumn();
+                try {
+                    return toUserDefinedPredicate(referenceCol, new FilePathPredicate(columnName, comparison.getOperator(), value));
+                } catch (NoSuchMethodException | IllegalAccessException
+                        | InvocationTargetException e) {
+                    throw new TranslatorException(e);
+                }
+            }
+
+            String typeName = comparison.getRightExpression().getType().getName();
+            Column<?> column = createFilterColumn(columnName, typeName);
+
             try {
+                if (value instanceof String) {
+                    String stringValue = (String)value;
+                    value = Binary.fromString(stringValue);
+                } else if (value instanceof BinaryType) {
+                    BinaryType binaryType = (BinaryType) value;
+                    value = Binary.fromConstantByteArray(binaryType.getBytes());
+                }
                 filterPredicate = toFilterPredicate(comparison, column, value);
 
                 //the api implements java like null comparisons, so we need an additional null filter
@@ -207,9 +347,46 @@ public class BaseParquetExecution implements Execution {
         return filterPredicate;
     }
 
-    private FilterCompat.Filter getRowGroupFilter(List<Condition> columnPredicates) throws TranslatorException {
+    /**
+     * Create a column for the {@link FilterApi}
+     * @param typeName the Java (not Teiid) type name
+     */
+    static Column<?> createFilterColumn(String columnName, String typeName)
+            throws TranslatorException {
+        Column<?> column;
+        switch (typeName) {
+            case "java.lang.String":
+                column = FilterApi.binaryColumn(columnName);
+                break;
+            case "org.teiid.core.types.BinaryType":
+                column = FilterApi.binaryColumn(columnName);
+                break;
+            case "java.lang.Long":
+                column = FilterApi.longColumn(columnName);
+                break;
+            case "java.lang.Integer":
+                column = FilterApi.intColumn(columnName);
+                break;
+            case "java.lang.Boolean":
+                column = FilterApi.booleanColumn(columnName);
+                //the filterapi does not support the concept of a comparable boolean
+                //the engine should handle the appropriate conversion prior to this
+                break;
+            case "java.lang.Double":
+                column = FilterApi.doubleColumn(columnName);
+                break;
+            case "java.lang.Float":
+                column = FilterApi.floatColumn(columnName);
+                break;
+            default:
+                throw new TranslatorException("The type " + typeName + " is not supported for comparison.");
+        }
+        return column;
+    }
+
+    private FilterPredicate getRowGroupFilter(List<Condition> columnPredicates) throws TranslatorException {
         if(columnPredicates.size() == 0){
-            return FilterCompat.NOOP;
+            return null;
         }
         FilterPredicate combinedFilterPredicate = null, filterPredicate;
         for (Condition cond : columnPredicates) {
@@ -220,8 +397,7 @@ public class BaseParquetExecution implements Execution {
                 combinedFilterPredicate = FilterApi.and(combinedFilterPredicate, filterPredicate);
             }
         }
-        assert combinedFilterPredicate != null;
-        return FilterCompat.get(combinedFilterPredicate);
+        return combinedFilterPredicate;
     }
 
     private FilterPredicate toFilterPredicate(Comparison comparison,
@@ -229,6 +405,13 @@ public class BaseParquetExecution implements Execution {
             throws NoSuchMethodException, TranslatorException,
             IllegalAccessException, InvocationTargetException {
         Method m = FilterApi.class.getMethod(getMethodName(comparison.getOperator()), Column.class, Comparable.class);
+        return (FilterPredicate) m.invoke(null, column, value);
+    }
+
+    private FilterPredicate toUserDefinedPredicate(Column<?> column, UserDefinedPredicate<?> value)
+            throws NoSuchMethodException,
+            IllegalAccessException, InvocationTargetException {
+        Method m = FilterApi.class.getMethod("userDefined", Column.class, UserDefinedPredicate.class);
         return (FilterPredicate) m.invoke(null, column, value);
     }
 
@@ -246,39 +429,46 @@ public class BaseParquetExecution implements Execution {
 
     private void readParquetFile(VirtualFile parquetFile) throws TranslatorException {
         try (InputStream parquetFileStream = parquetFile.openInputStream(!immutable)) {
-            if(!this.visitor.getPartitionedColumns().isEmpty()) {
-                partitionedColumnsValue = getPartitionedColumnsValues(parquetFile);
-            }
             File localFile = createTempFile(parquetFileStream);
             Path path = new Path(localFile.toURI());
             Configuration config = new Configuration();
             reader = ParquetFileReader.open(HadoopInputFile.fromPath(path, config), ParquetReadOptions.builder().withRecordFilter(rowGroupFilter).build());
             MessageType schema = reader.getFooter().getFileMetaData().getSchema();
-            filteredSchema = getFilteredSchema(schema, this.visitor.getProjectedColumnNames());
+            filteredSchema = getFilteredSchema(schema, this.visitor.getAllColumns());
             columnIO = new ColumnIOFactory().getColumnIO(filteredSchema);
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
     }
 
-    private HashMap<String, String> getPartitionedColumnsValues(VirtualFile parquetFile) {
-        HashMap<String, String> hm = new HashMap<>();
+    private void parsePartitionedColumnsValues(VirtualFile parquetFile) throws TranslatorException {
         String path = parquetFile.getPath().substring(this.visitor.getParquetPath().length());
         String[] columns = path.split("/");
         for(int i = 0; i < columns.length; i++){
-            if(columns[i].contains("=")){
-                int indexOfEquals = columns[i].indexOf("=");
-                hm.put(columns[i].substring(0, indexOfEquals), columns[i].substring(indexOfEquals+1));
+            int indexOfEquals = columns[i].indexOf("=");
+            if(indexOfEquals == -1){
+                continue;
             }
+            String name = columns[i].substring(0, indexOfEquals);
+            String stringValue = columns[i].substring(indexOfEquals+1);
+            Comparable value = stringValue;
+            org.teiid.metadata.Column partColumn = this.visitor.getPartitionedColumns().get(name);
+            if (partColumn != null) {
+                try {
+                    value = (Comparable)DataTypeManager.transformValue(stringValue, partColumn.getJavaType());
+                } catch (TransformationException e) {
+                    throw new TranslatorException(e);
+                }
+            }
+            partitionedColumnsValue.put(name, value);
         }
-        return hm;
     }
 
-    private MessageType getFilteredSchema(MessageType schema, List<String> expectedColumnNames) {
+    private MessageType getFilteredSchema(MessageType schema, LinkedHashSet<String> expectedColumnNames) {
         List<Type> allColumns = schema.getFields();
         List<Type> selectedColumns = new ArrayList<>();
         for(String columnName: expectedColumnNames) {
-            if(!this.visitor.getPartitionedColumns().contains(columnName)) {
+            if(!this.visitor.getPartitionedColumns().containsKey(columnName)) {
                 selectedColumns.add(allColumns.get(schema.getFieldIndex(columnName)));
             }
         }
@@ -326,10 +516,17 @@ public class BaseParquetExecution implements Execution {
         }
     }
 
-    protected VirtualFile getNextParquetFile() {
+    protected VirtualFile getNextParquetFile() throws TranslatorException {
         while (this.parquetFiles.length > this.fileCount.get()) {
             VirtualFile f = this.parquetFiles[this.fileCount.getAndIncrement()];
             if (f.getName().endsWith(".parquet")) {
+                if(!this.visitor.getPartitionedColumns().isEmpty()) {
+                    parsePartitionedColumnsValues(f);
+                    if (filePathFilter != null && !filePathFilter.accept(FILE_PATH_VISITOR)) {
+                        //use the next file as the path does not match
+                        continue;
+                    }
+                }
                 return f;
             }
         }

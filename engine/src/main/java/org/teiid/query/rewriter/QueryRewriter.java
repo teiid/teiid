@@ -200,6 +200,9 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class QueryRewriter {
 
+    private static final Constant TRUE_CONSTANT = new Constant(true);
+    private static final Constant FALSE_CONSTANT = new Constant(false);
+
     private static final String WRITE_THROUGH = "write-through"; //$NON-NLS-1$
 
     private static final Constant ZERO_CONSTANT = new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER);
@@ -1584,6 +1587,41 @@ public class QueryRewriter {
             // Check for < or > operator as we have to switch it
             criteria.setOperator(criteria.getReverseOperator());
             rightConstant = true;
+        }
+
+        if (rightConstant
+                && criteria.getLeftExpression().getType() == DataTypeManager.DefaultDataClasses.BOOLEAN
+                && criteria.getRightExpression() instanceof Constant) {
+            //simplify to an  comparison
+            if (TRUE_CONSTANT.equals(criteria.getRightExpression())) {
+                switch (criteria.getOperator()) {
+                case CompareCriteria.GE:
+                    criteria.setOperator(CompareCriteria.EQ);
+                    break;
+                case CompareCriteria.GT:
+                    return getSimpliedCriteria(criteria, criteria.getLeftExpression(), false, true);
+                case CompareCriteria.LT:
+                    criteria.setOperator(CompareCriteria.EQ);
+                    criteria.setRightExpression((Expression) FALSE_CONSTANT.clone());
+                    break;
+                case CompareCriteria.LE:
+                    return getSimpliedCriteria(criteria, criteria.getLeftExpression(), true, true);
+                }
+            } else if (FALSE_CONSTANT.equals(criteria.getRightExpression())) {
+                switch (criteria.getOperator()) {
+                case CompareCriteria.GE:
+                    return getSimpliedCriteria(criteria, criteria.getLeftExpression(), true, true);
+                case CompareCriteria.GT:
+                    criteria.setOperator(CompareCriteria.EQ);
+                    criteria.setRightExpression((Expression)TRUE_CONSTANT.clone());
+                    break;
+                case CompareCriteria.LT:
+                    return getSimpliedCriteria(criteria, criteria.getLeftExpression(), false, true);
+                case CompareCriteria.LE:
+                    criteria.setOperator(CompareCriteria.EQ);
+                    break;
+                }
+            }
         }
 
         Function f = null;

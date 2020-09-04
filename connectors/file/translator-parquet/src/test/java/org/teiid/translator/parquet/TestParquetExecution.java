@@ -3,6 +3,8 @@ package org.teiid.translator.parquet;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Assert;
@@ -54,11 +56,11 @@ public class TestParquetExecution {
     public void testParquetExecutionWithListAsAColumn() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
                 "	contacts integer[] ,\n" +
-                "	id integer ,\n" +
+                "	id long ,\n" +
                 "	last string ,\n" +
                 "	name string ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -70,10 +72,10 @@ public class TestParquetExecution {
     public void testParquetExecution() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
                 "	firstname string ,\n" +
-                "	id integer ,\n" +
+                "	id long ,\n" +
                 "	lastname string ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -84,12 +86,12 @@ public class TestParquetExecution {
     @Test
     public void testParquetExecutionWithDirectoryBasedPartitioning() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
-                "	id integer ,\n" +
+                "	id long ,\n" +
                 "	\"month\" string ,\n" +
                 "	name string ,\n" +
                 "	\"year\" long ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -98,18 +100,79 @@ public class TestParquetExecution {
     }
 
     @Test
+    public void testParquetExecutionWithPathFilter() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "   id long ,\n" +
+                "   \"month\" string ,\n" +
+                "   name string ,\n" +
+                "   \"year\" long ,\n" +
+                "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList<?> results = helpExecute(ddl, connection, "select name, \"month\" from Table1 WHERE \"month\">'January'");
+        Assert.assertEquals("[[Michael, March], [Anne, March]]",results.toString());
+
+        results = helpExecute(ddl, connection, "select name, \"year\" from Table1 WHERE \"year\"<2020");
+        Assert.assertEquals("[[Michael, 2019], [Anne, 2019], [Michael, 2019], [Anne, 2019]]",results.toString());
+
+        results = helpExecute(ddl, connection, "select name, \"year\" from Table1 WHERE \"year\">2021");
+        Assert.assertEquals("[]",results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionWithNestedPartitionFilter() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "   id long ,\n" +
+                "   \"month\" string ,\n" +
+                "   name string ,\n" +
+                "   \"year\" long ,\n" +
+                "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        //nested partition predicate
+        ArrayList<?> results = helpExecute(ddl, connection, "select name, \"month\" from Table1 WHERE \"month\"='January' or name='Michael'");
+
+        //this reads over multiple files, so compare without dictating the order
+        Assert.assertEquals(
+                new HashSet<List<String>>(
+                        Arrays.asList(Arrays.asList("Michael", "January"),
+                                Arrays.asList("Michael", "March"),
+                                Arrays.asList("Anne", "January"))),
+                new HashSet<>(results));
+    }
+
+    @Test
     public void testParquetExecutionWithProjectedColumns() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
                 "	firstname string ,\n" +
-                "	id integer ,\n" +
+                "	id long ,\n" +
                 "	lastname string ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
         ArrayList<?> results = helpExecute(ddl, connection, "select firstname, lastname from Table1");
         Assert.assertEquals("[[Aditya, Sharma], [Animesh, Sharma], [Shradha, Khapra]]", results.toString());
+    }
+
+    @Test
+    public void testParquetExecutionNonProjectedPredicate() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
+                "   firstname string ,\n" +
+                "   id long ,\n" +
+                "   lastname string ,\n" +
+                "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
+
+        VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
+
+        ArrayList<?> results = helpExecute(ddl, connection, "select firstname, lastname from Table1 where id = 1");
+        Assert.assertEquals("[[Aditya, Sharma]]", results.toString());
     }
 
     @Test
@@ -119,7 +182,7 @@ public class TestParquetExecution {
                 "	id integer ,\n" +
                 "	lastname string ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -135,7 +198,7 @@ public class TestParquetExecution {
                 "	name string ,\n" +
                 "	\"year\" long ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -151,7 +214,7 @@ public class TestParquetExecution {
                 "	name string ,\n" +
                 "	\"year\" long ,\n" +
                 "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'dir', \"teiid_parquet:PARTITIONED_COLUMNS\" 'year,month');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -166,7 +229,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -182,7 +245,7 @@ public class TestParquetExecution {
                 "   last string ,\n" +
                 "   name string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -190,15 +253,19 @@ public class TestParquetExecution {
         assertEquals(1, results.size());
     }
 
+    /*
+     * It is possible to resolve some type conflicts like this automatically, but for now
+     * we'll just error out
+     */
     @Test(expected = IllegalArgumentException.class)
     public void testParquetExecutionWithInvalidType() throws Exception {
         String ddl = "CREATE FOREIGN TABLE Table1 (\n" +
                 "   contacts integer[] ,\n" +
-                "   id integer ,\n" +
+                "   id integer ,\n" + //id is actually a long in the schema
                 "   last string ,\n" +
                 "   name string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -212,7 +279,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -227,7 +294,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -242,7 +309,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -257,7 +324,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -272,7 +339,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -287,7 +354,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -302,7 +369,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -317,7 +384,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 
@@ -332,7 +399,7 @@ public class TestParquetExecution {
                 "   id long ,\n" +
                 "   lastname string ,\n" +
                 "   CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-                ") OPTIONS (\"teiid_parquet:FILE\" 'people1.parquet');";
+                ") OPTIONS (\"teiid_parquet:LOCATION\" 'people1.parquet');";
 
         VirtualFileConnection connection = new JavaVirtualFileConnection(UnitTestUtil.getTestDataPath());
 

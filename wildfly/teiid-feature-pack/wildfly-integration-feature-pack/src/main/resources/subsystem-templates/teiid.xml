@@ -29,6 +29,7 @@
         <translator name="mysql" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="mysql5" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="oracle" module="org.jboss.teiid.translator.jdbc"/>
+        <translator name="parquet" module="org.jboss.teiid.translator.parquet"/>
         <translator name="postgresql" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="greenplum" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="sqlserver" module="org.jboss.teiid.translator.jdbc"/>

@@ -49,6 +49,10 @@
             <artifactId>translator-excel</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-parquet</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
             <artifactId>connector-file</artifactId>
             <version>${project.version}</version>

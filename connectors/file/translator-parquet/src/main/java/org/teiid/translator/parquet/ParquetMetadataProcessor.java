@@ -27,8 +27,8 @@ import org.teiid.translator.TranslatorException;
 public class ParquetMetadataProcessor implements MetadataProcessor<VirtualFileConnection> {
 
 
-    @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Parquet File Name", description="Parquet File name, use file name pattern if more than one file in the parent directory", required=true)
-    public static final String FILE = MetadataFactory.PARQUET_PREFIX+"FILE"; //$NON-NLS-1$
+    @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Parquet File Name", description="Parquet root location, may be a directory or single file", required=true)
+    public static final String LOCATION = MetadataFactory.PARQUET_PREFIX+"LOCATION"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= Table.class, datatype=String.class, display="Partitioned Columns", description="Partitioning Scheme Name, used to describe the partitioning scheme the parquet files follow", required=false)
     public static final String PARTITIONED_COLUMNS = MetadataFactory.PARQUET_PREFIX+"PARTITIONED_COLUMNS"; //$NON-NLS-1$

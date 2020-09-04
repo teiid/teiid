@@ -17,7 +17,9 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -164,7 +166,7 @@ public class TestODataSQLVistor {
 
 
             ArrayList<TranslatorException> exceptions =
-                    helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN') < 1", "Customers?$filter=startswith(CompanyName,'CN')&$select=ContactName");
+                    helpExecute("SELECT ContactName FROM Customers WHERE endswith('CN', CompanyName) > endswith('CN1', CompanyName)", "Customers?$filter=NOT (endswith(CompanyName,'CN'))&$select=ContactName");
             assertTrue(!exceptions.isEmpty());
             assertTrue(exceptions.get(0).getMessage().contains(ODataPlugin.Event.TEIID17018.name()));
         } finally {
