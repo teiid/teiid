@@ -20,8 +20,6 @@ package org.teiid.translator.salesforce.execution.visitors;
 
 public interface ICriteriaVisitor {
 
-    public boolean hasCriteria();
-
     public boolean hasOnlyIDCriteria();
 
     public String getTableName();
