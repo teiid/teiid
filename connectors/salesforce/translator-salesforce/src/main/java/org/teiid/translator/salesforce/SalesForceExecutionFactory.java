@@ -54,6 +54,7 @@ import com.sforce.soap.partner.sobject.SObject;
 
 @Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
+    public static final int MAX_RETRIEVE = 2000;
     private static final String SALESFORCE = "salesforce"; //$NON-NLS-1$
     private static final String EXCLUDES = "excludes";//$NON-NLS-1$
     private static final String INCLUDES = "includes";//$NON-NLS-1$
@@ -66,6 +67,8 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
         setSupportsInnerJoins(true);
         setTransactionSupport(TransactionSupport.NONE);
         setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+        setMaxDependentInPredicates(1);
+        setMaxInCriteriaSize(MAX_RETRIEVE); //retrieve limit
     }
 
     @Override
