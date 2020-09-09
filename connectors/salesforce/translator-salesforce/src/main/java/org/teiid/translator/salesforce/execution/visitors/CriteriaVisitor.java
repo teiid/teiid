@@ -44,6 +44,7 @@ import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.Util;
@@ -174,7 +175,10 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
             }
         }
         criteriaBuffer.add(CLOSE);
-        setHasCriteria(!criteria.isNegated() && isIdColumn(criteria.getLeftExpression()));
+        setHasCriteria(!criteria.isNegated()
+                && isIdColumn(criteria.getLeftExpression())
+                && criteria.getRightExpressions()
+                        .size() <= SalesForceExecutionFactory.MAX_RETRIEVE);
     }
 
     public void parseFunction( Function func ) {
