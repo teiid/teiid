@@ -172,6 +172,15 @@ public class TestVisitors {
         assertEquals(Arrays.asList(new String[]{"1", "2", "3"}), visitor.getIdInCriteria());
     }
 
+    @Test public void testOnlyIDsNotIN() throws Exception {
+        // this can resolve to a better performing retrieve call
+        Select command = (Select)translationUtility.parseCommand("select id, name from Account where ID NOT IN (1,2,3)"); //$NON-NLS-1$
+        SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertFalse(visitor.hasOnlyIdInCriteria());
+        assertEquals("Account", visitor.getTableName());
+    }
+
     @Test public void testJoin() throws Exception {
         Select command = (Select)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
         SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
