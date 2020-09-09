@@ -77,10 +77,9 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 
     //buffer of criteria parts
     protected List<String> criteriaBuffer = new ArrayList<String>();
-    protected boolean hasCriteria;
     protected List<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     protected NamedTable table;
-    boolean onlyIDCriteria;
+    Boolean onlyIDCriteria = null;
     protected boolean queryAll = Boolean.FALSE;
 
     // support for invoking a retrieve when possible.
@@ -95,7 +94,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     public void visit( Comparison criteria ) {
         addCompareCriteria(criteria);
         boolean isAcceptableID = (Operator.EQ == criteria.getOperator() && isIdColumn(criteria.getLeftExpression()));
-        setHasCriteria(true, isAcceptableID);
+        setHasCriteria(isAcceptableID);
         if (isAcceptableID) {
             this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
         }
@@ -129,7 +128,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
             criteria.setNegated(true);
         }
         // don't check if it's ID, Id LIKE '123%' still requires a query
-        setHasCriteria(true, false);
+        setHasCriteria(false);
     }
 
     @Override
@@ -175,7 +174,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
             }
         }
         criteriaBuffer.add(CLOSE);
-        setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
+        setHasCriteria(!criteria.isNegated() && isIdColumn(criteria.getLeftExpression()));
     }
 
     public void parseFunction( Function func ) {
@@ -406,28 +405,17 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         return result;
     }
 
-    @Override
-    public boolean hasCriteria() {
-        return hasCriteria;
-    }
-
-    public void setHasCriteria( boolean hasCriteria,
-                                boolean isIdCriteria ) {
-        if (isIdCriteria) {
-            if (hasCriteria()) {
-                this.onlyIDCriteria = false;
-            } else {
-                this.onlyIDCriteria = true;
-            }
-        } else if (this.onlyIDCriteria) {
-            this.onlyIDCriteria = false;
+    public void setHasCriteria( boolean isIdCriteria ) {
+        if (isIdCriteria && onlyIDCriteria == null) {
+            onlyIDCriteria = Boolean.TRUE;
+        } else {
+            onlyIDCriteria = Boolean.FALSE;
         }
-        this.hasCriteria = hasCriteria;
     }
 
     @Override
     public boolean hasOnlyIDCriteria() {
-        return this.onlyIDCriteria;
+        return Boolean.TRUE.equals(this.onlyIDCriteria);
     }
 
     @Override

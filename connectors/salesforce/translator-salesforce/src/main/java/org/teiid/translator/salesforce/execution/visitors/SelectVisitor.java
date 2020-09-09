@@ -24,8 +24,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
 import org.teiid.language.AndOr.Operator;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Condition;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.GroupBy;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.Limit;
+import org.teiid.language.NamedTable;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
@@ -210,7 +220,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
     private void assertRetrieveValidated() throws AssertionError {
         if(!hasOnlyIDCriteria()) {
-            throw new AssertionError("Must call hasOnlyIdInCriteria() before this method"); //$NON-NLS-1$
+            throw new AssertionError("hasOnlyIdInCriteria is false"); //$NON-NLS-1$
         }
     }
 
