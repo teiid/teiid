@@ -179,6 +179,14 @@ public class TestVisitors {
         assertEquals("Account", visitor.getTableName());
     }
 
+    @Test public void testOrderBy() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select id, name from Account order by name nulls last"); //$NON-NLS-1$
+        SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("Account", visitor.getTableName());
+        assertEquals("SELECT Id, Name FROM Account ORDER BY Name NULLS LAST", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
     @Test public void testJoin() throws Exception {
         Select command = (Select)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
         SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
