@@ -18,6 +18,8 @@
 package org.teiid.translator.salesforce.execution.visitors;
 
 
+import static org.teiid.language.SQLConstants.Reserved.DESC;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,8 +36,13 @@ import org.teiid.language.GroupBy;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Limit;
 import org.teiid.language.NamedTable;
+import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.Select;
+import org.teiid.language.SortSpecification;
+import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
@@ -46,11 +53,11 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     public static final String AGG_PREFIX = "expr"; //$NON-NLS-1$
     private Map<Integer, Expression> selectSymbolIndexToElement = new HashMap<Integer, Expression>();
     private int selectSymbolCount;
-    private int idIndex = -1; // index of the ID select symbol.
     protected List<DerivedColumn> selectSymbols;
     protected StringBuilder limitClause = new StringBuilder();
     protected StringBuilder groupByClause = new StringBuilder();
     protected StringBuilder havingClause = new StringBuilder();
+    protected StringBuilder orderByClause = new StringBuilder();
     private Boolean objectSupportsRetrieve;
     private Condition implicitCondition;
 
@@ -86,6 +93,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
                 this.havingClause.append(SPACE);
             }
         }
+        super.visitNode(query.getOrderBy());
         super.visitNode(query.getLimit());
         if (query.isDistinct()) {
             exceptions.add(new TranslatorException(SalesForcePlugin.Util.getString("SelectVisitor.distinct.not.supported"))); //$NON-NLS-1$
@@ -133,6 +141,31 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     }
 
     @Override
+    public void visit(OrderBy orderBy) {
+        List<SortSpecification> items = orderBy.getSortSpecifications();
+        orderByClause.append(ORDER_BY).append(SPACE);
+        //only 1 item is supported, but we'll let that manifest as a backend
+        //error
+        for (Iterator<SortSpecification> iter = items.iterator(); iter.hasNext();) {
+            SortSpecification spec = iter.next();
+            orderByClause.append(getValue(spec.getExpression(), false));
+            if (spec.getOrdering() == Ordering.DESC) {
+                orderByClause.append(Tokens.SPACE)
+                      .append(DESC);
+            } // Don't print default "ASC"
+            if (spec.getNullOrdering() != null) {
+                orderByClause.append(Tokens.SPACE)
+                    .append(NonReserved.NULLS)
+                    .append(Tokens.SPACE)
+                    .append(spec.getNullOrdering().name());
+            }
+            if (iter.hasNext()) {
+                orderByClause.append(COMMA).append(SPACE);
+            }
+        }
+    }
+
+    @Override
     public void visit(Limit obj) {
         super.visit(obj);
         limitClause.append(LIMIT).append(SPACE).append(obj.getRowLimit());
@@ -159,7 +192,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
         result.append(table.getMetadataObject().getSourceName()).append(SPACE);
         addCriteriaString(result);
         appendGroupByHaving(result);
-        //result.append(orderByClause).append(SPACE);
+        result.append(orderByClause);
         result.append(limitClause);
         return result.toString();
     }
@@ -229,11 +262,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     }
 
     public boolean canRetrieve() {
-        return objectSupportsRetrieve && hasOnlyIDCriteria() && this.limitClause.length() == 0 && groupByClause.length() == 0;
-    }
-
-    public boolean hasGroupBy() {
-        return groupByClause.length() > 0;
+        return objectSupportsRetrieve && hasOnlyIDCriteria() && this.limitClause.length() == 0 && groupByClause.length() == 0 && orderByClause.length() == 0;
     }
 
 }
