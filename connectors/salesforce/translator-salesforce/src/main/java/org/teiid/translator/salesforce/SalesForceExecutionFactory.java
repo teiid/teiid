@@ -65,7 +65,14 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     private boolean hardDelete;
 
     public SalesForceExecutionFactory() {
-        setSupportsOrderBy(true);
+        /*there are multiple issues:
+           - only one item is supported, which would require a new capability
+           - it's case insensitive (which is an inconsistent case for us at best)
+           - many types are not comparable or have other special rules, which we try to account for in the
+             the metadata processors, but it's not complete
+          basic support was added in case a user wants to turn this on though
+        */
+        setSupportsOrderBy(false);
         setSupportsOuterJoins(true);
         setSupportsInnerJoins(true);
         setTransactionSupport(TransactionSupport.NONE);
@@ -291,6 +298,16 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 
     public void setUseHardDelete(boolean hardDelete) {
         this.hardDelete = hardDelete;
+    }
+
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+        return true;
+    }
+
+    @Override
+    public NullOrder getDefaultNullOrder() {
+        return NullOrder.FIRST;
     }
 
 }
