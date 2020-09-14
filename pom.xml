@@ -50,7 +50,7 @@
         <project.build.targetJdk>8</project.build.targetJdk>
 
         <derby.version>10.2.1.6</derby.version>
-        <mysql.connector.version>5.1.5</mysql.connector.version>
+        <mysql.connector.version>8.0.16</mysql.connector.version>
         
         <version.accumulo>2.0.0</version.accumulo>
         <version.ant-contrib>1.0b3</version.ant-contrib>
