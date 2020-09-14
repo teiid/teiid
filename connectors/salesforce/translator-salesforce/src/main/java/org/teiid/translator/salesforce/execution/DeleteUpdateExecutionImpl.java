@@ -27,13 +27,14 @@ import org.teiid.language.BulkCommand;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.Literal;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
-import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
-import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.UpdateVisitor;
 
 import com.sforce.async.BatchResult;
@@ -136,15 +137,17 @@ public abstract class DeleteUpdateExecutionImpl extends AbstractUpdateExecution 
         int batchSize = 2000; //Salesforce limit
         String[] Ids = null;
         if (visitor.hasOnlyIDCriteria()) {
-            try {
-                String Id = ((Comparison)criteria).getRightExpression().toString();
-                Id = Util.stripQutes(Id);
-                Ids = new String[] { Id };
-                result = processIds(Ids);
-            } catch (ClassCastException cce) {
-                throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
+            if (criteria instanceof Comparison) {
+                Literal l = (Literal) ((Comparison)criteria).getRightExpression() ;
+                Ids = new String[] { l.getValue().toString() };
+            } else {
+                List<Expression> rightExpressions = ((In)criteria).getRightExpressions();
+                Ids = new String[rightExpressions.size()];
+                for (int i = 0; i < Ids.length; i++) {
+                    Ids[i] = ((Literal)rightExpressions.get(i)).getValue().toString();
+                }
             }
-
+            result = processIds(Ids);
         } else {
             String query = visitor.getQuery();
             context.logCommand(query);
