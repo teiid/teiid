@@ -71,7 +71,7 @@ public abstract class DeleteUpdateExecutionImpl extends AbstractUpdateExecution 
             execute(visitor.getWhere());
             selectComplete = true;
         }
-        if (bulk) {
+        if (bulk && this.activeJob != null) {
             if (this.activeJob.getState() == JobStateEnum.Open) {
                 this.activeJob = getConnection().closeJob(this.activeJob.getId());
             }

@@ -165,6 +165,42 @@ public class TestUpdates {
     }
 
     @Test
+    public void testEmptyBulkIds() throws Exception {
+        Delete delete = (Delete) translationUtility.parseCommand("delete from contacts where name = 'abc'");
+
+        SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
+
+        SalesForceExecutionFactory config = new SalesForceExecutionFactory();
+
+        ExecutionContext mock = Mockito.mock(ExecutionContext.class);
+        Mockito.stub(mock.getSourceHint()).toReturn("bulk");
+
+        DeleteExecutionImpl updateExecution = new DeleteExecutionImpl(config, delete, connection, Mockito.mock(RuntimeMetadata.class), mock);
+
+        ArgumentCaptor<String> queryArgument = ArgumentCaptor.forClass(String.class);
+        QueryResult qr = new QueryResult();
+        qr.setSize(0);
+        qr.setDone(true);
+
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+
+        while(true) {
+            try {
+                updateExecution.execute();
+                org.junit.Assert.assertArrayEquals(new int[] {0}, updateExecution.getUpdateCounts());
+                break;
+            } catch(DataNotAvailableException e) {
+                continue;
+            }
+        }
+
+        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
+
+        String query = queryArgument.getValue();
+        assertEquals("SELECT Id FROM Contact WHERE ContactName = 'abc' ", query);
+    }
+
+    @Test
     public void testUpdateValues() throws Exception {
         TranslationUtility tu = new TranslationUtility(RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sf.ddl")), "sf", "sf"));
         Update update = (Update) tu.parseCommand("update contact set birthdate = DATE'2000-01-01'");
