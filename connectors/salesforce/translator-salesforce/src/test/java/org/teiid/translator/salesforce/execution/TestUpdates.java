@@ -104,6 +104,30 @@ public class TestUpdates {
     }
 
     @Test
+    public void testIdsIn() throws Exception {
+        Delete delete = (Delete) translationUtility.parseCommand("delete from contacts where contactid in ('123', '456')");
+
+        SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
+
+        SalesForceExecutionFactory config = new SalesForceExecutionFactory();
+
+        Mockito.stub(connection.delete(new String[] {"123", "456"})).toReturn(2);
+
+        DeleteExecutionImpl updateExecution = new DeleteExecutionImpl(config, delete, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
+
+        while(true) {
+            try {
+                updateExecution.execute();
+                org.junit.Assert.assertArrayEquals(new int[] {2}, updateExecution.getUpdateCounts());
+                break;
+            } catch(DataNotAvailableException e) {
+                continue;
+            }
+        }
+    }
+
+
+    @Test
     public void testUpdateValues() throws Exception {
         TranslationUtility tu = new TranslationUtility(RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sf.ddl")), "sf", "sf"));
         Update update = (Update) tu.parseCommand("update contact set birthdate = DATE'2000-01-01'");

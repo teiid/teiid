@@ -115,7 +115,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
         for (Argument arg : arguments) {
             Object val = arg.getArgumentValue().getValue();
             if (val != null) {
-                ids.add(Util.stripQutes(val.toString()));
+                ids.add(val.toString());
             }
         }
         this.updateCount = this.connection.delete(ids.toArray(new String[ids.size()]));

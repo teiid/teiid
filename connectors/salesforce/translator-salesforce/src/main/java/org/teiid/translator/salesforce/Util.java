@@ -28,15 +28,6 @@ import org.teiid.translator.TypeFacility;
 
 public class Util {
 
-    public static String stripQutes(String id) {
-        if((id.startsWith("'") && id.endsWith("'"))) { //$NON-NLS-1$ //$NON-NLS-2$
-            id = id.substring(1,id.length()-1);
-        } else if ((id.startsWith("\"") && id.endsWith("\""))) { //$NON-NLS-1$ //$NON-NLS-2$
-            id = id.substring(1,id.length()-1);
-        }
-        return id;
-    }
-
     /**
      * Convert the Teiid value to one that Salesforce will correctly serialized
      * @param value
