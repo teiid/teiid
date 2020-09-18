@@ -117,7 +117,7 @@ public class TestFileConnection {
 
         //escaped match
         files = fc.getFiles("f**le");
-        assertEquals(1, files.length);
+        assertEquals(0, files.length);
 
         //no match on the file extension
         files = fc.getFiles("year=202*/*.other");
