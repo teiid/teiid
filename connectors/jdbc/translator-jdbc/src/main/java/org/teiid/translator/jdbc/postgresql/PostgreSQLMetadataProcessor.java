@@ -73,12 +73,12 @@ public class PostgreSQLMetadataProcessor
 
     @Override
     protected String getGeographyMetadataTableName() {
-        return "public.geometry_columns"; //$NON-NLS-1$
+        return "public.geography_columns"; //$NON-NLS-1$
     }
 
     @Override
     protected String getGeometryMetadataTableName() {
-        return "public.geography_columns"; //$NON-NLS-1$
+        return "public.geometry_columns"; //$NON-NLS-1$
     }
 
     @Override
