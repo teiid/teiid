@@ -266,7 +266,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
                 LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Ingoring bulk hint as the query is not bulk eligible"); //$NON-NLS-1$
             }
 
-            results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
+            results = connection.query(finalQuery, visitor.getQueryAll());
         }
     }
 
@@ -333,7 +333,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 
     private void loadBatch() throws TranslatorException {
         if(null != resultBatch) { // if we have an old batch, then we have to get new results
-            results = connection.queryMore(results.getQueryLocator(), context.getBatchSize());
+            results = connection.queryMore(results.getQueryLocator());
         }
         resultBatch = new ArrayList<List<Object>>();
         topResultIndex = 0;

@@ -336,12 +336,12 @@ public class TestVisitors {
 
         ArgumentCaptor<String> queryArgument = ArgumentCaptor.forClass(String.class);
         QueryResult qr = Mockito.mock(QueryResult.class);
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyBoolean())).toReturn(qr);
 
         Execution execution = factory.createExecution(command, ec, rm, connection);
         execution.execute();
 
-        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
+        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyBoolean());
 
         assertEquals(expected, queryArgument.getValue().trim());
     }

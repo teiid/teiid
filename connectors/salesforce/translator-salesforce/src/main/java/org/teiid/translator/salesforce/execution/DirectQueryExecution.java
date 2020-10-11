@@ -141,7 +141,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
     }
 
     private void doSelect(String select) throws TranslatorException {
-        this.results = this.connection.query(select, this.context.getBatchSize(), Boolean.FALSE);
+        this.results = this.connection.query(select, Boolean.FALSE);
     }
 
     @Override
@@ -183,7 +183,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
         else {
             if(!result.isDone()) {
                 // fetch more results
-                this.results = this.connection.queryMore(results.getQueryLocator(), context.getBatchSize());
+                this.results = this.connection.queryMore(results.getQueryLocator());
                 this.currentBatch = loadBatch(this.results);
 
                 // read next row

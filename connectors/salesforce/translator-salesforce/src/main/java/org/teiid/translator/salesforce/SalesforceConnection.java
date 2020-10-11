@@ -100,9 +100,9 @@ public interface SalesforceConnection extends Connection {
 
     }
 
-    public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws TranslatorException;
+    public QueryResult query(String queryString, boolean queryAll) throws TranslatorException;
 
-    public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException;
+    public QueryResult queryMore(String queryLocator) throws TranslatorException;
 
     public boolean isValid();
 

@@ -95,7 +95,8 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public BaseSalesforceConnection(T salesforceConfig) throws AsyncApiException, ConnectionException {
         config = createConnectorConfig(salesforceConfig);
         partnerConnection = login(salesforceConfig, config);
-
+        partnerConnection.setMruHeader(false); //Because really MRU used only in query and always false
+        partnerConnection.setQueryOptions(2000);//Because we have hard SF limit and really this value always is 2000
         String endpoint = config.getServiceEndpoint();
         // The endpoint for the Bulk API service is the same as for the normal
         // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
@@ -199,44 +200,29 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
         return partnerConnection;
     }
 
-    public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
-
-        if(batchSize > 2000) {
-            batchSize = 2000;
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
-        }
+    @Override
+    public QueryResult query(String queryString, boolean queryAll) throws TranslatorException {
 
         QueryResult qr = null;
-        partnerConnection.setQueryOptions(batchSize);
         try {
             if(queryAll) {
                 qr = partnerConnection.queryAll(queryString);
             } else {
-                partnerConnection.setMruHeader(false);
                 qr = partnerConnection.query(queryString);
             }
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
-        } finally {
-            partnerConnection.clearMruHeader();
-            partnerConnection.clearQueryOptions();
         }
         return qr;
     }
 
-    public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException {
-        if(batchSize > 2000) {
-            batchSize = 2000;
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
-        }
-
-        partnerConnection.setQueryOptions(batchSize);
-        try {
+    @Override
+    public QueryResult queryMore(String queryLocator) throws TranslatorException {
+        
+    	try {
             return partnerConnection.queryMore(queryLocator);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
-        } finally {
-            partnerConnection.clearQueryOptions();
         }
 
     }

@@ -87,7 +87,7 @@ public class TestUpdates {
         qr.setSize(1);
         qr.setDone(true);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyBoolean())).toReturn(qr);
         Mockito.stub(connection.delete(new String[] {"x"})).toReturn(1);
 
         while(true) {
@@ -100,7 +100,7 @@ public class TestUpdates {
             }
         }
 
-        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
+        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyBoolean());
 
         String query = queryArgument.getValue();
         assertEquals("SELECT Id FROM Contact ", query);
@@ -152,7 +152,7 @@ public class TestUpdates {
         qr.setSize(1);
         qr.setDone(true);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyBoolean())).toReturn(qr);
 
         JobInfo jobInfo = Mockito.mock(JobInfo.class);
 
@@ -181,7 +181,7 @@ public class TestUpdates {
             }
         }
 
-        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
+        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyBoolean());
 
         String query = queryArgument.getValue();
         assertEquals("SELECT Id FROM Contact WHERE ContactName LIKE '_a' ", query);
@@ -205,7 +205,7 @@ public class TestUpdates {
         qr.setSize(0);
         qr.setDone(true);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyBoolean())).toReturn(qr);
 
         while(true) {
             try {
@@ -217,7 +217,7 @@ public class TestUpdates {
             }
         }
 
-        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
+        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyBoolean());
 
         String query = queryArgument.getValue();
         assertEquals("SELECT Id FROM Contact WHERE ContactName = 'abc' ", query);
@@ -245,7 +245,7 @@ public class TestUpdates {
 
         ArgumentCaptor<List> data = ArgumentCaptor.forClass(List.class);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyBoolean())).toReturn(qr);
         Mockito.stub(connection.update(data.capture())).toReturn(1);
 
         while(true) {
@@ -258,7 +258,7 @@ public class TestUpdates {
             }
         }
 
-        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
+        Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyBoolean());
 
         String query = queryArgument.getValue();
         assertEquals("SELECT Id FROM Contact ", query);
