@@ -72,12 +72,12 @@ public class TestSalesForceDirectQueryExecution {
         s.addField("Name", "The Name");
 
         Mockito.stub(qr.getRecords()).toReturn(results);
-        Mockito.stub(connection.query("SELECT Account.Id, Account.Type, Account.Name FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(connection.query("SELECT Account.Id, Account.Type, Account.Name FROM Account", false)).toReturn(qr);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();
 
-        Mockito.verify(connection, Mockito.times(1)).query("SELECT Account.Id, Account.Type, Account.Name FROM Account", 0, false);
+        Mockito.verify(connection, Mockito.times(1)).query("SELECT Account.Id, Account.Type, Account.Name FROM Account", false);
 
         assertArrayEquals(new Object[] {"The ID", "The Type", "The Name"}, (Object[])execution.next().get(0));
 

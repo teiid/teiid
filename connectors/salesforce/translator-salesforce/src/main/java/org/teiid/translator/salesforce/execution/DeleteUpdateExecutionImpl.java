@@ -134,7 +134,6 @@ public abstract class DeleteUpdateExecutionImpl extends AbstractUpdateExecution 
         if (((BulkCommand)command).getParameterValues() != null) {
             throw new TranslatorException("Only bulk inserts are supported"); //$NON-NLS-1$
         }
-        int batchSize = 2000; //Salesforce limit
         String[] Ids = null;
         if (visitor.hasOnlyIDCriteria()) {
             if (criteria instanceof Comparison) {
@@ -151,7 +150,7 @@ public abstract class DeleteUpdateExecutionImpl extends AbstractUpdateExecution 
         } else {
             String query = visitor.getQuery();
             context.logCommand(query);
-            QueryResult results = getConnection().query(query, batchSize, Boolean.FALSE);
+            QueryResult results = getConnection().query(query, Boolean.FALSE);
             ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
             //5000 is the default size from StreamHandler.getMaxRecordsInBatch
             //200 was the existing default for sync updates
@@ -171,7 +170,7 @@ public abstract class DeleteUpdateExecutionImpl extends AbstractUpdateExecution 
                 if (results.isDone()) {
                     break;
                 }
-                results = connection.queryMore(results.getQueryLocator(), batchSize);
+                results = connection.queryMore(results.getQueryLocator());
             }
             if (!idList.isEmpty()) {
                 Ids = idList.toArray(new String[0]);

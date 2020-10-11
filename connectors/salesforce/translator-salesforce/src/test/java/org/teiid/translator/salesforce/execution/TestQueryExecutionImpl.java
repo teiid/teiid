@@ -73,8 +73,8 @@ public class TestQueryExecutionImpl {
         QueryResult finalQr = new QueryResult();
         finalQr.setRecords(new SObject[] {so});
         finalQr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Name FROM Account", 0, false)).toReturn(qr);
-        Mockito.stub(sfc.queryMore(null, 0)).toReturn(finalQr);
+        Mockito.stub(sfc.query("SELECT Name FROM Account", false)).toReturn(qr);
+        Mockito.stub(sfc.queryMore(null)).toReturn(finalQr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertNotNull(qei.next());
@@ -95,7 +95,7 @@ public class TestQueryExecutionImpl {
         so1.addField("Account", so);
         qr.setRecords(new SObject[] {so1});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Account.Name, Id FROM Contact WHERE AccountId != NULL", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Account.Name, Id FROM Contact WHERE AccountId != NULL", false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "contact id"), qei.next());
@@ -115,7 +115,7 @@ public class TestQueryExecutionImpl {
         so.addField("Contacts", so1);
         qr.setRecords(new SObject[] {so});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM Contacts) FROM Account", false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "contact id"), qei.next());
@@ -139,7 +139,7 @@ public class TestQueryExecutionImpl {
         so.addField("ChildAccounts", so2);
         qr.setRecords(new SObject[] {so});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM ChildAccounts) FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM ChildAccounts) FROM Account", false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
         assertEquals(Arrays.asList("account name", "account id1"), qei.next());
