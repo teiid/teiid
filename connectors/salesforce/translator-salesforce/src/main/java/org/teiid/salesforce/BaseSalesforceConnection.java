@@ -218,7 +218,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
 
     @Override
     public QueryResult queryMore(String queryLocator) throws TranslatorException {
-        
+
      try {
             return partnerConnection.queryMore(queryLocator);
         } catch (ConnectionException e) {
