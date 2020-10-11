@@ -420,15 +420,17 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
                 job.setExternalIdFieldName(ID_FIELD_NAME);
             }
             job.setConcurrencyMode(ConcurrencyMode.Parallel);
-            if (operation == OperationEnum.query && usePkChunking) {
-                this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
+            synchronized(this){
+	            if (operation == OperationEnum.query && usePkChunking) {
+	                this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
+	            }
+	            JobInfo info = this.bulkConnection.createJob(job);
+	            //reset the header
+	            if (operation == OperationEnum.query) {
+	                this.bulkConnection = new BulkConnection(config);
+	            }
+	            return info;
             }
-            JobInfo info = this.bulkConnection.createJob(job);
-            //reset the header
-            if (operation == OperationEnum.query) {
-                this.bulkConnection = new BulkConnection(config);
-            }
-            return info;
         } catch (AsyncApiException e) {
             throw new TranslatorException(e);
         }
