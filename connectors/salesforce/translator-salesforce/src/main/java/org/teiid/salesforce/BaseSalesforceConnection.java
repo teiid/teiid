@@ -219,7 +219,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     @Override
     public QueryResult queryMore(String queryLocator) throws TranslatorException {
         
-    	try {
+     try {
             return partnerConnection.queryMore(queryLocator);
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
@@ -421,15 +421,15 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
             }
             job.setConcurrencyMode(ConcurrencyMode.Parallel);
             synchronized(this){
-	            if (operation == OperationEnum.query && usePkChunking) {
-	                this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
-	            }
-	            JobInfo info = this.bulkConnection.createJob(job);
-	            //reset the header
-	            if (operation == OperationEnum.query) {
-	                this.bulkConnection = new BulkConnection(config);
-	            }
-	            return info;
+             if (operation == OperationEnum.query && usePkChunking) {
+                 this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
+             }
+             JobInfo info = this.bulkConnection.createJob(job);
+             //reset the header
+             if (operation == OperationEnum.query) {
+                 this.bulkConnection = new BulkConnection(config);
+             }
+             return info;
             }
         } catch (AsyncApiException e) {
             throw new TranslatorException(e);
