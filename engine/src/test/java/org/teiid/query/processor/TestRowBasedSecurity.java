@@ -18,7 +18,10 @@
 
 package org.teiid.query.processor;
 
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
 
 import java.util.Arrays;
 import java.util.HashMap;

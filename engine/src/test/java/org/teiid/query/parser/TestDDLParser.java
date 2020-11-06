@@ -16,7 +16,12 @@ package org.teiid.query.parser;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.StringReader;
 import java.util.Collection;
@@ -30,11 +35,28 @@ import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.Database;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Permission;
 import org.teiid.metadata.Permission.Privilege;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Role;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Server;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.Trigger;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DDLStringVisitor;
@@ -1278,8 +1300,9 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
-                + "CREATE POLICY p ON test.G1 TO superuser USING (e1 =1);"
-                + "CREATE POLICY p1 ON test.G1 FOR SELECT TO superuser USING (true);";
+                + "CREATE POLICY p ON test.G1 TO superuser USING (e1 =1 and e2 =2);"
+                + "CREATE POLICY p1 ON test.G1 FOR SELECT TO superuser USING (true);"
+                + "CREATE POLICY p3 ON test.G1 FOR SELECT TO superuser USING (e1 =1);";
 
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1290,7 +1313,7 @@ public class TestDDLParser {
         Role r = roles.iterator().next();
         assertEquals(0, r.getGrants().size());
         assertEquals(1, r.getPolicies().size());
-        assertEquals("e1 = 1", r.getPolicies().values().iterator().next().get("p").getCondition());
+        assertEquals("(e1 = 1) AND (e2 = 2)", r.getPolicies().values().iterator().next().get("p").getCondition());
 
         assertEquals("\n" +
                 "/*\n" +
@@ -1325,8 +1348,9 @@ public class TestDDLParser {
                 "\n" +
                 "\n" +
                 "--############ Policies ############\n" +
-                "CREATE POLICY p ON test.G1 TO superuser USING (e1 = 1);\n" +
+                "CREATE POLICY p ON test.G1 TO superuser USING ((e1 = 1) AND (e2 = 2));\n" +
                 "CREATE POLICY p1 ON test.G1 FOR SELECT TO superuser USING (TRUE);\n" +
+                "CREATE POLICY p3 ON test.G1 FOR SELECT TO superuser USING (e1 = 1);\n" +
                 "\n" +
                 "\n" +
                 "/*\n" +
@@ -1334,8 +1358,7 @@ public class TestDDLParser {
                 "# END DATABASE FOO\n" +
                 "###########################################\n" +
                 "*/\n" +
-                "\n" +
-                "", DDLStringVisitor.getDDLString(db));
+                "\n", DDLStringVisitor.getDDLString(db));
     }
 
     @Test(expected=org.teiid.metadata.ParseException.class)
@@ -1349,6 +1372,20 @@ public class TestDDLParser {
                 + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
                 + "CREATE POLICY p ON test.G1 TO superuser USING (e1 =1);"
                 + "CREATE POLICY p ON test.G1 FOR SELECT TO superuser USING (true);";
+
+        helpParse(ddl);
+    }
+
+    @Test(expected=org.teiid.metadata.ParseException.class)
+    public void testStringCondition() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"
+                + "CREATE SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
+                + "CREATE POLICY p ON test.G1 TO superuser USING ('e1 =1');";
 
         helpParse(ddl);
     }
