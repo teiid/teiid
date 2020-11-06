@@ -2403,7 +2403,7 @@ Expression filterClause(ParseInfo info) :
 	Expression condition = null;
 }
 {
-	<FILTER> <LPAREN> <WHERE> condition = booleanPrimary(info) <RPAREN>
+	<FILTER> <LPAREN> <WHERE> condition = criteria(info) <RPAREN>
 	{
 		return condition;	
 	}
@@ -5659,7 +5659,7 @@ void dropRole(DatabaseStore dbStore) :
 /*
 name=CREATE POLICY
 description=CREATE row level policy
-example=[source,sql]\n----\nCREATE POLICY pname ON tbl FOR SELECT,INSERT TO role USING col = user();\n----\n
+example=[source,sql]\n----\nCREATE POLICY pname ON tbl FOR SELECT,INSERT TO role USING (col = user());\n----\n
 */
 void createPolicy(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -5691,11 +5691,18 @@ void createPolicy(DatabaseStore dbStore, ParseInfo info) :
       )
     ) 
     <TO>( to = id(null) )
-    <USING> <LPAREN> condition = booleanPrimary(info) <RPAREN>
+    <USING> <LPAREN> condition = criteria(info) <RPAREN>
     {
         policy.setName(policyName);
         policy.setResourceName(resource);
         policy.setResourceType(on);
+        if (condition instanceof ExpressionCriteria) {
+            ExpressionCriteria exc = (ExpressionCriteria)condition;
+            Expression ex = exc.getExpression();
+            if (ex instanceof Constant && ex.getType() == DataTypeManager.DefaultDataClasses.STRING) {
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.string_condition", ex));
+            }
+        }
         policy.setCondition(condition.toString());
         dbStore.policyCreated(to, policy);
     } 
@@ -5766,7 +5773,7 @@ void grant(DatabaseStore dbStore) :
         (<SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;}) |
         (<COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
             [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()]
-            [<CONDITION> (LOOKAHEAD(booleanPrimary(ParseInfo.DEFAULT_INSTANCE)) booleanExpr = booleanPrimary(ParseInfo.DEFAULT_INSTANCE) | condition = stringVal())]
+            [<CONDITION> (LOOKAHEAD(criteria(ParseInfo.DEFAULT_INSTANCE)) booleanExpr = criteria(ParseInfo.DEFAULT_INSTANCE) | condition = stringVal())]
         ) 
        )
       ) 
