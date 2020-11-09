@@ -18,7 +18,8 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -1054,6 +1055,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public int getMaxProjectedColumns() {
         //in practice this could be lower depending on the block size, so it may need to be settable
         return 1600;
+    }
+
+    @Override
+    public boolean preserveNullTyping() {
+        return true;
     }
 
 }

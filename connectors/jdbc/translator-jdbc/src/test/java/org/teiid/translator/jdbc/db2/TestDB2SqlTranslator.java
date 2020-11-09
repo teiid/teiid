@@ -18,7 +18,9 @@
 
 package org.teiid.translator.jdbc.db2;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -268,7 +270,7 @@ public class TestDB2SqlTranslator {
 
     @Test public void testSubstring2() throws Exception {
         String input = "SELECT substring(STRINGNUM, 2, -1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT NULL FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT cast(NULL AS varchar) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output,

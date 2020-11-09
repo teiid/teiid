@@ -22,9 +22,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.*;
+import org.teiid.language.Command;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Join;
 import org.teiid.language.Join.JoinType;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
@@ -115,20 +124,6 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
         //DB2 doesn't support cross join
         convertCrossJoinToInner(obj, getLanguageFactory());
-        //DB2 needs projected nulls wrapped in casts
-        if (obj instanceof DerivedColumn) {
-            DerivedColumn selectSymbol = (DerivedColumn)obj;
-            if (selectSymbol.getExpression() instanceof Literal) {
-                Literal literal = (Literal)selectSymbol.getExpression();
-                if (literal.getValue() == null) {
-                    String type = TypeFacility.RUNTIME_NAMES.INTEGER;
-                    if (literal.getType() != TypeFacility.RUNTIME_TYPES.NULL) {
-                        type = TypeFacility.getDataTypeName(literal.getType());
-                    }
-                    selectSymbol.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), literal, type));
-                }
-            }
-        }
         return super.translate(obj, context);
     }
 

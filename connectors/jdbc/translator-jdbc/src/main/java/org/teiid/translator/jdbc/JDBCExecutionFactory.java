@@ -22,7 +22,19 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.*;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Struct;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -52,15 +64,43 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.*;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Condition;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Insert;
+import org.teiid.language.IsNull;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.Not;
+import org.teiid.language.Parameter;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SearchedWhenClause;
+import org.teiid.language.SetQuery;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 import org.teiid.util.Version;
 
 
@@ -1861,6 +1901,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     @Override
     public boolean supportsProcedureParameterExpression() {
         return true;
+    }
+
+    /**
+     * Return true if null literals should retain a type (typically handled by a cast).
+     * @return
+     */
+    public boolean preserveNullTyping() {
+        return false;
     }
 
 }

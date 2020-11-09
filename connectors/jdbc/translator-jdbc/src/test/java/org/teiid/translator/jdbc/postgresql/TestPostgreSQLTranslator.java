@@ -18,7 +18,9 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -733,6 +735,22 @@ public class TestPostgreSQLTranslator {
         TRANSLATOR.bindValue(ps, new Array(String.class,
                 Arrays.asList((Expression)new Literal("a", String.class))), String[].class, 1);
         Mockito.verify(c, Mockito.times(1)).createArrayOf("varchar", new Object[] {"a"});
+    }
+
+    @Test public void testNullCast() throws Exception {
+        String input = "SELECT cast(NULL AS integer) FROM bqt1.SmallA"; //$NON-NLS-1$
+        String output = "SELECT cast(NULL AS integer) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test public void testNullInsert() throws Exception {
+        String input = "insert into t (id) values (cast(null as integer))"; //$NON-NLS-1$
+        String output = "INSERT INTO t (id) VALUES (NULL)";  //$NON-NLS-1$
+
+        helpTestVisitor("create foreign table t (id string)",
+            input,
+            output);
     }
 
 }

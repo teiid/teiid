@@ -589,4 +589,9 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         return "0x" + obj; //$NON-NLS-1$
     }
 
+    @Override
+    public boolean preserveNullTyping() {
+        return true;
+    }
+
 }
