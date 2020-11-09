@@ -18,7 +18,8 @@
 
 package org.teiid.query.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,8 +27,26 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.AbstractCompareCriteria;
+import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Delete;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.JoinPredicate;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.Option;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -1147,6 +1166,12 @@ public class TestOptionsAndHints {
 
         sql = "(SELECT /*+ sh keep aliases oracle:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
         assertEquals("(SELECT /*+sh KEEP ALIASES oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+
+        sql = "(SELECT /*+ ashoe */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
+        assertEquals("(SELECT a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+
+        sql = "(SELECT /*+ shoe */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
+        assertEquals("(SELECT a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
     }
 
     @Test public void testNestedSourceHint() throws QueryParserException {
