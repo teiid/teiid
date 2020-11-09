@@ -18,9 +18,12 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.nio.charset.Charset;
 import java.security.Identity;
 import java.security.Principal;
 import java.security.acl.Group;
@@ -165,6 +168,52 @@ public class TestRowBasedSecurity {
         rs = s.executeQuery("select count(*) from v_mat");
         rs.next();
         assertEquals(3, rs.getInt(1));*/
+    }
+
+    @Test public void testDdlSecurity() throws Exception {
+        es = new EmbeddedServer();
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        final Vector<Principal> v = new Vector<Principal>();
+        v.add(new Identity("myrole") {});
+        final Subject subject = new Subject();
+        Group g = Mockito.mock(Group.class);
+        Mockito.stub(g.getName()).toReturn("Roles");
+        Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
+        subject.getPrincipals().add(g);
+        ec.setSecurityHelper(new DoNothingSecurityHelper() {
+
+            @Override
+            public Subject getSubjectInContext(Object context) {
+                return subject;
+            }
+        });
+        es.start(ec);
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+        hcef.addData("SELECT ACCOUNT.id FROM ACCOUNT", Arrays.asList(Arrays.asList(1), Arrays.asList(2)));
+
+        es.addTranslator("hc", hcef);
+
+        es.deployVDB(new ByteArrayInputStream(("CREATE DATABASE test VERSION '1.0.0';\n" +
+                "USE DATABASE test VERSION '1.0.0';\n" +
+                "\n" +
+                "CREATE ROLE user_role  WITH FOREIGN ROLE myrole;\n" +
+                "\n" +
+                "CREATE SERVER accounts FOREIGN DATA WRAPPER hc;\n" +
+                "CREATE SCHEMA public SERVER accounts;\n" +
+                "SET SCHEMA public;\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE ACCOUNT (id integer, SSN string);\n" +
+                "\n" +
+                "GRANT SELECT ON TABLE public.ACCOUNT TO user_role;\n" +
+                "GRANT SELECT ON COLUMN public.ACCOUNT.SSN\n" +
+                "    MASK '''xxxx'''\n" +
+                "    TO user_role;").getBytes(Charset.forName("UTF-8"))), true);
+
+        Connection c = es.getDriver().connect("jdbc:teiid:test;PassthroughAuthentication=true", null);
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select id, ssn from account");
+        rs.next();
+        assertEquals("xxxx", rs.getString(2));
     }
 
 }

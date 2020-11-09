@@ -357,6 +357,12 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
                 }
                 if (rowSecurityState.mask != null) {
                     sb.append(" mask ").append(rowSecurityState.mask); //$NON-NLS-1$
+                    if (rowSecurityState.order != null) {
+                        sb.append(" order ").append(rowSecurityState.order); //$NON-NLS-1$
+                    }
+                }
+                if (rowSecurityState.constraint != null) {
+                    sb.append(" constraint ").append(rowSecurityState.constraint); //$NON-NLS-1$
                 }
             }
             return sb.toString();
@@ -368,6 +374,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
             clone.bitsSet = bitsSet;
             clone.resourceName = resourceName;
             clone.resourceType = resourceType;
+            if (rowSecurityState != null) {
+                clone.rowSecurityState = new RowSecurityState();
+                clone.rowSecurityState.condition = rowSecurityState.condition;
+                clone.rowSecurityState.mask = rowSecurityState.mask;
+                clone.rowSecurityState.constraint = rowSecurityState.constraint;
+                clone.rowSecurityState.order = rowSecurityState.order;
+            }
             return clone;
         }
 
