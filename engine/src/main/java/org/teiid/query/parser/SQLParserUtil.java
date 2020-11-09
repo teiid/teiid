@@ -33,15 +33,41 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.DDLConstants;
 import org.teiid.query.metadata.DatabaseStore;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.AlterTrigger;
+import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.Option;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SourceHint;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -342,6 +368,14 @@ public class SQLParserUtil {
         if (!matcher.find()) {
             return null;
         }
+        int start = matcher.start();
+        if (start > 0 && !Character.isWhitespace(comment.charAt(start -1))) {
+            return null;
+        }
+        int end = matcher.end();
+        if (end < comment.length() - 1 && !Character.isWhitespace(comment.charAt(end-1))) {
+            return null;
+        }
         SourceHint sourceHint = new SourceHint();
         if (matcher.group(1) != null) {
             sourceHint.setUseAliases(true);
@@ -350,7 +384,6 @@ public class SQLParserUtil {
         if (generalHint != null) {
             sourceHint.setGeneralHint(normalizeStringLiteral(generalHint));
         }
-        int end = matcher.end();
         matcher = SOURCE_HINT_ARG.matcher(comment);
         while (matcher.find(end)) {
             end = matcher.end();
