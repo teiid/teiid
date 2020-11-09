@@ -17,7 +17,9 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileReader;
 import java.util.Arrays;
@@ -184,7 +186,7 @@ public class TestVisitors {
         SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
         visitor.visit(command);
         assertEquals("Account", visitor.getTableName());
-        assertEquals("SELECT Id, Name FROM Account ORDER BY Name NULLS LAST", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+        assertEquals("SELECT Account.Id, Account.Name FROM Account ORDER BY Account.Name NULLS LAST", visitor.getQuery().toString().trim()); //$NON-NLS-1$
     }
 
     @Test public void testJoin() throws Exception {
