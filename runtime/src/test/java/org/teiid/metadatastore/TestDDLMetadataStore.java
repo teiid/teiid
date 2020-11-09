@@ -17,7 +17,9 @@
  */
 package org.teiid.metadatastore;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -55,8 +57,11 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.metadata.MetadataRepository;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.runtime.EmbeddedAdminImpl;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
@@ -69,6 +74,7 @@ import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.file.FileExecutionFactory;
+import org.teiid.vdb.runtime.VDBKey;
 
 @SuppressWarnings("nls")
 public class TestDDLMetadataStore {
@@ -92,6 +98,11 @@ public class TestDDLMetadataStore {
         @Override
         public Admin getAdmin() {
             return new DatasourceAwareEmbeddedAdmin(this);
+        }
+
+        @Override
+        public VDBRepository getVDBRepository() {
+            return super.getVDBRepository();
         }
     }
 
@@ -375,5 +386,23 @@ public class TestDDLMetadataStore {
             count++;
         }
         assertEquals(2, count);
+    }
+
+    @Test
+    public void testPolicies() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.addTranslator("file", new FileExecutionFactory());
+        es.addTranslator("h2", new ExecutionFactory<>());
+        es.start(ec);
+
+        FileInputStream vdb = new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml");
+        es.deployVDB(vdb);
+
+        CompositeVDB cvdb = es.getVDBRepository().getCompositeVDB(new VDBKey("portfolio", 1));
+        TransformationMetadata metadata = cvdb.getVDB().getAttachment(TransformationMetadata.class);
+        assertEquals(
+                "[Accounts[R], Accounts.Account.SSN[ mask null], Accounts.Customer[ condition state <> 'New York'], Accounts.Customer.SSN[ mask null], MarketData[R], Stocks[R], Stocks.StockPrices.Price[ mask CASE WHEN hasRole('Prices') = true THEN Price END order 1]]",
+                metadata.getPolicies().get("ReadOnly").getPermissions().toString());
     }
 }
