@@ -18,8 +18,11 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
 
 import java.util.Arrays;
 import java.util.List;
@@ -106,6 +109,18 @@ public class TestSourceHints {
         helpProcess(plan, manager(null, "leading(g)"), expected);
     }
 
+    @Test public void testEmptyHint() throws Exception {
+        String sql = "SELECT /*+ sh */ e1 from pm1.g1 g order by e1 limit 1"; //$NON-NLS-1$
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setDQPWorkContext(new DQPWorkContext());
+        cc.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.example1Cached()), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), null, true, cc);
+        TestOptimizer.checkAtomicQueries(new String[] {"SELECT /*+sh */ g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"}, plan);
+
+        List<?>[] expected = new List[] {};
+        helpProcess(plan, manager(null, null), expected);
+    }
+
     @Test public void testHintInView() {
         MetadataStore metadataStore = new MetadataStore();
         Schema p1 = RealMetadataFactory.createPhysicalModel("p1", metadataStore); //$NON-NLS-1$
@@ -162,8 +177,8 @@ public class TestSourceHints {
                     Command command, String modelName,
                     RegisterRequestParameter parameterObject)
                     throws TeiidComponentException {
-                if (hints[i*2] == null && hints[i*2+1] == null) {
-                    assertNull(command.getSourceHint());
+                if (command.getSourceHint() == null) {
+                    assertTrue(hints[i*2] == null && hints[i*2+1] == null);
                 } else {
                     assertEquals(hints[i*2], command.getSourceHint().getGeneralHint()); //$NON-NLS-1$
                     assertEquals(hints[i*2+1], command.getSourceHint().getSourceHint("bar")); //$NON-NLS-1$
