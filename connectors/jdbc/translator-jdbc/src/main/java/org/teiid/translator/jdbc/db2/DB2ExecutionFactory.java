@@ -251,4 +251,9 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
         return getVersion().compareTo(TEN_0) >= 0;
     }
 
+    @Override
+    public boolean preserveNullTyping() {
+        return true;
+    }
+
 }

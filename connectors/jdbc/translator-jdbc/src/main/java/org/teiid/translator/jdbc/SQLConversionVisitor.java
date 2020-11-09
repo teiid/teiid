@@ -20,7 +20,7 @@
  */
 package org.teiid.translator.jdbc;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Reserved.AS;
 
 import java.math.BigDecimal;
 import java.sql.Time;
@@ -38,10 +38,29 @@ import java.util.regex.Pattern;
 
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Call;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Function;
+import org.teiid.language.GroupBy;
+import org.teiid.language.In;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Parameter;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SearchedCase;
+import org.teiid.language.SetClause;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -75,6 +94,9 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     private Map<LanguageObject, Object> translations = new IdentityHashMap<LanguageObject, Object>();
 
     private boolean replaceWithBinding = false;
+
+    private boolean addNullCast;
+    private int startDerivedColumn = -1;
 
     public SQLConversionVisitor(JDBCExecutionFactory ef) {
         this.executionFactory = ef;
@@ -128,6 +150,11 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         }
         this.replaceWithBinding = replacementMode;
     }
+
+    protected boolean preserveNullTyping() {
+        return executionFactory.preserveNullTyping();
+    }
+
     /**
      * For the given type, append a literal SQL value
      * @param type
@@ -247,7 +274,29 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
                 return;
             }
         }
+        if (obj.getParameters().size() == 1) {
+            Expression param = obj.getParameters().get(0);
+            if (param instanceof Literal) {
+                Literal l = (Literal)param;
+                addNullCast = l.getValue() == null;
+            }
+        }
         super.visit(obj);
+        addNullCast = false;
+
+    }
+
+    @Override
+    public void visit(AggregateFunction obj) {
+        if (obj.getParameters().size() == 1) {
+            Expression param = obj.getParameters().get(0);
+            if (param instanceof Literal) {
+                Literal l = (Literal)param;
+                addNullCast = l.getValue() == null;
+            }
+        }
+        super.visit(obj);
+        addNullCast = false;
     }
 
     @Override
@@ -273,6 +322,19 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         if (this.prepared && ((replaceWithBinding && obj.isBindEligible()) || TranslatedCommand.isBindEligible(obj))) {
             addBinding(obj);
         } else {
+            //check to see if the null should be in a cast
+            //this is somewhat limited in scope to situations that could be ambiguous or
+            //requried in projection
+            if (preserveNullTyping() && obj.getValue() == null && (addNullCast || startDerivedColumn == buffer.length())) {
+                String type = TypeFacility.RUNTIME_NAMES.INTEGER;
+                if (obj.getType() != TypeFacility.RUNTIME_TYPES.NULL) {
+                    type = TypeFacility.getDataTypeName(obj.getType());
+                }
+                addNullCast = false;
+                append(ConvertModifier.createConvertFunction(LanguageFactory.INSTANCE, obj, type));
+                addNullCast = true;
+                return;
+            }
             translateSQLType(obj.getType(), obj.getValue(), buffer);
         }
     }
@@ -310,7 +372,9 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     @Override
     public void visit(DerivedColumn obj) {
         replaceWithBinding = false;
+        startDerivedColumn = buffer.length();
         super.visit(obj);
+        startDerivedColumn = -1;
     }
 
     @Override
