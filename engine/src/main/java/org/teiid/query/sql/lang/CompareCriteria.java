@@ -18,6 +18,8 @@
 
 package org.teiid.query.sql.lang;
 
+import java.util.Objects;
+
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
@@ -72,8 +74,20 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
      * Set right expression.
      * @param expression Right expression
      */
+    @Override
     public void setRightExpression(Expression expression) {
+        if (!Boolean.FALSE.equals(isOptional) && !Objects.equals(getRightExpression(), expression)) {
+            isOptional = false; //isOptional is preserved by clone, reset if the predicate changes
+        }
         this.rightExpression = expression;
+    }
+
+    @Override
+    public void setLeftExpression(Expression expression) {
+        if (!Boolean.FALSE.equals(isOptional) && !Objects.equals(getLeftExpression(), expression)) {
+            isOptional = false; //isOptional is preserved by clone, reset if the predicate changes
+        }
+        super.setLeftExpression(expression);
     }
 
     /**
