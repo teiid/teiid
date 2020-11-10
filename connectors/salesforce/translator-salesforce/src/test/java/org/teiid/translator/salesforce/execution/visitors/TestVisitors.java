@@ -138,7 +138,7 @@ public class TestVisitors {
 
     @Test public void testEscaping() throws Exception {
         String sql = "select id from Account where Name = '''foo\\'";
-        helpTest(sql, "SELECT Id FROM Account WHERE Name = '\\'foo\\\\'");
+        helpTest(sql, "SELECT Account.Id FROM Account WHERE Account.Name = '\\'foo\\\\'");
     }
 
     @Test public void testNot() throws Exception {
