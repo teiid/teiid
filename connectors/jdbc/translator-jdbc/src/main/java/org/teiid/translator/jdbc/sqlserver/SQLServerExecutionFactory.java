@@ -144,13 +144,15 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         public List<?> translate(Function function) {
             if (function.getParameters().get(0) instanceof ColumnReference) {
                 ColumnReference cr = (ColumnReference)function.getParameters().get(0);
-                String nativeType = cr.getMetadataObject().getNativeType();
-                if (nativeType != null
-                        && StringUtil.indexOfIgnoreCase(nativeType, "char") == -1) { //$NON-NLS-1$
-                    Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), cr,
-                                    (StringUtil.startsWithIgnoreCase(nativeType.trim(), "n")?"n":"")+"varchar(max)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                    cast.setName("cast"); //$NON-NLS-1$
-                    function.getParameters().set(0, cast);
+                if (cr.getMetadataObject() != null) {
+                    String nativeType = cr.getMetadataObject().getNativeType();
+                    if (nativeType != null
+                            && StringUtil.indexOfIgnoreCase(nativeType, "char") == -1) { //$NON-NLS-1$
+                        Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), cr,
+                                        (StringUtil.startsWithIgnoreCase(nativeType.trim(), "n")?"n":"")+"varchar(max)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                        cast.setName("cast"); //$NON-NLS-1$
+                        function.getParameters().set(0, cast);
+                    }
                 }
             }
             return super.translate(function);
