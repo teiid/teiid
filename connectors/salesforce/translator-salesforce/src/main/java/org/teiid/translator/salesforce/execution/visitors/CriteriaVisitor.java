@@ -291,10 +291,11 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     }
 
     public static void appendLiteralValue(StringBuilder result, Literal literal) {
-        if (literal.getValue().getClass().equals(Boolean.class)) {
-            result.append(((Boolean)literal.getValue()).toString());
-        } else if (literal.getValue().getClass().equals(java.sql.Timestamp.class)) {
-            Timestamp datetime = (java.sql.Timestamp)literal.getValue();
+        Object v = literal.getValue();
+        if (v.getClass().equals(Boolean.class)) {
+            result.append(((Boolean)v).toString());
+        } else if (v.getClass().equals(java.sql.Timestamp.class)) {
+            Timestamp datetime = (java.sql.Timestamp)v;
             String value = datetime.toString();
             int fractionalPlace = value.lastIndexOf('.');
             int fractionalLength = value.length() - fractionalPlace - 1;
@@ -314,28 +315,32 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
             val = minutes%60;
             result.append(val/10);
             result.append(val%10);
-        } else if (literal.getValue().getClass().equals(java.sql.Time.class)) {
-            result.append(literal.getValue()).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
-        } else if (literal.getValue().getClass().equals(java.sql.Date.class)) {
-            result.append(literal.getValue());
-        } else if (literal.getValue() instanceof Double) {
-            Double doubleVal = (Double)literal.getValue();
+        } else if (v.getClass().equals(java.sql.Time.class)) {
+            result.append(v).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
+        } else if (v.getClass().equals(java.sql.Date.class)) {
+            result.append(v);
+        } else if (v instanceof Double) {
+            Double doubleVal = (Double)v;
             double value = Math.abs(doubleVal.doubleValue());
             if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) {
                 result.append(BigDecimal.valueOf(doubleVal).toPlainString());
             } else {
                 result.append(literal.toString());
             }
-        } else if (literal.getValue() instanceof Float) {
-            Float floatVal = (Float)literal.getValue();
+        } else if (v instanceof Float) {
+            Float floatVal = (Float)v;
             float value = Math.abs(floatVal);
             if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) {
                 result.append(BigDecimal.valueOf(floatVal).toPlainString());
             } else {
                 result.append(literal.toString());
             }
-        } else if (literal.getValue() instanceof BigDecimal) {
-            result.append(((BigDecimal)literal.getValue()).toPlainString());
+        } else if (v instanceof BigDecimal) {
+            result.append(((BigDecimal)v).toPlainString());
+        } else if (v instanceof String) {
+            String stringVal = (String)v;
+            stringVal = stringVal.replaceAll("['\\\\]", "\\\\$0");
+            result.append("'").append(stringVal).append("'");
         } else {
             result.append(literal.toString());
         }
