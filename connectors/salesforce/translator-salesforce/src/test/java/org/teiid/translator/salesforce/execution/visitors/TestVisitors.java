@@ -17,7 +17,9 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileReader;
 import java.util.Arrays;
@@ -136,7 +138,7 @@ public class TestVisitors {
 
     @Test public void testEscaping() throws Exception {
         String sql = "select id from Account where Name = '''foo\\'";
-        helpTest(sql, "SELECT Id FROM Account WHERE Name = '\\'foo\\\\'");
+        helpTest(sql, "SELECT Account.Id FROM Account WHERE Account.Name = '\\'foo\\\\'");
     }
 
     @Test public void testNot() throws Exception {
