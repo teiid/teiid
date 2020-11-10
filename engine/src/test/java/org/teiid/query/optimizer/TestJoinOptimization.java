@@ -18,8 +18,12 @@
 
 package org.teiid.query.optimizer;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -1741,6 +1745,32 @@ public class TestJoinOptimization {
                 new DefaultCapabilitiesFinder(caps),
                 ComparisonMode.EXACT_COMMAND_STRING);
 
+    }
+
+    @Test public void testOptionalClone() throws Exception {
+        String sql = "SELECT \n" +
+                "    subquery_a.a, subquery_b.a, subquery_b.b\n" +
+                "FROM (SELECT 'val' AS a) AS subquery_a\n" +
+                "LEFT JOIN (\n" +
+                "    SELECT \n" +
+                "        subquery_inner_a.medium || subquery_inner_b.proc_res AS a,\n" +
+                "        1 AS b\n" +
+                "    FROM (\n" +
+                "        SELECT 'medium' AS medium) AS subquery_inner_a\n" +
+                "        , TABLE(CALL pr(subquery_inner_a.medium)) AS subquery_inner_b\n" +
+                "--      , TABLE(SELECT 'some_value' proc_res) AS subquery_inner_b\n" +
+                ") AS subquery_b \n" +
+                "    ON subquery_b.a = subquery_a.a\n" +
+                "    AND subquery_a.a = 'val' ;";
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE PROCEDURE pr(str string) RETURNS (proc_res string) AS\n" +
+                "    BEGIN\n" +
+                "        SELECT 'some_value';\n" +
+                "    END", "x", "y");
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
+
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList("val", null, null) });
     }
 
 }
