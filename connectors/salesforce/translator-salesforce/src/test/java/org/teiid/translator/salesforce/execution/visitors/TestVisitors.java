@@ -136,6 +136,11 @@ public class TestVisitors {
         helpTest(sql, "SELECT Id FROM Account WHERE (Name = 'foo') OR (BillingStreet = 'bar')");
     }
 
+    @Test public void testEscaping() throws Exception {
+        String sql = "select id from Account where Name = '''foo\\'";
+        helpTest(sql, "SELECT Id FROM Account WHERE Name = '\\'foo\\\\'");
+    }
+
     @Test public void testNot() throws Exception {
         String sql = "select Account.id, Account.Name, Account.Industry from Account where not (Name = 'foo' and BillingStreet = 'bar')"; //$NON-NLS-1$
         helpTest(sql, "SELECT Id, Name, Industry FROM Account WHERE (Name != 'foo') OR (BillingStreet != 'bar')");
