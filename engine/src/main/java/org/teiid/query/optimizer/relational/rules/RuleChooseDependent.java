@@ -671,7 +671,9 @@ public final class RuleChooseDependent implements OptimizerRule {
 
     static PlanNode createDependentSetNode(String id, List<DependentSetCriteria.AttributeComparison> expressions) {
         DependentSetCriteria crit = createDependentSetCriteria(id, expressions);
-
+        if (crit == null) {
+            return null;
+        }
         return RelationalPlanner.createSelectNode(crit, false);
     }
 
