@@ -18,11 +18,13 @@
 
 package org.teiid.query.optimizer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
@@ -40,7 +42,9 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.DependentAccessNode;
 import org.teiid.query.processor.relational.JoinNode;
@@ -1095,6 +1099,50 @@ public class TestDependentJoins {
                 new DefaultCapabilitiesFinder(caps),
                 TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         checkDependentGroups(plan, new String[] { "PM2.G2" }); //$NON-NLS-1$
+    }
+
+    @Test public void testMultiAttributeWithoutRight() throws Exception {
+        String sql = "select \"a.shop_key\" -- it doesn't matter what is selected here\n" +
+                "from \n" +
+                "    (\n" +
+                "        select \"shop_key\", \"channel_key\" \n" +
+                "        from \"test_dwh_pg.table_a\"\n" +
+                "    ) a\n" +
+                "    join \n" +
+                "        (\n" +
+                "            select\n" +
+                "                table_b.\"shop_key\",  \n" +
+                "                table_b.medium || '_' || p.procedure_result as \"channel_key\" -- mandatory: coalesce between one field from dwhtable and a result field from proc (with proc consuming adwh table field)\n" +
+                "            from test_dwh_pg.\"table_b\" \n" +
+                "            , table( exec p1(dummy)) p -- any field from dwh table may be consumed, one field has to be consumed\n" +
+                "        ) b \n" +
+                "        on \n" +
+                "            \"b.shop_key\" = \"a.shop_key\" \n" +
+                "            and \"b.channel_key\" = \"a.channel_key\" -- mandatory: 2 fields in on clause";
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+                "CREATE foreign TABLE table_a\n" +
+                "(\n" +
+                "  shop_key varchar(4000),\n" +
+                "  channel_key varchar(4000)\n" +
+                ") options (cardinality 1);\n" +
+                "CREATE foreign TABLE table_b\n" +
+                "(\n" +
+                "  shop_key varchar(4000),\n" +
+                "  dummy varchar(4000),\n" +
+                "  medium varchar(4000)\n" +
+                ");" +
+                "create virtual procedure p1(in dummy string) returns (procedure_result string)\n" +
+                "as begin\n" +
+                "    select 'key' procedure_result;\n" +
+                "end", "x", "test_dwh_pg");
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.shop_key AS c_0, g_0.channel_key AS c_1 FROM test_dwh_pg.table_a AS g_0 ORDER BY c_0, c_1", Arrays.asList("shop_key", "channel_key"));
+        hdm.addData("SELECT g_0.medium, g_0.dummy, g_0.shop_key FROM test_dwh_pg.table_b AS g_0 WHERE g_0.shop_key = 'shop_key'", Arrays.asList("channel", "dummy", "shop_key"));
+
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
+
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList("shop_key") });
     }
 
 }
