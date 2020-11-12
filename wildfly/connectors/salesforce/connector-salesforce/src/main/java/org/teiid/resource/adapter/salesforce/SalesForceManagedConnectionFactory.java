@@ -243,7 +243,11 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
     }
 
     public void checkVersion() {
-        String apiVersion = url.substring(url.lastIndexOf('/') + 1, url.length());
+        String urlToCheck = url;
+        if (url.endsWith("/")) { //$NON-NLS-1$
+            urlToCheck = url.substring(0, url.length()-1);
+        }
+        String apiVersion = urlToCheck.substring(urlToCheck.lastIndexOf('/') + 1, urlToCheck.length());
         String javaApiVersion = getJavaApiVersion();
         if (javaApiVersion != null && !javaApiVersion.equals(apiVersion)) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13009, apiVersion, javaApiVersion));

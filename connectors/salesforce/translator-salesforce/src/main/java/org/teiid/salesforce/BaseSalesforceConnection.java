@@ -79,6 +79,7 @@ import com.sforce.ws.transport.JdkHttpTransport;
 
 public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration, C extends ConnectorConfig, P extends PartnerConnection> implements SalesforceConnection {
 
+    private static final int MAX_BATCH_SIZE = 2000;
     private static final String ID_FIELD_NAME = "id"; //$NON-NLS-1$
     private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
     private static final int MAX_CHUNK_SIZE = 100000;
@@ -95,7 +96,7 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
     public BaseSalesforceConnection(T salesforceConfig) throws AsyncApiException, ConnectionException {
         config = createConnectorConfig(salesforceConfig);
         partnerConnection = login(salesforceConfig, config);
-
+        config.setManualLogin(true);
         String endpoint = config.getServiceEndpoint();
         // The endpoint for the Bulk API service is the same as for the normal
         // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
@@ -201,44 +202,51 @@ public abstract class BaseSalesforceConnection<T extends SalesforceConfiguration
 
     public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
 
-        if(batchSize > 2000) {
-            batchSize = 2000;
+        if(batchSize > MAX_BATCH_SIZE) {
+            batchSize = MAX_BATCH_SIZE;
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
         }
 
-        QueryResult qr = null;
-        partnerConnection.setQueryOptions(batchSize);
         try {
-            if(queryAll) {
-                qr = partnerConnection.queryAll(queryString);
-            } else {
-                partnerConnection.setMruHeader(false);
-                qr = partnerConnection.query(queryString);
+            PartnerConnection pc = new PartnerConnection(config);
+            pc.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
+            QueryResult qr = null;
+            pc.setQueryOptions(batchSize);
+            try {
+                if(queryAll) {
+                    qr = pc.queryAll(queryString);
+                } else {
+                    pc.setMruHeader(false);
+                    qr = pc.query(queryString);
+                }
+            } catch (ConnectionException e) {
+                throw new TranslatorException(e);
             }
+            return qr;
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
-        } finally {
-            partnerConnection.clearMruHeader();
-            partnerConnection.clearQueryOptions();
         }
-        return qr;
+
     }
 
     public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException {
-        if(batchSize > 2000) {
-            batchSize = 2000;
+        if(batchSize > MAX_BATCH_SIZE) {
+            batchSize = MAX_BATCH_SIZE;
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
         }
 
-        partnerConnection.setQueryOptions(batchSize);
         try {
-            return partnerConnection.queryMore(queryLocator);
+            PartnerConnection pc = new PartnerConnection(config);
+            pc.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
+            pc.setQueryOptions(batchSize);
+            try {
+                return pc.queryMore(queryLocator);
+            } catch (ConnectionException e) {
+                throw new TranslatorException(e);
+            }
         } catch (ConnectionException e) {
             throw new TranslatorException(e);
-        } finally {
-            partnerConnection.clearQueryOptions();
         }
-
     }
 
     public int delete(String[] ids) throws TranslatorException {

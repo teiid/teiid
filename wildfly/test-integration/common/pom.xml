@@ -184,6 +184,17 @@
         </dependency>
         
         <dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-salesforce-41</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.teiid.wildfly.connectors</groupId>
+            <artifactId>connector-salesforce-41</artifactId>
+        </dependency>
+        
+        <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
             <type>test-jar</type>
