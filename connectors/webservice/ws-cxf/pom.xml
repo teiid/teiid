@@ -3,7 +3,7 @@
     <parent>
         <artifactId>webservice</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>15.0.1</version>
+        <version>15.0.2-SNAPSHOT</version>
     </parent>
     <artifactId>ws-cxf</artifactId>
     <name>WS CXF</name>
