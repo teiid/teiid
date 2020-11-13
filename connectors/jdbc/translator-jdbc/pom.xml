@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>jdbc</artifactId>
-		<version>14.0.2</version>
+		<version>14.0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>translator-jdbc</artifactId>
 	<name>JDBC Translator</name>
