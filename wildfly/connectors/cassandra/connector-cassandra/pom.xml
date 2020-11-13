@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.teiid.wildfly.connectors</groupId>
         <artifactId>cassandra</artifactId>
-        <version>14.0.2-SNAPSHOT</version>
+        <version>14.0.2</version>
     </parent>
     <artifactId>connector-cassandra</artifactId>
     <name>Cassandra Resource Adapter</name>
