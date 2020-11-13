@@ -229,7 +229,7 @@
         <properties>
             <basepom.check.skip-dependency-versions-check>false</basepom.check.skip-dependency-versions-check>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
-            <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
+            <basepom.check.fail-javadoc>false</basepom.check.fail-javadoc>
         </properties>
         </profile>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
