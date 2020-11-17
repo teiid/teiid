@@ -25,11 +25,14 @@ import static org.junit.Assert.assertTrue;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Arrays;
+import java.util.TimeZone;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.SimpleMock;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Array;
 import org.teiid.language.Expression;
 import org.teiid.language.Literal;
@@ -50,6 +53,12 @@ public class TestPostgreSQLTranslator {
         TRANSLATOR.start();
         TRANSLATOR.setPostGisVersion("1.0");
         TRANSLATOR.initCapabilities(SimpleMock.createSimpleMock(Connection.class));
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        TimestampWithTimezone.resetCalendar(null);
     }
 
     public String getTestVDB() {
@@ -751,6 +760,10 @@ public class TestPostgreSQLTranslator {
         helpTestVisitor("create foreign table t (id string)",
             input,
             output);
+    }
+
+    @Test public void testConvertTimestampTZ() throws Exception {
+        assertEquals("2001-01-01 05:02:03.123456", PostgreSQLExecutionFactory.convertTimestampTZ("2001-01-01 01:02:03.123456-04").toString());
     }
 
 }

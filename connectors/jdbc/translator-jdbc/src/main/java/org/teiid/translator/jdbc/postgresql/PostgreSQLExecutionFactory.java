@@ -23,6 +23,7 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.CharBuffer;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
@@ -32,6 +33,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1048,7 +1051,27 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         if (expectedType == TypeFacility.RUNTIME_TYPES.JSON) {
             return new JsonType(new ClobImpl(results.getString(columnIndex)));
         }
-        return super.retrieveValue(results, columnIndex, expectedType);
+        try {
+            return super.retrieveValue(results, columnIndex, expectedType);
+        } catch (SQLException e) {
+            if (expectedType == TypeFacility.RUNTIME_TYPES.TIMESTAMP) {
+                //redshift cannot convert timestamptz to timestamp at the driver level
+                String value = (String) super.retrieveValue(results, columnIndex, TypeFacility.RUNTIME_TYPES.STRING);
+                if (value != null && value.length() > 10) {
+                    return convertTimestampTZ(value);
+                }
+            }
+            throw e;
+        }
+    }
+
+    static Object convertTimestampTZ(String value) {
+        char[] chars = value.toCharArray();
+        chars[10] = 'T'; //convert to the iso format
+        ZonedDateTime dt = ZonedDateTime.parse(CharBuffer.wrap(chars), DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        Timestamp ts = new Timestamp(dt.toEpochSecond()*1000);
+        ts.setNanos(dt.getNano());
+        return ts;
     }
 
     @Override
