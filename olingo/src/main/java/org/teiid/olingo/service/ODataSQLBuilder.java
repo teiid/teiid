@@ -42,9 +42,45 @@ import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ODataApplicationException;
 import org.apache.olingo.server.api.ODataLibraryException;
 import org.apache.olingo.server.api.ServiceMetadata;
-import org.apache.olingo.server.api.uri.*;
-import org.apache.olingo.server.api.uri.queryoption.*;
+import org.apache.olingo.server.api.uri.UriInfo;
+import org.apache.olingo.server.api.uri.UriInfoAll;
+import org.apache.olingo.server.api.uri.UriInfoBatch;
+import org.apache.olingo.server.api.uri.UriInfoCrossjoin;
+import org.apache.olingo.server.api.uri.UriInfoEntityId;
+import org.apache.olingo.server.api.uri.UriInfoMetadata;
+import org.apache.olingo.server.api.uri.UriInfoService;
+import org.apache.olingo.server.api.uri.UriParameter;
+import org.apache.olingo.server.api.uri.UriResource;
+import org.apache.olingo.server.api.uri.UriResourceAction;
+import org.apache.olingo.server.api.uri.UriResourceComplexProperty;
+import org.apache.olingo.server.api.uri.UriResourceCount;
+import org.apache.olingo.server.api.uri.UriResourceEntitySet;
+import org.apache.olingo.server.api.uri.UriResourceFunction;
+import org.apache.olingo.server.api.uri.UriResourceIt;
+import org.apache.olingo.server.api.uri.UriResourceLambdaAll;
+import org.apache.olingo.server.api.uri.UriResourceLambdaAny;
+import org.apache.olingo.server.api.uri.UriResourceLambdaVariable;
+import org.apache.olingo.server.api.uri.UriResourceNavigation;
+import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
+import org.apache.olingo.server.api.uri.UriResourceRef;
+import org.apache.olingo.server.api.uri.UriResourceRoot;
+import org.apache.olingo.server.api.uri.UriResourceSingleton;
+import org.apache.olingo.server.api.uri.UriResourceValue;
+import org.apache.olingo.server.api.uri.queryoption.ApplyItem;
+import org.apache.olingo.server.api.uri.queryoption.ApplyOption;
+import org.apache.olingo.server.api.uri.queryoption.CountOption;
+import org.apache.olingo.server.api.uri.queryoption.ExpandItem;
+import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
+import org.apache.olingo.server.api.uri.queryoption.FilterOption;
+import org.apache.olingo.server.api.uri.queryoption.FormatOption;
 import org.apache.olingo.server.api.uri.queryoption.OrderByItem;
+import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
+import org.apache.olingo.server.api.uri.queryoption.SearchOption;
+import org.apache.olingo.server.api.uri.queryoption.SelectItem;
+import org.apache.olingo.server.api.uri.queryoption.SelectOption;
+import org.apache.olingo.server.api.uri.queryoption.SkipOption;
+import org.apache.olingo.server.api.uri.queryoption.SkipTokenOption;
+import org.apache.olingo.server.api.uri.queryoption.TopOption;
 import org.apache.olingo.server.api.uri.queryoption.apply.Aggregate;
 import org.apache.olingo.server.api.uri.queryoption.apply.AggregateExpression;
 import org.apache.olingo.server.api.uri.queryoption.apply.AggregateExpression.StandardMethod;
@@ -68,6 +104,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
@@ -83,10 +120,30 @@ import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 import org.teiid.olingo.service.TeiidServiceHandler.ExpandNode;
 import org.teiid.olingo.service.TeiidServiceHandler.OperationParameterValueProvider;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.AbstractCompareCriteria;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Option.MakeDep;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.Array;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
@@ -115,6 +172,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     private OData odata;
     private boolean navigation = false;
     private OperationParameterValueProvider parameters;
+    private boolean enforceNullOrder = PropertiesUtils.getHierarchicalProperty("org.teiid.enforceODataNullOrder", true, Boolean.class); //$NON-NLS-1$
 
     class URLParseService {
         public Query parse(String rawPath, String baseUri) throws TeiidException {
@@ -503,10 +561,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 //not a big issue
                 visitor.getEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
             }
-            if (obitem.isDescending()) {
-                item.setNullOrdering(NullOrdering.LAST);
-            } else {
-                item.setNullOrdering(NullOrdering.FIRST);
+            if (enforceNullOrder) {
+                if (obitem.isDescending()) {
+                    item.setNullOrdering(NullOrdering.LAST);
+                } else {
+                    item.setNullOrdering(NullOrdering.FIRST);
+                }
             }
         }
         return orderBy;
@@ -1183,5 +1243,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     public void setOperationParameterValueProvider(
             OperationParameterValueProvider parameters) {
         this.parameters = parameters;
+    }
+
+    public void setEnforceNullOrder(boolean enforceNullOrder) {
+        this.enforceNullOrder = enforceNullOrder;
     }
 }
