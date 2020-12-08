@@ -229,8 +229,8 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     }
 
     @Override
-    public int getMaxFromGroups() {
-        return 2;
+    public boolean supportsOnlyRelationshipStyleJoins() {
+        return true;
     }
 
     @Override

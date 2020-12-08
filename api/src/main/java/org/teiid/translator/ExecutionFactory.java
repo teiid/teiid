@@ -901,6 +901,10 @@ public class ExecutionFactory<F, C> {
         return DEFAULT_MAX_FROM_GROUPS;
     }
 
+    public boolean supportsOnlyRelationshipStyleJoins() {
+        return false;
+    }
+
     /**
      * The number of columns supported in projected select clause.  Added for a postgresql limitation.
      * @since 12.1

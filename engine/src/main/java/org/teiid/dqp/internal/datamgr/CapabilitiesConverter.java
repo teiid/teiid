@@ -141,6 +141,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, srcCaps.supportsOnlyTimestampAddLiteral());
         tgtCaps.setCapabilitySupport(Capability.GEOGRAPHY_TYPE, srcCaps.supportsGeographyType());
         tgtCaps.setCapabilitySupport(Capability.PROCEDURE_PARAMETER_EXPRESSION, srcCaps.supportsProcedureParameterExpression());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_ONLY_FROM_RELATIONSHIP_JOIN, srcCaps.supportsOnlyRelationshipStyleJoins());
         if (srcCaps.supportsPartialFiltering()) {
             //disable supports that could end up being not filterable
             tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

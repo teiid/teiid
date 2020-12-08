@@ -428,4 +428,39 @@ public class TestVisitors {
         assertEquals("SELECT Name, (SELECT Name FROM ChildAccounts) FROM Account WHERE Name = 'x'", visitor.getQuery().toString().trim()); //$NON-NLS-1$
     }
 
+    @Test public void testMultipleParents() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName, r.LastName FROM Contact left outer join Account on Account.Id = Contact.AccountId left outer join Contact r on Contact.ReportsToId = r.Id"); //$NON-NLS-1$
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("SELECT Account.Phone, Account.Name, Account.Type, LastName, ReportsTo.LastName FROM Contact", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
+    @Test public void testGrandParents() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("SELECT Account.Type, Contact.LastName, p.Id FROM Contact left outer join Account on Account.Id = Contact.AccountId inner join Account p on Account.parentid = p.Id"); //$NON-NLS-1$
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("SELECT Account.Type, LastName, Account.Parent.Id FROM Contact WHERE Account.ParentId != NULL", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
+    @Test public void testParentChildParent() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName, p.Id FROM Contact right outer join Account on Account.Id = Contact.AccountId left outer join Account p on Account.parentid = p.Id"); //$NON-NLS-1$
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("SELECT Phone, Name, Type, Parent.Id, (SELECT LastName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
+    @Test(expected = AssertionError.class) public void testInvalidParentChildGrandChild() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName, r.LastName FROM Account left outer join Contact on Account.Id = Contact.AccountId left outer join Contact r on Contact.ReportsToId = r.Id"); //$NON-NLS-1$
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("SELECT Phone, Name, Type, ReportsTo.LastName, (SELECT LastName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
+    @Test(expected = AssertionError.class) public void testInvalidChildParentSibling() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("SELECT Account.Type, Contact.LastName, c.Id FROM Contact left outer join Account on Account.Id = Contact.AccountId inner join Account c on Account.Id = c.parentId"); //$NON-NLS-1$
+        SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+        visitor.visit(command);
+        assertEquals("SELECT Parent.Type, LastName, Id FROM Contact WHERE ParentId != NULL", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+    }
+
 }

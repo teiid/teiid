@@ -102,6 +102,26 @@ public class TestQueryExecutionImpl {
         assertNull(qei.next());
     }
 
+    @Test public void testJoinChildToGrandParent() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id, a1.id from Contact left outer join Account on Account.Id = Contact.AccountId left outer join Account a1 on Account.parentid = a1.id"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryResult qr = new QueryResult();
+        SObject so = new SObject();
+        so.setType("Account");
+        so.addField("Name", "account name");
+        SObject so1 = new SObject();
+        so1.setType("Contact");
+        so1.addField("Id", "contact id");
+        so1.addField("Account", so);
+        qr.setRecords(new SObject[] {so1});
+        qr.setDone(true);
+        Mockito.stub(sfc.query("SELECT Account.Name, Id, Account.Parent.Id FROM Contact", 0, false)).toReturn(qr);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertEquals(Arrays.asList("account name", "contact id", null), qei.next());
+        assertNull(qei.next());
+    }
+
     @Test public void testJoinParentToChild() throws Exception {
         Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account left outer join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
         SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
@@ -112,7 +132,9 @@ public class TestQueryExecutionImpl {
         SObject so1 = new SObject();
         so1.setType("Contact");
         so1.addField("Id", "contact id");
-        so.addField("Contacts", so1);
+        SObject records = new SObject();
+        records.addField("records", so1);
+        so.addField("Contacts", records);
         qr.setRecords(new SObject[] {so});
         qr.setDone(true);
         Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
