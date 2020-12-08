@@ -17,6 +17,7 @@
  */
 package org.teiid.translator.salesforce;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -58,8 +59,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     private SalesforceConnection connection;
 
     private Map<String, Table> tableMap = new LinkedHashMap<String, Table>();
-    private Map<String, ChildRelationship[]> relationships = new LinkedHashMap<String, ChildRelationship[]>();
-    private List<Column> columns;
+    private List<Map.Entry<String, ChildRelationship[]>> relationships = new ArrayList<>();
     private boolean auditModelFields = false;
     private boolean normalizeNames = true;
     private Pattern excludeTables;
@@ -202,7 +202,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     }
 
     private void addRelationships() {
-        for (Map.Entry<String, ChildRelationship[]> entry : this.relationships.entrySet()) {
+        for (Map.Entry<String, ChildRelationship[]> entry : this.relationships) {
             for (ChildRelationship relationship : entry.getValue()) {
                 if (relationship.getRelationshipName() == null) {
                     continue; //not queryable
@@ -224,7 +224,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                 }
 
                 Column col = null;
-                columns = child.getColumns();
+                List<Column> columns = child.getColumns();
                 for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
                     Column column = colIter.next();
                     if(column.getSourceName().equals(relationship.getField())) {
@@ -242,7 +242,10 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                 ArrayList<String> columnNames = new ArrayList<String>();
                 columnNames.add(col.getName());
                 ForeignKey fk = metadataFactory.addForeignKey(name, columnNames, parent.getName(), child);
-                fk.setNameInSource(relationship.getRelationshipName()); //TODO: only needed for custom relationships
+                fk.setNameInSource(relationship.getRelationshipName());
+                if (isAuditField(relationship.getField())) {
+                    fk.setProperty(ForeignKey.ALLOW_JOIN, "INNER"); //$NON-NLS-1$
+                }
             }
         }
     }
@@ -304,7 +307,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     private void getRelationships(DescribeSObjectResult objectMetadata) {
         ChildRelationship[] children = objectMetadata.getChildRelationships();
         if(children != null && children.length > 0) {
-            this.relationships.put(objectMetadata.getName(), children);
+            this.relationships.add(new AbstractMap.SimpleEntry<String, ChildRelationship[]>(objectMetadata.getName(), children));
         }
     }
 
@@ -317,8 +320,17 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                 normalizedName = NameUtil.normalizeName(normalizedName);
             }
             FieldType fieldType = field.getType();
-            if(!isModelAuditFields() && isAuditField(field.getName())) {
-                continue;
+            if(isAuditField(field.getName())) {
+                if (!isModelAuditFields()) {
+                    continue;
+                }
+                if (field.getName().equals(AUDIT_FIELD_CREATED_BY_ID) || field.getName().equals(AUDIT_FIELD_LAST_MODIFIED_BY_ID)) {
+                    ChildRelationship relationship = new ChildRelationship();
+                    relationship.setChildSObject(objectMetadata.getName());
+                    relationship.setField(field.getName());
+                    relationship.setRelationshipName(objectMetadata.getName()+"s"); //$NON-NLS-1$
+                    this.relationships.add(new AbstractMap.SimpleEntry<String, ChildRelationship[]>("User", new ChildRelationship[]{relationship})); //$NON-NLS-1$
+                }
             }
             String sfTypeName = fieldType.name();
             Column column = null;
