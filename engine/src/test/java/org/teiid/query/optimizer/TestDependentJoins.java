@@ -1145,4 +1145,18 @@ public class TestDependentJoins {
         TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList("shop_key") });
     }
 
+    @Test public void testMultipleMakeIndAgainstLargeCardinalities() throws Exception {
+        String sql = "select bet.e1 from (pm1.g1 AS bet LEFT OUTER JOIN pm1.g2 AS bre ON bet.e1 = bre.e1) LEFT OUTER JOIN pm1.g3 AS zak ON bet.e2 = zak.e2 inner join /*+ MAKEIND */ (select e1 from pm2.g1) test on (zak.e1 = test.e1) inner join /*+ MAKEIND */ (select e2 from pm3.g1) test1 on (zak.e1 = test1.e2)";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+
+        //causes the plan structure to loose the hints
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g2", 100000000, metadata);
+        RealMetadataFactory.setCardinality("pm1.g1", 100000000, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", 100000000, metadata);
+
+        TestOptimizer.helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(caps), new String[] {
+                "SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_2.e1, g_0.e1 FROM (pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e1 = g_1.e1) INNER JOIN pm1.g3 AS g_2 ON g_0.e2 = g_2.e2 WHERE (g_2.e1 IN (<dependent values>)) AND (g_2.e1 IN (<dependent values>))", "SELECT g_0.e2 FROM pm3.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+    }
+
 }

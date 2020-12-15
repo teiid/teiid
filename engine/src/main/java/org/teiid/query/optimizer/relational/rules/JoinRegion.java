@@ -18,8 +18,19 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -281,7 +292,7 @@ class JoinRegion {
             CompoundCriteria cc = null;
 
             if (!criteria.isEmpty() && i > 0) {
-                applicableCriteria = getJoinCriteriaForGroups(groups, criteria);
+                applicableCriteria = getJoinCriteriaForGroups(groups, criteria, false);
                 if (applicableCriteria != null && !applicableCriteria.isEmpty()) {
                     cc = new CompoundCriteria();
                     for (PlanNode planNode : applicableCriteria) {
@@ -290,8 +301,11 @@ class JoinRegion {
                 }
             }
 
+            boolean isInd = joinSourceRoot.hasProperty(Info.MAKE_IND);
+
             if (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE) {
                 sourceCost = UNKNOWN_TUPLE_EST;
+
                 hasUnknown = true;
                 if (cc != null) {
                     shouldFilter = false;
@@ -326,8 +340,13 @@ class JoinRegion {
                 }
             }
 
-            if (i > 0 && (applicableCriteria == null || applicableCriteria.isEmpty()) && hasUnknown) {
-                sourceCost *= 10; //cross join penalty
+            if (i > 0 && (applicableCriteria == null || applicableCriteria.isEmpty()) && (hasUnknown || isInd)) {
+                if (isInd && !getJoinCriteriaForGroups(joinSourceRoot.getGroups(), criteria, true).isEmpty()) {
+                    //TODO: it would be better to deeply cost / plan the various dependent scenarios
+                    //rather than the check here and above for an initial dependent join
+                    return Double.MAX_VALUE;
+                }
+                sourceCost *= 100; //penalty
             }
 
             double rightCost = cost;
@@ -590,11 +609,11 @@ class JoinRegion {
     }
 
     //TODO: this should be better than a linear search
-    protected List<PlanNode> getJoinCriteriaForGroups(Set<GroupSymbol> groups, Collection<PlanNode> nodes) {
+    protected List<PlanNode> getJoinCriteriaForGroups(Set<GroupSymbol> groups, Collection<PlanNode> nodes, boolean any) {
         List<PlanNode> result = new LinkedList<PlanNode>();
 
         for (PlanNode critNode : nodes) {
-            if (groups.containsAll(critNode.getGroups())) {
+            if (any?!Collections.disjoint(groups, critNode.getGroups()):groups.containsAll(critNode.getGroups())) {
                 Criteria crit = (Criteria) critNode.getProperty(Info.SELECT_CRITERIA);
                 if (crit instanceof CompareCriteria && ((CompareCriteria) crit).isOptional()) {
                     continue;
