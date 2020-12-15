@@ -44,9 +44,50 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.AbstractCompareCriteria;
+import org.teiid.query.sql.lang.AbstractSetCriteria;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.IsDistinctCriteria;
+import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.lang.MatchCriteria;
+import org.teiid.query.sql.lang.NotCriteria;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Array;
+import org.teiid.query.sql.symbol.CaseExpression;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.JSONObject;
+import org.teiid.query.sql.symbol.QueryString;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.TextLine;
+import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.XMLAttributes;
+import org.teiid.query.sql.symbol.XMLCast;
+import org.teiid.query.sql.symbol.XMLElement;
+import org.teiid.query.sql.symbol.XMLExists;
+import org.teiid.query.sql.symbol.XMLForest;
+import org.teiid.query.sql.symbol.XMLNamespaces;
+import org.teiid.query.sql.symbol.XMLParse;
+import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
@@ -654,27 +695,23 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.ExistsCriteria)
      */
     public void visit(ExistsCriteria crit) {
+        if (crit.shouldEvaluate()) {
+            return;
+        }
+        boolean canPreEval = crit.getCommand().getCorrelatedReferences() == null;
         // Check if exists criteria are allowed
         if(! this.caps.supportsCapability(Capability.CRITERIA_EXISTS)) {
-            markInvalid(crit, "Exists is not supported by source"); //$NON-NLS-1$
-            return;
-        }
-
-        if (crit.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
-            markInvalid(crit, "Negation is not supported by source"); //$NON-NLS-1$
-            return;
-        }
-
-        try {
-            if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
-                if (crit.getCommand().getCorrelatedReferences() == null) {
-                    crit.setShouldEvaluate(true);
-                } else {
-                    markInvalid(crit.getCommand(), "Subquery cannot be pushed down"); //$NON-NLS-1$
+            markEvaluatable(crit, canPreEval, "Exists is not supported by source"); //$NON-NLS-1$
+        } else if (crit.isNegated() && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+            markEvaluatable(crit, canPreEval, "Negation is not supported by source"); //$NON-NLS-1$
+        } else {
+            try {
+                if (validateSubqueryPushdown(crit, modelID, metadata, capFinder, analysisRecord) == null) {
+                    markEvaluatable(crit, canPreEval, "Subquery cannot be pushed down"); //$NON-NLS-1$
                 }
+            } catch (TeiidComponentException e) {
+                handleException(e);
             }
-        } catch (TeiidComponentException e) {
-            handleException(e);
         }
     }
 
@@ -752,7 +789,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
     }
 
-    private void markEvaluatable(ScalarSubquery obj, boolean canPreEval, String reasonWhyInvalid) {
+    private void markEvaluatable(SubqueryContainer.Evaluatable<QueryCommand> obj, boolean canPreEval, String reasonWhyInvalid) {
         if (canPreEval) {
             obj.setShouldEvaluate(true);
         } else {

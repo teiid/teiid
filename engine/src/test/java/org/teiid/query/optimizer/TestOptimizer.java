@@ -18,7 +18,12 @@
 
 package org.teiid.query.optimizer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,8 +61,26 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
-import org.teiid.query.processor.relational.*;
+import org.teiid.query.processor.relational.AccessNode;
+import org.teiid.query.processor.relational.DependentAccessNode;
+import org.teiid.query.processor.relational.DupRemoveNode;
+import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
+import org.teiid.query.processor.relational.GroupingNode;
+import org.teiid.query.processor.relational.JoinNode;
+import org.teiid.query.processor.relational.JoinStrategy;
+import org.teiid.query.processor.relational.MergeJoinStrategy;
+import org.teiid.query.processor.relational.NestedLoopJoinStrategy;
+import org.teiid.query.processor.relational.NestedTableJoinStrategy;
+import org.teiid.query.processor.relational.NullNode;
+import org.teiid.query.processor.relational.PlanExecutionNode;
+import org.teiid.query.processor.relational.ProjectIntoNode;
+import org.teiid.query.processor.relational.ProjectNode;
+import org.teiid.query.processor.relational.RelationalNode;
+import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.processor.relational.SelectNode;
+import org.teiid.query.processor.relational.SortNode;
 import org.teiid.query.processor.relational.SortUtility.Mode;
+import org.teiid.query.processor.relational.UnionAllNode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
@@ -1253,7 +1276,7 @@ public class TestOptimizer {
     }
 
     @Test public void testExistsSubquery1() {
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where exists (select e1 FROM pm2.g1)", example1(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where exists (select e1 FROM pm2.g1 where pm2.g1.e1 = pm1.g1.e1)", example1(),  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -5513,7 +5536,7 @@ public class TestOptimizer {
      * The bug was in FrameUtil.convertCriteria() method, where ExistsCriteria was not being checked for.
      */
     @Test public void testExistsCriteriaInSelect() {
-        String sql = "select intkey, case when exists (select stringkey from bqt1.smallb) then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
+        String sql = "select intkey, case when exists (select stringkey from bqt1.smallb where intkey = vqt.smalla.intkey) then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
                                       new String[] {
@@ -6393,7 +6416,7 @@ public class TestOptimizer {
     }
 
     @Test public void testUpdatePushdownFails() {
-        helpPlan("update pm1.g1 set e1 = 1 where exists (select 1 from pm1.g2)", RealMetadataFactory.example1Cached(), null, //$NON-NLS-1$
+        helpPlan("update pm1.g1 set e1 = 1 where exists (select 1 from pm1.g2 where e1 = pm1.g1.e1)", RealMetadataFactory.example1Cached(), null, //$NON-NLS-1$
             null, null, false); //$NON-NLS-1$
     }
 

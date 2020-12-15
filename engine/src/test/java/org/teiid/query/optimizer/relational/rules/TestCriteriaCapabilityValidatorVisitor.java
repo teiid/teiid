@@ -18,7 +18,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -884,10 +884,22 @@ public class TestCriteriaCapabilityValidatorVisitor {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2 where e2 = pm1.g1.e2)", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
+    }
+
+    @Test public void testExistsPreeval() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Object modelID = metadata.getMetadataStore().getSchema("PM1");
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false); //$NON-NLS-1$
+        helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
     }
 
     @Test public void testExistsCriteria5() throws Exception {
