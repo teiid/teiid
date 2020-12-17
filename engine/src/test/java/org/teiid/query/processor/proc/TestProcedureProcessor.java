@@ -18,8 +18,15 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +37,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryProcessingException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.xa.XATransactionException;
@@ -1402,10 +1410,7 @@ public class TestProcedureProcessor {
         helpTestProcessFailure(plan, dataMgr, "TEIID30229 Temporary table \"T1\" already exists.", metadata); //$NON-NLS-1$
     }
 
-    /**
-     *  We allow drops to silently fail
-     */
-    @Test public void testDoubleDrop() throws Exception {
+    @Test(expected=QueryPlannerException.class) public void testDoubleDrop() throws Exception {
 
         TransformationMetadata metadata = RealMetadataFactory.example1();
 
@@ -1424,9 +1429,7 @@ public class TestProcedureProcessor {
 
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-
-        helpTestProcess(plan, new List[] {Arrays.asList("1")}, dataMgr, metadata);
+        getProcedurePlan(userUpdateStr, metadata);
     }
 
     /**
@@ -2539,6 +2542,57 @@ public class TestProcedureProcessor {
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         List[] expected = new List[] { }; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataManager, tm);
+    }
+
+    @Test public void testImplicitRecreate() throws Exception {
+        String sql = "begin\n" +
+                "    select * into #temp from (select 1 as a) x;\n" +
+                "    drop table #temp;\n" +
+                "    select * into #temp from (select 'a' as a) x;\n" +
+                "end";
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+
+    @Test public void testExplictDropException() throws Exception {
+        String sql = "begin create temporary table temp (a integer);\n" +
+                "    select * into temp from (select 1 as a) x;\n" +
+                "    drop table temp;\n" +
+                "    select * into temp from (select 'a' as a) x;\n" +
+                "end";
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+
+        try {
+            getProcedurePlan(sql, tm);
+            fail();
+        } catch (QueryResolverException e) {
+            assertTrue(e.getMessage().contains("Group does not exist"));
+        }
+    }
+
+    @Test public void testDoubleCreate() throws Exception {
+        String sql = "begin "
+                + "   create temporary table temp (a integer); "
+                + "   create temporary table temp (a integer);\n" +
+                "end";
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+
+        //should plan just fine, but fail to process
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { }; //$NON-NLS-1$
+        try {
+            helpTestProcess(plan, expected, dataManager, tm);
+            fail();
+        } catch (QueryProcessingException e) {
+
+        }
     }
 
     @Test public void testAnonDynamicAtomic() throws Exception {

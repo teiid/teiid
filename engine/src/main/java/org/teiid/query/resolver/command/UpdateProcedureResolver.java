@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NavigableMap;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -50,7 +51,18 @@ import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.proc.*;
+import org.teiid.query.sql.proc.AssignmentStatement;
+import org.teiid.query.sql.proc.Block;
+import org.teiid.query.sql.proc.CommandStatement;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
+import org.teiid.query.sql.proc.DeclareStatement;
+import org.teiid.query.sql.proc.ExpressionStatement;
+import org.teiid.query.sql.proc.IfStatement;
+import org.teiid.query.sql.proc.LoopStatement;
+import org.teiid.query.sql.proc.ReturnStatement;
+import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.proc.TriggerAction;
+import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -193,7 +205,9 @@ public class UpdateProcedureResolver implements CommandResolver {
                 }
 
                 if (discoveredMetadata != null) {
-                    metadata.getMetadataStore().getData().putAll(discoveredMetadata.getData());
+                    NavigableMap<String, TempMetadataID> data = metadata.getMetadataStore().getData();
+                    data.clear();
+                    data.putAll(discoveredMetadata.getData());
                 }
 
                 //dynamic commands need to be updated as to their implicitly expected projected symbols

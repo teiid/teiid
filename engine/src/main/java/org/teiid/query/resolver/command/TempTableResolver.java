@@ -32,6 +32,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.resolver.CommandResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
@@ -100,7 +101,10 @@ public class TempTableResolver implements CommandResolver {
                 tempTable.getTableData().setModel(mid);
             }
         } else if(command.getType() == Command.TYPE_DROP) {
-            ResolverUtil.resolveGroup(((Drop)command).getTable(), metadata);
+            GroupSymbol table = ((Drop)command).getTable();
+            ResolverUtil.resolveGroup(table, metadata);
+            TempMetadataStore store = metadata.getMetadataStore();
+            store.removeTempGroup(table.getName());
         }
     }
 
