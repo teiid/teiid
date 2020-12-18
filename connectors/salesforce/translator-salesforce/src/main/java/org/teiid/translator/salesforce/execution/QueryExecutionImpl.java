@@ -244,10 +244,14 @@ public class QueryExecutionImpl implements ResultSetExecution {
         }
         visitor.visitNode(query);
         if(visitor.canRetrieve()) {
-            context.logCommand("Using retrieve: ", visitor.getRetrieveFieldList(), visitor.getTableName(), visitor.getIdInCriteria()); //$NON-NLS-1$
-            results = this.executionFactory.buildQueryResult(connection.retrieve(visitor.getRetrieveFieldList(),
-                    visitor.getTableName(), visitor.getIdInCriteria()));
-        } else {
+            String retrieveFieldList = visitor.getRetrieveFieldList();
+            if (!visitor.isSelectAggregate()) { //check after looking at the select
+                context.logCommand("Using retrieve: ", retrieveFieldList, visitor.getTableName(), visitor.getIdInCriteria()); //$NON-NLS-1$
+                results = this.executionFactory.buildQueryResult(connection.retrieve(retrieveFieldList,
+                        visitor.getTableName(), visitor.getIdInCriteria()));
+            }
+        }
+        if (results == null) {
             String finalQuery = visitor.getQuery().trim();
             //redundant
             LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
