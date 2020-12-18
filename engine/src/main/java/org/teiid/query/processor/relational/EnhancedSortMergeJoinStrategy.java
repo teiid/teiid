@@ -245,9 +245,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         } else {
             if (!this.rightSource.hasBuffer() && processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && shouldIndexIfSmall(this.leftSource)) {
                 this.processingSortRight = SortOption.NOT_SORTED;
-            } else if (processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && ((!this.rightSource.hasBuffer() && processingSortLeft != SortOption.SORT) || shouldIndex(this.leftSource, this.rightSource))) {
+            } else if (!semiDep && processingSortRight == SortOption.SORT && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER && ((!this.rightSource.hasBuffer() && processingSortLeft != SortOption.SORT) || shouldIndex(this.leftSource, this.rightSource))) {
                 this.processingSortRight = SortOption.NOT_SORTED;
-            } else if (processingSortLeft == SortOption.SORT && shouldIndex(this.rightSource, this.leftSource)) {
+            } else if (!semiDep && processingSortLeft == SortOption.SORT && shouldIndex(this.rightSource, this.leftSource)) {
                 this.processingSortLeft = SortOption.NOT_SORTED;
             }
         }
@@ -278,6 +278,31 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
             }
             parent = parent.getParent();
         }
+
+        if (semiDep && this.leftSource.isExpresssionDistinct()) {
+            this.rightSource.rowCountLE(1); //do a prefetch to see if any select nodes are triggered
+            if (!this.joinNode.getDependentValueSource().isUnused()) {
+                if (!this.joinNode.getDependentValueSource().inMemory()) {
+                    //must be pushed - TODO detect that without buffering
+                    this.rightSource.getTupleBuffer();
+                    if (!this.joinNode.getDependentValueSource().isUnused()) {
+                        this.validSemiDep = true;
+                    }
+                } else {
+                    this.validSemiDep = true;
+                }
+
+                if (this.validSemiDep) {
+                    this.sortedSource = this.leftSource;
+                    this.notSortedSource = this.rightSource;
+                    //sort is not needed
+                    this.processingSortRight = SortOption.NOT_SORTED;
+                    //TODO: this performs an unnecessary projection
+                    return;
+                }
+            }
+        }
+
         if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
             if (hasLimit && this.joinNode.getJoinType() != JoinType.JOIN_LEFT_OUTER) {
                 //still use a more incremental join/sort approach
@@ -302,6 +327,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
                 return; //degrade to merge join
             }
         }
+
         if (this.processingSortLeft == SortOption.NOT_SORTED) {
             this.sortedSource = this.rightSource;
             this.notSortedSource = this.leftSource;
@@ -319,17 +345,6 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         } else if (this.processingSortRight == SortOption.NOT_SORTED) {
             this.sortedSource = this.leftSource;
             this.notSortedSource = this.rightSource;
-
-            if (semiDep && this.leftSource.isExpresssionDistinct()) {
-                this.rightSource.getTupleBuffer();
-                if (!this.joinNode.getDependentValueSource().isUnused()) {
-                    //sort is not needed
-                    this.processingSortRight = SortOption.NOT_SORTED;
-                    this.validSemiDep = true;
-                    //TODO: this requires full buffering and performs an unnecessary projection
-                    return;
-                }
-            }
 
             if (!repeatedMerge) {
                 createIndex(this.leftSource, this.processingSortLeft);

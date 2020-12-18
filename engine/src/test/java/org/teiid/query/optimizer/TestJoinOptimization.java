@@ -303,6 +303,56 @@ public class TestJoinOptimization {
     }
 
     /**
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    @Test public void testEvaluatableSubqueryInOn1a() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select b1.intkey, b2.intkey from bqt1.smalla b1 left outer join bqt1.smallb b2 on (b1.intkey = b2.intkey and exists (select stringkey from bqt1.mediuma where stringkey = b2.stringkey))"; //$NON-NLS-1$
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, false);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
+                new String[] {"SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 ORDER BY c_0",
+                "SELECT g_0.IntKey AS c_0 FROM BQT1.SmallB AS g_0 WHERE EXISTS (SELECT g_1.StringKey FROM BQT1.MediumA AS g_1 WHERE g_1.StringKey = g_0.StringKey) ORDER BY c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 ORDER BY c_0", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey AS c_0 FROM BQT1.SmallB AS g_0 WHERE EXISTS (SELECT g_1.StringKey FROM BQT1.MediumA AS g_1 WHERE g_1.StringKey = g_0.StringKey) ORDER BY c_0", Arrays.asList(1));
+
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1)});
+    }
+
+    @Test public void testEvaluatableSubqueryInOn1b() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select b1.intkey, b2.intkey from bqt1.smalla b1 left outer join bqt1.smallb b2 on (b1.intkey = b2.intkey and exists (select stringkey from bqt1.mediuma))"; //$NON-NLS-1$
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, false);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, false);
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
+                new String[] {"SELECT g_0.IntKey, g_1.IntKey FROM BQT1.SmallA AS g_0 LEFT OUTER JOIN BQT1.SmallB AS g_1 ON g_0.IntKey = g_1.IntKey AND EXISTS (SELECT g_0.StringKey FROM BQT1.MediumA AS g_0)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey FROM BQT1.MediumA AS g_0");
+        hdm.addData("SELECT g_0.IntKey, g_1.IntKey FROM BQT1.SmallA AS g_0 LEFT OUTER JOIN BQT1.SmallB AS g_1 ON 1 = 0", Arrays.asList(1, null));
+
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, null)});
+
+        //make sure even if exists is supported, this doesn't inhibit pushdown
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+
+        plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
+                new String[] {"SELECT g_0.IntKey, g_1.IntKey FROM BQT1.SmallA AS g_0 LEFT OUTER JOIN BQT1.SmallB AS g_1 ON g_0.IntKey = g_1.IntKey AND EXISTS (SELECT g_0.StringKey FROM BQT1.MediumA AS g_0)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, null)});
+    }
+
+    /**
      * Copy criteria should still work here even though the join criteria has an implicit type conversion because
      * the equality operation on the select criteria can be used.
      */

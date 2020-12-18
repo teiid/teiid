@@ -110,7 +110,7 @@ public class DependentValueSource implements
             result = cachedSets.get(valueExpression);
         }
         if (result == null) {
-            if (buffer.getRowCount() > buffer.getBatchSize()) {
+            if (!inMemory()) {
                 return null;
             }
             TupleSourceValueIterator ve = getValueIterator(valueExpression);
@@ -147,13 +147,18 @@ public class DependentValueSource implements
     }
 
     @Override
+    public boolean inMemory() {
+        return buffer.getRowCount() <= buffer.getBatchSize();
+    }
+
+    @Override
     public boolean isUnused() {
         return unused;
     }
 
     @Override
     public void setUnused(boolean unused) {
-        this.unused = unused;
+        this.unused |= unused;
     }
 
     public boolean isDistinct() {

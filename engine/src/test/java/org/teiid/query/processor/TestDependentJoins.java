@@ -18,8 +18,14 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -29,6 +35,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.language.Array;
@@ -1055,29 +1062,65 @@ public class TestDependentJoins {
         return dataManager;
     }
 
-    @Test public void testDjHint() {
+    @Test public void testDjHintNotPusheddown() throws Exception {
         // Create query
-        String sql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 IN /*+ DJ */ (select e1 from pm2.g1) order by pm1.g1.e1"; //$NON-NLS-1$
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 IN /*+ DJ */ (select e1 from pm2.g1 where e2 < 2) order by pm1.g1.e1"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
-            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
         };
 
         // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        TestProcessor.sampleData1(dataManager);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, false);
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN, false);
+
+        dataManager.addData("SELECT DISTINCT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 < 2", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"), Arrays.asList("d"), Arrays.asList("e"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("f"));
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+        TestOptimizer.checkDependentJoinCount(plan, 1);
+
+        BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(Integer.MAX_VALUE, 1);
+        CommandContext context = createCommandContext();
+        context.setBufferManager(bm);
+        // Run query
+        TestProcessor.helpProcess(plan, context, dataManager, expected);
+    }
+
+    @Test public void testDjHintFullPushdown() throws Exception {
+        // Create query
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 IN /*+ DJ */ (select e1 from pm2.g1 where e2 < 2) order by pm1.g1.e1"; //$NON-NLS-1$
+
+        // Create expected results
+        List[] expected = new List[] {
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+        };
+
+        // Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT DISTINCT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 < 2", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"), Arrays.asList("d"), Arrays.asList("e"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b', 'c', 'd', 'e')", Arrays.asList("a"), Arrays.asList("b"));
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
 
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
         TestOptimizer.checkDependentJoinCount(plan, 1);
 
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
+
+        BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(Integer.MAX_VALUE, 1);
+        CommandContext context = createCommandContext();
+        context.setBufferManager(bm);
+        // Run query
+        TestProcessor.helpProcess(plan.clone(), context, dataManager, expected);
     }
 
     @Test public void testMakeIndHint() {

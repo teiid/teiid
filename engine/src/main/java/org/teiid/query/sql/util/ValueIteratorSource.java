@@ -51,4 +51,6 @@ public interface ValueIteratorSource {
 
     boolean isUnused();
 
+    boolean inMemory();
+
 }

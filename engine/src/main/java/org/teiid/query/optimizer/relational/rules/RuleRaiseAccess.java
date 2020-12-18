@@ -49,8 +49,17 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor.ValidatorOptions;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.OrderBy;
+import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SourceHint;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -861,7 +870,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 if (sjc != SupportedJoinCriteria.ANY && thetaCriteria.isEmpty()) {
                     return null; //cross join not supported
                 }
-                if (type == JoinType.JOIN_LEFT_OUTER && !CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, accessModelID, metadata, capFinder)) {
+                if ((type == JoinType.JOIN_LEFT_OUTER || type == JoinType.JOIN_FULL_OUTER) && !CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, accessModelID, metadata, capFinder)) {
                     PlanNode right = children.get(1);
                     for (PlanNode node : NodeEditor.findAllNodes(right, NodeConstants.Types.SELECT, NodeConstants.Types.SOURCE)) {
                         for (SubqueryContainer<?> subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders((Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA))) {
