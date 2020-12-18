@@ -60,6 +60,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     protected StringBuilder orderByClause = new StringBuilder();
     private Boolean objectSupportsRetrieve;
     private Condition implicitCondition;
+    private boolean selectAggregate;
 
     public SelectVisitor(RuntimeMetadata metadata) {
         super(metadata);
@@ -212,6 +213,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
             if (expression instanceof ColumnReference) {
                 appendColumnReference(result, (ColumnReference) expression);
             } else if (expression instanceof AggregateFunction) {
+                this.selectAggregate = true;
                 AggregateFunction af = (AggregateFunction)expression;
                 appendAggregateFunction(result, af);
             } else {
@@ -259,6 +261,10 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 
     public boolean hasOnlyIdInCriteria() {
         return hasOnlyIDCriteria() && idInCriteria != null;
+    }
+
+    public boolean isSelectAggregate() {
+        return selectAggregate;
     }
 
     public boolean canRetrieve() {
