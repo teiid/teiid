@@ -280,6 +280,14 @@ public class TestVisitors {
         Mockito.verify(sfc).retrieve("Account.Id, Account.Name", "Account", Arrays.asList("bar"));
     }
 
+    @Test public void testIDCriteriaWithAggregate() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select count(*) from Account where id = 'bar'"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, translationUtility.createRuntimeMetadata(), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        Mockito.verify(sfc).query("SELECT COUNT(Id) FROM Account WHERE Account.Id = 'bar'", 0, false);
+    }
+
     @BeforeClass static public void oneTimeSetup() {
         Util.resetTimeZone();
         TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00"));
