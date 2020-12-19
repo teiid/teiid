@@ -1,7 +1,12 @@
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -1529,12 +1534,33 @@ public class TestWithClauseProcessing {
         TestProcessor.helpProcess(pp, cc, dataMgr, new List[] {Arrays.asList(BigDecimal.valueOf(2))});
     }
 
-    public static void main(String[] args) throws Exception {
-        TestWithClauseProcessing twcp = new TestWithClauseProcessing();
-        for (int i = 0; i < 10000; i++) {
-            twcp.testWithImplicitIndexing();
-            System.out.println(i);
-        }
+    @Test public void testMultipleMaterializedExists() throws Exception {
+        String sql = "with test as  /*+ materialize */ (select e1 from pm2.g1), "
+               + "test1 as  /*+ materialize */ (select e3 from pm2.g3) "
+               + "select bet.e1 from pm1.g1 AS bet "
+               + "where exists (select 1 from test where e1 = bet.e1 ) and exists (select 1 from test1 where e3 = bet.e3)";
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+
+        FakeCapabilitiesFinder fcf = new FakeCapabilitiesFinder();
+        fcf.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities());
+        fcf.addCapabilities("pm1", caps);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"));
+        dataManager.addData("SELECT g_0.e3 FROM g3 AS g_0", Arrays.asList(true));
+        dataManager.addData("SELECT g_0.e3, g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') AND g_0.e3 = TRUE", Arrays.asList(true, "a"), Arrays.asList(true, "b"));
+        CommandContext cc = TestProcessor.createCommandContext();
+        Command command = helpParse(sql);
+
+        //causes the plan structure to loose the hints
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+
+        ProcessorPlan plan = helpGetPlan(command, metadata, fcf, cc);
+
+        List<?>[] expected = new List[] {Arrays.asList("a"), Arrays.asList("b")};
+        helpProcess(plan, cc, dataManager, expected);
     }
 
 }

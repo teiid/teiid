@@ -497,6 +497,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
                 //TODO: would like for an enhanced sort merge with the semi dep option to avoid the sorting
                 //this is a little different than a typical dependent join in that the right is the independent side
                 PlanNode dep = RuleChooseDependent.getDependentCriteriaNode(id, plannedResult.rightExpressions, plannedResult.leftExpressions, node, metadata, null, false, null);
+                dep.setProperty(Info.OUTPUT_COLS, new ArrayList((List<?>)semiJoin.getFirstChild().getProperty(Info.OUTPUT_COLS)));
                 semiJoin.getFirstChild().addAsParent(dep);
                 semiJoin.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
                 this.dependent = true;
