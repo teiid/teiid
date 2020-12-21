@@ -18,7 +18,7 @@
 
 package org.teiid.translator;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Method;
 
@@ -34,7 +34,7 @@ public class TestBaseDelegatingExecutionFactory {
         Method[] methods = ExecutionFactory.class.getDeclaredMethods();
         Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
         //excluding the setter methods the counts should be equal
-        assertEquals(methods.length+102, proxyMethods.length);
+        assertEquals(methods.length+103, proxyMethods.length);
     }
 
     @Test public void testExecution() throws TranslatorException {

@@ -362,56 +362,60 @@ public class QueryExecutionImpl implements ResultSetExecution {
             List<Object[]> result = new ArrayList<Object[]>();
             NamedTable targetTable = null;
             if(visitor instanceof JoinQueryVisitor) {
-                targetTable = ((JoinQueryVisitor)visitor).getLeftTableInJoin();
-                for(int i = 0; i < children.size(); i++) {
-                    XmlObject element = children.get(i);
-                    extactJoinResults(element, result);
+                JoinQueryVisitor joinVisitor = (JoinQueryVisitor)visitor;
+                String name = joinVisitor.getChildName();
+                targetTable = joinVisitor.getRootTable();
+                if (name != null) {
+                    NamedTable childTable = joinVisitor.getChildTable();
+                    for(int i = 0; i < children.size(); i++) {
+                        XmlObject element = children.get(i);
+                        String localName = element.getName().getLocalPart();
+                        if (name.equals(localName)) {
+                            extactJoinResults(element, result, childTable);
+                        }
+                    }
                 }
             }
             return extractDataFromFields(sObject, children, result, targetTable);
-
         }
 
-        private void extactJoinResults(XmlObject node, List<Object[]> result) throws TranslatorException {
-            Object val = node.getField(TYPE);
-            String localName = node.getName().getLocalPart();
-            String name = ((JoinQueryVisitor)visitor).getChildName();
-            if(val instanceof String) {
-                extractValuesFromElement(node, result, (String)val, ((JoinQueryVisitor)visitor).getRightTableInJoin());
-            } else if (name == null || name.equals(localName)) {
-                if (node.hasChildren()) {
-                    Iterator<XmlObject> children = node.getChildren();
-                    while (children.hasNext()) {
-                        XmlObject item = children.next();
-                        extactJoinResults(item, result);
-                    }
-                } else {
-                    //just null
+        private void extactJoinResults(XmlObject node, List<Object[]> result, NamedTable childTable) throws TranslatorException {
+            Iterator<XmlObject> records = node.getChildren("records"); //$NON-NLS-1$
+            if (!records.hasNext()) {
+                extractValuesFromElement(result, childTable, node);
+            } else {
+                while (records.hasNext()) {
+                    XmlObject next = records.next();
+                    extractValuesFromElement(result, childTable, next);
                 }
             }
         }
 
         //TODO: this looks inefficient as getChild is linear
-        private List<Object[]> extractValuesFromElement(XmlObject sObject,
-                List<Object[]> result, String sObjectName, NamedTable targetTable) throws TranslatorException {
+        private void extractValuesFromElement(List<Object[]> result,
+                NamedTable childTable, XmlObject next)
+                throws TranslatorException {
+            Object val = next.getField(TYPE);
+            if (!(val instanceof String)) {
+                return;
+            }
             Object[] row = new Object[visitor.getSelectSymbolCount()];
-            for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
+            for (int j = 0; j < row.length; j++) {
                 //must be a column reference as we won't allow an agg over a join
                 ColumnReference columnReference = (ColumnReference)visitor.getSelectSymbolMetadata(j);
                 Column element = columnReference.getMetadataObject();
                 AbstractMetadataRecord table = element.getParent();
-                if(table.getSourceName().equals(sObjectName) && columnReference.getTable().equals(targetTable)) {
-                    XmlObject child = sObject.getChild(element.getSourceName());
+                if(table.getSourceName().equals(val) && columnReference.getTable().equals(childTable)) {
+                    XmlObject child = next.getChild(element.getSourceName());
                     Object cell = getCellDatum(element.getSourceName(), element.getJavaType(), child);
                     setElementValueInColumn(j, cell, row);
                 }
             }
             result.add(row);
-            return result;
         }
 
     private List<Object[]> extractDataFromFields(SObject sObject,
-        List<XmlObject> fields, List<Object[]> result, NamedTable targetTable) throws TranslatorException {
+            List<XmlObject> fields, List<Object[]> result, NamedTable targetTable) throws TranslatorException {
         Map<String,Integer> fieldToIndexMap = sObjectToResponseField.get(sObject.getType());
         int aggCount = 0;
         for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
@@ -423,24 +427,58 @@ public class QueryExecutionImpl implements ResultSetExecution {
                 if ((table.getSourceName().equals(sObject.getType())
                         && (targetTable == null || columnReference.getTable().equals(targetTable)))
                         || AGGREGATE_RESULT.equalsIgnoreCase(sObject.getType())) {
-                    Integer index = fieldToIndexMap.get(element.getSourceName());
+                    String sourceName = element.getSourceName();
+                    Integer index = fieldToIndexMap.get(sourceName);
                     if (null == index) {
-                        throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ element.getSourceName()); //$NON-NLS-1$
+                        extractParentValue(sObject, result, j, element, sourceName);
+                    } else {
+                        Object cell = getCellDatum(sourceName, element.getJavaType(), fields.get(index));
+                        setValueInColumn(j, cell, result);
                     }
-                    Object cell = getCellDatum(element.getSourceName(), element.getJavaType(), fields.get(index));
-                    setValueInColumn(j, cell, result);
+                } else {
+                    if (visitor instanceof JoinQueryVisitor) {
+                        JoinQueryVisitor joinVisitor = (JoinQueryVisitor)visitor;
+                        String path = joinVisitor.getParents().get(columnReference.getTable());
+                        if (path != null) {
+                            extractParentValue(sObject, result, j, element, path+"."+element.getSourceName()); //$NON-NLS-1$
+                        }
+                    }
                 }
             } else if (ex instanceof AggregateFunction) {
                 String name = SelectVisitor.AGG_PREFIX + (aggCount++);
                 Integer index = fieldToIndexMap.get(name);
                 if (null == index) {
-                    throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ ex); //$NON-NLS-1$
+                    throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field", ex)); //$NON-NLS-1$
                 }
                 Object cell = getCellDatum(name, ex.getType(), fields.get(index));
                 setValueInColumn(j, cell, result);
             }
         }
         return result;
+    }
+
+    private void extractParentValue(SObject sObject, List<Object[]> result,
+            int j, Column element, String sourceName)
+            throws TranslatorException {
+        int dotIndex = sourceName.indexOf('.');
+        XmlObject root = sObject;
+        String fieldName = sourceName;
+        while (dotIndex > 0 && root != null) {
+            String parent = sourceName.substring(0, dotIndex);
+            fieldName = sourceName.substring(dotIndex + 1);
+            root = root.getChild(parent);
+            dotIndex = fieldName.indexOf('.');
+        }
+        if (fieldName.equals(sourceName)) {
+            throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field", sourceName)); //$NON-NLS-1$
+        }
+        if (root != null) {
+            XmlObject child = root.getChild(fieldName);
+            if (child != null) {
+                Object cell = getCellDatum(fieldName, element.getJavaType(), child);
+                setValueInColumn(j, cell, result);
+            }
+        }
     }
 
     private void setElementValueInColumn(int columnIndex, Object value, Object[] row) {
@@ -505,7 +543,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
      */
     private Object getCellDatum(String name, Class<?> type, XmlObject elem) throws TranslatorException {
         if(!name.equals(elem.getName().getLocalPart())) {
-            throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + name + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getName().getLocalPart()); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1", name, elem.getName().getLocalPart())); //$NON-NLS-1$
         }
         Object value = elem.getValue();
         return convertValue(type, value);

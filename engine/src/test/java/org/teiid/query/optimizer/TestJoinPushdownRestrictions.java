@@ -21,6 +21,7 @@ package org.teiid.query.optimizer;
 import org.junit.Test;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -96,7 +97,26 @@ public class TestJoinPushdownRestrictions {
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example4(),
-                new String[] {"SELECT g_1.e1 AS c_0, g_1.e2 AS c_1, g_0.e1 AS c_2 FROM pm4.g1 AS g_0, pm4.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e2 = g_1.e2) ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g1 AS g_0 ORDER BY c_0, c_1"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+                new String[] {"SELECT g_0.e1, g_1.e1, g_2.e2 FROM (pm4.g1 AS g_0 INNER JOIN pm4.g2 AS g_1 ON g_0.e1 = g_1.e1 AND g_0.e2 = g_1.e2) LEFT OUTER JOIN pm4.g1 AS g_2 ON g_2.e1 = g_1.e1 AND g_2.e2 = g_1.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        //equivalent form, should be same result
+        sql = "select a.e1, b.e1, c.e2 from pm4.g1 a inner join pm4.g2 b left outer join pm4.g1 c on (c.e1 = b.e1 and c.e2 = b.e2) on (a.e1 = b.e1 and a.e2 = b.e2)"; //$NON-NLS-1$
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example4(),
+                new String[] {"SELECT g_2.e1, g_0.e1, g_1.e2 FROM (pm4.g2 AS g_0 LEFT OUTER JOIN pm4.g1 AS g_1 ON g_1.e1 = g_0.e1 AND g_1.e2 = g_0.e2) INNER JOIN pm4.g1 AS g_2 ON g_2.e1 = g_0.e1 AND g_2.e2 = g_0.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testKeyRestriction2() throws Exception {
+        String sql = "select a.e1, b.e1, c.e2 from pm4.g1 a left outer join pm4.g2 b on (a.e1 = b.e1 and a.e2 = b.e2) inner join pm4.g2 c on (c.e1 = a.e1 and c.e2 = a.e2)"; //$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
+        capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example4(),
+                new String[] {"SELECT g_0.e1, g_1.e1, g_2.e2 FROM (pm4.g1 AS g_0 LEFT OUTER JOIN pm4.g2 AS g_1 ON g_0.e1 = g_1.e1 AND g_0.e2 = g_1.e2) INNER JOIN pm4.g2 AS g_2 ON g_2.e1 = g_0.e1 AND g_2.e2 = g_0.e2"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testKeyPasses() throws Exception {
@@ -194,7 +214,7 @@ public class TestJoinPushdownRestrictions {
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
 
         TestOptimizer.helpPlan(sql, RealMetadataFactory.fromDDL(ddl, "x", "y"),
-                new String[] {"SELECT g_1.e2, g_2.e2 FROM y.g3 AS g_0 LEFT OUTER JOIN (y.g1 AS g_1 LEFT OUTER JOIN y.g2 AS g_2 ON g_1.e1 = g_2.e2) ON g_2.e1 = g_0.e2 WHERE g_2.e2 IS NOT NULL"}, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+                new String[] {"SELECT g_0.e2, g_1.e2 FROM (y.g1 AS g_0 LEFT OUTER JOIN y.g2 AS g_1 ON g_0.e1 = g_1.e2) LEFT OUTER JOIN y.g3 AS g_2 ON g_1.e1 = g_2.e2 WHERE (g_1.e2 IS NOT NULL) AND (g_2.e2 IS NOT NULL)"}, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testOuterPreservation() throws Exception {
@@ -236,6 +256,25 @@ public class TestJoinPushdownRestrictions {
 
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),
                 new String[] {"SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e2 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'hello' ORDER BY c_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Test public void testRelationshipJoin() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_ONLY_FROM_RELATIONSHIP_JOIN, true);
+        capFinder.addCapabilities("y", caps); //$NON-NLS-1$
+
+        String ddl = "create foreign table parent (id integer primary key, name string);"
+                + "create foreign table child (id integer primary key, parentid integer, name string, foreign key (parentid) references parent (id));"
+                + "create foreign table grandchild (id integer primary key, childid integer, name string, foreign key (childid) references child (id));";
+
+        TestOptimizer.helpPlan("select parent.name, child.name, grandchild.name from grandchild left outer join child on grandchild.childid=child.id left outer join parent on child.parentid = parent.id", RealMetadataFactory.fromDDL(ddl, "x", "y"), null, capFinder, //$NON-NLS-1$
+                new String[] { "SELECT g_2.name, g_1.name, g_0.name FROM (y.grandchild AS g_0 LEFT OUTER JOIN y.child AS g_1 ON g_0.childid = g_1.id) LEFT OUTER JOIN y.parent AS g_2 ON g_1.parentid = g_2.id"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.helpPlan("select g1.name, child.name, grandchild.name from grandchild inner join child on grandchild.childid=child.id inner join grandchild g1 on g1.childid = child.id", RealMetadataFactory.fromDDL(ddl, "x", "y"), null, capFinder, //$NON-NLS-1$
+                new String[] { "SELECT g_0.childid AS c_0, g_0.name AS c_1 FROM y.grandchild AS g_0 ORDER BY c_0", "SELECT g_1.id AS c_0, g_1.name AS c_1, g_0.name AS c_2 FROM y.grandchild AS g_0, y.child AS g_1 WHERE g_0.childid = g_1.id ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }

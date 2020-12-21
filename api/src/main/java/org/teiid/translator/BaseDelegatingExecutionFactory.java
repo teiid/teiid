@@ -1672,4 +1672,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
             Boolean supportsProcedureParameterExpression) {
         this.supportsProcedureParameterExpression = supportsProcedureParameterExpression;
     }
+
+    Boolean supportsOnlyRelationshipStyleJoins;
+    @Override
+    public boolean supportsOnlyRelationshipStyleJoins() {
+        if (supportsOnlyRelationshipStyleJoins != null) {
+            return supportsOnlyRelationshipStyleJoins;
+        }
+        return delegate.supportsOnlyRelationshipStyleJoins();
+    }
+
+    public void setSupportsOnlyRelationshipStyleJoins(
+            Boolean supportsOnlyRelationshipStyleJoins) {
+        this.supportsOnlyRelationshipStyleJoins = supportsOnlyRelationshipStyleJoins;
+    }
 }

@@ -826,12 +826,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
                     if (sjc == SupportedJoinCriteria.KEY) {
                         PlanNode left = children.get(0);
                         PlanNode right = children.get(1);
-                        if (left.getGroups().size() != 1) {
-                            if (right.getGroups().size() != 1) {
+                        if (right.getGroups().size() != 1) {
+                            if (left.getGroups().size() != 1 || type != JoinType.JOIN_INNER) {
                                 return null; //require the simple case of 1 side being a single group
-                            }
-                            if (type != JoinType.JOIN_INNER) {
-                                return null;
                             }
                             left = children.get(1);
                             right = children.get(0);
@@ -861,8 +858,21 @@ public final class RuleRaiseAccess implements OptimizerRule {
                         if (rightGroup == null) {
                             return null;
                         }
-                        if (!matchesForeignKey(metadata, leftIds, rightIds, left.getGroups().iterator().next(), true, !type.isOuter() || type == JoinType.JOIN_LEFT_OUTER)
-                                && !matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true, !type.isOuter())) {
+                        boolean leftMatches = false;
+                        for (GroupSymbol gs : left.getGroups()) {
+                            leftMatches = matchesForeignKey(metadata, leftIds, rightIds, gs, true, !type.isOuter() || type == JoinType.JOIN_LEFT_OUTER);
+                            if (leftMatches) {
+                                break;
+                            }
+                        }
+                        boolean rightMatches = matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true, !type.isOuter());
+                        if (!rightMatches) {
+                            if (!leftMatches) {
+                                return null;
+                            }
+                        } else if (!leftMatches && left.getGroups().size() > 1
+                            && CapabilitiesUtil.supports(Capability.QUERY_ONLY_FROM_RELATIONSHIP_JOIN, accessModelID, metadata, capFinder)
+                            ) {
                             return null;
                         }
                     }
@@ -1063,7 +1073,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         PlanNode leftAccess = joinNode.getFirstChild();
         PlanNode rightAccess = joinNode.getLastChild();
         boolean switchChildren = false;
-        if (leftAccess.getGroups().size() != 1 && joinNode.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER && CapabilitiesUtil.getSupportedJoinCriteria(modelID, metadata, capFinder) == SupportedJoinCriteria.KEY) {
+        if (leftAccess.getGroups().size() == 1  && rightAccess.getGroups().size() > 1 && joinNode.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER && CapabilitiesUtil.getSupportedJoinCriteria(modelID, metadata, capFinder) == SupportedJoinCriteria.KEY) {
             switchChildren = true;
         }
 

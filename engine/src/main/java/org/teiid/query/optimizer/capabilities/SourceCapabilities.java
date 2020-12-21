@@ -370,7 +370,9 @@ public interface SourceCapabilities {
         QUERY_AGGREGATES_LIST,
         QUERY_AGGREGATES_COUNT_BIG,
         GEOGRAPHY_TYPE,
-        PROCEDURE_PARAMETER_EXPRESSION;
+        PROCEDURE_PARAMETER_EXPRESSION,
+        MAX_QUERY_FROM_ONE_TO_MANY,
+        QUERY_ONLY_FROM_RELATIONSHIP_JOIN;
 
         private final String toString;
 

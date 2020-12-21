@@ -73,6 +73,11 @@ public class NamedTable extends BaseLanguageObject implements MetadataReference<
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(name, correlationName);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -90,7 +95,8 @@ public class NamedTable extends BaseLanguageObject implements MetadataReference<
         if (!Objects.equals(this.name, other.name)) {
             return false;
         }
-        if (this.correlationName != null && !this.correlationName.equalsIgnoreCase(other.correlationName)) {
+        if ((this.correlationName != null && !this.correlationName.equalsIgnoreCase(other.correlationName))
+        || (this.correlationName == null && other.correlationName != null)) {
             return false;
         }
         return true;
