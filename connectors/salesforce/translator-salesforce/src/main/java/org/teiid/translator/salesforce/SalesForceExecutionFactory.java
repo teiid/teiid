@@ -63,6 +63,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     private boolean supportsGroupBy = true;
     private boolean bulk;
     private boolean hardDelete;
+    private int maxFromGroups = 2;
 
     public SalesForceExecutionFactory() {
         /*there are multiple issues:
@@ -231,6 +232,15 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     @Override
     public boolean supportsOnlyRelationshipStyleJoins() {
         return true;
+    }
+
+    @TranslatorProperty(display="Max From Clause Groups", description="The number of Salesforce tables to join. Defaults to 2.  Set to a larger number to pushdown more joins.", advanced=true)
+    public int getMaxFromGroups() {
+        return maxFromGroups;
+    }
+
+    public void setMaxFromGroups(int maxFromGroups) {
+        this.maxFromGroups = maxFromGroups;
     }
 
     @Override
