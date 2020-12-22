@@ -4,7 +4,7 @@
 	<parent>
         <groupId>org.teiid.wildfly.connectors</groupId>
 		<artifactId>couchbase</artifactId>
-		<version>16.0.0-SNAPSHOT</version>
+		<version>16.0.0</version>
 	</parent>
     <artifactId>feature-pack-couchbase</artifactId>
     <name>Teiid Connector couchbase Feature Pack</name>
