@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid.wildfly</groupId>
       <artifactId>connectors</artifactId>
-      <version>16.0.0</version>
+      <version>16.0.1-SNAPSHOT</version>
   </parent>
   <groupId>org.teiid.wildfly.connectors</groupId>
   <artifactId>file</artifactId>
