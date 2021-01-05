@@ -18,7 +18,11 @@
 
 package org.teiid.query.processor;
 
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpParse;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,12 +35,14 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.proc.TestProcedureProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
@@ -551,6 +557,29 @@ public class TestOrderByProcessing {
 
         TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT xscore() AS c_0 FROM phy.customer ORDER BY c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 
+    }
+
+    @Test public void testOrderByVariableEval() throws Exception {
+        String sql = "begin\n" +
+                "    declare integer v_id  = 5002;       \n" +
+                "    SELECT \n" +
+                "        rsr.intkey,\n" +
+                "        rsr.stringkey\n" +
+                "        , variables.v_id\n" +
+                "    FROM bqt1.smalla rsr\n" +
+                "    ORDER BY \n" +
+                "        --rsr.intkey, variables.v_id;\n" +
+                "        -- ok\n" +
+                "        rsr.intkey = variables.v_id;\n" +
+                "end ;";
+
+        TransformationMetadata tm = RealMetadataFactory.exampleBQTCached();
+        ProcessorPlan plan = TestProcedureProcessor.getProcedurePlan(sql, tm, TestOptimizer.getGenericFinder());
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM SmallA AS g_0 ORDER BY g_0.IntKey = 5002", new List<?>[] {Arrays.asList(1, "a")});
+        List[] expected = new List[] { Arrays.asList(1, "a", 5002) }; //$NON-NLS-1$
+        TestProcedureProcessor.helpTestProcess(plan, expected, dataManager, tm);
     }
 
 }

@@ -790,19 +790,26 @@ public class QueryRewriter {
         Select select = queryCommand.getProjectedQuery().getSelect();
         final List<Expression> projectedSymbols = select.getProjectedSymbols();
 
-        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, context, metadata);
+        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, this);
 
         return queryCommand;
     }
 
     public static void rewriteOrderBy(QueryCommand queryCommand,
             final OrderBy orderBy, final List projectedSymbols, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
+        QueryRewriter rewriter = new QueryRewriter(metadata, context);
+        rewriteOrderBy(queryCommand, orderBy, projectedSymbols, rewriter);
+    }
+
+    private static void rewriteOrderBy(QueryCommand queryCommand,
+            final OrderBy orderBy, final List projectedSymbols, QueryRewriter rewriter)
+            throws TeiidComponentException, TeiidProcessingException {
         HashSet<Expression> previousExpressions = new HashSet<Expression>();
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
             Expression querySymbol = orderBy.getVariable(i);
             int index = orderBy.getExpressionPosition(i);
             if (index == -1) {
-                querySymbol = rewriteExpression(querySymbol, context, metadata);
+                querySymbol = rewriter.rewriteExpressionDirect(querySymbol);
             } else {
                 querySymbol = (Expression)projectedSymbols.get(index);
             }
