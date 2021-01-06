@@ -15,6 +15,7 @@ cache:
 deploy:
   provider: script
   script: "mvn -P dev,wildfly deploy -q"
+  skip_cleanup: true
   on:
     branch: master
     jdk: openjdk9
