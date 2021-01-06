@@ -41,6 +41,7 @@
 	    <basepom.failsafe.reuse-vm>true</basepom.failsafe.reuse-vm>
 	    <!-- takes a really long time -->
         <basepom.check.skip-dependency-versions-check>true</basepom.check.skip-dependency-versions-check>
+        <dep.plugin.jacoco.version>0.8.3</dep.plugin.jacoco.version>
         <!-- end from syndesis.io -->
         
         <!-- since we auto-release, we want to push the changes -->
