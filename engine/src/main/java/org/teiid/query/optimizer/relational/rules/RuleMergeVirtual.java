@@ -97,7 +97,7 @@ public final class RuleMergeVirtual implements
             return root;
         }
 
-        List<PlanNode> sources = NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
+        List<PlanNode> sources = NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE | NodeConstants.Types.NULL, NodeConstants.Types.SOURCE);
 
         SymbolMap references = (SymbolMap)frame.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
         if (references != null) {
