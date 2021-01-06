@@ -43,6 +43,9 @@
         <basepom.check.skip-dependency-versions-check>true</basepom.check.skip-dependency-versions-check>
         <dep.plugin.surefire.version>2.21.0</dep.plugin.surefire.version> <!-- SUREFIRE-1422 -->
         <dep.plugin.failsafe.version>2.21.0</dep.plugin.failsafe.version> <!-- SUREFIRE-1422 -->
+        <!-- the tests under java 11 fail with the default version -->
+        <dep.plugin.jacoco.version>0.8.3</dep.plugin.jacoco.version>
+        
         <!-- end from syndesis.io -->
         
         <!-- since we auto-release, we want to push the changes -->
