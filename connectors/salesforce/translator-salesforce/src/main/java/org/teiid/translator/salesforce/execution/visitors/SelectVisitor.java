@@ -164,6 +164,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
                 orderByClause.append(COMMA).append(SPACE);
             }
         }
+        this.orderByClause.append(SPACE);
     }
 
     @Override
