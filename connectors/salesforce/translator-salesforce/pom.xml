@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>salesforce</artifactId>
-		<version>16.0.1-SNAPSHOT</version>
+		<version>17.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>translator-salesforce</artifactId>
 	<name>Salesforce Translator</name>
