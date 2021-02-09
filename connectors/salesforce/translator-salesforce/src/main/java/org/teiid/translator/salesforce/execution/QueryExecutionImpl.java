@@ -464,8 +464,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
         XmlObject root = sObject;
         String fieldName = sourceName;
         while (dotIndex > 0 && root != null) {
-            String parent = sourceName.substring(0, dotIndex);
-            fieldName = sourceName.substring(dotIndex + 1);
+            String parent = fieldName.substring(0, dotIndex);
+            fieldName = fieldName.substring(dotIndex + 1);
             root = root.getChild(parent);
             dotIndex = fieldName.indexOf('.');
         }
