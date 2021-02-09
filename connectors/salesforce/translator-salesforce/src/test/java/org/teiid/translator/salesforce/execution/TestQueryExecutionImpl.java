@@ -122,8 +122,8 @@ public class TestQueryExecutionImpl {
         assertNull(qei.next());
     }
 
-    @Test public void testJoinParentToChild() throws Exception {
-        Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account left outer join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+    @Test public void testJoinChildToOwnerWithLongPath() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id, u.id from Contact left outer join Account on Account.Id = Contact.AccountId left outer join User_ as u on Account.OwnerId = u.id"); //$NON-NLS-1$
         SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
         QueryResult qr = new QueryResult();
         SObject so = new SObject();
@@ -132,15 +132,17 @@ public class TestQueryExecutionImpl {
         SObject so1 = new SObject();
         so1.setType("Contact");
         so1.addField("Id", "contact id");
-        SObject records = new SObject();
-        records.addField("records", so1);
-        so.addField("Contacts", records);
-        qr.setRecords(new SObject[] {so});
+        so1.addField("Account", so);
+        SObject so2 = new SObject();
+        so2.setType("User");
+        so2.addField("Id", "user id");
+        so.addField("Owner", so2);
+        qr.setRecords(new SObject[] {so1});
         qr.setDone(true);
-        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.query("SELECT Account.Name, Id, Account.Owner.Id FROM Contact", 0, false)).toReturn(qr);
         QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
         qei.execute();
-        assertEquals(Arrays.asList("account name", "contact id"), qei.next());
+        assertEquals(Arrays.asList("account name", "contact id", "user id"), qei.next());
         assertNull(qei.next());
     }
 
