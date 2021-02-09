@@ -122,7 +122,29 @@ public class TestQueryExecutionImpl {
         assertNull(qei.next());
     }
 
-    @Test public void testJoinChildToOwnerWithLongPath() throws Exception {
+    @Test public void testJoinParentToChild() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account left outer join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryResult qr = new QueryResult();
+        SObject so = new SObject();
+        so.setType("Account");
+        so.addField("Name", "account name");
+        SObject so1 = new SObject();
+        so1.setType("Contact");
+        so1.addField("Id", "contact id");
+        SObject records = new SObject();
+        records.addField("records", so1);
+        so.addField("Contacts", records);
+        qr.setRecords(new SObject[] {so});
+        qr.setDone(true);
+        Mockito.stub(sfc.query("SELECT Name, (SELECT Id FROM Contacts) FROM Account", 0, false)).toReturn(qr);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertEquals(Arrays.asList("account name", "contact id"), qei.next());
+        assertNull(qei.next());
+    }
+
+    @Test public void testJoinOwnerWithLongPathTraversal() throws Exception {
         Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id, u.id from Contact left outer join Account on Account.Id = Contact.AccountId left outer join User_ as u on Account.OwnerId = u.id"); //$NON-NLS-1$
         SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
         QueryResult qr = new QueryResult();
