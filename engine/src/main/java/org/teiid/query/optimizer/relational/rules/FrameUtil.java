@@ -18,7 +18,16 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -228,32 +237,15 @@ public class FrameUtil {
             }
 
         } else if(type == NodeConstants.Types.PROJECT) {
-            List<Expression> projectedSymbols = (List<Expression>)node.getProperty(NodeConstants.Info.PROJECT_COLS);
-            Select select = new Select(projectedSymbols);
-            ExpressionMappingVisitor.mapExpressions(select, symbolMap);
-            if (rewrite) {
-                for (LanguageObject expr : select.getSymbols()) {
-                    rewriteSingleElementSymbol(metadata, (Expression) expr);
-                }
-            }
-            node.setProperty(NodeConstants.Info.PROJECT_COLS, select.getSymbols());
-            if (!singleMapping) {
-                GroupsUsedByElementsVisitor.getGroups(select, groups);
-            }
+            convertExpressionList(node, symbolMap, metadata, rewrite, NodeConstants.Info.PROJECT_COLS, !singleMapping?groups:null);
         } else if(type == NodeConstants.Types.JOIN) {
             // Convert join criteria property
-            List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-            if(joinCrits != null && !joinCrits.isEmpty()) {
-                Criteria crit = new CompoundCriteria(joinCrits);
-                crit = convertCriteria(crit, symbolMap, metadata, rewrite);
-                if (crit instanceof CompoundCriteria && ((CompoundCriteria)crit).getOperator() == CompoundCriteria.AND) {
-                    node.setProperty(NodeConstants.Info.JOIN_CRITERIA, ((CompoundCriteria)crit).getCriteria());
-                } else {
-                    joinCrits = new ArrayList<Criteria>();
-                    joinCrits.add(crit);
-                    node.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCrits);
-                }
-            }
+            convertJoinCriteria(node, symbolMap, metadata, rewrite, NodeConstants.Info.JOIN_CRITERIA);
+
+            // if there's are already set and cloned, they need to updated individually
+            convertJoinCriteria(node, symbolMap, metadata, rewrite, NodeConstants.Info.NON_EQUI_JOIN_CRITERIA);
+            convertExpressionList(node, symbolMap, metadata, rewrite, NodeConstants.Info.LEFT_EXPRESSIONS, null);
+            convertExpressionList(node, symbolMap, metadata, rewrite, NodeConstants.Info.RIGHT_EXPRESSIONS, null);
 
             convertAccessPatterns(symbolMap, node);
 
@@ -287,6 +279,43 @@ public class FrameUtil {
             }
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {
             convertAccessPatterns(symbolMap, node);
+        }
+    }
+
+    private static void convertJoinCriteria(PlanNode node, Map symbolMap,
+            QueryMetadataInterface metadata, boolean rewrite,
+            Info criteriaProperty) throws QueryPlannerException {
+        List<Criteria> joinCrits = (List<Criteria>) node.getProperty(criteriaProperty);
+        if(joinCrits != null && !joinCrits.isEmpty()) {
+            Criteria crit = new CompoundCriteria(joinCrits);
+            crit = convertCriteria(crit, symbolMap, metadata, rewrite);
+            if (crit instanceof CompoundCriteria && ((CompoundCriteria)crit).getOperator() == CompoundCriteria.AND) {
+                node.setProperty(criteriaProperty, ((CompoundCriteria)crit).getCriteria());
+            } else {
+                joinCrits = new ArrayList<Criteria>();
+                joinCrits.add(crit);
+                node.setProperty(criteriaProperty, joinCrits);
+            }
+        }
+    }
+
+    private static void convertExpressionList(PlanNode node, Map symbolMap,
+            QueryMetadataInterface metadata, boolean rewrite, Info listProperty, Set<GroupSymbol> groupsToUpdate)
+            throws QueryPlannerException {
+        List<Expression> exprs = (List<Expression>)node.getProperty(listProperty);
+        if (exprs == null) {
+            return;
+        }
+        Select select = new Select(exprs);
+        ExpressionMappingVisitor.mapExpressions(select, symbolMap);
+        if (rewrite) {
+            for (LanguageObject expr : select.getSymbols()) {
+                rewriteSingleElementSymbol(metadata, (Expression) expr);
+            }
+        }
+        node.setProperty(listProperty, select.getSymbols());
+        if (groupsToUpdate != null) {
+            GroupsUsedByElementsVisitor.getGroups(select, groupsToUpdate);
         }
     }
 
