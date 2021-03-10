@@ -37,7 +37,6 @@ public class ODataPlugin {
 
     public static enum Event implements BundleUtil.Event {
         TEIID16001,
-        TEIID16002,
         TEIID16003,
         TEIID16004,
         TEIID16005,

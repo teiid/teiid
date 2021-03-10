@@ -100,11 +100,15 @@ public class LocalClient implements Client {
 
     @Override
     public Connection open() throws SQLException, TeiidProcessingException {
-        this.connection = buildConnection(TeiidDriver.getInstance(), this.vdbName, this.vdbVersion, this.properties);
+        this.connection = buildConnection(getDriver(), this.vdbName, this.vdbVersion, this.properties);
         ODBCServerRemoteImpl.setConnectionProperties(connection);
         ODBCServerRemoteImpl.setConnectionProperties(connection, this.properties);
         getVDBInternal();
         return this.connection;
+    }
+
+    protected TeiidDriver getDriver() {
+        return TeiidDriver.getInstance();
     }
 
     @Override
