@@ -95,7 +95,7 @@
         
         <version.olap4j>1.1.0</version.olap4j>
 
-        <version.org.apache.ant>1.10.8</version.org.apache.ant>
+        <version.org.apache.ant>1.10.9</version.org.apache.ant>
         <version.org.apache.olingo>4.7.1</version.org.apache.olingo>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>
         <version.org.apache.poi>3.17</version.org.apache.poi>
