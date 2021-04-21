@@ -18,9 +18,15 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.optimizer.TestOptimizer.*;
-import static org.teiid.query.processor.TestProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.teiid.query.optimizer.TestOptimizer.FULL_PUSHDOWN;
+import static org.teiid.query.optimizer.TestOptimizer.checkNodeTypes;
+import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
+import static org.teiid.query.optimizer.TestOptimizer.helpGetCommand;
+import static org.teiid.query.processor.TestProcessor.createCommandContext;
+import static org.teiid.query.processor.TestProcessor.helpGetPlan;
+import static org.teiid.query.processor.TestProcessor.helpProcess;
+import static org.teiid.query.processor.TestProcessor.sampleData1;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -1387,6 +1393,28 @@ public class TestWindowFunctions {
         assertEquals(Long.class, ((Expression)plan.getOutputElements().get(1)).getType());
         assertEquals(Long.class, ((Expression)plan.getOutputElements().get(2)).getType());
         assertEquals(Long.class, ((Expression)plan.getOutputElements().get(3)).getType());
+        helpProcess(plan, dataManager, expected);
+    }
+
+    @Test public void testCountOverWhere() throws Exception {
+        String sql = "select e1, count(e1) over () count from pm1.g1 where translate(e1, '', '') = 'a'";
+
+        List<?>[] expected = new List[] {
+                Arrays.asList("a", 2),
+                Arrays.asList("a", 2),
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        // nothing should get pushed - as the window function cannot move below the select
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("a"));
+
+        TransformationMetadata tm = RealMetadataFactory.example1();
+
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+
+        ProcessorPlan plan = helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(caps));
         helpProcess(plan, dataManager, expected);
     }
 
