@@ -776,8 +776,23 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                 modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
                 //narrow check for projection pushing
                 if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
-                    requiredSymbols.add(ss);
-                    return true;
+                    boolean allowed = true;
+                    // if there's window functions, we'll only pass through nodes that
+                    // don't affect the order or cardinality - with deep introspection, this
+                    // could be relaxed
+                    if (!getWindowFunctions(Arrays.asList(ss)).isEmpty()) {
+                        PlanNode current = accessNode.getParent();
+                        while (current != null && current != node) {
+                            if ((current.getType() & (NodeConstants.Types.PROJECT | NodeConstants.Types.SOURCE)) != current.getType()) {
+                                allowed = false;
+                            }
+                            current = current.getParent();
+                        }
+                    }
+                    if (allowed) {
+                        requiredSymbols.add(ss);
+                        return true;
+                    }
                 }
             }
             if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
