@@ -158,33 +158,28 @@ public class RulePlanUnions implements OptimizerRule {
                                      boolean all, Operation setOp) throws QueryMetadataException,
                                                  TeiidComponentException {
         for (PlanNode child : unionNode.getChildren()) {
+            boolean directChildren = false;
             if (child.getType() == NodeConstants.Types.SET_OP) {
                 if (!all && Operation.UNION == child.getProperty(NodeConstants.Info.SET_OPERATION)) {
                     //allow the parent to handle the dup removal
                     child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
                 }
-                if ((!all || child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT) { //keep collecting sources
-                    List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
+                directChildren = ((!all || child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT);
+            }
+            List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
 
-                    Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
+            Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
 
-                    if (id != null) {
-                        buildModelMap(metadata, capabilitiesFinder, sourceNodes, child, id);
-                    } else {
-                        collectUnionSources(metadata, capabilitiesFinder, child, sourceNodes, all, setOp);
-                    }
-                } else { //recursively optimize
-                    optimizeUnions(child, metadata, capabilitiesFinder);
-                }
-            } else {  //this must be a source, see if it has a consistent access node
-                List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
-
-                Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
-
+            if (!directChildren || id != null) {
+                // this is a far as we need to collect
                 buildModelMap(metadata, capabilitiesFinder, sourceNodes, child, id);
-
-                if (id == null) {
-                    //recursively optimize below this point
+            }
+            if (id == null) {
+                if (directChildren) {
+                    // keep collecting children
+                    collectUnionSources(metadata, capabilitiesFinder, child, sourceNodes, all, setOp);
+                } else {
+                    // recursively optimize below this point
                     optimizeUnions(child, metadata, capabilitiesFinder);
                 }
             }
