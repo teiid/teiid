@@ -18,6 +18,8 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.teiid.cache.Cachable;
@@ -101,6 +103,18 @@ public class PreparedPlan implements Cachable {
      * Set the list of Reference.
      */
     public void setReferences(List<Reference> refsValue){
+        if (refsValue != null) {
+            // the object order is not necessarily the same as the parsing order
+            // make sure they align
+            Collections.sort(refsValue, new Comparator<Reference>() {
+
+                @Override
+                public int compare(Reference o1, Reference o2) {
+                    return Integer.compare(o1.getIndex(), o2.getIndex());
+                }
+
+            });
+        }
         refs = refsValue;
     }
 

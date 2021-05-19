@@ -18,7 +18,9 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -439,6 +441,19 @@ public class TestPreparedStatement {
         List<?> values = Arrays.asList(1);
         List<?>[] expected = new List<?>[] {
                 Arrays.asList("c"), //$NON-NLS-1$s
+            };
+
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, false,RealMetadataFactory.example1VDB());
+    }
+
+    @Test public void testLimitOffsetParams() throws Exception {
+        String preparedSql = "select e1 from pm1.g1 order by e1 desc limit ? offset ?"; //$NON-NLS-1$
+
+        List<?> values = Arrays.asList(1, 2);
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a"), //$NON-NLS-1$s
             };
 
         FakeDataManager dataManager = new FakeDataManager();
