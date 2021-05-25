@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
@@ -57,10 +58,11 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     protected ConvertModifier convertModifier;
     private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TIME_PARSE(", true); //$NON-NLS-1$
 
+
     public DruidExecutionFactory() {
         setSupportsFullOuterJoins(false);
-        setSupportsOuterJoins(false);
-        setSupportsInnerJoins(false);
+        setSupportsOuterJoins(true);
+        setSupportsInnerJoins(true);
         setSupportsOrderBy(true);
     }
 
@@ -87,11 +89,27 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("CURRENT_DATE")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("CURRENT_TIMESTAMP")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new TimestampAddModifier());
-
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new FunctionModifier() {
+        /*
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
-                return Arrays.asList("TIME_EXTRACT(", function.getParameters().get(0), ", 'DOY' )"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                return Arrays.asList("EXTRACT( YEAR FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("EXTRACT(MONTH FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+        */
+
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR,
+                new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("EXTRACT(DOY FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
         });
 
@@ -112,10 +130,12 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
             }
         });
         //OTHER FUNCTIONS
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nullif")); //$NON-NLS-1$
+        //registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("nvl")); //$NON-NLS-1$
+        //registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("ifnull")); //$NON-NLS-1$
 
         //standard function form of several predicates
         addPushDownFunction(DRUID, "concat", STRING, STRING).setVarArgs(true); //$NON-NLS-1$
+        addPushDownFunction(DRUID, "coalesce", STRING, STRING, STRING).setVarArgs(true); //$NON-NLS-1$
         addPushDownFunction(DRUID, "APPROX_COUNT_DISTINCT",BIG_INTEGER, STRING); //$NON-NLS-1$ //$NON-NLS-2$
         addPushDownFunction(DRUID, "BLOOM_FILTER",BLOB, STRING, BIG_INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
         addPushDownFunction(DRUID, "regexp_extract", STRING, STRING, STRING, INTEGER); //$NON-NLS-1$
@@ -125,15 +145,18 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(DRUID, "trim",STRING, STRING, STRING, STRING); //$NON-NLS-1$ //$NON-NLS-2$
         addPushDownFunction(DRUID, "date_trunc", TIMESTAMP, STRING, TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_FLOOR", TIMESTAMP, TIMESTAMP, STRING, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(DRUID, "TIME_FLOOR", TIMESTAMP, TIMESTAMP, STRING, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(DRUID, "TIME_FLOOR", TIMESTAMP, TIMESTAMP, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(DRUID, "TIME_FLOOR", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_SHIFT", TIMESTAMP, TIMESTAMP, STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_EXTRACT", TIMESTAMP, TIMESTAMP, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_EXTRACT", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_EXTRACT", TIMESTAMP, TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_PARSE", TIMESTAMP, STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_PARSE", TIMESTAMP, STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(DRUID, "TIME_PARSE", TIMESTAMP, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_FORMAT", TIMESTAMP, TIMESTAMP, STRING, STRING ); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIME_FORMAT", TIMESTAMP, TIMESTAMP, STRING ); //$NON-NLS-1$
+        addPushDownFunction(DRUID, "TIME_FORMAT", TIMESTAMP, BIG_INTEGER, STRING ); //$NON-NLS-1$
         addPushDownFunction(DRUID, "MILLIS_TO_TIMESTAMP", TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
         addPushDownFunction(DRUID, "TIMESTAMP_TO_MILLIS", BIG_INTEGER, TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(DRUID, "EXTRACT", BIG_INTEGER, STRING, TIMESTAMP); //$NON-NLS-1$
@@ -201,6 +224,16 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
+        /*
+        if (command.getClass().toString().equals("class org.teiid.language.Select")) {
+            if (null!= ((Select) command).getGroupBy() && ((Select) command).getGroupBy().getElements().size() > 0) {
+                // remove any columns from group by that are not in the select
+                ((Select) command).getGroupBy().getElements().removeAll(
+                        ((Select) command).getGroupBy().getElements().stream().filter(
+                                g -> !((Select) command).getDerivedColumns().stream().anyMatch(
+                                        d -> d.toString().equals(g.toString()))).collect(Collectors.toList()));
+            }
+        }*/
         return super.translateCommand(command, context);
     }
 
@@ -252,6 +285,16 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
      */
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (obj.getClass().toString().equals("class org.teiid.language.Select")) {
+            if (null!= ((Select) obj).getGroupBy() && ((Select) obj).getGroupBy().getElements().size() > 0) {
+                // remove any columns from group by that are not in the select
+                ((Select) obj).getGroupBy().getElements().removeAll(
+                        ((Select) obj).getGroupBy().getElements().stream().filter(
+                                g -> !((Select) obj).getDerivedColumns().stream().anyMatch(
+                                        d -> d.toString().equals(g.toString()))).collect(Collectors.toList()));
+                System.out.println(obj.toString());
+            }
+        }
         return super.translate(obj, context);
     }
 
@@ -289,6 +332,11 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
+        supportedFunctions.add("CAST"); //$NON-NLS-1$
+        supportedFunctions.add("CONVERT"); //$NON-NLS-1$
+        supportedFunctions.add("NVL");      //$NON-NLS-1$
+        //supportedFunctions.add("IFNULL"); //$NON-NLS-1$
+
         //TIME FUNCTIONS
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
@@ -307,11 +355,17 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
 
         //COMPARISON OPERATORS
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
+        supportedFunctions.add(SourceSystemFunctions.NULLIF);
+        supportedFunctions.add("BETWEEN");
+
         //OTHER FUNCTIONS
 
         return supportedFunctions;
     }
-
+    @Override
+    public boolean supportsHaving() {
+        return true;
+    }
     @Override
     public boolean supportsOrderByNullOrdering() {
         return false;
@@ -341,11 +395,11 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowLimit() {
         return true;
     }
+
     @Override
     public boolean supportsInCriteria() {
         return true;
     }
-
     @Override
     public boolean supportsIsNullCriteria() {
         return true;
@@ -429,7 +483,7 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     }
     @Override
     public boolean supportsFunctionsInGroupBy() {
-        return false;
+        return true;
     }
 
     @Override

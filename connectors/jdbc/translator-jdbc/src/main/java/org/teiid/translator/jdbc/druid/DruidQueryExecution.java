@@ -28,7 +28,7 @@ public class DruidQueryExecution extends JDBCQueryExecution {
         }
         catch (Exception translatorException)
         {
-			// Avatica jdbc error message is not usually at the top of the stack
+            // Avatica jdbc error message is not usually at the top of the stack
             throw new TranslatorException(translatorException.getCause());
 
         }
