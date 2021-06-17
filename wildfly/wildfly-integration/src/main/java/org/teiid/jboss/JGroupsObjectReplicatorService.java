@@ -41,8 +41,7 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
             @Override
             public JChannel createChannel(String id) throws Exception {
                 JChannel c = channelFactoryInjector.getValue().createChannel(id);
-                 c.connect(id);
-                 return c;
+                return c;
             }
         }, executorInjector.getValue());
     }
