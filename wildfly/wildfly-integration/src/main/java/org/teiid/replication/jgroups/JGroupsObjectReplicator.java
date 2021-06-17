@@ -520,6 +520,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
         methodMap.put(finishState, (short)(methodList.size() - 1));
 
         ReplicatedInvocationHandler<S> proxy = new ReplicatedInvocationHandler<S>(object, methodMap);
+        channel.setReceiver(proxy);
         /*
          * TODO: could have an object implement streaming
          * Override the normal handle method to support streaming
