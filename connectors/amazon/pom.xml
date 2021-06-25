@@ -16,6 +16,7 @@
 	<modules>
 		<module>translator-simpledb</module>
 		<module>translator-amazon-s3</module>
+		<module>translator-dynamodb</module>
 	</modules>
 
 </project>
