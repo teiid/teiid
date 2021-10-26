@@ -2,15 +2,11 @@ package org.teiid.translator.jdbc.druid;
 
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.jdbc.JDBCBaseExecution;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCQueryExecution;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Objects;
 
 /**
  * Query execution class for Apache Druid.
@@ -35,3 +31,4 @@ public class DruidQueryExecution extends JDBCQueryExecution {
 
     }
 }
+

@@ -29,7 +29,6 @@ import java.sql.Connection;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
@@ -91,14 +90,29 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("CURRENT_DATE")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("CURRENT_TIMESTAMP")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new TimestampAddModifier());
+        /*
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("EXTRACT( YEAR FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("EXTRACT(MONTH FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+        */
 
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR,
                 new FunctionModifier() {
-                    @Override
-                    public List<?> translate(Function function) {
-                        return Arrays.asList("EXTRACT(DOY FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    }
-                });
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("EXTRACT(DOY FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
 
         //source: time_format(ts, pattern), teiid: FORMATTIMESTAMP(ts, pattern)
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new FunctionModifier() {
@@ -226,8 +240,29 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
+
+        /*
+        if (command.getClass().toString().equals("class org.teiid.language.Select")) {
+            if (null!= ((Select) command).getGroupBy() && ((Select) command).getGroupBy().getElements().size() > 0) {
+                // remove any columns from group by that are not in the select
+                ((Select) command).getGroupBy().getElements().removeAll(
+                        ((Select) command).getGroupBy().getElements().stream().filter(
+                                g -> !((Select) command).getDerivedColumns().stream().anyMatch(
+                                        d -> d.toString().equals(g.toString()))).collect(Collectors.toList()));
+            }
+        }*/
         return super.translateCommand(command, context);
     }
+
+        /*
+    @Override
+    public String translateLiteralBoolean(Boolean booleanValue) {
+        if(booleanValue.booleanValue()) {
+            return "TRUE"; //$NON-NLS-1$
+        }
+        return "FALSE"; //$NON-NLS-1$
+    }
+    */
 
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
@@ -258,33 +293,6 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     public int getTimestampNanoPrecision() {
         return 6;
     }
-
-    /**
-     * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as
-     * bool_and(BooleanValue)
-     * @see org.teiid.language.visitor.LanguageObjectVisitor#visit(org.teiid.language.AggregateFunction)
-     * @since 4.3
-     */
-    @Override
-    public List<?> translate(LanguageObject obj, ExecutionContext context) {
-        if (obj instanceof Select ) {
-            if (null!= ((Select) obj).getGroupBy() && ((Select) obj).getGroupBy().getElements().size() > 0) {
-                // remove any columns from group by that are not in the select
-                ((Select) obj).getGroupBy().getElements().removeAll(
-                        ((Select) obj).getGroupBy().getElements().stream().filter(
-                                g -> !((Select) obj).getDerivedColumns().stream().anyMatch(
-                                        d -> d.toString().equals(g.toString()))).collect(Collectors.toList()));
-                System.out.println(obj.toString());
-            }
-        }
-        return super.translate(obj, context);
-    }
-
-    @Override
-    public NullOrder getDefaultNullOrder() {
-        return NullOrder.HIGH;
-    }
-
 
     @Override
     public List<String> getSupportedFunctions() {
@@ -359,10 +367,6 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsHaving() {
         return true;
-    }
-    @Override
-    public boolean supportsOrderByNullOrdering() {
-        return false;
     }
 
     @Override
@@ -461,16 +465,13 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     }
     @Override
     public boolean supportsUnions() {
-        return false;
+        return true;
     }
     @Override
     public boolean supportsWindowDistinctAggregates() {
         return false;
     }
-    @Override
-    public boolean supportsWindowOrderByWithAggregates() {
-        return false;
-    }
+
     @Override
     public boolean supportsElementaryOlapOperations() {
         return false;
