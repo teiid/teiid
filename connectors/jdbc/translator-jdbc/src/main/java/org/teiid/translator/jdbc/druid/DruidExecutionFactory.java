@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
@@ -60,8 +61,8 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
 
     public DruidExecutionFactory() {
         setSupportsFullOuterJoins(false);
-        setSupportsOuterJoins(true);
-        setSupportsInnerJoins(true);
+        setSupportsOuterJoins(false);
+        setSupportsInnerJoins(false);
         setSupportsOrderBy(true);
     }
 
@@ -83,7 +84,7 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("strlen")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
 
         //TIME FUNCTIONS
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("CURRENT_TIMESTAMP")); //$NON-NLS-1$
@@ -240,7 +241,6 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
-
         /*
         if (command.getClass().toString().equals("class org.teiid.language.Select")) {
             if (null!= ((Select) command).getGroupBy() && ((Select) command).getGroupBy().getElements().size() > 0) {
@@ -294,6 +294,33 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         return 6;
     }
 
+    /**
+     * Postgres doesn't provide min/max(boolean), so this conversion writes a min(BooleanValue) as
+     * bool_and(BooleanValue)
+     * @see org.teiid.language.visitor.LanguageObjectVisitor#visit(org.teiid.language.AggregateFunction)
+     * @since 4.3
+     */
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        /*if (obj.getClass().toString().equals("class org.teiid.language.Select")) {
+            if (null!= ((Select) obj).getGroupBy() && ((Select) obj).getGroupBy().getElements().size() > 0) {
+                // remove any columns from group by that are not in the select
+                ((Select) obj).getGroupBy().getElements().removeAll(
+                        ((Select) obj).getGroupBy().getElements().stream().filter(
+                                g -> !((Select) obj).getDerivedColumns().stream().anyMatch(
+                                        d -> d.toString().equals(g.toString()))).collect(Collectors.toList()));
+                System.out.println(obj.toString());
+            }
+        }*/
+        return super.translate(obj, context);
+    }
+
+    @Override
+    public NullOrder getDefaultNullOrder() {
+        return NullOrder.HIGH;
+    }
+
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -324,7 +351,10 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
-        supportedFunctions.add("NVL");      //$NON-NLS-1$
+        
+        //Druid doesn't support NVL 
+        //supportedFunctions.add("NVL");      //$NON-NLS-1$
+        
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
         supportedFunctions.add(SourceSystemFunctions.REPLACE);
@@ -361,12 +391,16 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("BETWEEN");
 
         //OTHER FUNCTIONS
-
+       
         return supportedFunctions;
     }
     @Override
     public boolean supportsHaving() {
         return true;
+    }
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+        return false;
     }
 
     @Override
@@ -465,13 +499,16 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
     }
     @Override
     public boolean supportsUnions() {
-        return true;
+        return false;
     }
     @Override
     public boolean supportsWindowDistinctAggregates() {
         return false;
     }
-
+    @Override
+    public boolean supportsWindowOrderByWithAggregates() {
+        return false;
+    }
     @Override
     public boolean supportsElementaryOlapOperations() {
         return false;
