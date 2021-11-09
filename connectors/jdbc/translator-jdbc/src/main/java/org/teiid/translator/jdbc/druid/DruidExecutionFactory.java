@@ -84,7 +84,7 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("strlen")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$
 
         //TIME FUNCTIONS
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("CURRENT_TIMESTAMP")); //$NON-NLS-1$
