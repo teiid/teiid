@@ -132,7 +132,7 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
             }
         });
         //OTHER FUNCTIONS
-        //registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("nvl")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("nvl")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("ifnull")); //$NON-NLS-1$
 
         //standard function form of several predicates
@@ -351,10 +351,10 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
-        
-        //Druid doesn't support NVL 
+
+        //Druid doesn't support NVL
         //supportedFunctions.add("NVL");      //$NON-NLS-1$
-        
+
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
         supportedFunctions.add(SourceSystemFunctions.REPLACE);
@@ -391,7 +391,7 @@ public class DruidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("BETWEEN");
 
         //OTHER FUNCTIONS
-       
+
         return supportedFunctions;
     }
     @Override
