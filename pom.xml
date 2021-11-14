@@ -153,6 +153,7 @@
         
         <version.org.apache.cxf>3.3.6</version.org.apache.cxf>
         <version.org.springframework>5.1.14.RELEASE</version.org.springframework>
+    	<closeTestReports>true</closeTestReports>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -472,6 +473,7 @@
 					<user.dir>${basedir}/target</user.dir>
 					<java.io.tmpdir>${basedir}/target</java.io.tmpdir>
 				</systemPropertyVariables>
+				<disableXmlReport>${closeTestReports}</disableXmlReport>
 			</configuration>
 		</plugin>
 		<!-- Build a test-jar for each project, so that src/test/* resources and 
