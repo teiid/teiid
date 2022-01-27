@@ -145,7 +145,7 @@
         <version.opentracing.concurrent>0.1.0</version.opentracing.concurrent>
         <version.opentracing>0.31.0</version.opentracing>
 
-        <version.xerces>2.12.0</version.xerces>
+        <version.xerces>2.12.2</version.xerces>
         <version.org.slf4j>1.7.29</version.org.slf4j>
         
         <version.caffeine>2.8.0</version.caffeine>
