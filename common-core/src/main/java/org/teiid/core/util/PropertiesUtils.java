@@ -301,7 +301,7 @@ public final class PropertiesUtils {
             final Method method = methods[i];
             final String methodName = method.getName();
             // If setter ...
-            if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 ) { //$NON-NLS-1$
+            if (! methodName.startsWith("set") || method.getParameterCount() != 1 ) { //$NON-NLS-1$
                 continue;
             }
             // Get the property name
@@ -327,7 +327,7 @@ public final class PropertiesUtils {
             final Method method = methods[i];
             final String methodName = method.getName();
             // If setter ...
-            if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 || !StringUtil.endsWithIgnoreCase(methodName, name)) { //$NON-NLS-1$
+            if (! methodName.startsWith("set") || method.getParameterCount() != 1 || !StringUtil.endsWithIgnoreCase(methodName, name)) { //$NON-NLS-1$
                 continue;
             }
             // Get the property name

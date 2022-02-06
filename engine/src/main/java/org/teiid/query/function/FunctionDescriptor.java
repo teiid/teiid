@@ -254,7 +254,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
                         }
                     }
                 } else {
-                    int i = invocationMethod.getParameterTypes().length;
+                    int i = invocationMethod.getParameterCount();
                     Object[] newValues = Arrays.copyOf(values, i);
                     Object varArgs = null;
                     if (invocationMethod.getParameterTypes()[i - 1].getComponentType() != Object.class) {

@@ -422,7 +422,7 @@ public class TranslatorUtil {
                     //can't find getter, won't set the default value
                 }
             }
-        } else if (method.getParameterTypes().length != 0) {
+        } else if (method.getParameterCount() != 0) {
              throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40029, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40029, method));
         } else {
             getter = method;
