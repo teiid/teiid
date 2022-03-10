@@ -174,7 +174,7 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
             if (pds != null) {
                 for (int j = 0; j < mds.length; j++) {
                     MethodDescriptor md = mds[j];
-                    if (md.getMethod() == null || md.getMethod().getParameterTypes().length > 0 || md.getMethod().getReturnType() == Void.class || md.getMethod().getReturnType() == void.class) {
+                    if (md.getMethod() == null || md.getMethod().getParameterCount() > 0 || md.getMethod().getReturnType() == Void.class || md.getMethod().getReturnType() == void.class) {
                         continue;
                     }
                     String name = md.getName();

@@ -335,7 +335,7 @@ public class FunctionTree {
                      throw new MetadataException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
                 }
             } else {
-                requiresContext = (invocationMethod.getParameterTypes().length > 0 && org.teiid.CommandContext.class.isAssignableFrom(invocationMethod.getParameterTypes()[0]));
+                requiresContext = (invocationMethod.getParameterCount() > 0 && org.teiid.CommandContext.class.isAssignableFrom(invocationMethod.getParameterTypes()[0]));
             }
             if (invocationMethod != null) {
                 // Check return type is non void
