@@ -7,14 +7,14 @@ stages:
     if: type != cron
 before_install:
   - cp settings.xml $HOME/.m2/settings.xml
-install: mvn -P release,wildfly install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-script: mvn -P arquillian-tests,wildfly test -B
+install: mvn -T 1C -P release,wildfly install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+script: mvn -T 1C -P arquillian-tests,wildfly test -B
 cache:
   directories:
     - $HOME/.m2
 deploy:
   provider: script
-  script: "mvn -P dev,wildfly deploy -q"
+  script: "mvn -T 1C -P dev,wildfly deploy -q"
   skip_cleanup: true
   on:
     branch: master

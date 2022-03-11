@@ -472,6 +472,9 @@
 					<user.dir>${basedir}/target</user.dir>
 					<java.io.tmpdir>${basedir}/target</java.io.tmpdir>
 				</systemPropertyVariables>
+				<parallel>classes</parallel>
+				<useUnlimitedThreads>true</useUnlimitedThreads>
+
 			</configuration>
 		</plugin>
 		<!-- Build a test-jar for each project, so that src/test/* resources and 
