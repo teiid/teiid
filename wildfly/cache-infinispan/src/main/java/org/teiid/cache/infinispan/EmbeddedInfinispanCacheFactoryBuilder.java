@@ -18,14 +18,19 @@
 
 package org.teiid.cache.infinispan;
 
-import java.io.IOException;
-
-import javax.transaction.TransactionManager;
-
-import org.infinispan.commons.tx.lookup.TransactionManagerLookup;
+import org.infinispan.commons.util.FileLookupFactory;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.TransactionConfigurationBuilder;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.configuration.parsing.XMLResourceResolver;
 import org.infinispan.manager.DefaultCacheManager;
 import org.teiid.cache.CacheFactory;
 import org.teiid.core.TeiidRuntimeException;
+
+import javax.transaction.TransactionManager;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Needed to create the CacheFactory for embedded usage.
@@ -37,18 +42,12 @@ public class EmbeddedInfinispanCacheFactoryBuilder {
             if (configFile == null) {
                 configFile = "infinispan-config.xml"; // in classpath
             }
-            DefaultCacheManager cacheManager = new DefaultCacheManager(configFile, true);
-            for(String cacheName:cacheManager.getCacheNames()) {
-                if (tm != null) {
-                    cacheManager.getCacheConfiguration(cacheName).transaction().transactionManagerLookup(new TransactionManagerLookup() {
-                        @Override
-                        public TransactionManager getTransactionManager() throws Exception {
-                            return tm;
-                        }
-                    });
-                }
-                cacheManager.startCache(cacheName);
-            }
+            InputStream inputStream = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader());
+            ConfigurationBuilderHolder builderHolder = new ParserRegistry().parse(inputStream, (XMLResourceResolver)null);
+            ConfigurationBuilder builder = builderHolder.getCurrentConfigurationBuilder();
+            TransactionConfigurationBuilder transaction = builder.transaction();
+            transaction.transactionManagerLookup(() -> tm);
+            DefaultCacheManager cacheManager = new DefaultCacheManager(builderHolder, true);
             return new InfinispanCacheFactory(cacheManager, InfinispanCacheFactory.class.getClassLoader());
         } catch (IOException e) {
             throw new TeiidRuntimeException("Failed to initialize a Infinispan cache factory");
