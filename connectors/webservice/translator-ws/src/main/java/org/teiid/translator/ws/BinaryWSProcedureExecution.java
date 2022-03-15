@@ -18,26 +18,7 @@
 
 package org.teiid.translator.ws;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.activation.DataSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.WebServiceException;
-import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-
+import org.apache.cxf.bus.spring.BusApplicationContext;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.teiid.connector.DataPlugin;
@@ -54,6 +35,21 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
+
+import javax.activation.DataSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
+import javax.xml.ws.WebServiceException;
+import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.http.HTTPBinding;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.util.*;
 
 /**
  * http handler
@@ -146,7 +142,13 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
                 ds = new InputStreamFactory.BlobInputStreamFactory((Blob)payload);
             }
 
-            this.returnValue = dispatch.invoke(ds);
+            ClassLoader originalCCL = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(BusApplicationContext.class.getClassLoader());
+                this.returnValue = dispatch.invoke(ds);
+            }finally {
+                Thread.currentThread().setContextClassLoader(originalCCL);
+            }
 
             Map<String, Object> rc = dispatch.getResponseContext();
             this.responseCode = (Integer)rc.get(WSConnection.STATUS_CODE);
