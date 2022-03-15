@@ -39,7 +39,13 @@
         <dependency>
           <groupId>jakarta.activation</groupId>
           <artifactId>jakarta.activation-api</artifactId>
-        </dependency>        
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-core</artifactId>
+            <version>${version.org.apache.cxf}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
