@@ -67,8 +67,14 @@
         <dependency>
 	      <groupId>org.teiid</groupId>
 	      <artifactId>teiid-engine</artifactId>
-	    </dependency>    
-        
+	    </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${version.org.springframework}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Rutime dependencies -->
         
 		<dependency>

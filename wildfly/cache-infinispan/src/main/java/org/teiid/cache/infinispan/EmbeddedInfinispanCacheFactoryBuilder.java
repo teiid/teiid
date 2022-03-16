@@ -31,6 +31,7 @@ import org.teiid.core.TeiidRuntimeException;
 import javax.transaction.TransactionManager;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 
 /**
  * Needed to create the CacheFactory for embedded usage.
@@ -48,6 +49,9 @@ public class EmbeddedInfinispanCacheFactoryBuilder {
             TransactionConfigurationBuilder transaction = builder.transaction();
             transaction.transactionManagerLookup(() -> tm);
             DefaultCacheManager cacheManager = new DefaultCacheManager(builderHolder, true);
+            for (String cacheName : builderHolder.getNamedConfigurationBuilders().keySet()) {
+                cacheManager.startCache(cacheName);
+            }
             return new InfinispanCacheFactory(cacheManager, InfinispanCacheFactory.class.getClassLoader());
         } catch (IOException e) {
             throw new TeiidRuntimeException("Failed to initialize a Infinispan cache factory");

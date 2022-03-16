@@ -46,6 +46,12 @@
             <version>${version.org.apache.cxf}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${version.org.springframework}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

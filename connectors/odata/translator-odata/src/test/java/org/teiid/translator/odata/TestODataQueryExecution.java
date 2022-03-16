@@ -17,28 +17,6 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.activation.DataSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -66,6 +44,19 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ws.WSConnection;
+
+import javax.activation.DataSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
+import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.http.HTTPBinding;
+import java.io.*;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataQueryExecution {
@@ -290,7 +281,7 @@ public class TestODataQueryExecution {
                 "         <errordetail>\n" +
                 "             <code>/IWBEP/CX_MGW_TECH_EXCEPTION</code>\n" +
                 "             <message>Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" +
-                "              <propertyref></propertyref>\n" +
+                "              <propertyref/>\n" +
                 "              <severity>error</severity>\n" +
                 "        </errordetail>\n" +
                 "     </errordetails>\n" +
