@@ -18,21 +18,20 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import javax.sql.ConnectionEvent;
-import javax.sql.ConnectionEventListener;
-import javax.transaction.xa.XAException;
-import javax.transaction.xa.XAResource;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.net.ServerConnection;
+
+import javax.sql.ConnectionEvent;
+import javax.sql.ConnectionEventListener;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import static org.junit.Assert.assertTrue;
 
 public class TestXAConnection {
 
@@ -74,7 +73,7 @@ public class TestXAConnection {
         } catch (SQLException e) {
 
         }
-        Mockito.verify(cel).connectionErrorOccurred((ConnectionEvent) Mockito.anyObject());
+        Mockito.verify(cel).connectionErrorOccurred(Mockito.any(ConnectionEvent.class));
     }
 
     @Test(expected=XAException.class) public void testStartFailure() throws Exception {

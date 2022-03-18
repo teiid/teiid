@@ -17,18 +17,6 @@
  */
 package org.teiid.eclipselink.platform;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,6 +29,18 @@ import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.file.FileExecutionFactory;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import java.io.File;
+import java.io.FileInputStream;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @SuppressWarnings("nls")
 public class TestTeiidPlatform {
@@ -60,7 +60,7 @@ public class TestTeiidPlatform {
             public VirtualFileConnection getConnection() throws Exception {
                 VirtualFileConnection result = Mockito.mock(VirtualFileConnection.class);
                 JavaVirtualFile javaVirtualFile = new JavaVirtualFile(UnitTestUtil.getTestDataFile("file/marketdata.csv"));
-                Mockito.stub(result.getFiles(Mockito.anyString())).toReturn(new VirtualFile[] {javaVirtualFile});
+                Mockito.when(result.getFiles(Mockito.anyString())).thenReturn(new VirtualFile[] {javaVirtualFile});
                 return result;
             }
         });

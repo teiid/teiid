@@ -17,11 +17,6 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.VDB.Status;
@@ -31,17 +26,18 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
+import org.teiid.metadata.*;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestCompositeVDB {
@@ -83,7 +79,7 @@ public class TestCompositeVDB {
     private static ConnectorManager getConnectorManager(String translatorName, String connectionName, List<FunctionMethod> funcs) {
         final ExecutionFactory<Object, Object> ef = Mockito.mock(ExecutionFactory.class);
 
-        Mockito.stub(ef.getPushDownFunctions()).toReturn(funcs);
+        Mockito.when(ef.getPushDownFunctions()).thenReturn(funcs);
 
         ConnectorManager cm = new ConnectorManager(translatorName,connectionName, ef);
         cm.start();

@@ -129,7 +129,7 @@ public class TestODBCSocketTransport {
             ec.setTransactionManager(TRANSACTION_MANAGER);
             server.start(ec, false);
             LogonImpl logon = Mockito.mock(LogonImpl.class);
-            Mockito.stub(logon.getSessionService()).toReturn(server.getSessionService());
+            Mockito.when(logon.getSessionService()).thenReturn(server.getSessionService());
             odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
             odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
             if (mode == Mode.LEGACY) {

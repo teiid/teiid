@@ -18,14 +18,6 @@
 
 package org.teiid.translator.jdbc.sqlserver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -45,6 +37,12 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.TranslationHelper;
+
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestSqlServerConversionVisitor {
@@ -339,7 +337,7 @@ public class TestSqlServerConversionVisitor {
         trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
         trans.start();
         Connection c = Mockito.mock(Connection.class);
-        Mockito.stub(c.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
+        Mockito.when(c.getMetaData()).thenReturn(Mockito.mock(DatabaseMetaData.class));
         trans.initCapabilities(c);
 
         String input = "select cast(smalla.stringkey as date), formatdate(smalla.datevalue, 'dd/MM/yy'), parsedate(smalla.stringkey, 'dd/MM/yy') from bqt1.smalla where smalla.datevalue = {d'2000-01-01'}"; //$NON-NLS-1$

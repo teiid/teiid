@@ -17,15 +17,6 @@
  */
 package org.teiid.translator.salesforce.execution;
 
-import static org.junit.Assert.*;
-
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,12 +25,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
+import org.teiid.language.*;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -49,6 +35,15 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
+
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.TimeZone;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestSingleInsert {
@@ -85,7 +80,7 @@ public class TestSingleInsert {
 
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
-        Mockito.stub(connection.create(Mockito.any(DataPayload.class))).toAnswer(new Answer<Integer>() {
+        Mockito.when(connection.create(Mockito.any(DataPayload.class))).thenAnswer(new Answer<Integer>() {
             @Override
             public Integer answer(InvocationOnMock invocation) throws Throwable {
                 DataPayload payload = (DataPayload) invocation.getArguments()[0];
@@ -99,7 +94,7 @@ public class TestSingleInsert {
             }
         });
 
-        Mockito.stub(connection.upsert(Mockito.any(DataPayload.class))).toReturn(1);
+        Mockito.when(connection.upsert(Mockito.any(DataPayload.class))).thenReturn(1);
 
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
         config.setMaxBulkInsertBatchSize(1);

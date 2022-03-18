@@ -89,10 +89,10 @@ public class TestODataQueryExecution {
         headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
         Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Mockito.when(dispatch.getRequestContext()).thenReturn(headers);
+        Mockito.when(dispatch.getResponseContext()).thenReturn(headers);
 
-        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(), Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.when(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(), Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).thenReturn(dispatch);
 
         DataSource ds = new DataSource() {
             @Override
@@ -113,7 +113,7 @@ public class TestODataQueryExecution {
                 return "application/xml";
             }
         };
-        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
+        Mockito.when(dispatch.invoke(Mockito.any(DataSource.class))).thenReturn(ds);
 
         ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
         execution.execute();

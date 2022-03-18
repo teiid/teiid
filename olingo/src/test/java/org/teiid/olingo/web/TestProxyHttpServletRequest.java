@@ -18,12 +18,13 @@
 
 package org.teiid.olingo.web;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.junit.Test;
-import org.mockito.Mockito;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 @SuppressWarnings("nls")
 public class TestProxyHttpServletRequest {
@@ -32,17 +33,17 @@ public class TestProxyHttpServletRequest {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         assertSame(request, ProxyHttpServletRequest.handleProxiedRequest(request));
 
-        Mockito.stub(request.getHeader("X-Forwarded-Host")).toReturn("host:8080");
-        Mockito.stub(request.getHeader("X-Forwarded-Port")).toReturn("8080");
+        Mockito.when(request.getHeader("X-Forwarded-Host")).thenReturn("host:8080");
+        Mockito.when(request.getHeader("X-Forwarded-Port")).thenReturn("8080");
         assertEquals("http://host:8080", ProxyHttpServletRequest.getProxyUrl(request));
 
-        Mockito.stub(request.getHeader("X-Forwarded-Host")).toReturn("host");
-        Mockito.stub(request.getHeader("X-Forwarded-Port")).toReturn("443");
-        Mockito.stub(request.getHeader("X-Forwarded-Proto")).toReturn("https");
+        Mockito.when(request.getHeader("X-Forwarded-Host")).thenReturn("host");
+        Mockito.when(request.getHeader("X-Forwarded-Port")).thenReturn("443");
+        Mockito.when(request.getHeader("X-Forwarded-Proto")).thenReturn("https");
         assertEquals("https://host:443", ProxyHttpServletRequest.getProxyUrl(request));
 
-        Mockito.stub(request.getHeader("X-Forwarded-Host")).toReturn(null);
-        Mockito.stub(request.getHeader("Forwarded")).toReturn("Forwarded for=192.168.42.1;host=hostname:80;proto=http;proto-version=");
+        Mockito.when(request.getHeader("X-Forwarded-Host")).thenReturn(null);
+        Mockito.when(request.getHeader("Forwarded")).thenReturn("Forwarded for=192.168.42.1;host=hostname:80;proto=http;proto-version=");
         assertEquals("http://hostname:80", ProxyHttpServletRequest.getProxyUrl(request));
     }
 

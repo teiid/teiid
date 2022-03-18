@@ -18,21 +18,17 @@
 
 package org.teiid.translator.google;
 
-import static org.junit.Assert.*;
-
-import java.util.Properties;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.google.api.metadata.Column;
-import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
-import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.google.api.metadata.Util;
-import org.teiid.translator.google.api.metadata.Worksheet;
+import org.teiid.translator.google.api.metadata.*;
+
+import java.util.Properties;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestMetadataProcessor {
@@ -56,7 +52,7 @@ public class TestMetadataProcessor {
         newCol.setAlphaName("empty");
         worksheet.addColumn(null, newCol);
 
-        Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
+        Mockito.when(conn.getSpreadsheetInfo()).thenReturn(people);
 
         MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
         GoogleMetadataProcessor processor = new GoogleMetadataProcessor();

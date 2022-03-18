@@ -192,7 +192,7 @@ public class FakeServer extends EmbeddedServer {
                 }
             } else {
                 if (!parameterObject.useDataRoles) {
-                    vdbMetaData.setDataPolicies(Collections.EMPTY_LIST);
+                    vdbMetaData.setDataPolicies(Collections.emptyList());
                 }
                 cmr.createConnectorManagers(vdbMetaData, this);
             }

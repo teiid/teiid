@@ -49,7 +49,7 @@ public class TestJBossSecurityHelper extends TestCase {
     private JBossSecurityHelper buildSecurityHelper(final String domain, final SecurityDomainContext sdc)
             throws Exception {
         Principal p = Mockito.mock(Principal.class);
-        Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
+        Mockito.when(p.getName()).thenReturn("alreadylogged"); //$NON-NLS-1$
         HashSet<Principal> principals = new HashSet<Principal>();
         principals.add(p);
 
@@ -108,7 +108,7 @@ public class TestJBossSecurityHelper extends TestCase {
         domains.add("somedomain");
 
         AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
-        Mockito.stub(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).toReturn(true);
+        Mockito.when(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).thenReturn(true);
 
         final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
 

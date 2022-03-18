@@ -35,7 +35,7 @@ public class TestCassandraConnectionImpl {
         Metadata metadata = Mockito.mock(Metadata.class);
         CassandraConnectionImpl cci = new CassandraConnectionImpl(config, metadata);
         KeyspaceMetadata key_metadata = Mockito.mock(KeyspaceMetadata.class);
-        Mockito.stub(metadata.getKeyspace("x")).toReturn(key_metadata);
+        Mockito.when(metadata.getKeyspace("x")).thenReturn(key_metadata);
         assertNotNull(cci.keyspaceInfo());
     }
 }

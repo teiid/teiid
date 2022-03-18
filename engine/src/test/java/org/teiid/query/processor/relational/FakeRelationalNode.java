@@ -18,10 +18,6 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.mockito.Mockito;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
@@ -29,6 +25,10 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -129,7 +129,7 @@ public class FakeRelationalNode extends RelationalNode {
     protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
             TeiidComponentException, TeiidProcessingException {
         TupleBuffer tb = Mockito.mock(TupleBuffer.class);
-        Mockito.stub(tb.getRowCount()).toReturn((long)(maxRows != -1 ? Math.min(maxRows, data.length) : data.length));
+        Mockito.when(tb.getRowCount()).thenReturn((long)(maxRows != -1 ? Math.min(maxRows, data.length) : data.length));
         return tb;
     }
 

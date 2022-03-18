@@ -18,20 +18,20 @@
 
 package org.teiid.metadata;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestForeignKey {
 
     @Test
     public void testReferenceTableName() {
         Table table = Mockito.mock(Table.class);
-        Mockito.stub(table.getName()).toReturn("table"); //$NON-NLS-1$
+        Mockito.when(table.getName()).thenReturn("table"); //$NON-NLS-1$
 
         KeyRecord pk = Mockito.mock(KeyRecord.class);
-        Mockito.stub(pk.getParent()).toReturn(table);
+        Mockito.when(pk.getParent()).thenReturn(table);
 
         ForeignKey fk = new ForeignKey();
         fk.setPrimaryKey(pk);

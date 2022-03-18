@@ -17,9 +17,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.mongodb.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -36,12 +34,8 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 
-import com.mongodb.AggregationOptions;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings("nls")
 public class TestMongoDBDirectQueryExecution {
@@ -64,10 +58,10 @@ public class TestMongoDBDirectQueryExecution {
         ExecutionContext context = Mockito.mock(ExecutionContext.class);
         DBCollection dbCollection = Mockito.mock(DBCollection.class);
         DB db = Mockito.mock(DB.class);
-        Mockito.stub(db.getCollection("MyTable")).toReturn(dbCollection);
+        Mockito.when(db.getCollection("MyTable")).thenReturn(dbCollection);
 
-        Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
-        Mockito.stub(connection.getDatabase()).toReturn(db);
+        Mockito.when(db.collectionExists(Mockito.anyString())).thenReturn(true);
+        Mockito.when(connection.getDatabase()).thenReturn(db);
 
         Argument arg = new Argument(Direction.IN, null, String.class, null);
         arg.setArgumentValue(new Literal("MyTable;{$match:{\"id\":\"$1\"}};{$project:{\"_m0\":\"$user\"}}", String.class));
@@ -91,10 +85,10 @@ public class TestMongoDBDirectQueryExecution {
         ExecutionContext context = Mockito.mock(ExecutionContext.class);
         DBCollection dbCollection = Mockito.mock(DBCollection.class);
         DB db = Mockito.mock(DB.class);
-        Mockito.stub(db.getCollection("MyTable")).toReturn(dbCollection);
+        Mockito.when(db.getCollection("MyTable")).thenReturn(dbCollection);
 
-        Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
-        Mockito.stub(connection.getDatabase()).toReturn(db);
+        Mockito.when(db.collectionExists(Mockito.anyString())).thenReturn(true);
+        Mockito.when(connection.getDatabase()).thenReturn(db);
 
         Argument arg = new Argument(Direction.IN, null, String.class, null);
         arg.setArgumentValue(new Literal("$ShellCmd;MyTable;remove;{ qty: { $gt: 20 }}", String.class));

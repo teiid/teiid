@@ -17,26 +17,6 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.TimeZone;
-
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edmx.EdmxReference;
@@ -45,11 +25,7 @@ import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.core.OData4Impl;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -69,6 +45,21 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
+
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @SuppressWarnings("nls")
 public class TestODataSQLBuilder {
@@ -191,8 +182,8 @@ public class TestODataSQLBuilder {
         Hashtable<String, String> headers = new Hashtable<String, String>();
         headers.put("Content-Type", "application/json");
 
-        Mockito.stub(client.getMetadataStore()).toReturn(store);
-        Mockito.stub(client.executeCount(Mockito.any(Query.class), Mockito.anyListOf(SQLParameter.class))).toReturn(new CountResponse() {
+        Mockito.when(client.getMetadataStore()).thenReturn(store);
+        Mockito.when(client.executeCount(Mockito.any(Query.class), Mockito.anyList())).thenReturn(new CountResponse() {
             @Override
             public int getCount() {
                 return 10;
@@ -200,9 +191,9 @@ public class TestODataSQLBuilder {
         });
 
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        Mockito.stub(request.getHeaderNames()).toReturn(headers.keys());
-        Mockito.stub(request.getHeaders("Content-Type")).toReturn(headers.elements());
-        Mockito.stub(request.getMethod()).toReturn(method);
+        Mockito.when(request.getHeaderNames()).thenReturn(headers.keys());
+        Mockito.when(request.getHeaders("Content-Type")).thenReturn(headers.elements());
+        Mockito.when(request.getMethod()).thenReturn(method);
 
         String requestURL = url;
         String queryString = "";
@@ -211,11 +202,11 @@ public class TestODataSQLBuilder {
             requestURL = url.substring(0, idx);
             queryString = url.substring(idx+1);
         }
-        Mockito.stub(request.getRequestURL()).toReturn(new StringBuffer(requestURL));
-        Mockito.stub(request.getQueryString()).toReturn(queryString);
-        Mockito.stub(request.getServletPath()).toReturn("");
-        Mockito.stub(request.getContextPath()).toReturn("/odata4/vdb/PM1");
-        Mockito.stub(request.getInputStream()).toReturn(stream);
+        Mockito.when(request.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        Mockito.when(request.getQueryString()).thenReturn(queryString);
+        Mockito.when(request.getServletPath()).thenReturn("");
+        Mockito.when(request.getContextPath()).thenReturn("/odata4/vdb/PM1");
+        Mockito.when(request.getInputStream()).thenReturn(stream);
 
         final StringBuffer sb = new StringBuffer();
         ServletOutputStream out = new ServletOutputStream() {
@@ -232,7 +223,7 @@ public class TestODataSQLBuilder {
             }
         };
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
-        Mockito.stub(response.getOutputStream()).toReturn(out);
+        Mockito.when(response.getOutputStream()).thenReturn(out);
 
         try {
             TeiidServiceHandler tsh = new TeiidServiceHandler("PM1");

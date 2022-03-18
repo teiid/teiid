@@ -17,15 +17,6 @@
  */
 package org.teiid.translator.hive;
 
-import static org.junit.Assert.*;
-
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -35,11 +26,7 @@ import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -49,6 +36,15 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
+
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestHiveExecutionFactory {
@@ -257,11 +253,11 @@ public class TestHiveExecutionFactory {
         Connection c = Mockito.mock(Connection.class);
         MetadataFactory mf = Mockito.mock(MetadataFactory.class);
         Statement stmt = Mockito.mock(Statement.class);
-        Mockito.stub(c.createStatement()).toReturn(stmt);
+        Mockito.when(c.createStatement()).thenReturn(stmt);
         ResultSet rs = Mockito.mock(ResultSet.class);
-        Mockito.stub(stmt.executeQuery("SHOW TABLES")).toReturn(rs);
-        Mockito.stub(rs.next()).toReturn(true).toReturn(false);
-        Mockito.stub(rs.getString(1)).toReturn("x");
+        Mockito.when(stmt.executeQuery("SHOW TABLES")).thenReturn(rs);
+        Mockito.when(rs.next()).thenReturn(true).thenReturn(false);
+        Mockito.when(rs.getString(1)).thenReturn("x");
 
         hmp.process(mf, c);
         Mockito.verify(mf, Mockito.times(0)).addTable("x");
@@ -272,22 +268,22 @@ public class TestHiveExecutionFactory {
         Connection c = Mockito.mock(Connection.class);
         MetadataFactory mf = Mockito.mock(MetadataFactory.class);
         Table table = new Table();
-        Mockito.stub(mf.addTable("x")).toReturn(table);
+        Mockito.when(mf.addTable("x")).thenReturn(table);
         Column col = new Column();
         col.setName("y");
-        Mockito.stub(mf.addColumn("y", "string", table)).toReturn(col);
+        Mockito.when(mf.addColumn("y", "string", table)).thenReturn(col);
         Statement stmt = Mockito.mock(Statement.class);
-        Mockito.stub(c.createStatement()).toReturn(stmt);
+        Mockito.when(c.createStatement()).thenReturn(stmt);
         ResultSet rs = Mockito.mock(ResultSet.class);
-        Mockito.stub(stmt.executeQuery("SHOW TABLES")).toReturn(rs);
-        Mockito.stub(rs.next()).toReturn(true).toReturn(false);
-        Mockito.stub(rs.getString(1)).toReturn("x");
+        Mockito.when(stmt.executeQuery("SHOW TABLES")).thenReturn(rs);
+        Mockito.when(rs.next()).thenReturn(true).thenReturn(false);
+        Mockito.when(rs.getString(1)).thenReturn("x");
 
         ResultSet rs1 = Mockito.mock(ResultSet.class);
-        Mockito.stub(stmt.executeQuery("DESCRIBE x")).toReturn(rs1);
-        Mockito.stub(rs1.next()).toReturn(true).toReturn(false);
-        Mockito.stub(rs1.getString(1)).toReturn("y");
-        Mockito.stub(rs1.getString(2)).toReturn("string");
+        Mockito.when(stmt.executeQuery("DESCRIBE x")).thenReturn(rs1);
+        Mockito.when(rs1.next()).thenReturn(true).thenReturn(false);
+        Mockito.when(rs1.getString(1)).thenReturn("y");
+        Mockito.when(rs1.getString(2)).thenReturn("string");
 
         hmp.process(mf, c);
         assertEquals("`x`", table.getNameInSource());

@@ -17,10 +17,9 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -38,9 +37,10 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedMongoExecution {
@@ -79,7 +79,7 @@ public class TestEmbeddedMongoExecution {
 
     private static MongoDBConnection getConnection(MongoClient client) {
         MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
-        Mockito.stub(connection.getDatabase()).toReturn(client.getDB("test"));
+        Mockito.when(connection.getDatabase()).thenReturn(client.getDB("test"));
         return connection;
     }
 
@@ -91,7 +91,7 @@ public class TestEmbeddedMongoExecution {
         Command cmd = utility.parseCommand(sql);
         CommandContext cc = Mockito.mock(CommandContext.class);
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(ec.getCommandContext()).toReturn(cc);
+        Mockito.when(ec.getCommandContext()).thenReturn(cc);
         Execution exec =  translator.createExecution(cmd, ec, utility.createRuntimeMetadata(), this.connection);
         exec.execute();
         return exec;

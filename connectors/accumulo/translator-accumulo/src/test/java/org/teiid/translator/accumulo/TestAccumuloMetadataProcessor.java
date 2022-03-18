@@ -17,13 +17,6 @@
  */
 package org.teiid.translator.accumulo;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.BatchWriter;
 import org.apache.accumulo.core.client.BatchWriterConfig;
@@ -47,6 +40,14 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @SuppressWarnings("nls")
 public class TestAccumuloMetadataProcessor {
@@ -94,8 +95,8 @@ public class TestAccumuloMetadataProcessor {
     @Test
     public void testDefaultImportPropertiesMetadata() throws Exception {
         AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
-        Mockito.stub(conn.getInstance()).toReturn(connector);
-        Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
+        Mockito.when(conn.getInstance()).thenReturn(connector);
+        Mockito.when(conn.getAuthorizations()).thenReturn(new Authorizations("public"));
         MetadataFactory mf = new MetadataFactory("vdb", 1, "accumulo", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor();
         processor.process(mf,conn);
@@ -128,8 +129,8 @@ public class TestAccumuloMetadataProcessor {
         props.put("importer.ValueIn", "{ROWID}");
 
         AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
-        Mockito.stub(conn.getInstance()).toReturn(connector);
-        Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
+        Mockito.when(conn.getInstance()).thenReturn(connector);
+        Mockito.when(conn.getAuthorizations()).thenReturn(new Authorizations("public"));
         MetadataFactory mf = new MetadataFactory("vdb", 1, "accumulo", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         AccumuloMetadataProcessor processor = new AccumuloMetadataProcessor();
         PropertiesUtils.setBeanProperties(processor, mf.getModelProperties(), "importer"); //$NON-NLS-1$

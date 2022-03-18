@@ -18,11 +18,6 @@
 
 package org.teiid.translator.salesforce.execution;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-import java.util.Calendar;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -31,6 +26,12 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
+
+import java.util.Arrays;
+import java.util.Calendar;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @SuppressWarnings("nls")
 public class TestProcedureExecution {
@@ -42,7 +43,7 @@ public class TestProcedureExecution {
         SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
         UpdatedResult ur = new UpdatedResult();
         ur.setIDs(Arrays.asList("1", "2"));
-        Mockito.stub(sfc.getUpdated(Mockito.eq("foo"), (Calendar)Mockito.anyObject(), (Calendar)Mockito.anyObject())).toReturn(ur);
+        Mockito.when(sfc.getUpdated(Mockito.eq("foo"), Mockito.any(Calendar.class), Mockito.any(Calendar.class))).thenReturn(ur);
         ProcedureExecutionParentImpl pepi = new ProcedureExecutionParentImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
         pepi.execute();
         assertNotNull(pepi.next());

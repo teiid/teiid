@@ -18,12 +18,6 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Properties;
-
-import javax.security.auth.Subject;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -42,6 +36,11 @@ import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.services.SessionServiceImpl;
+
+import javax.security.auth.Subject;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestLogonImpl {
@@ -66,7 +65,7 @@ public class TestLogonImpl {
     @Test
     public void testLogonResult() throws Exception {
         SessionService ssi = Mockito.mock(SessionService.class);
-        Mockito.stub(ssi.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).toReturn(AuthenticationType.USERPASSWORD);
+        Mockito.when(ssi.getAuthenticationType(Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(AuthenticationType.USERPASSWORD);
         DQPWorkContext.setWorkContext(new DQPWorkContext());
         String userName = "Fred"; //$NON-NLS-1$
         String applicationName = "test"; //$NON-NLS-1$
@@ -82,7 +81,7 @@ public class TestLogonImpl {
         session.setSessionId(String.valueOf(1));
         session.setSessionToken(new SessionToken(1, userName));
 
-        Mockito.stub(ssi.createSession("x", "1", AuthenticationType.USERPASSWORD, userName, null, applicationName,p)).toReturn(session);
+        Mockito.when(ssi.createSession("x", "1", AuthenticationType.USERPASSWORD, userName, null, applicationName,p)).thenReturn(session);
 
         LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 
@@ -99,7 +98,7 @@ public class TestLogonImpl {
         vdb.setName("name");
         vdb.setVersion(1);
         vdb.setStatus(Status.ACTIVE);
-        Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
+        Mockito.when(repo.getLiveVDB("name", "1")).thenReturn(vdb);
 
         ssi.setVDBRepository(repo);
         ssi.setSecurityDomain("SC");
@@ -213,7 +212,7 @@ public class TestLogonImpl {
         vdb.setName(name);
         vdb.setVersion(1);
         vdb.setStatus(Status.ACTIVE);
-        Mockito.stub(repo.getLiveVDB(name, "1")).toReturn(vdb);
+        Mockito.when(repo.getLiveVDB(name, "1")).thenReturn(vdb);
         vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, sc);
         vdb.addProperty(SessionServiceImpl.AUTHENTICATION_TYPE_PROPERTY, authenticationType);
         return vdb;

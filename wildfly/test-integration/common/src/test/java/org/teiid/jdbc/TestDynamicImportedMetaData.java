@@ -313,7 +313,7 @@ public class TestDynamicImportedMetaData {
         oef.start();
         DataSource ds = Mockito.mock(DataSource.class);
 
-        Mockito.stub(ds.getConnection()).toReturn(conn);
+        Mockito.when(ds.getConnection()).thenReturn(conn);
 
         nmr.loadMetadata(mf, oef, ds);
 
@@ -408,7 +408,7 @@ public class TestDynamicImportedMetaData {
         tef.start();
         server.addTranslator("teiid", tef);
         DataSource ds = Mockito.mock(DataSource.class);
-        Mockito.stub(ds.getConnection()).toReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
+        Mockito.when(ds.getConnection()).thenReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
         server.addConnectionFactory("teiid1", ds);
         server.addConnectionFactory("teiid2", ds);
         server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("multi.xml")));
@@ -453,11 +453,11 @@ public class TestDynamicImportedMetaData {
         //bad databasemetadata
         DatabaseMetaData dbmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new BadMetadata(), c.getMetaData()}, new Class[] {DatabaseMetaData.class});
         Connection mock = Mockito.mock(Connection.class);
-        Mockito.stub(mock.getMetaData()).toReturn(dbmd);
-        Mockito.stub(ds.getConnection()).toReturn(mock);
+        Mockito.when(mock.getMetaData()).thenReturn(dbmd);
+        Mockito.when(ds.getConnection()).thenReturn(mock);
 
         DataSource ds1 = Mockito.mock(DataSource.class);
-        Mockito.stub(ds1.getConnection()).toReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
+        Mockito.when(ds1.getConnection()).thenReturn(server.getDriver().connect("jdbc:teiid:vdb", null));
 
         server.addConnectionFactory("teiid1", ds);
         server.addConnectionFactory("teiid2", ds1);
@@ -518,7 +518,7 @@ public class TestDynamicImportedMetaData {
 
         DatabaseMetaData dbmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new TypeMixin(), conn.getMetaData()}, new Class[] {DatabaseMetaData.class});
         Connection c = Mockito.mock(Connection.class);
-        Mockito.stub(c.getMetaData()).toReturn(dbmd);
+        Mockito.when(c.getMetaData()).thenReturn(dbmd);
 
         mf = getMetadata(importProperties, c);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("X");

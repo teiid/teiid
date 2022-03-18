@@ -17,11 +17,7 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-
+import com.mongodb.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,7 +35,10 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
-import com.mongodb.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestMongoDBUpdateExecution {
@@ -276,33 +275,33 @@ public class TestMongoDBUpdateExecution {
         Command cmd = this.utility.parseCommand(query);
         ExecutionContext context = Mockito.mock(ExecutionContext.class);
         CommandContext cc = Mockito.mock(CommandContext.class);
-        Mockito.stub(context.getCommandContext()).toReturn(cc);
+        Mockito.when(context.getCommandContext()).thenReturn(cc);
         MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
         DB db = Mockito.mock(DB.class);
         DBCollection dbCollection = Mockito.mock(DBCollection.class);
         for(String collection:expectedCollection) {
-            Mockito.stub(db.getCollection(collection)).toReturn(dbCollection);
+            Mockito.when(db.getCollection(collection)).thenReturn(dbCollection);
         }
-        Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
-        Mockito.stub(connection.getDatabase()).toReturn(db);
+        Mockito.when(db.collectionExists(Mockito.anyString())).thenReturn(true);
+        Mockito.when(connection.getDatabase()).thenReturn(db);
 
-        Mockito.stub(db.getCollectionFromString(Mockito.anyString())).toReturn(dbCollection);
-        Mockito.stub(dbCollection.findOne(Mockito.any(BasicDBObject.class))).toReturn(match_result);
+        Mockito.when(db.getCollectionFromString(Mockito.anyString())).thenReturn(dbCollection);
+        Mockito.when(dbCollection.findOne(Mockito.any(BasicDBObject.class))).thenReturn(match_result);
         WriteResult result = Mockito.mock(WriteResult.class);
-        Mockito.stub(result.getN()).toReturn(1);
-        Mockito.stub(dbCollection.insert(Mockito.any(BasicDBObject.class), Mockito.any(WriteConcern.class)))
-            .toReturn(result);
-        Mockito.stub(dbCollection.update(Mockito.any(BasicDBObject.class),
+        Mockito.when(result.getN()).thenReturn(1);
+        Mockito.when(dbCollection.insert(Mockito.any(BasicDBObject.class), Mockito.any(WriteConcern.class)))
+            .thenReturn(result);
+        Mockito.when(dbCollection.update(Mockito.any(BasicDBObject.class),
                 Mockito.any(BasicDBObject.class),
                 Mockito.eq(false),
                 Mockito.eq(true),
-                Mockito.any(WriteConcern.class))).toReturn(result);
+                Mockito.any(WriteConcern.class))).thenReturn(result);
 
         if (results != null) {
             Cursor out = new ResultsCursor(results);
             for (DBObject obj:results) {
-                Mockito.stub(dbCollection.aggregate(Mockito.anyList(), Mockito.any(AggregationOptions.class))).toReturn(out);
-                Mockito.stub(dbCollection.aggregate(Mockito.anyList(), Mockito.any(AggregationOptions.class))).toReturn(out);
+                Mockito.when(dbCollection.aggregate(Mockito.anyList(), Mockito.any(AggregationOptions.class))).thenReturn(out);
+                Mockito.when(dbCollection.aggregate(Mockito.anyList(), Mockito.any(AggregationOptions.class))).thenReturn(out);
             }
         }
 

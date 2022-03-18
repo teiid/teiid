@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.mockito.stubbing.DeprecatedOngoingStubbing;
+import org.mockito.stubbing.OngoingStubbing;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -97,9 +97,9 @@ public class TestExecutionReuse {
     @Before public void setup() throws DataNotAvailableException, TranslatorException {
         execution = Mockito.mock(FakeReusableExecution.class);
         ec = null;
-        DeprecatedOngoingStubbing stubbing = Mockito.stub(execution.next()).toReturn((List) Arrays.asList((Object)null)).toReturn(null);
+        OngoingStubbing stubbing = Mockito.when(execution.next()).thenReturn((List) Arrays.asList((Object)null)).thenReturn(null);
         for (int i = 1; i < EXEC_COUNT; i++) {
-            stubbing.toReturn(Arrays.asList((Object)null)).toReturn(null);
+            stubbing.thenReturn(Arrays.asList((Object)null)).thenReturn(null);
         }
         Mockito.doAnswer(new Answer<Void>() {
             @Override
@@ -197,7 +197,7 @@ public class TestExecutionReuse {
         Mockito.verify(execution, Mockito.times(1)).dispose();
         Mockito.verify(execution, Mockito.times(EXEC_COUNT)).execute();
         Mockito.verify(execution, Mockito.times(EXEC_COUNT)).close();
-        Mockito.verify(execution, Mockito.times(EXEC_COUNT - 1)).reset((Command)Mockito.anyObject(), (ExecutionContext)Mockito.anyObject(), Mockito.anyObject());
+        Mockito.verify(execution, Mockito.times(EXEC_COUNT - 1)).reset(Mockito.any(Command.class), Mockito.any(ExecutionContext.class), Mockito.any());
     }
 
     @Test public void testCommandContext() {

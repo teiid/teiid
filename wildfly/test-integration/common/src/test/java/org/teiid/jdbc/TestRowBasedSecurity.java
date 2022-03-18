@@ -68,8 +68,8 @@ public class TestRowBasedSecurity {
         v.add(new Identity("myrole") {});
         final Subject subject = new Subject();
         Group g = Mockito.mock(Group.class);
-        Mockito.stub(g.getName()).toReturn("Roles");
-        Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
+        Mockito.when(g.getName()).thenReturn("Roles");
+        Mockito.when(g.members()).thenReturn((Enumeration) v.elements());
         subject.getPrincipals().add(g);
         ec.setSecurityHelper(new DoNothingSecurityHelper() {
 
@@ -177,8 +177,8 @@ public class TestRowBasedSecurity {
         v.add(new Identity("myrole") {});
         final Subject subject = new Subject();
         Group g = Mockito.mock(Group.class);
-        Mockito.stub(g.getName()).toReturn("Roles");
-        Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
+        Mockito.when(g.getName()).thenReturn("Roles");
+        Mockito.when(g.members()).thenReturn((Enumeration) v.elements());
         subject.getPrincipals().add(g);
         ec.setSecurityHelper(new DoNothingSecurityHelper() {
 
