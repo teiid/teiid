@@ -82,7 +82,7 @@
         <version.org.apache.parquet>1.11.0</version.org.apache.parquet>
         
         <version.google-api-services-sheets>v4-rev612-1.25.0</version.google-api-services-sheets>
-        <version.google-api-client>1.25.0</version.google-api-client>
+        <version.google-api-client>1.33.3</version.google-api-client>
 
         <version.io.dropwizard.metrics.metrics-core>3.2.2</version.io.dropwizard.metrics.metrics-core>
         <version.io.swagger>1.5.22</version.io.swagger>
