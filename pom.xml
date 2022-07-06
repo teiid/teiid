@@ -50,7 +50,7 @@
         <project.build.systemJdk>9</project.build.systemJdk>
         <project.build.targetJdk>8</project.build.targetJdk>
 
-        <derby.version>10.2.1.6</derby.version>
+        <derby.version>10.14.2.0</derby.version>
         <mysql.connector.version>8.0.16</mysql.connector.version>
         
         <version.accumulo>2.0.0</version.accumulo>
