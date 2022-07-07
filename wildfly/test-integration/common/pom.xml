@@ -22,7 +22,7 @@
 	<description>Common Integration tests that do not require external dependencies</description>
 	<properties>
 	   <arquillian.vmArgs>-Xmx2048m -Xms512m -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n -Dteiid.some-property=true</arquillian.vmArgs>
-	   <version.hadoop.org.eclipse.jetty>9.4.41.v20210516</version.hadoop.org.eclipse.jetty>
+	   <version.hadoop.org.eclipse.jetty>9.4.48.v20220622</version.hadoop.org.eclipse.jetty>
 	</properties>
     <dependencyManagement>
         <!-- to make minihdfs work we need some overrides -->
