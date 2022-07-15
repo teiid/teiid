@@ -55,7 +55,7 @@
         
         <version.accumulo>2.0.0</version.accumulo>
         <version.ant-contrib>1.0b3</version.ant-contrib>
-        <version.aws-java-sdk>1.11.804</version.aws-java-sdk>
+        <version.aws-java-sdk>1.12.261</version.aws-java-sdk>
                 
         <version.cassandra-driver-core>3.7.1</version.cassandra-driver-core>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
