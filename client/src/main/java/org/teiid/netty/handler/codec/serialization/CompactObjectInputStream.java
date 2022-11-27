@@ -81,10 +81,10 @@ public class CompactObjectInputStream extends ObjectInputStream {
             }
             return ObjectStreamClass.lookupAny(clazz);
         default:
-        	clazz = CompactObjectOutputStream.KNOWN_CODES.get(type);
-        	if (clazz != null) {
+            clazz = CompactObjectOutputStream.KNOWN_CODES.get(type);
+            if (clazz != null) {
                 return ObjectStreamClass.lookupAny(clazz);
-        	}
+            }
             throw new StreamCorruptedException(
                     "Unexpected class descriptor type: " + type); //$NON-NLS-1$
         }
@@ -95,17 +95,17 @@ public class CompactObjectInputStream extends ObjectInputStream {
         String name = desc.getName();
 
         try {
-        	ObjectInputStreamWithClassloader.checkClass(name);
+            ObjectInputStreamWithClassloader.checkClass(name);
         } catch (ClassNotFoundException e) {
-        	Logger.getLogger("org.teiid").log(Level.SEVERE, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20037, name)); //$NON-NLS-1$
-        	throw e;
+            Logger.getLogger("org.teiid").log(Level.SEVERE, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20037, name)); //$NON-NLS-1$
+            throw e;
         }
-        
+
         try {
             return Class.forName(name, false, classLoader);
         } catch (ClassNotFoundException ex) {
             return super.resolveClass(desc);
         }
     }
-	
+
 }

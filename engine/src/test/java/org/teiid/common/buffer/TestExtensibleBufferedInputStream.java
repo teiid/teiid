@@ -27,27 +27,27 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 public class TestExtensibleBufferedInputStream {
-	
-	@Test public void testReset() throws IOException {
-		InputStream is = new ExtensibleBufferedInputStream() {
-			boolean returned = false;
-			@Override
-			protected ByteBuffer nextBuffer() throws IOException {
-				if (returned) {
-					return null;
-				}
-				ByteBuffer result = ByteBuffer.allocate(3);
-				returned = true;
-				return result;
-			}
-		};
-		is.read();
-		is.read();
-		is.reset();
-		for (int i = 0; i < 3; i++) {
-			assertEquals(0, is.read());
-		}
-		assertEquals(-1, is.read());
-	}
+
+    @Test public void testReset() throws IOException {
+        InputStream is = new ExtensibleBufferedInputStream() {
+            boolean returned = false;
+            @Override
+            protected ByteBuffer nextBuffer() throws IOException {
+                if (returned) {
+                    return null;
+                }
+                ByteBuffer result = ByteBuffer.allocate(3);
+                returned = true;
+                return result;
+            }
+        };
+        is.read();
+        is.read();
+        is.reset();
+        for (int i = 0; i < 3; i++) {
+            assertEquals(0, is.read());
+        }
+        assertEquals(-1, is.read());
+    }
 
 }

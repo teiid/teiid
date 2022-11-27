@@ -1,0 +1,46 @@
+<assembly>
+  
+  <id>server</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>${dir.teiid}</baseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>${project.build.directory}/${dir.wildfly}</directory>
+        <outputDirectory>/</outputDirectory>   
+        <filtered>true</filtered>   
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>  
+    </fileSet> 
+    <fileSet>
+        <directory>${project.build.directory}/${dir.wildfly}</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>      
+    </fileSet>
+    <fileSet>
+        <directory>${project.build.directory}/teiid-${project.version}-wildfly-dist</directory>
+        <outputDirectory>/</outputDirectory>
+        <filtered>true</filtered>
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>          
+    </fileSet>
+    <fileSet>
+        <directory>${project.build.directory}/teiid-${project.version}-wildfly-dist</directory>
+        <outputDirectory>/</outputDirectory>
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>          
+    </fileSet>    
+  </fileSets>    
+</assembly>

@@ -24,11 +24,11 @@ import org.teiid.query.sql.proc.Statement.Labeled;
 
 
 public interface RepeatedInstruction extends Labeled {
-    
+
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException;
-    
+
     public Program getNestedProgram();
-    
+
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException;
 
 }

@@ -19,22 +19,22 @@ import org.teiid.core.BundleUtil;
 /**
  * CommonPlugin
  * <p>Used here in <code>metadata.runtime</code> to have access to the new
- * logging framework for <code>LogManager</code>.</p>
+ * logging framework for <code>LogManager</code>.
  */
 public class RuntimeMetadataPlugin {
 
-	/**
+    /**
      * The plug-in identifier of this plugin
-	 */
-	public static final String PLUGIN_ID = "org.teiid.metadata"; //$NON-NLS-1$
+     */
+    public static final String PLUGIN_ID = "org.teiid.metadata"; //$NON-NLS-1$
 
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
-	                                                         PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
+                                                             PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 
-	public static enum Event implements BundleUtil.Event {
-		TEIID80000,
-		TEIID80002,
-		TEIID80003,
-		TEIID80004
-	}
+    public static enum Event implements BundleUtil.Event {
+        TEIID80000,
+        TEIID80002,
+        TEIID80003,
+        TEIID80004
+    }
 }

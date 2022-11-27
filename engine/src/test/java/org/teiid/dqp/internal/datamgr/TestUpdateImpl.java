@@ -37,7 +37,7 @@ public class TestUpdateImpl extends TestCase {
     public TestUpdateImpl(String name) {
         super(name);
     }
-    
+
     public static org.teiid.query.sql.lang.Update helpExample() {
         GroupSymbol group = TestGroupImpl.helpExample("vm1.g1"); //$NON-NLS-1$
         org.teiid.query.sql.lang.Update result = new org.teiid.query.sql.lang.Update();
@@ -49,7 +49,7 @@ public class TestUpdateImpl extends TestCase {
         result.setCriteria(new CompareCriteria(new Constant(new Integer(1)), CompareCriteria.EQ, new Constant(new Integer(1))));
         return result;
     }
-    
+
     public static Update example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }

@@ -27,43 +27,43 @@ import org.teiid.core.types.TransformationException;
 
 public class FloatingNumberToBigIntegerTransform extends Transform {
 
-	private Class<?> sourceType;
-	
-	public FloatingNumberToBigIntegerTransform(Class<?> sourceType) {
-		this.sourceType = sourceType;
-	}
+    private Class<?> sourceType;
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
+    public FloatingNumberToBigIntegerTransform(Class<?> sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
         return BigDecimal.valueOf(((Number)value).doubleValue()).toBigInteger();
-	}
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return sourceType;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return sourceType;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.BIG_INTEGER;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.BIG_INTEGER;
+    }
 
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
 
 }

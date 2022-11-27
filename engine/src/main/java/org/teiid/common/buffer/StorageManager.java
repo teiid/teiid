@@ -22,10 +22,10 @@ import org.teiid.core.TeiidComponentException;
 
 public interface StorageManager {
 
-	void initialize() throws TeiidComponentException;
+    void initialize() throws TeiidComponentException;
 
-	FileStore createFileStore(String name);
-	
-	long getMaxStorageSpace();
+    FileStore createFileStore(String name);
+
+    long getMaxStorageSpace();
 
 }

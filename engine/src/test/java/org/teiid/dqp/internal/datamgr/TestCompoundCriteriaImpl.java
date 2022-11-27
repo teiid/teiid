@@ -41,7 +41,7 @@ public class TestCompoundCriteriaImpl extends TestCase {
         CompareCriteria c2 = TestCompareCriteriaImpl.helpExample(CompareCriteria.LT, 500, 600);
         return new org.teiid.query.sql.lang.CompoundCriteria(operator, c1, c2);
     }
-    
+
     public static AndOr example(int operator) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(operator));
     }

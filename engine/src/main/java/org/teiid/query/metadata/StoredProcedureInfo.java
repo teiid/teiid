@@ -19,10 +19,11 @@
 package org.teiid.query.metadata;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.SPParameter;
 
@@ -35,7 +36,7 @@ public class StoredProcedureInfo implements Serializable {
 
     /** Constant identifying an IN parameter */
     public static final int IN = ParameterInfo.IN;
-    
+
     /** Constant identifying an OUT parameter */
     public static final int OUT = ParameterInfo.OUT;
 
@@ -53,7 +54,7 @@ public class StoredProcedureInfo implements Serializable {
     private List<SPParameter> parameters = new ArrayList<SPParameter>();
     private String callableName;
     private QueryNode query;
-    private int updateCount = -1;
+    private int updateCount = Procedure.AUTO_UPDATECOUNT;
 
     public String getProcedureCallableName(){
         return this.callableName;
@@ -79,11 +80,11 @@ public class StoredProcedureInfo implements Serializable {
     public void setParameters(List<SPParameter> parameters){
         this.parameters = parameters;
     }
-    
+
     public void addParameter(SPParameter parameter){
         this.parameters.add(parameter);
     }
-           
+
     public QueryNode getQueryPlan(){
         return this.query;
     }
@@ -91,30 +92,30 @@ public class StoredProcedureInfo implements Serializable {
         this.query = queryNode;
     }
 
-	public boolean returnsResultSet() {
-		for (SPParameter parameter : parameters) {
-			if (parameter.getParameterType() == ParameterInfo.RESULT_SET) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public boolean returnsResultSet() {
+        for (SPParameter parameter : parameters) {
+            if (parameter.getParameterType() == ParameterInfo.RESULT_SET) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public boolean returnsResultParameter() {
-		for (SPParameter parameter : parameters) {
-			if (parameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
+    public boolean returnsResultParameter() {
+        for (SPParameter parameter : parameters) {
+            if (parameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int getUpdateCount() {
-		return updateCount;
-	}
+        return updateCount;
+    }
 
-	public void setUpdateCount(int updateCount) {
-		this.updateCount = updateCount;
-	}
+    public void setUpdateCount(int updateCount) {
+        this.updateCount = updateCount;
+    }
 
-} 
+}

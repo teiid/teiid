@@ -30,10 +30,10 @@ import junit.framework.TestCase;
 public class TestByteLobChunkStream extends TestCase {
 
     public void testGetChunk() throws Exception {
-    	byte[] bytes = "hello world".getBytes(); //$NON-NLS-1$
+        byte[] bytes = "hello world".getBytes(); //$NON-NLS-1$
         ByteLobChunkStream stream = new ByteLobChunkStream(new ByteArrayInputStream(bytes), 5);
 
-        assertTrue(Arrays.equals(bytes, ObjectConverterUtil.convertToByteArray(new LobChunkInputStream(stream))));            
+        assertTrue(Arrays.equals(bytes, ObjectConverterUtil.convertToByteArray(new LobChunkInputStream(stream))));
     }
-    
+
 }

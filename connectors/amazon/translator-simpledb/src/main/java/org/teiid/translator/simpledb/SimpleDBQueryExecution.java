@@ -39,7 +39,7 @@ import com.amazonaws.services.simpledb.model.SelectResult;
 
 public class SimpleDBQueryExecution implements ResultSetExecution {
     private static final int MAX_PAGE_SIZE = 2500;
-	private Class<?>[] expectedColumnTypes;
+    private Class<?>[] expectedColumnTypes;
     @SuppressWarnings("unused")
     private ExecutionContext executionContext;
     @SuppressWarnings("unused")
@@ -48,7 +48,7 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
     private SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
     private String nextToken;
     protected Iterator<Item> listIterator;
-    
+
     public SimpleDBQueryExecution(final Select command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             final SimpleDBConnection connection) throws TranslatorException {
@@ -68,15 +68,15 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
     public void execute() throws TranslatorException {
         executeDirect(getSQL(), null);
     }
-    
+
     protected String getSQL() {
         return this.visitor.toString() + " LIMIT " + Math.min(this.executionContext.getBatchSize(), MAX_PAGE_SIZE); //$NON-NLS-1$
     }
-    
+
     protected void executeDirect(String sql, String next) throws TranslatorException {
         SelectResult result = connection.performSelect(sql, next);
         this.nextToken = result.getNextToken();
-        this.listIterator = result.getItems().iterator();        
+        this.listIterator = result.getItems().iterator();
     }
 
     @Override
@@ -96,7 +96,7 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
             executeDirect(getSQL(), this.nextToken);
             if (this.listIterator.hasNext()) {
                 return buildRow(this.listIterator.next());
-            }            
+            }
         }
         return null;
     }
@@ -114,7 +114,7 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
         }
         return row;
     }
-    
+
     protected Map<String, List<String>> createAttributeMap(List<Attribute> attributes) {
         Map<String, List<String>> map = new TreeMap<String, List<String>>();
         for (Attribute attribute : attributes) {
@@ -122,11 +122,11 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
                 List<String> list = new ArrayList<String>();
                 list.add(attribute.getValue());
                 map.put(attribute.getName(), list);
-            } 
+            }
             else {
                 map.get(attribute.getName()).add(attribute.getValue());
             }
         }
         return map;
-    }    
+    }
 }

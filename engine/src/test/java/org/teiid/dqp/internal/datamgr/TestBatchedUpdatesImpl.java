@@ -32,7 +32,7 @@ import org.teiid.query.sql.lang.BatchedUpdateCommand;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 @SuppressWarnings("nls")
@@ -45,7 +45,7 @@ public class TestBatchedUpdatesImpl {
         updates.add(TestDeleteImpl.helpExample());
         return new BatchedUpdateCommand(updates);
     }
-    
+
     public static BatchedUpdates example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
@@ -58,7 +58,7 @@ public class TestBatchedUpdatesImpl {
         assertTrue(updates.get(1) instanceof Update);
         assertTrue(updates.get(2) instanceof Delete);
     }
-    
+
     @Test
     public void testToString() throws Exception {
         assertEquals("INSERT INTO b (e1, e2, e3, e4) VALUES (1, 2, 3, 4);\n"

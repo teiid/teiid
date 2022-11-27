@@ -29,57 +29,57 @@ import junit.framework.*;
 
 public class TestDrop extends TestCase {
 
-	// ################################## FRAMEWORK ################################
-	
-	public TestDrop(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################	
+    // ################################## FRAMEWORK ################################
 
-	public static final Drop sample1() { 
+    public TestDrop(String name) {
+        super(name);
+    }
+
+    // ################################## TEST HELPERS ################################
+
+    public static final Drop sample1() {
         Drop Drop = new Drop();
         Drop.setTable(new GroupSymbol("temp_table"));//$NON-NLS-1$
-        
-		List elements = new ArrayList();
-        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
-        elements.add(new ElementSymbol("b")); //$NON-NLS-1$
-	    return Drop;	
-	}
 
-	public static final Drop sample2() { 
-        Drop Drop = new Drop();
-        Drop.setTable(new GroupSymbol("temp_table2"));//$NON-NLS-1$
-        
         List elements = new ArrayList();
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
         elements.add(new ElementSymbol("b")); //$NON-NLS-1$
-        return Drop;  	}
-			
-	// ################################## ACTUAL TESTS ################################
-	
-	public void testGetProjectedNoElements() {    
-	    assertEquals(Command.getUpdateCommandSymbol(), sample1().getProjectedSymbols());
+        return Drop;
     }
 
-	public void testSelfEquivalence(){
-		Drop c1 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c1);
-	}
+    public static final Drop sample2() {
+        Drop Drop = new Drop();
+        Drop.setTable(new GroupSymbol("temp_table2"));//$NON-NLS-1$
 
-	public void testEquivalence(){
-		Drop c1 = sample1();
+        List elements = new ArrayList();
+        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("b")); //$NON-NLS-1$
+        return Drop;      }
+
+    // ################################## ACTUAL TESTS ################################
+
+    public void testGetProjectedNoElements() {
+        assertEquals(Command.getUpdateCommandSymbol(), sample1().getProjectedSymbols());
+    }
+
+    public void testSelfEquivalence(){
+        Drop c1 = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c1);
+    }
+
+    public void testEquivalence(){
+        Drop c1 = sample1();
         Drop c2 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}
-	
-	public void testNonEquivalence(){
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c2);
+    }
+
+    public void testNonEquivalence(){
         Drop c1 = sample1();
         Drop c2 = sample2();
-		int equals = -1;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}	
-	
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c2);
+    }
+
 }

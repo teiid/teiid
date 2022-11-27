@@ -33,32 +33,32 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 public @interface Replicated {
-	
-	enum ReplicationMode {
-		PUSH,
-		PULL,
-		NONE
-	}
-	
-	/**
-	 * @return true if members should be called asynchronously.  asynch methods should be void. 
-	 */
-	boolean asynch() default true;
-	/**
-	 * @return the timeout in milliseconds, or 0 if no timeout.  affects only synch calls.
-	 */
-	long timeout() default 0;
-	/**
-	 * @return true if only remote members should be called.  should not be used with replicateState.  method should be void.
-	 */
-	boolean remoteOnly() default false;
-	/**
-	 * Should not be used with remoteOnly.
-	 * 
-	 * @return PUSH if the remote members should have a partial state replication called using the first argument as the state after
-	 *  the local method has been invoked, or PULL if the local member should initial a partial state pull using the first argument
-	 *  as the state after the local method returns null.  PULL cannot be asynch.
-	 */
-	ReplicationMode replicateState() default ReplicationMode.NONE;
+
+    enum ReplicationMode {
+        PUSH,
+        PULL,
+        NONE
+    }
+
+    /**
+     * @return true if members should be called asynchronously.  asynch methods should be void.
+     */
+    boolean asynch() default true;
+    /**
+     * @return the timeout in milliseconds, or 0 if no timeout.  affects only synch calls.
+     */
+    long timeout() default 0;
+    /**
+     * @return true if only remote members should be called.  should not be used with replicateState.  method should be void.
+     */
+    boolean remoteOnly() default false;
+    /**
+     * Should not be used with remoteOnly.
+     *
+     * @return PUSH if the remote members should have a partial state replication called using the first argument as the state after
+     *  the local method has been invoked, or PULL if the local member should initial a partial state pull using the first argument
+     *  as the state after the local method returns null.  PULL cannot be asynch.
+     */
+    ReplicationMode replicateState() default ReplicationMode.NONE;
 
 }

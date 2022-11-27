@@ -30,32 +30,32 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 
 /**
- * Convert the MONTHNAME etc. function into an equivalent Oracle function.  
- * Format: to_char(timestampvalue/dayvalue, 'Month'/'Day') 
+ * Convert the MONTHNAME etc. function into an equivalent Oracle function.
+ * Format: to_char(timestampvalue/dayvalue, 'Month'/'Day')
  */
 public class MonthOrDayNameFunctionModifier extends FunctionModifier {
     private LanguageFactory langFactory;
     private String format;
-    
+
     public MonthOrDayNameFunctionModifier(LanguageFactory langFactory, String format) {
         this.langFactory = langFactory;
         this.format = format;
     }
-    
+
     @Override
     public List<?> translate(Function function) {
         List<Expression> args = function.getParameters();
-    
+
         Function func = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
-            Arrays.asList( 
-                args.get(0), 
-                langFactory.createLiteral(format, TypeFacility.RUNTIME_TYPES.STRING)),  
+            Arrays.asList(
+                args.get(0),
+                langFactory.createLiteral(format, TypeFacility.RUNTIME_TYPES.STRING)),
             TypeFacility.RUNTIME_TYPES.STRING);
-        
+
         // For some reason, these values have trailing spaces
         Function trimFunc = langFactory.createFunction(SourceSystemFunctions.RTRIM,
             Arrays.asList( func ), TypeFacility.RUNTIME_TYPES.STRING);
-        
-        return Arrays.asList(trimFunc);    
+
+        return Arrays.asList(trimFunc);
     }
 }

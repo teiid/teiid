@@ -18,6 +18,6 @@
 package org.teiid.transport;
 
 public enum WireProtocol {
-	teiid, 
-	pg
+    teiid,
+    pg
 }

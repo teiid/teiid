@@ -28,61 +28,61 @@ import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 public class TempCapabilitiesFinder implements CapabilitiesFinder {
 
-	private final static BasicSourceCapabilities cachedTempCaps = defaultCapabilities();
-	static BasicSourceCapabilities defaultCapabilities() {
-		BasicSourceCapabilities tempCaps = new BasicSourceCapabilities();
-		tempCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
-		tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
-		tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
-		tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
-		tempCaps.setCapabilitySupport(Capability.ARRAY_TYPE, true);
-		tempCaps.setCapabilitySupport(Capability.UPSERT, true);
-		tempCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
-		tempCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
-		tempCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.XA);
-		tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
-		return tempCaps;
-	}
-	
-	private final CapabilitiesFinder delegate;
-	private BasicSourceCapabilities tempCaps = cachedTempCaps;
-	
-	public TempCapabilitiesFinder(CapabilitiesFinder delegate) {
-		this(delegate, NullOrder.LOW);
-	}
-	
-	public TempCapabilitiesFinder(CapabilitiesFinder delegate, NullOrder nullOrder) {
-		this.delegate = delegate;
-		if (nullOrder != NullOrder.LOW) {
-			tempCaps = defaultCapabilities();
-			tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, nullOrder);
-		}
-	}
+    private final static BasicSourceCapabilities cachedTempCaps = defaultCapabilities();
+    static BasicSourceCapabilities defaultCapabilities() {
+        BasicSourceCapabilities tempCaps = new BasicSourceCapabilities();
+        tempCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
+        tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED_EXCLUSIVE, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
+        tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
+        tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        tempCaps.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+        tempCaps.setCapabilitySupport(Capability.UPSERT, true);
+        tempCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
+        tempCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        tempCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.XA);
+        tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
+        return tempCaps;
+    }
 
-	@Override
-	public SourceCapabilities findCapabilities(String modelName)
-			throws TeiidComponentException {
-		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
-    		return tempCaps;
-    	}
-		return delegate.findCapabilities(modelName);
-	}
-	
-	@Override
-	public boolean isValid(String modelName) {
-		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
-			return true;
-		}
-		return delegate.isValid(modelName);
-	}
+    private final CapabilitiesFinder delegate;
+    private BasicSourceCapabilities tempCaps = cachedTempCaps;
+
+    public TempCapabilitiesFinder(CapabilitiesFinder delegate) {
+        this(delegate, NullOrder.LOW);
+    }
+
+    public TempCapabilitiesFinder(CapabilitiesFinder delegate, NullOrder nullOrder) {
+        this.delegate = delegate;
+        if (nullOrder != NullOrder.LOW) {
+            tempCaps = defaultCapabilities();
+            tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, nullOrder);
+        }
+    }
+
+    @Override
+    public SourceCapabilities findCapabilities(String modelName)
+            throws TeiidComponentException {
+        if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
+            return tempCaps;
+        }
+        return delegate.findCapabilities(modelName);
+    }
+
+    @Override
+    public boolean isValid(String modelName) {
+        if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
+            return true;
+        }
+        return delegate.isValid(modelName);
+    }
 
 }

@@ -30,40 +30,40 @@ import org.teiid.core.types.XMLType;
 @SuppressWarnings("nls")
 public class TestStringToXmlTransform {
 
-	@Test public void testGoodXML() throws Exception {
+    @Test public void testGoodXML() throws Exception {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$
                      "</customer>"; //$NON-NLS-1$
-        
+
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
-       
+
        SQLXML xmlValue = (SQLXML)transform.transformDirect(xml);
        assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
     }
-	
-	@Test public void testGoodElement() throws Exception {
+
+    @Test public void testGoodElement() throws Exception {
         String xml = "<customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$
                      "</customer>"; //$NON-NLS-1$
-        
+
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
-       
+
        XMLType xmlValue = (XMLType)transform.transformDirect(xml);
        assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
        assertEquals(XMLType.Type.ELEMENT, xmlValue.getType());
     }
-    
+
     @Test(expected=TransformationException.class) public void testBadXML() throws Exception {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$
                      "<customer>"; //$NON-NLS-1$ (********no ending)
-        
+
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
-       
+
        transform.transformDirect(xml);
-    }    
-    
+    }
+
 }

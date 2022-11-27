@@ -27,7 +27,7 @@ import org.teiid.core.TeiidProcessingException;
 /**
  * <p>A cursored source of tuples.  The implementation will likely be closely
  * bound to a {@link BufferManager} implementation - it will work with it
- * to use {@link TupleBatch TupleBatches} behind the scenes.</p>
+ * to use {@link TupleBatch TupleBatches} behind the scenes.
  */
 public interface TupleSource {
 
@@ -39,12 +39,12 @@ public interface TupleSource {
      * exception such as a communication exception, or other such
      * nondeterministic exception
      */
-	List<?> nextTuple()
-		throws TeiidComponentException, TeiidProcessingException;
-	
+    List<?> nextTuple()
+        throws TeiidComponentException, TeiidProcessingException;
+
     /**
-     * Closes the Tuple Source.  
-     */    
-	void closeSource();
-	
+     * Closes the Tuple Source.
+     */
+    void closeSource();
+
 }

@@ -35,14 +35,14 @@ public class Select extends QueryExpression {
     private GroupBy groupBy;
     private Condition having;
     private Map<String, List<? extends List<?>>> dependentValues;
-    
+
     /**
      * Constructs an empty select.  This is not valid until at least the {@link DerivedColumn}s have been set.
      */
     public Select() {
-    	
+
     }
-        
+
     public Select(List<DerivedColumn> derivedColumns, boolean distinct, List<TableReference> from, Condition where,
                      GroupBy groupBy, Condition having, OrderBy orderBy) {
         this.derivedColumns = derivedColumns;
@@ -53,7 +53,7 @@ public class Select extends QueryExpression {
         this.having = having;
         this.setOrderBy(orderBy);
     }
-    
+
     public List<DerivedColumn> getDerivedColumns() {
         return derivedColumns;
     }
@@ -113,7 +113,7 @@ public class Select extends QueryExpression {
     public void setFrom(List<TableReference> from) {
         this.from = from;
     }
-    
+
     /**
      * Set WHERE clause, may be null.
      * @param criteria A criteria object
@@ -121,7 +121,7 @@ public class Select extends QueryExpression {
     public void setWhere(Condition criteria) {
         this.where = criteria;
     }
-    
+
     /**
      * Set GROUP BY clause, may be null.
      * @param groupBy A group by object
@@ -137,11 +137,11 @@ public class Select extends QueryExpression {
     public void setHaving(Condition criteria) {
         this.having = criteria;
     }
-    
+
     public Select getProjectedQuery() {
         return this;
     }
-    
+
     /**
      * Gets the dependent value lists.  The lists are memory-safe.  Caution should be used
      * to not access large lists in a non-memory safe manner.  The lists are invalid
@@ -149,10 +149,10 @@ public class Select extends QueryExpression {
      * @return the map of dependent values or null if this is not a dependent join pushdown
      */
     public Map<String, List<? extends List<?>>> getDependentValues() {
-		return dependentValues;
-	}
-    
+        return dependentValues;
+    }
+
     public void setDependentValues(Map<String, List<? extends List<?>>> dependentValues) {
-		this.dependentValues = dependentValues;
-	}
+        this.dependentValues = dependentValues;
+    }
 }

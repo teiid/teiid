@@ -37,45 +37,45 @@ import org.teiid.translator.jdbc.TranslationHelper;
 @SuppressWarnings("nls")
 public class TestNetezzaTranslatorDatetimeConversion {
 
-    private static NetezzaExecutionFactory TRANSLATOR; 
+    private static NetezzaExecutionFactory TRANSLATOR;
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
     @BeforeClass public static void oneTimeSetup() throws TranslatorException {
-        TRANSLATOR = new NetezzaExecutionFactory();       
+        TRANSLATOR = new NetezzaExecutionFactory();
         TRANSLATOR.setUseBindVariables(false);
         TRANSLATOR.start();
-        
+
 
     }
-    
+
     /////////////////UTILLITY FUNCTIONS/////////
     ////////////////////////////////////////////
 
     private String getTestBQTVDB() {
-        return TranslationHelper.BQT_VDB; 
+        return TranslationHelper.BQT_VDB;
     }
-    
-    public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
-        Function func = LANG_FACTORY.createFunction("convert",  
-            Arrays.asList( srcExpression,LANG_FACTORY.createLiteral(tgtType, String.class)),TypeFacility.getDataTypeClass(tgtType));
-        
-        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, 
-            expectedExpression, helpGetString(func)); 
-    }    
-    public String helpGetString(Expression expr) throws Exception {
-        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
-        
-        return sqlVisitor.toString();        
-    }  
 
-    
+    public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
+        Function func = LANG_FACTORY.createFunction("convert",
+            Arrays.asList( srcExpression,LANG_FACTORY.createLiteral(tgtType, String.class)),TypeFacility.getDataTypeClass(tgtType));
+
+        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType,
+            expectedExpression, helpGetString(func));
+    }
+    public String helpGetString(Expression expr) throws Exception {
+        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor();
+        sqlVisitor.append(expr);
+
+        return sqlVisitor.toString();
+    }
+
+
      ///////////////DATE/TIME CONVERSION TESTCASES///////
      ////////////////////////////////////////////////////
-     
+
     @Test public void testdayofmonth() throws Exception {
-        String input = "SELECT dayofmonth(datevalue) FROM BQT1.SMALLA"; 
-        String output = "SELECT extract(DAY from SmallA.DateValue) FROM SmallA"; 
+        String input = "SELECT dayofmonth(datevalue) FROM BQT1.SMALLA";
+        String output = "SELECT extract(DAY from SmallA.DateValue) FROM SmallA";
 
         TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
     }
@@ -83,30 +83,30 @@ public class TestNetezzaTranslatorDatetimeConversion {
 
      ///BEGIN--FROM TIMESTAMP->DATE, TIME, STRING////////
      @Test public void testTimestampToDate() throws Exception {
-         String input = "SELECT convert(convert(TIMESTAMPVALUE, date), string) FROM BQT1.SMALLA"; 
-         String output = "SELECT cast(cast(SmallA.TimestampValue AS DATE) AS varchar(4000)) FROM SmallA";  
+         String input = "SELECT convert(convert(TIMESTAMPVALUE, date), string) FROM BQT1.SMALLA";
+         String output = "SELECT cast(cast(SmallA.TimestampValue AS DATE) AS varchar(4000)) FROM SmallA";
 
          TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
      }
      @Test public void testTimestampToTime() throws Exception {
-         String input = "SELECT convert(convert(TIMESTAMPVALUE, time), string) FROM BQT1.SMALLA"; 
-         String output = "SELECT cast(cast(SmallA.TimestampValue AS TIME) AS varchar(4000)) FROM SmallA";  
+         String input = "SELECT convert(convert(TIMESTAMPVALUE, time), string) FROM BQT1.SMALLA";
+         String output = "SELECT cast(cast(SmallA.TimestampValue AS TIME) AS varchar(4000)) FROM SmallA";
 
          TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
      }
 
      @Test public void testTimestampToString() throws Exception {
-		  String input = "SELECT convert(timestampvalue, string) FROM BQT1.SMALLA"; 
-		  String output = "SELECT to_char(SmallA.TimestampValue, 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";  
-		
-	      TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
-	  }
+          String input = "SELECT convert(timestampvalue, string) FROM BQT1.SMALLA";
+          String output = "SELECT to_char(SmallA.TimestampValue, 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";
+
+          TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
+      }
      ///END--FROM TIMESTAMP->DATE, TIME, STRING////////
 
      ///BEGIN--FROM DATE->TIMESTAMP////////
      @Test public void testDateToTimestamp() throws Exception {
-         String input = "SELECT convert(convert(datevalue, timestamp), string) FROM BQT1.SMALLA"; 
-         String output = "SELECT to_char(cast(SmallA.DateValue AS TIMESTAMP), 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";  
+         String input = "SELECT convert(convert(datevalue, timestamp), string) FROM BQT1.SMALLA";
+         String output = "SELECT to_char(cast(SmallA.DateValue AS TIMESTAMP), 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";
 
          TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
      }
@@ -114,20 +114,20 @@ public class TestNetezzaTranslatorDatetimeConversion {
 
      ///BEGIN--FROM TIME->TIMESTAMP////////
      @Test public void testTimeToTimestamp() throws Exception {
-         String input = "SELECT convert(convert(TIMEVALUE, timestamp), string) FROM BQT1.SMALLA"; 
+         String input = "SELECT convert(convert(TIMEVALUE, timestamp), string) FROM BQT1.SMALLA";
          //String output = "SELECT to_char(cast(SmallA.TimeValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF') FROM SmallA";
          String output = "SELECT to_char(SmallA.TimeValue, 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";
 
          TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output,     TRANSLATOR);
      }
      ///END--FROM TIME->TIMESTAMP////////
-     
-     
+
+
 //     @Test public void testTimestampToTime() throws Exception {
-//      	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "TIME", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
+//          helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "TIME", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
 //      }
 
-     
-     
-    
+
+
+
 }

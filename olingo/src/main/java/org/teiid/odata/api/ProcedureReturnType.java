@@ -17,8 +17,17 @@
  */
 package org.teiid.odata.api;
 
+import org.apache.olingo.commons.api.edm.EdmReturnType;
 
 public interface ProcedureReturnType {
     boolean hasResultSet();
+    /**
+     * @return the sql type of the return parameter or null if there is no return parameter
+     */
     Integer getSqlType();
+    /**
+     *
+     * @return the return type or null, if no resultset nor return parameter
+     */
+    EdmReturnType getReturnType();
 }

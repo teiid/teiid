@@ -32,13 +32,13 @@ import org.teiid.query.util.CommandContext;
 
 public class DdlPlanner implements CommandPlanner {
 
-	@Override
-	public ProcessorPlan optimize(Command command, IDGenerator idGenerator,
-			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			AnalysisRecord analysisRecord, CommandContext context)
-			throws QueryPlannerException, QueryMetadataException,
-			TeiidComponentException {
-		return new DdlPlan(command);
-	}
+    @Override
+    public ProcessorPlan optimize(Command command, IDGenerator idGenerator,
+            QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+            AnalysisRecord analysisRecord, CommandContext context)
+            throws QueryPlannerException, QueryMetadataException,
+            TeiidComponentException {
+        return new DdlPlan(command);
+    }
 
 }

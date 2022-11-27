@@ -21,75 +21,75 @@ package org.teiid.cache;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 
 public class CacheConfiguration {
-			
-	public enum Policy {
-		LRU,  // Least Recently Used
-		EXPIRATION
-	}
-	
-	private Policy policy;
-	private int maxage = -1;
-	private int maxEntries = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
-	private String name;
-	private String location;
-	
-	private int maxStaleness = 0;
-	
-	public CacheConfiguration() {
-	}
-	
-	public CacheConfiguration(Policy policy, int maxAgeInSeconds, int maxNodes, String location) {
-		this.policy = policy;
-		this.maxage = maxAgeInSeconds;
-		this.maxEntries = maxNodes;
-		this.location = location;
-	}
-	
-	public Policy getPolicy() {
-		return this.policy;
-	}
 
-	public int getMaxAgeInSeconds(){
-		return maxage;
-	}
+    public enum Policy {
+        LRU,  // Least Recently Used
+        EXPIRATION
+    }
 
-	public void setMaxAgeInSeconds(int maxage){
-		this.maxage = maxage;
-	}
-	
-	public int getMaxStaleness() {
-		return maxStaleness;
-	}
-	
-	public void setMaxStaleness(int maxStaleDataModification) {
-		this.maxStaleness = maxStaleDataModification;
-	}
-	
-	public int getMaxEntries() {
-		return this.maxEntries;
-	}
+    private Policy policy;
+    private int maxage = -1;
+    private int maxEntries = SessionAwareCache.DEFAULT_MAX_SIZE_TOTAL;
+    private String name;
+    private String location;
 
-	public void setMaxEntries(int entries) {
-		this.maxEntries = entries;
-	}
+    private int maxStaleness = 0;
 
-	public void setType (String type) {
-		this.policy = Policy.valueOf(type);
-	}
-	
-	public String getName() {
-		return this.name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public String getLocation() {
-		return location;
-	}
+    public CacheConfiguration() {
+    }
 
-	public void setLocation(String location) {
-		this.location = location;
-	}	
+    public CacheConfiguration(Policy policy, int maxAgeInSeconds, int maxNodes, String location) {
+        this.policy = policy;
+        this.maxage = maxAgeInSeconds;
+        this.maxEntries = maxNodes;
+        this.location = location;
+    }
+
+    public Policy getPolicy() {
+        return this.policy;
+    }
+
+    public int getMaxAgeInSeconds(){
+        return maxage;
+    }
+
+    public void setMaxAgeInSeconds(int maxage){
+        this.maxage = maxage;
+    }
+
+    public int getMaxStaleness() {
+        return maxStaleness;
+    }
+
+    public void setMaxStaleness(int maxStaleDataModification) {
+        this.maxStaleness = maxStaleDataModification;
+    }
+
+    public int getMaxEntries() {
+        return this.maxEntries;
+    }
+
+    public void setMaxEntries(int entries) {
+        this.maxEntries = entries;
+    }
+
+    public void setType (String type) {
+        this.policy = Policy.valueOf(type);
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }

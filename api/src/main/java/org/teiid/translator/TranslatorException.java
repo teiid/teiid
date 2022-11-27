@@ -22,20 +22,20 @@ import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 
 /**
- * An exception the connector writer can return in case of an 
+ * An exception the connector writer can return in case of an
  * error while using the connector.
  */
 public class TranslatorException extends TeiidException{
 
-	private static final long serialVersionUID = -5980862789340592219L;
+    private static final long serialVersionUID = -5980862789340592219L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public TranslatorException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -44,36 +44,48 @@ public class TranslatorException extends TeiidException{
     public TranslatorException( String message ) {
         super( message );
     }
-    
+
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param code A code denoting the exception
+     * @param message A message describing the exception
      * @param e An exception to nest within this one
      */
     public TranslatorException( Throwable e, String message ) {
         super(e, message);
-    }  
-    
+    }
+
     /**
      * Construct an instance with a linked exception specified.
      *
      * @param e An exception to chain to this exception
      */
     public TranslatorException(Throwable e) {
-        super(e);
-    }  
+        this(e, getMessage(e));
+    }
 
     public TranslatorException(BundleUtil.Event event, Throwable e) {
-        super(event, e);
-    }  
+        this(event, e, getMessage(e));
+    }
+
+    private static String getMessage(Throwable e) {
+        if (e == null) {
+            return null;
+        }
+        String message = e.getMessage();
+        if (message != null) {
+            return message;
+        }
+        //the class name can sometimes help the user not dig for the full stacktrace
+        return e.getClass().toString();
+    }
 
     public TranslatorException(BundleUtil.Event event, Throwable e, String message) {
         super(event, e, message);
-    } 
-    
+    }
+
     public TranslatorException(BundleUtil.Event event, String message) {
         super(event, message);
-    } 
+    }
 }

@@ -24,20 +24,20 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  * Represents a logical criteria such as AND, OR, or NOT.
  */
 public class AndOr extends Condition {
-    
-	public enum Operator {
-		AND,
-		OR,
-	}
+
+    public enum Operator {
+        AND,
+        OR,
+    }
 
     private Condition leftCondition;
     private Condition rightCondition;
     private Operator operator = Operator.AND;
-    	
+
     public AndOr(Condition left, Condition right, Operator operator) {
-    	this.leftCondition = left;
-    	this.rightCondition = right;
-        this.operator = operator; 
+        this.leftCondition = left;
+        this.rightCondition = right;
+        this.operator = operator;
     }
 
     /**
@@ -59,21 +59,21 @@ public class AndOr extends Condition {
     public void setOperator(Operator operator) {
         this.operator = operator;
     }
-    
+
     public Condition getLeftCondition() {
-		return leftCondition;
-	}
-    
+        return leftCondition;
+    }
+
     public Condition getRightCondition() {
-		return rightCondition;
-	}
-    
+        return rightCondition;
+    }
+
     public void setLeftCondition(Condition left) {
-		this.leftCondition = left;
-	}
-    
+        this.leftCondition = left;
+    }
+
     public void setRightCondition(Condition right) {
-		this.rightCondition = right;
-	}
-    
+        this.rightCondition = right;
+    }
+
 }

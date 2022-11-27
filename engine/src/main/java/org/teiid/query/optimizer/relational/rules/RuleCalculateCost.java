@@ -32,7 +32,7 @@ import org.teiid.query.util.CommandContext;
 
 public class RuleCalculateCost implements OptimizerRule {
 
-    /** 
+    /**
      * @see org.teiid.query.optimizer.relational.OptimizerRule#execute(org.teiid.query.optimizer.relational.plantree.PlanNode, org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.optimizer.capabilities.CapabilitiesFinder, org.teiid.query.optimizer.relational.RuleStack, org.teiid.query.analysis.AnalysisRecord, org.teiid.query.util.CommandContext)
      */
     public PlanNode execute(PlanNode plan,
@@ -46,12 +46,12 @@ public class RuleCalculateCost implements OptimizerRule {
         NewCalculateCostUtil.computeCostForTree(plan, metadata);
         return plan;
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#toString()
      */
     public String toString() {
         return "CalculateCost";  //$NON-NLS-1$
     }
-    
+
 }

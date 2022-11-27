@@ -25,11 +25,11 @@ import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 public class ExpandSQLBuilder extends RequestURLHierarchyVisitor {
 
     EdmNavigationProperty navProperty;
-    
+
     public ExpandSQLBuilder(ExpandItem ei) {
-    	if (ei.getResourcePath() != null) {
-    		visit(ei.getResourcePath());
-    	}
+        if (ei.getResourcePath() != null) {
+            visit(ei.getResourcePath());
+        }
     }
 
     public EdmNavigationProperty getNavigationProperty() {
@@ -39,5 +39,5 @@ public class ExpandSQLBuilder extends RequestURLHierarchyVisitor {
     @Override
     public void visit(UriResourceNavigation info) {
         this.navProperty = info.getProperty();
-    }    
+    }
 }

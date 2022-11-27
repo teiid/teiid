@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.jdbc;
 
 import java.util.List;
@@ -30,110 +30,110 @@ import org.teiid.core.TeiidRuntimeException;
  * Handles the future processing logic and makes the appropriate calls to the callback
  */
 public class NonBlockingRowProcessor implements
-		ResultsFuture.CompletionListener<Boolean> {
+        ResultsFuture.CompletionListener<Boolean> {
 
-	private static Logger logger = Logger.getLogger(NonBlockingRowProcessor.class.getName());
-	private StatementImpl stmt;
-	private StatementCallback callback;
+    private static Logger logger = Logger.getLogger(NonBlockingRowProcessor.class.getName());
+    private StatementImpl stmt;
+    private StatementCallback callback;
 
-	public NonBlockingRowProcessor(StatementImpl stmt, StatementCallback callback) {
-		this.stmt = stmt;
-		this.callback = callback;
-	}
+    public NonBlockingRowProcessor(StatementImpl stmt, StatementCallback callback) {
+        this.stmt = stmt;
+        this.callback = callback;
+    }
 
-	@Override
-	public void onCompletion(ResultsFuture<Boolean> future) {
-		try {
-			boolean hasResultSet = future.get(); 
-			if (!hasResultSet) {
-				callback.onComplete(stmt);
-				return;
-			}
-			final ResultSetImpl resultSet = stmt.getResultSet();
-			resultSet.asynch = true;
-			Runnable rowProcessor = new Runnable() {
-				@Override
-				public void run() {
-					while (true) {
-						try {
-							if (stmt.isClosed()) {
-								callback.onComplete(stmt);
-								break;
-							}
-							ResultsFuture<Boolean> hasNext = resultSet.submitNext();
-							synchronized (hasNext) {
-								if (!hasNext.isDone()) {
-									hasNext.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-	
-												@Override
-												public void onCompletion(
-														ResultsFuture<Boolean> f) {
-													if (processRow(f)) {
-														run();
-													}
-												}
-											});
-									break; // will be resumed by onCompletion above
-								}
-							}
-							if (!processRow(hasNext)) {
-								break;
-							}
-						} catch (Exception e) {
-							onException(e);
-							break;
-						}
-					}
-				}
-			};
-			rowProcessor.run();
-		} catch (Exception e) {
-			onException(e);
-		}
-	}
+    @Override
+    public void onCompletion(ResultsFuture<Boolean> future) {
+        try {
+            boolean hasResultSet = future.get();
+            if (!hasResultSet) {
+                callback.onComplete(stmt);
+                return;
+            }
+            final ResultSetImpl resultSet = stmt.getResultSet();
+            resultSet.asynch = true;
+            Runnable rowProcessor = new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        try {
+                            if (stmt.isClosed()) {
+                                callback.onComplete(stmt);
+                                break;
+                            }
+                            ResultsFuture<Boolean> hasNext = resultSet.submitNext();
+                            synchronized (hasNext) {
+                                if (!hasNext.isDone()) {
+                                    hasNext.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
 
-	/**
-	 * return true to continue processing
-	 */
-	boolean processRow(ResultsFuture<Boolean> hasNext) {
-		try {
-			if (!hasNext.get()) {
-				callback.onComplete(stmt);
-				return false;
-			}
+                                                @Override
+                                                public void onCompletion(
+                                                        ResultsFuture<Boolean> f) {
+                                                    if (processRow(f)) {
+                                                        run();
+                                                    }
+                                                }
+                                            });
+                                    break; // will be resumed by onCompletion above
+                                }
+                            }
+                            if (!processRow(hasNext)) {
+                                break;
+                            }
+                        } catch (Exception e) {
+                            onException(e);
+                            break;
+                        }
+                    }
+                }
+            };
+            rowProcessor.run();
+        } catch (Exception e) {
+            onException(e);
+        }
+    }
 
-			List<?> row = stmt.getResultSet().getCurrentRecord();
-			if (row == null) {
-				if (callback instanceof ContinuousStatementCallback) {
-					((ContinuousStatementCallback)callback).beforeNextExecution(this.stmt);
-				}
-				return true;
-			}
-			
-			callback.onRow(stmt, stmt.getResultSet());
+    /**
+     * return true to continue processing
+     */
+    boolean processRow(ResultsFuture<Boolean> hasNext) {
+        try {
+            if (!hasNext.get()) {
+                callback.onComplete(stmt);
+                return false;
+            }
 
-			return true;
-		} catch (Exception e) {
-			onException(e);
-			return false;
-		} catch (Throwable t) {
-			onException(new TeiidRuntimeException(t));
-			return false;	
-		}
-	}
+            List<?> row = stmt.getResultSet().getCurrentRecord();
+            if (row == null) {
+                if (callback instanceof ContinuousStatementCallback) {
+                    ((ContinuousStatementCallback)callback).beforeNextExecution(this.stmt);
+                }
+                return true;
+            }
 
-	private void onException(Exception e) {
-		if (e instanceof ExecutionException) {
-			ExecutionException ee = (ExecutionException)e;
-			if (ee.getCause() instanceof Exception) {
-				e = (Exception) ee.getCause();
-			}
-		}
-		try {
-			callback.onException(stmt, e);
-		} catch (Exception e1) {
-			logger.log(Level.WARNING, "Unhandled exception from StatementCallback", e); //$NON-NLS-1$
-		}
-	}
+            callback.onRow(stmt, stmt.getResultSet());
+
+            return true;
+        } catch (Exception e) {
+            onException(e);
+            return false;
+        } catch (Throwable t) {
+            onException(new TeiidRuntimeException(t));
+            return false;
+        }
+    }
+
+    private void onException(Exception e) {
+        if (e instanceof ExecutionException) {
+            ExecutionException ee = (ExecutionException)e;
+            if (ee.getCause() instanceof Exception) {
+                e = (Exception) ee.getCause();
+            }
+        }
+        try {
+            callback.onException(stmt, e);
+        } catch (Exception e1) {
+            logger.log(Level.WARNING, "Unhandled exception from StatementCallback", e); //$NON-NLS-1$
+        }
+    }
 
 }

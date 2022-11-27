@@ -36,11 +36,11 @@ public class TestTupleBatch extends TestCase {
         List rows = new ArrayList();
         for(int i=0; i<numRows; i++) {
             List row = new ArrayList();
-            for(int j=0; j<numColumns; j++) { 
+            for(int j=0; j<numColumns; j++) {
                 row.add("data-" + (rowBegin + i) + "-" + j); //$NON-NLS-1$ //$NON-NLS-2$
             }
-            rows.add(row);    
-        }            
+            rows.add(row);
+        }
         return new TupleBatch(rowBegin, rows);
     }
 
@@ -48,7 +48,7 @@ public class TestTupleBatch extends TestCase {
      * Test for void TupleBatch(int, List)
      */
     public void testTupleBatch() {
-        exampleBatch(0, 10, 2);        
+        exampleBatch(0, 10, 2);
     }
 
 }

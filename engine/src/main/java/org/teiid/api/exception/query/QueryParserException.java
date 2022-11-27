@@ -23,13 +23,13 @@ import org.teiid.query.parser.ParseException;
 
 
 /**
- * Thrown when a query cannot be parsed.  This is most likely due to not 
+ * Thrown when a query cannot be parsed.  This is most likely due to not
  * following the Query Parser grammar, which defines how queries are parsed.
  */
 public class QueryParserException extends QueryProcessingException {
-	
-	private static final long serialVersionUID = 7565287582917117432L;
-	private ParseException parseException;
+
+    private static final long serialVersionUID = 7565287582917117432L;
+    private ParseException parseException;
 
     /**
      * No-arg constructor required by Externalizable semantics.
@@ -37,7 +37,7 @@ public class QueryParserException extends QueryProcessingException {
     public QueryParserException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -57,24 +57,24 @@ public class QueryParserException extends QueryProcessingException {
         super( e, message );
     }
 
-    
+
     public ParseException getParseException() {
-		return parseException;
-	}
-    
+        return parseException;
+    }
+
     public void setParseException(ParseException parseException) {
-		this.parseException = parseException;
-	}
-    
+        this.parseException = parseException;
+    }
+
     public QueryParserException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public QueryParserException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public QueryParserException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }     
+    }
 }

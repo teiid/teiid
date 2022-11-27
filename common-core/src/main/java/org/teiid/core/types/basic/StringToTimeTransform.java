@@ -28,62 +28,62 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToTimeTransform extends Transform {
-	
-	private static boolean validate = true;
-	private static Pattern pattern = Pattern.compile("\\d{2}:\\d{2}:\\d{2}"); //$NON-NLS-1$
-	
-	static {
-		try {
-			Time.valueOf("26:10:10"); //$NON-NLS-1$
-		} catch (Exception e) {
-			validate = false;
-		}
-	}
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		value = ((String) value).trim();
-		Time result = null;
-		try {
-			result = Time.valueOf((String)value);
-		} catch(Exception e) {
-		    if (!validate && pattern.matcher((String)value).matches()) {
-				throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
-			}
-			  throw new TransformationException(CorePlugin.Event.TEIID10068, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10068, value));
-		}
-		if (validate && !result.toString().equals(value)) {
-			  throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
-		}
-		return result;
-	}
+    private static boolean validate = true;
+    private static Pattern pattern = Pattern.compile("\\d{2}:\\d{2}:\\d{2}"); //$NON-NLS-1$
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DataTypeManager.DefaultDataClasses.STRING;
-	}
+    static {
+        try {
+            Time.valueOf("26:10:10"); //$NON-NLS-1$
+        } catch (Exception e) {
+            validate = false;
+        }
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.TIME;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        value = ((String) value).trim();
+        Time result = null;
+        try {
+            result = Time.valueOf((String)value);
+        } catch(Exception e) {
+            if (!validate && pattern.matcher((String)value).matches()) {
+                throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
+            }
+              throw new TransformationException(CorePlugin.Event.TEIID10068, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10068, value));
+        }
+        if (validate && !result.toString().equals(value)) {
+              throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
+        }
+        return result;
+    }
+
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return DataTypeManager.DefaultDataClasses.STRING;
+    }
+
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.TIME;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
 
 }

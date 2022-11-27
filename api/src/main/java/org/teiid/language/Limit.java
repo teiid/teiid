@@ -20,14 +20,14 @@ package org.teiid.language;
 
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
-/** 
+/**
  * Represents a LIMIT clause with row offset and row limit values to bound the resulting rows
  */
 public class Limit extends BaseLanguageObject {
 
     private int rowOffset;
     private int rowLimit;
-    
+
     public Limit(int offset, int rowLimit) {
         this.rowOffset = offset;
         this.rowLimit = rowLimit;
@@ -46,14 +46,14 @@ public class Limit extends BaseLanguageObject {
     public int getRowOffset() {
         return rowOffset;
     }
-    
+
     public void setRowLimit(int rowLimit) {
-		this.rowLimit = rowLimit;
-	}
-    
+        this.rowLimit = rowLimit;
+    }
+
     public void setRowOffset(int rowOffset) {
-		this.rowOffset = rowOffset;
-	}
+        this.rowOffset = rowOffset;
+    }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

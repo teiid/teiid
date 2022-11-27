@@ -21,19 +21,19 @@ package org.teiid.metadata;
 import org.teiid.core.BundleUtil.Event;
 
 public class ParseException extends MetadataException {
-	private static final long serialVersionUID = -7889770730039591817L;
+    private static final long serialVersionUID = -7889770730039591817L;
 
-	public ParseException(Event event, Throwable cause) {
-		super(event, cause);
-	}
-	
-	public ParseException(Event event, String message) {
-		super(event, message);
-	}
-	
-	public ParseException(String message) {
-		super(message);
-	}
+    public ParseException(Event event, Throwable cause) {
+        super(event, cause);
+    }
+
+    public ParseException(Event event, String message) {
+        super(event, message);
+    }
+
+    public ParseException(String message) {
+        super(message);
+    }
 
     public ParseException(Event event,
             Throwable cause, String message) {

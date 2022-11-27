@@ -52,16 +52,16 @@ import org.teiid.query.util.CommandContext;
 
 
 
-/** 
+/**
  * Planner for BatchedUpdateCommands
  * @since 4.2
  */
 public class BatchedUpdatePlanner implements CommandPlanner {
 
-    /** 
+    /**
      * Optimizes batched updates by batching all contiguous commands that relate to the same physical model.
      * For example, for the following batch of commands:
-     * <br/>
+     * <br>
      * <ol>
      *      <li>1.  INSERT INTO physicalModel.myPhysical ...</li>
      *      <li>2.  UPDATE physicalModel.myPhysical ... </li>
@@ -76,7 +76,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      *      <li>11. INSERT INTO physicalModel.myPhysical ... </li>
      *      <li>12. INSERT INTO physicalModel.myPhysical ... </li>
      * </ol>
-     * <br/> this implementation will batch as follows: (1,2), (5, 6, 7), (8 thru 12).
+     * <br> this implementation will batch as follows: (1,2), (5, 6, 7), (8 thru 12).
      * The remaining commands/plans will be executed individually.
      * @see org.teiid.query.optimizer.CommandPlanner#optimize(Command, org.teiid.core.id.IDGenerator, org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.optimizer.capabilities.CapabilitiesFinder, org.teiid.query.analysis.AnalysisRecord, CommandContext)
      * @since 4.2
@@ -94,7 +94,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         List<VariableContext> allContexts = batchedUpdateCommand.getVariableContexts();
         List<VariableContext> planContexts = null;
         if (allContexts != null) {
-        	planContexts = new ArrayList<VariableContext>(allContexts.size());
+            planContexts = new ArrayList<VariableContext>(allContexts.size());
         }
         //pre-plan the commands to determine pushdown/batching eligibility
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
@@ -124,10 +124,10 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                     // This is the first command in a potential batch, so add it to the batch
                     batch.add(updateCommand);
                     if (allContexts != null) {
-                    	contexts.add(allContexts.get(commandIndex));
-                    	shouldEvaluate.add(Boolean.TRUE);
+                        contexts.add(allContexts.get(commandIndex));
+                        shouldEvaluate.add(Boolean.TRUE);
                     } else {
-                    	shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(updateCommand));
+                        shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(updateCommand));
                     }
                     // Find out if there are other commands called on the same physical model
                     // immediately and contiguously after this one
@@ -137,10 +137,10 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         if (canBeAddedToBatch(batchingCandidate, batchModelID, metadata, capFinder)) {
                             batch.add(batchingCandidate);
                             if (allContexts != null) {
-                            	contexts.add(allContexts.get(batchIndex));
-                            	shouldEvaluate.add(Boolean.TRUE);
+                                contexts.add(allContexts.get(batchIndex));
+                                shouldEvaluate.add(Boolean.TRUE);
                             } else {
-                            	shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(batchingCandidate));
+                                shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(batchingCandidate));
                             }
                         } else { // Otherwise, stop batching at this point. The next command may well be the start of a new batch
                             break batchLoop;
@@ -156,15 +156,15 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         List symbols = batchedUpdateCommand.getProjectedSymbols();
                         projectNode.setSelectSymbols(symbols);
                         projectNode.setElements(symbols);
-                        
+
                         batchNode.setElements(symbols);
-                        
+
                         projectNode.addChild(batchNode);
                         // Add a new RelationalPlan that represents the plan for this batch.
                         childPlans.add(new RelationalPlan(projectNode));
                         if (planContexts != null) {
-                        	planContexts.add(new VariableContext());
-                    	}
+                            planContexts.add(new VariableContext());
+                        }
                         // Skip those commands that were added to this batch
                         commandIndex += batch.size() - 1;
                         commandWasBatched = true;
@@ -172,19 +172,19 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                 }
             }
             if (!commandWasBatched) { // If the command wasn't batched, just add the plan for this command to the list of plans
-            	Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
-            	ProcessorPlan plan = cmd.getProcessorPlan();
+                Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
+                ProcessorPlan plan = cmd.getProcessorPlan();
                 childPlans.add(plan);
                 if (allContexts != null) {
-                	planContexts.add(allContexts.get(commandIndex));
+                    planContexts.add(allContexts.get(commandIndex));
                 }
             }
         }
         return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size(), planContexts, batchedUpdateCommand.isSingleResult());
     }
-    
+
     /**
-     * Get the group being updated by the update command 
+     * Get the group being updated by the update command
      * @param command an INSERT, UPDATE, DELETE or SELECT INTO command
      * @return the group being updated
      * @since 4.2
@@ -200,9 +200,9 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         }
          throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30244, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30244, command));
     }
-    
+
     /**
-     * Returns whether a command can be placed in a connector batch 
+     * Returns whether a command can be placed in a connector batch
      * @param command an update command
      * @param metadata
      * @return true if this command can be added to a batch; false otherwise
@@ -216,13 +216,13 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         // If the command updates a physical group, it's eligible
         return aNode != null && !metadata.isVirtualGroup(getUpdatedGroup(command).getMetadataID());
     }
-    
+
     /**
-     * Returns whether a command can be placed in a given batch 
+     * Returns whether a command can be placed in a given batch
      * @param command an update command
      * @param batchModelID the model ID for the batch concerned
      * @param metadata
-     * @param capFinder 
+     * @param capFinder
      * @return true if this command can be place in a batch associated with the model ID; false otherwise
      * @throws QueryMetadataException
      * @throws TeiidComponentException
@@ -232,7 +232,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         // If it's eligible ...
         if (isEligibleForBatching(command, metadata)) {
             Object modelID = metadata.getModelID(getUpdatedGroup(command).getMetadataID());
-            
+
             return CapabilitiesUtil.isSameConnector(modelID, batchModelID, metadata, capFinder);
         }
         return false;

@@ -26,36 +26,42 @@ import java.util.List;
 import org.teiid.GeneratedKeys;
 
 public class GeneratedKeysImpl implements GeneratedKeys {
-	private List<List<?>> keys = new ArrayList<List<?>>();
-	private String[] colNames;
-	private Class<?>[] types;
-	
-	protected GeneratedKeysImpl(String[] colNames, Class<?>[] types) {
-		this.colNames = colNames;
-		this.types = types;
-	}
-	
-	@Override
-	public void addKey(List<?> vals) {
-		if (vals != null) {
-			keys.add(vals);
-		}
-	}
-	
-	public List<List<?>> getKeys() {
-		return keys;
-	}
-	
-	public String[] getColumnNames() {
-		return colNames;
-	}
-	
-	public Class<?>[] getColumnTypes() {
-		return types;
-	}
-	
-	public Iterator<List<?>> getKeyIterator() {
-		return keys.iterator();
-	}
+
+    public static final String LAST_GENERATED_KEY = "last_generated_key"; //$NON-NLS-1$
+
+    private List<List<?>> keys = new ArrayList<List<?>>();
+    private String[] colNames;
+    private Class<?>[] types;
+    private CommandContext context;
+
+    protected GeneratedKeysImpl(String[] colNames, Class<?>[] types, CommandContext commandContext) {
+        this.colNames = colNames;
+        this.types = types;
+        this.context = commandContext;
+    }
+
+    @Override
+    public void addKey(List<?> vals) {
+        if (vals != null) {
+            keys.add(vals);
+            context.setSessionVariable(LAST_GENERATED_KEY, this);
+        }
+    }
+
+    public List<List<?>> getKeys() {
+        return keys;
+    }
+
+    public String[] getColumnNames() {
+        return colNames;
+    }
+
+    public Class<?>[] getColumnTypes() {
+        return types;
+    }
+
+    public Iterator<List<?>> getKeyIterator() {
+        return keys.iterator();
+    }
 
 }

@@ -35,45 +35,45 @@ import org.teiid.translator.BaseDelegatingExecutionFactory;
 @SuppressWarnings("nls")
 public class TestEmbeddedServerCaching {
     EmbeddedServer es;
-	
-	@Before public void setup() {
-		es = new EmbeddedServer();
-	}
-	
-	@After public void teardown() {
-		if (es != null) {
-			es.stop();
-		}
-	}
-	
-	
-	@Test public void testDelegatingCaching() throws Exception {
-	    es.start(new EmbeddedConfiguration());
-	    HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
-	    hcef.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList(Arrays.asList("a")));
-	    es.addTranslator("hc1", hcef);
-	    es.addTranslator(BaseDelegatingExecutionFactory.class);
-	    Map<String, String> properties = new HashMap<>();
-	    properties.put("delegateName", "hc1");
-	    properties.put("cachePattern", ".*");
-	    properties.put("cacheTtl", "5000");
-	    es.addTranslator("x", "delegator", properties);
-	    
-	    ModelMetaData mmd = new ModelMetaData();
+
+    @Before public void setup() {
+        es = new EmbeddedServer();
+    }
+
+    @After public void teardown() {
+        if (es != null) {
+            es.stop();
+        }
+    }
+
+
+    @Test public void testDelegatingCaching() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+        hcef.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList(Arrays.asList("a")));
+        es.addTranslator("hc1", hcef);
+        es.addTranslator(BaseDelegatingExecutionFactory.class);
+        Map<String, String> properties = new HashMap<>();
+        properties.put("delegateName", "hc1");
+        properties.put("cachePattern", ".*");
+        properties.put("cacheTtl", "5000");
+        es.addTranslator("x", "delegator", properties);
+
+        ModelMetaData mmd = new ModelMetaData();
         mmd.setName("my-schema");
         mmd.addSourceMapping("x", "x", null);
         mmd.addSourceMetadata("ddl", "create foreign table \"pm1.g1\" (e1 string)");
 
         es.deployVDB("test", mmd);
-        
+
         Connection c = es.getDriver().connect("jdbc:teiid:test", null);
 
         Statement s = c.createStatement();
         s.executeQuery("select * from pm1.g1");
-        
+
         s.executeQuery("select * from pm1.g1");
-        
+
         assertEquals(1, hcef.getCommands().size());
-	}
-	
+    }
+
 }

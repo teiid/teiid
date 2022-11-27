@@ -37,69 +37,69 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 
-	private SubqueryAwareEvaluator evaluator;
+    private SubqueryAwareEvaluator evaluator;
 
-	protected SubqueryAwareRelationalNode() {
-		super();
-	}
-	
-	public SubqueryAwareRelationalNode(int nodeID) {
-		super(nodeID);
-	}
-	
-	protected Evaluator getEvaluator(Map elementMap) {
-		if (this.evaluator == null) {
-			this.evaluator = new SubqueryAwareEvaluator(elementMap, getDataManager(), getContext(), getBufferManager());
-		} else {
-			this.evaluator.initialize(getContext(), getDataManager());
-		}
-		return this.evaluator;
-	}
-	
-	@Override
-	public void reset() {
-		super.reset();
-		if (evaluator != null) {
-			evaluator.reset();
-		}
-	}
-	
-	@Override
-	public void closeDirect() {
-		if (evaluator != null) {
-			evaluator.close();
-		}
-	}
-	
-	protected void setReferenceValues(TableFunctionReference ref) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-		if (ref.getCorrelatedReferences() == null) {
-			return;
-		}
-		for (Map.Entry<ElementSymbol, Expression> entry : ref.getCorrelatedReferences().asMap().entrySet()) {
-			getContext().getVariableContext().setValue(entry.getKey(), getEvaluator(Collections.emptyMap()).evaluate(entry.getValue(), null));
-		}
-	}
-	
-	abstract public Collection<? extends LanguageObject> getObjects();
-	
-	@Override
-	public Boolean requiresTransaction(boolean transactionalReads) {
-		List<SubqueryContainer<?>> valueIteratorProviders = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects());
+    protected SubqueryAwareRelationalNode() {
+        super();
+    }
+
+    public SubqueryAwareRelationalNode(int nodeID) {
+        super(nodeID);
+    }
+
+    protected Evaluator getEvaluator(Map elementMap) {
+        if (this.evaluator == null) {
+            this.evaluator = new SubqueryAwareEvaluator(elementMap, getDataManager(), getContext(), getBufferManager());
+        } else {
+            this.evaluator.initialize(getContext(), getDataManager());
+        }
+        return this.evaluator;
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        if (evaluator != null) {
+            evaluator.reset();
+        }
+    }
+
+    @Override
+    public void closeDirect() {
+        if (evaluator != null) {
+            evaluator.close();
+        }
+    }
+
+    protected void setReferenceValues(TableFunctionReference ref) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+        if (ref.getCorrelatedReferences() == null) {
+            return;
+        }
+        for (Map.Entry<ElementSymbol, Expression> entry : ref.getCorrelatedReferences().asMap().entrySet()) {
+            getContext().getVariableContext().setValue(entry.getKey(), getEvaluator(Collections.emptyMap()).evaluate(entry.getValue(), null));
+        }
+    }
+
+    abstract public Collection<? extends LanguageObject> getObjects();
+
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        List<SubqueryContainer<?>> valueIteratorProviders = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects());
         return requiresTransaction(transactionalReads, valueIteratorProviders);
-	}
+    }
 
     public static Boolean requiresTransaction(boolean transactionalReads,
             List<SubqueryContainer<?>> valueIteratorProviders) {
         for (SubqueryContainer<?> subquery : valueIteratorProviders) {
-			ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
-			if (plan != null) {
-				Boolean txn = plan.requiresTransaction(transactionalReads);
-				if (txn == null || txn) {
-					return true; //we can't ensure that this is read only 
-				}
-			}
-		}
-		return false;
+            ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
+            if (plan != null) {
+                Boolean txn = plan.requiresTransaction(transactionalReads);
+                if (txn == null || txn) {
+                    return true; //we can't ensure that this is read only
+                }
+            }
+        }
+        return false;
     }
 
 }

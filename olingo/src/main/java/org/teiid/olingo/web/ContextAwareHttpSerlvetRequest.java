@@ -32,6 +32,16 @@ public class ContextAwareHttpSerlvetRequest extends HttpServletRequestWrapper {
     }
 
     @Override
+    public StringBuffer getRequestURL() {
+        //Workaround for https://issues.apache.org/jira/browse/OLINGO-1324
+        StringBuffer result = super.getRequestURL();
+        if (result.charAt(result.length()-1) == '/') {
+            result.setLength(result.length() - 1);
+        }
+        return result;
+    }
+
+    @Override
     public String getContextPath() {
         if (contextPath != null) {
             return contextPath;

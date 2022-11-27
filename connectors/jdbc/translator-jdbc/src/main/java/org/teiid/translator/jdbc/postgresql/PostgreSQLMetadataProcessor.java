@@ -24,27 +24,39 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.teiid.core.util.StringUtil;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
-public final class PostgreSQLMetadataProcessor
+public class PostgreSQLMetadataProcessor
         extends JDBCMetadataProcessor {
-    
+
     @Override
     protected String getRuntimeType(int type, String typeName, int precision) {
         //pg will otherwise report a 1111/other type for geometry
-    	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+        if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
             return TypeFacility.RUNTIME_NAMES.GEOMETRY;
-        }                
-    	if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) { 
-    	    return TypeFacility.RUNTIME_NAMES.STRING;
-    	}
-        return super.getRuntimeType(type, typeName, precision);                    
+        }
+        if ("geography".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+            return TypeFacility.RUNTIME_NAMES.GEOGRAPHY;
+        }
+        if ("json".equalsIgnoreCase(typeName) || "jsonb".equalsIgnoreCase(typeName)) { //$NON-NLS-1$ //$NON-NLS-2$
+            return TypeFacility.RUNTIME_NAMES.JSON;
+        }
+        if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) {
+            return TypeFacility.RUNTIME_NAMES.STRING;
+        }
+        return super.getRuntimeType(type, typeName, precision);
+    }
+
+    @Override
+    protected String getNativeComponentType(String typeName) {
+        if (typeName.startsWith("_")) { //$NON-NLS-1$
+            return typeName.substring(1);
+        }
+        return super.getNativeComponentType(typeName);
     }
 
     @Override
@@ -52,7 +64,7 @@ public final class PostgreSQLMetadataProcessor
             MetadataFactory metadataFactory, int rsColumns)
             throws SQLException {
         Column result = super.addColumn(columns, table, metadataFactory, rsColumns);
-        if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(result.getNativeType())) { 
+        if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(result.getNativeType())) {
             result.setLength(36); //pg reports max int
             result.setCaseSensitive(false);
         }
@@ -60,44 +72,15 @@ public final class PostgreSQLMetadataProcessor
     }
 
     @Override
-    protected void getGeometryMetadata(Column c, Connection conn,
-    		String tableCatalog, String tableSchema, String tableName,
-    		String columnName) {
-    	PreparedStatement ps = null;
-    	ResultSet rs = null;
-    	try {
-    		if (tableCatalog == null) {
-    			tableCatalog = conn.getCatalog();
-    		}
-        	ps = conn.prepareStatement("select coord_dimension, srid, type from public.geometry_columns where f_table_catalog=? and f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
-        	ps.setString(1, tableCatalog);
-        	ps.setString(2, tableSchema);
-        	ps.setString(3, tableName);
-        	ps.setString(4, columnName);
-        	rs = ps.executeQuery();
-        	if (rs.next()) {
-        		c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
-        		c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
-        		c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
-        	}
-    	} catch (SQLException e) {
-    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
-    	} finally {
-    		if (rs != null) {
-    			try {
-    				rs.close();
-    			} catch (SQLException e) {
-    			}
-    		}
-    		if (ps != null) {
-    			try {
-    				ps.close();
-    			} catch (SQLException e) {
-    			}
-    		}
-    	}
+    protected String getGeographyMetadataTableName() {
+        return "public.geography_columns"; //$NON-NLS-1$
     }
-    
+
+    @Override
+    protected String getGeometryMetadataTableName() {
+        return "public.geometry_columns"; //$NON-NLS-1$
+    }
+
     @Override
     protected ResultSet executeSequenceQuery(Connection conn)
             throws SQLException {
@@ -109,12 +92,12 @@ public final class PostgreSQLMetadataProcessor
         ps.setString(2, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
         return ps.executeQuery();
     }
-    
+
     @Override
     protected String getSequenceNextSQL(String fullyQualifiedName) {
-        return "nextval('" + StringUtil.replaceAll(fullyQualifiedName, "'", "''") + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+        return "nextval('" + StringUtil.replaceAll(fullyQualifiedName, "'", "''") + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-    
+
     @Override
     protected Table addTable(MetadataFactory metadataFactory,
             String tableCatalog, String tableSchema, String tableName,
@@ -123,7 +106,7 @@ public final class PostgreSQLMetadataProcessor
         String type = tables.getString(4);
         if (type == null || type.contains("INDEX") //$NON-NLS-1$
                 || type.equalsIgnoreCase("TYPE") //$NON-NLS-1$
-                || type.equalsIgnoreCase("SEQUENCE")) { //$NON-NLS-1$ 
+                || type.equalsIgnoreCase("SEQUENCE")) { //$NON-NLS-1$
             return null;
         }
         return super.addTable(metadataFactory, tableCatalog, tableSchema, tableName,

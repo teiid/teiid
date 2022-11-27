@@ -25,10 +25,10 @@ import org.teiid.core.CorePlugin;
 
 
 
-/** 
+/**
  * A InputStream wrapper class for a Lob Chunks. Given a stream of Lob Chunks
  * this class will convert those chunks into InputStream, which can be used to
- * stream the lob data. 
+ * stream the lob data.
  */
 public class LobChunkInputStream extends InputStream {
     private LobChunkProducer reader;
@@ -37,21 +37,21 @@ public class LobChunkInputStream extends InputStream {
     private int currentCounter = 0;
     private boolean lastChunk = false;
     private boolean closed = false;
-    
+
     public LobChunkInputStream(LobChunkProducer reader) {
         this.reader = reader;
     }
-    
-    public int read() throws IOException {               
+
+    public int read() throws IOException {
         if (this.closed) {
             throw new IllegalStateException(CorePlugin.Util.getString("stream_closed")); //$NON-NLS-1$
-        }        
+        }
         while (this.byteData == null || this.byteData.length <= currentCounter) {
-        	if (this.lastChunk) {
-	            // we are done
-	            return -1;
-        	}
-        	LobChunk value = this.reader.getNextChunk();
+            if (this.lastChunk) {
+                // we are done
+                return -1;
+            }
+            LobChunk value = this.reader.getNextChunk();
             this.lastChunk = value.isLast();
             this.byteData = value.getBytes();
             this.currentCounter = 0;
@@ -61,7 +61,7 @@ public class LobChunkInputStream extends InputStream {
         return (byteData[currentCounter++] & 0xFF);
     }
 
-    /**  
+    /**
      * @see java.io.InputStream#close()
      */
     public void close() throws IOException {

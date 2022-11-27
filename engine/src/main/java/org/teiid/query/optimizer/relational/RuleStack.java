@@ -22,58 +22,58 @@ import java.util.LinkedList;
 
 public class RuleStack {
 
-	private RelationalPlanner planner;
+    private RelationalPlanner planner;
     private LinkedList<OptimizerRule> rules = new LinkedList<OptimizerRule>();
-    
-    public void push(OptimizerRule rule) { 
+
+    public void push(OptimizerRule rule) {
         rules.addFirst(rule);
     }
-    
+
     public void addLast(OptimizerRule rule) {
-    	rules.addLast(rule);
+        rules.addLast(rule);
     }
-    
-    public OptimizerRule pop() { 
-        if(rules.isEmpty()) { 
+
+    public OptimizerRule pop() {
+        if(rules.isEmpty()) {
             return null;
-        }    
+        }
         return rules.removeFirst();
     }
-    
-    public boolean isEmpty() { 
+
+    public boolean isEmpty() {
         return rules.isEmpty();
     }
-    
-    public int size() { 
+
+    public int size() {
         return rules.size();
     }
-    
+
     /**
-     * Remove all occurrences of this rule in the stack 
+     * Remove all occurrences of this rule in the stack
      * @param rule The rule to remove
      * @since 4.2
      */
     public void remove(OptimizerRule rule) {
-        while(rules.remove(rule)) {}            
+        while(rules.remove(rule)) {}
     }
-    
+
     public boolean contains(OptimizerRule rule) {
         return rules.contains(rule);
     }
-    
+
     public void setPlanner(RelationalPlanner planner) {
-		this.planner = planner;
-	}
-    
-    public RelationalPlanner getPlanner() {
-		return planner;
-	}
-    
-    public RuleStack clone() {
-    	RuleStack clone = new RuleStack();
-    	clone.rules.addAll(this.rules);
-    	clone.planner = this.planner;
-    	return clone;
+        this.planner = planner;
     }
-    
+
+    public RelationalPlanner getPlanner() {
+        return planner;
+    }
+
+    public RuleStack clone() {
+        RuleStack clone = new RuleStack();
+        clone.rules.addAll(this.rules);
+        clone.planner = this.planner;
+        return clone;
+    }
+
 }

@@ -29,25 +29,23 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 public class TestAnsiJoinPushdown {
 
-	/**
-	 * See {@link TestOptimizer.testPushMultiGroupCriteria}
-	 * 
-	 * Notice that the non-join criteria is still in the on clause.
-	 */
-    @Test public void testAnsiInnerJoin() throws Exception { 
-    	FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+    /**
+     * Notice that the non-join criteria is still in the on clause.
+     */
+    @Test public void testAnsiInnerJoin() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-    	
+
         ProcessorPlan plan = TestOptimizer.helpPlan(
-        		"select pm2.g1.e1 from pm2.g1, pm2.g2 where pm2.g1.e1 = pm2.g2.e1 and (pm2.g1.e2 = 1 OR pm2.g2.e2 = 2) and pm2.g2.e3 = 1", //$NON-NLS-1$ 
-        		RealMetadataFactory.example1Cached(), 
-        		null,
-        		capFinder,
-        		new String[] { "SELECT g_0.e1 FROM pm2.g1 AS g_0 INNER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND ((g_0.e2 = 1) OR (g_1.e2 = 2)) WHERE g_1.e3 = TRUE" }, //$NON-NLS-1$
-        		ComparisonMode.EXACT_COMMAND_STRING); 
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
-    }  
-	
+                "select pm2.g1.e1 from pm2.g1, pm2.g2 where pm2.g1.e1 = pm2.g2.e1 and (pm2.g1.e2 = 1 OR pm2.g2.e2 = 2) and pm2.g2.e3 = 1", //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                null,
+                capFinder,
+                new String[] { "SELECT g_0.e1 FROM pm2.g1 AS g_0 INNER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND ((g_0.e2 = 1) OR (g_1.e2 = 2)) WHERE g_1.e3 = TRUE" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+
 }

@@ -21,27 +21,27 @@ package org.teiid.query.sql.lang;
 import org.teiid.query.sql.LanguageObject;
 
 /**
- * This interface defines a common interface for all SQL objects 
- * that contain subqueries. 
+ * This interface defines a common interface for all SQL objects
+ * that contain subqueries.
  */
 public interface SubqueryContainer<T extends Command> extends LanguageObject {
-	
-	public static interface Evaluatable<T extends Command> extends SubqueryContainer<T> {
-		boolean shouldEvaluate();
-		
-		void setShouldEvaluate(boolean b);
-	}
+
+    public static interface Evaluatable<T extends Command> extends SubqueryContainer<T> {
+        boolean shouldEvaluate();
+
+        void setShouldEvaluate(boolean b);
+    }
 
     /**
      * Returns the subquery Command object
      * @return the subquery Command object
      */
     T getCommand();
-    
+
     /**
      * Sets the subquery Command object
      * @param command the subquery Command object
      */
     void setCommand(T command);
-    
+
 }

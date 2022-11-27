@@ -20,22 +20,23 @@ package org.teiid.infinispan.api;
 import java.util.Map;
 
 import org.infinispan.commons.api.BasicCache;
-import org.infinispan.protostream.BaseMarshaller;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
+import org.teiid.resource.api.Connection;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.translator.TranslatorException;
 
-public interface InfinispanConnection {
+public interface InfinispanConnection extends Connection {
 
-    <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException;
+    <K, V> BasicCache<K, V> getCache(String cacheName) throws TranslatorException;
 
     <K, V> BasicCache<K, V> getCache() throws TranslatorException;
 
     void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException;
 
-    void registerMarshaller(BaseMarshaller<InfinispanDocument> marshller) throws TranslatorException;
+    void registerMarshaller(Table table, RuntimeMetadata metadata) throws TranslatorException;
 
-    void unRegisterMarshaller(BaseMarshaller<InfinispanDocument> marshller) throws TranslatorException;
-
-    void registerScript(String scriptName, String script);
-    
     <T> T execute(String scriptName, Map<String, ?> params);
+
+    TransactionSupport getTransactionSupport();
 }

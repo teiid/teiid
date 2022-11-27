@@ -25,13 +25,13 @@ import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
  * A pruned version of a Hibernate {@link Dialect} for use by Teiid
  */
 public interface SQLDialect {
-	
+
     public AbstractMultiTableBulkIdStrategyImpl getDefaultMultiTableBulkIdStrategy();
-    
-	//TODO: there's a chance that the type is not supported by the source 
-	//which will throw a HibernateException - this is likely a modeling error
-	//rather than something we need to generally consider
-	public String getTypeName(int code, long length, int precision, int scale);
-	
+
+    //TODO: there's a chance that the type is not supported by the source
+    //which will throw a HibernateException - this is likely a modeling error
+    //rather than something we need to generally consider
+    public String getTypeName(int code, long length, int precision, int scale);
+
 
 }

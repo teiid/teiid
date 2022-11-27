@@ -28,79 +28,79 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.util.CommandContext;
 
 public class StatsFunction extends SingleArgumentAggregateFunction {
-	
-	private double sum = 0;
-	private double sumSq = 0;
-	private long count = 0;
-	private Type type;
-	
-	public StatsFunction(Type function) {
-		this.type = function;
-	}
 
-	@Override
-	public void reset() {
-		sum = 0;
-		sumSq = 0;
-		count = 0;
-	}
-	
-	@Override
-	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
-			throws FunctionExecutionException, ExpressionEvaluationException,
-			TeiidComponentException {
-		sum += ((Number)input).doubleValue();
-		sumSq += Math.pow(((Number)input).doubleValue(), 2);
-		count++;
-	}
-	
-	@Override
-	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
-			ExpressionEvaluationException, TeiidComponentException {
-		double result = 0;
-		switch (type) {
-		case STDDEV_POP:
-		case VAR_POP:
-			if (count == 0) {
-				return null;
-			}
-			result = (sumSq - sum * sum / count) / count;
-			if (type == Type.STDDEV_POP) {
-				result = Math.sqrt(result);
-			}
-			break;
-		case STDDEV_SAMP:
-		case VAR_SAMP:
-			if (count < 2) {
-				return null;
-			}
-			result = (sumSq - sum * sum / count) / (count - 1);
-			if (type == Type.STDDEV_SAMP) {
-				result = Math.sqrt(result);
-			}
-			break;
-		}
-		return result;
-	}
-	
-	@Override
-	public void getState(List<Object> state) {
-		state.add(count);
-		state.add(sum);
-		state.add(sumSq);
-	}
-	
-	@Override
-	public List<? extends Class<?>> getStateTypes() {
-		return Arrays.asList(Long.class, Double.class, Double.class);
-	}
-	
-	@Override
-	public int setState(List<?> state, int index) {
-		count = (Long) state.get(index++);
-		sum = (Double) state.get(index++);
-		sumSq = (Double) state.get(index++);
-		return index;
-	}
+    private double sum = 0;
+    private double sumSq = 0;
+    private long count = 0;
+    private Type type;
+
+    public StatsFunction(Type function) {
+        this.type = function;
+    }
+
+    @Override
+    public void reset() {
+        sum = 0;
+        sumSq = 0;
+        count = 0;
+    }
+
+    @Override
+    public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
+            throws FunctionExecutionException, ExpressionEvaluationException,
+            TeiidComponentException {
+        sum += ((Number)input).doubleValue();
+        sumSq += Math.pow(((Number)input).doubleValue(), 2);
+        count++;
+    }
+
+    @Override
+    public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
+            ExpressionEvaluationException, TeiidComponentException {
+        double result = 0;
+        switch (type) {
+        case STDDEV_POP:
+        case VAR_POP:
+            if (count == 0) {
+                return null;
+            }
+            result = (sumSq - sum * sum / count) / count;
+            if (type == Type.STDDEV_POP) {
+                result = Math.sqrt(result);
+            }
+            break;
+        case STDDEV_SAMP:
+        case VAR_SAMP:
+            if (count < 2) {
+                return null;
+            }
+            result = (sumSq - sum * sum / count) / (count - 1);
+            if (type == Type.STDDEV_SAMP) {
+                result = Math.sqrt(result);
+            }
+            break;
+        }
+        return result;
+    }
+
+    @Override
+    public void getState(List<Object> state) {
+        state.add(count);
+        state.add(sum);
+        state.add(sumSq);
+    }
+
+    @Override
+    public List<? extends Class<?>> getStateTypes() {
+        return Arrays.asList(Long.class, Double.class, Double.class);
+    }
+
+    @Override
+    public int setState(List<?> state, int index) {
+        count = (Long) state.get(index++);
+        sum = (Double) state.get(index++);
+        sumSq = (Double) state.get(index++);
+        return index;
+    }
 
 }

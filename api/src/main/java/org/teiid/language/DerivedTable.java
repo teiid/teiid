@@ -29,7 +29,7 @@ public class DerivedTable extends BaseLanguageObject implements TableReference {
     private QueryExpression query;
     private boolean lateral;
 
-    public DerivedTable(QueryExpression query, String name) {        
+    public DerivedTable(QueryExpression query, String name) {
         this.query = query;
         this.correlationName = name;
     }
@@ -53,13 +53,13 @@ public class DerivedTable extends BaseLanguageObject implements TableReference {
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public boolean isLateral() {
-		return lateral;
-	}
-    
+        return lateral;
+    }
+
     public void setLateral(boolean lateral) {
-		this.lateral = lateral;
-	}
+        this.lateral = lateral;
+    }
 
 }

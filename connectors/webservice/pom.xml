@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid</groupId>
 		<artifactId>connectors</artifactId>
-		<version>11.1.0-SNAPSHOT</version>
+		<version>17.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.teiid.connectors</groupId>
@@ -14,9 +14,8 @@
 	<description />
 
 	<modules>
+	    <module>ws-cxf</module>
 		<module>translator-ws</module>
-		<module>connector-ws</module>
-		<module>feature-pack-ws</module>
 	</modules>
 
 </project>

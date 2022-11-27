@@ -26,13 +26,13 @@ import org.teiid.query.validator.ValidatorReport;
 
 public class TestSystemSource {
 
-	@Test public void testValidate() {
-	    SystemSource source = new SystemSource();
-	    ValidatorReport report = new ValidatorReport("Test Report");	    	     //$NON-NLS-1$
-		FunctionMetadataValidator.validateFunctionMethods(source.getFunctionMethods(), report);
+    @Test public void testValidate() {
+        SystemSource source = new SystemSource();
+        ValidatorReport report = new ValidatorReport("Test Report");                 //$NON-NLS-1$
+        FunctionMetadataValidator.validateFunctionMethods(source.getFunctionMethods(), report);
 
-		if(report.hasItems()) { 		    
-			fail("Got validation errors while validating system functions: " + report); //$NON-NLS-1$
-		}
-	}
+        if(report.hasItems()) {
+            fail("Got validation errors while validating system functions: " + report); //$NON-NLS-1$
+        }
+    }
 }

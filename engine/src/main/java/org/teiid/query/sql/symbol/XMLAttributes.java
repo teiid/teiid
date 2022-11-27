@@ -30,47 +30,47 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class XMLAttributes implements LanguageObject {
 
-	private static final long serialVersionUID = -3348922701950966494L;
-	private List<DerivedColumn> args;
-	
-	public XMLAttributes(List<DerivedColumn> args) {
-		this.args = args;
-	}
-	
-	public List<DerivedColumn> getArgs() {
-		return args;
-	}
-	
-	@Override
-	public XMLAttributes clone() {
-		XMLAttributes clone = new XMLAttributes(LanguageObject.Util.deepClone(args, DerivedColumn.class));
-		return clone;
-	}
-	
-	@Override
-	public int hashCode() {
-		return args.hashCode();
-	}
-	
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof XMLAttributes)) {
-			return false;
-		}
-		XMLAttributes other = (XMLAttributes)obj;
-		return args.equals(other.args);
-	}
+    private static final long serialVersionUID = -3348922701950966494L;
+    private List<DerivedColumn> args;
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
+    public XMLAttributes(List<DerivedColumn> args) {
+        this.args = args;
+    }
+
+    public List<DerivedColumn> getArgs() {
+        return args;
+    }
+
+    @Override
+    public XMLAttributes clone() {
+        XMLAttributes clone = new XMLAttributes(LanguageObject.Util.deepClone(args, DerivedColumn.class));
+        return clone;
+    }
+
+    @Override
+    public int hashCode() {
+        return args.hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof XMLAttributes)) {
+            return false;
+        }
+        XMLAttributes other = (XMLAttributes)obj;
+        return args.equals(other.args);
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
 }

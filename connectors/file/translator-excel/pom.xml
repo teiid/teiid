@@ -3,14 +3,16 @@
     <parent>
         <groupId>org.teiid.connectors</groupId>
         <artifactId>file</artifactId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.teiid.connectors</groupId>
     <artifactId>translator-excel</artifactId>
-    <packaging>bundle</packaging>
     
     <name>Excel Translator</name>
     <description>This translator provides access to the Excel data.</description>
+    
+    <properties>
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
     
     <dependencies>
         <dependency>
@@ -22,8 +24,8 @@
             <artifactId>teiid-common-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -36,10 +38,6 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml-schemas</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dom4j</groupId>
-            <artifactId>dom4j</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlbeans</groupId>

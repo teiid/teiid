@@ -21,10 +21,10 @@ package org.teiid.dialect;
 import java.sql.Types;
 
 public class TeiidEightDialect extends TeiidDialect {
-	
-	public TeiidEightDialect() {
-		super();
-		registerColumnType(Types.VARBINARY, "varbinary"); //$NON-NLS-1$
-	}
-	
+
+    public TeiidEightDialect() {
+        super();
+        registerColumnType(Types.VARBINARY, "varbinary"); //$NON-NLS-1$
+    }
+
 }

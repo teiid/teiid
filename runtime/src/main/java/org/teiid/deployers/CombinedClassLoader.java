@@ -29,50 +29,50 @@ public class CombinedClassLoader extends ClassLoader {
     private ClassLoader[] toSearch;
 
     public CombinedClassLoader(ClassLoader parent, ClassLoader... toSearch){
-    	super(parent);
+        super(parent);
         this.toSearch = toSearch;
     }
-    
+
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
-    	for (ClassLoader cl : toSearch) {
-    		if (cl == null) {
-    			continue;
-    		}
-    		try {
-    			return cl.loadClass(name);
-    		} catch (ClassNotFoundException e) {
-    			
-    		}
-		}
-    	return super.loadClass(name);
+        for (ClassLoader cl : toSearch) {
+            if (cl == null) {
+                continue;
+            }
+            try {
+                return cl.loadClass(name);
+            } catch (ClassNotFoundException e) {
+
+            }
+        }
+        return super.loadClass(name);
     }
-    
+
     @Override
     protected URL findResource(String name) {
-    	for (ClassLoader cl : toSearch) {
-    		if (cl == null) {
-    			continue;
-    		}
-			URL url = cl.getResource(name);
-			if (url != null) {
-				return url;
-			}
-    	}
-    	return super.getResource(name);
+        for (ClassLoader cl : toSearch) {
+            if (cl == null) {
+                continue;
+            }
+            URL url = cl.getResource(name);
+            if (url != null) {
+                return url;
+            }
+        }
+        return super.getResource(name);
     }
-    
+
     @Override
     protected Enumeration<URL> findResources(String name) throws IOException {
-    	Vector<URL> result = new Vector<URL>();
-    	for (ClassLoader cl : toSearch) {
-    		if (cl == null) {
-    			continue;
-    		}
-    		Enumeration<URL> url = cl.getResources(name);
-    		result.addAll(Collections.list(url));
-    	}
-    	return result.elements();
+        Vector<URL> result = new Vector<URL>();
+        for (ClassLoader cl : toSearch) {
+            if (cl == null) {
+                continue;
+            }
+            Enumeration<URL> url = cl.getResources(name);
+            result.addAll(Collections.list(url));
+        }
+        return result.elements();
     }
-    
+
 }

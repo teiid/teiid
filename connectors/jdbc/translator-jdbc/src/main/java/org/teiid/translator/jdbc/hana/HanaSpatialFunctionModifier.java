@@ -23,8 +23,6 @@ import java.util.List;
 
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.Literal;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 
@@ -32,23 +30,23 @@ public class HanaSpatialFunctionModifier extends FunctionModifier {
 
     /**
      * Most geospatial functions in HANA are called from the geometry object or an equivalent expression.
-     * For example, <geometry-expression>.ST_SRID() or <geometry-expression>.ST_Relate(<geo2>). This method
+     * For example, &lt;geometry-expression&gt;.ST_SRID() or &lt;geometry-expression&gt;.ST_Relate(&lt;geo2&gt;). This method
      * will take the argument(s) to the Teiid spatial function and move the first argument to precede
      * the function name.
      */
     public List<?> translate(Function function) {
         List<Expression> params = function.getParameters();
-    	List<Object> objs = new ArrayList<Object>();
-    	
-    	Expression exp1 = params.get(0);
-    	
-    	objs.add(exp1+"."+function.getName());
+        List<Object> objs = new ArrayList<Object>();
+
+        Expression exp1 = params.get(0);
+
+        objs.add(exp1+"."+function.getName()); //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
         if (params.size()>1){
-        	objs.add(params.get(1));
+            objs.add(params.get(1));
         }
         objs.add(")"); //$NON-NLS-1$
         return objs;
     }
-	
+
 }

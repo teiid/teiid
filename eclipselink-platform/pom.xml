@@ -2,13 +2,17 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.teiid</groupId>
-		<version>11.1.0-SNAPSHOT</version>
+		<version>17.0.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-eclipselink-platform</artifactId>
 	<name>Eclipselink DatabasePlatform</name>
 	<description>Teiid Eclipselink DatabasePlatform</description>
-	<packaging>bundle</packaging>
+
+	<properties>
+	    <!-- turned off dup finder with dups across the eclipse jars -->
+	    <basepom.check.skip-duplicate-finder>true</basepom.check.skip-duplicate-finder>
+    </properties>
 
 	<dependencies>
 	
@@ -16,6 +20,12 @@
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>eclipselink</artifactId>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>javax.persistence</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -24,46 +34,41 @@
 		</dependency>
 		
 		<dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+		
+		<dependency>
 			<groupId>org.teiid</groupId>
 			<artifactId>teiid-runtime</artifactId>
 			<scope>test</scope>
 		</dependency>
 		
 		<dependency>
-			<groupId>org.teiid</groupId>
-			<artifactId>teiid-admin</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.teiid.connectors</groupId>
 			<artifactId>translator-file</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		
 		<dependency>
-			<groupId>org.teiid.connectors</groupId>
-			<artifactId>connector-file</artifactId>
-			<scope>test</scope>
-		</dependency>
-        
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>    
-		<dependency>
-			<groupId>org.jboss.spec.javax.resource</groupId>
-			<artifactId>jboss-connector-api_1.7_spec</artifactId>
-			<scope>test</scope>
-		</dependency>
 		
-	    <dependency>
-	        <groupId>org.jboss.spec.javax.transaction</groupId>
-	        <artifactId>jboss-transaction-api_1.2_spec</artifactId>
-	        <scope>test</scope>
-	    </dependency>		
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 	
 </project>

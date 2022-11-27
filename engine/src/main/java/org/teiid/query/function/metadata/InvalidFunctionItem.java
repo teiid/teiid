@@ -27,15 +27,15 @@ import org.teiid.query.validator.ValidatorFailure;
  * attribute with the method reference for the invalid method.
  */
 public class InvalidFunctionItem extends ValidatorFailure {
-	
-	private static final long serialVersionUID = 5679334286895174700L;
 
-	/**
-	 * Report item type
-	 */
-	public static final String INVALID_FUNCTION = "InvalidFunction"; //$NON-NLS-1$
+    private static final long serialVersionUID = 5679334286895174700L;
 
-	private FunctionMethod method;
+    /**
+     * Report item type
+     */
+    public static final String INVALID_FUNCTION = "InvalidFunction"; //$NON-NLS-1$
+
+    private FunctionMethod method;
 
     /**
      * Constructor for InvalidFunctionItem.
@@ -43,18 +43,18 @@ public class InvalidFunctionItem extends ValidatorFailure {
     public InvalidFunctionItem() {
         super(INVALID_FUNCTION);
     }
-    
-    /** 
+
+    /**
      * Construct with invalid function object and exception.
      * @param method Invalid function method object
      * @param message Message describing invalid function
      */
-    public InvalidFunctionItem(FunctionMethod method, String message) { 
+    public InvalidFunctionItem(FunctionMethod method, String message) {
         this();
         setMessage(message);
         setMethod(method);
     }
-    
+
     /**
      * Gets the method.
      * @return Returns a FunctionMethod

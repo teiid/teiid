@@ -1,0 +1,22 @@
+<vdb name="petstore" version="1">
+    <!-- example VDB -->
+    <model visible="true" name="m">
+        <property name="importer.metadataUrl" value="/swagger.json"/>
+        <source name="s" translator-name="openapi" connection-jndi-name="java:/openapi"/> 
+    </model>
+</vdb>
+
+<!--sample resource adapter configuration in standalone-teiid.xml in resource adapters subsystem. 
+
+<resource-adapter id="openapi">
+    <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
+    <transaction-support>NoTransaction</transaction-support>
+    <connection-definitions>
+        <connection-definition class-name="org.teiid.resource.adapter.ws.WSManagedConnectionFactory" jndi-name="java:/openapi" enabled="true" use-java-context="true" pool-name="teiid-openapi-ds">
+            <config-property name="EndPoint">
+                http://petstore.swagger.io/v2
+            </config-property>
+        </connection-definition>
+    </connection-definitions>
+</resource-adapter>
+ -->

@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 public @interface Secure {
-	
-	boolean optional() default false;
+
+    boolean optional() default false;
 
 }

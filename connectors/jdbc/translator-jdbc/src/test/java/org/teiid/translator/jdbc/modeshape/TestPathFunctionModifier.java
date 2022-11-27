@@ -46,37 +46,37 @@ public class TestPathFunctionModifier extends TestCase {
     }
 
     public void helpTestMod(Expression c, String expectedStr, String target) throws Exception {
-    	Function func = null;
-    	if (c != null) {
-        	func = LANG_FACTORY.createFunction(target, 
+        Function func = null;
+        if (c != null) {
+            func = LANG_FACTORY.createFunction(target,
             Arrays.asList(c),
             String.class);
-    	} else {
-        	func = LANG_FACTORY.createFunction(target, 
+        } else {
+            func = LANG_FACTORY.createFunction(target,
                     Collections.EMPTY_LIST,
                     String.class);
-		
-    	}
-        
+
+        }
+
         ModeShapeExecutionFactory trans = new ModeShapeExecutionFactory();
         trans.start();
-        
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
 
-        sqlVisitor.append(func);  
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+
+        sqlVisitor.append(func);
         assertEquals(expectedStr, sqlVisitor.toString());
     }
-    
-    
+
+
     public void test1() throws Exception {
         Literal arg1 = LANG_FACTORY.createLiteral("car", String.class); //$NON-NLS-1$
         helpTestMod(arg1, "PATH('car')", "PATH"); //$NON-NLS-1$
     }
-    
+
     public void test2() throws Exception {
         helpTestMod(null, "PATH()", "PATH"); //$NON-NLS-1$
     }
-    
-     
+
+
 }
 

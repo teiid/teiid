@@ -4,7 +4,7 @@
    <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>11.1.0-SNAPSHOT</version>
+      <version>17.0.0-SNAPSHOT</version>
   </parent>
   <groupId>org.teiid.connectors</groupId>
   <artifactId>jdbc</artifactId>
@@ -17,7 +17,6 @@
     <module>translator-phoenix</module>
     <module>translator-hive</module>
     <module>translator-prestodb</module>
-    <module>feature-pack-jdbc</module>
   </modules>
 
 </project>

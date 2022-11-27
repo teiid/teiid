@@ -25,15 +25,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.teiid.core.util.ArgCheck;
-import org.teiid.core.util.StringUtil;
 
 public class BundleUtil {
-    /**
-     * The product properties used to override default localized text.
-     * @since 5.0.2
-     */
-    static protected ResourceBundle productProps;
-
     /**
      * The name of the resource bundle.
      */
@@ -45,33 +38,32 @@ public class BundleUtil {
     private final ResourceBundle bundle;
 
     protected final String pluginId;
-    
+
     public interface Event {
-    	//String id();
+        //String id();
     }
-    
+
     /**
      * Return the {@link BundleUtil} for the class.  The bundle must be in the same package or a parent package of the class.
      * @param clazz
-     * @return
      */
     public static BundleUtil getBundleUtil(Class<?> clazz) {
-    	String packageName = clazz.getPackage().getName();
-    	
-    	while (true) {
-    		//scan up packages until found
-    		String bundleName = packageName + ".i18n"; //$NON-NLS-1$
-    		try {
-    			ResourceBundle bundle = ResourceBundle.getBundle(bundleName, Locale.getDefault(), clazz.getClassLoader());
-    			return new BundleUtil(packageName, bundleName, bundle);
-    		} catch (MissingResourceException e) {
-    			int index = packageName.lastIndexOf('.'); 
-    			if (index < 0) {
-    				throw e;
-    			}
-    			packageName = packageName.substring(0, index);
-    		}
-    	}
+        String packageName = clazz.getPackage().getName();
+
+        while (true) {
+            //scan up packages until found
+            String bundleName = packageName + ".i18n"; //$NON-NLS-1$
+            try {
+                ResourceBundle bundle = ResourceBundle.getBundle(bundleName, Locale.getDefault(), clazz.getClassLoader());
+                return new BundleUtil(packageName, bundleName, bundle);
+            } catch (MissingResourceException e) {
+                int index = packageName.lastIndexOf('.');
+                if (index < 0) {
+                    throw e;
+                }
+                packageName = packageName.substring(0, index);
+            }
+        }
     }
 
     /**
@@ -87,7 +79,7 @@ public class BundleUtil {
     public BundleUtil(final String pluginId,
                           final String bundleName,
                           final ResourceBundle bundle) {
-    	this.pluginId = pluginId;
+        this.pluginId = pluginId;
         this.bundleName = bundleName;
         this.bundle = bundle;
     }
@@ -114,8 +106,7 @@ public class BundleUtil {
             //char[] messageWithNoDoubleQuotes = CharOperation.replace(text.toCharArray(), DOUBLE_QUOTES, SINGLE_QUOTE);
             //text = new String(messageWithNoDoubleQuotes);
 
-            String value = getProductValue(key);
-            return ((value == null) ? this.bundle.getString(key) : value);
+            return this.bundle.getString(key);
         } catch (final Exception err) {
             String msg;
 
@@ -136,27 +127,6 @@ public class BundleUtil {
     }
 
     /**
-     * Obtains the value that is overriding the default value.
-     * @param theKey the key whose product value is being requested
-     * @return the value or <code>null</code> if not overridden by the product
-     */
-    private String getProductValue(String theKey) {
-        String result = null;
-
-        if ((productProps != null) && !StringUtil.isEmpty(theKey)) {
-            String key = this.pluginId + '.' + theKey;
-
-            try {
-                result = productProps.getString(key);
-            } catch (MissingResourceException theException) {
-                // not found in product properties
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * Determines if the given key exists in the resource file.
      *
      * @param key
@@ -166,7 +136,7 @@ public class BundleUtil {
      */
     public boolean keyExists(final String key) {
         try {
-            return ((getProductValue(key) != null) || (this.bundle.getString(key) != null));
+            return (this.bundle.getString(key) != null);
         } catch (final Exception err) {
             return false;
         }
@@ -212,7 +182,7 @@ public class BundleUtil {
      */
     public String getString(final String key,
                             final Object... parameters) {
-    	String text = getString(key);
+        String text = getString(key);
 
         // Check the trivial cases ...
         if (text == null) {
@@ -224,33 +194,27 @@ public class BundleUtil {
 
         return MessageFormat.format(text, parameters);
     }
-    
-	public String gs(final String key, final Object... parameters) {
-		return getString(key, parameters);
-	}
-	
-	public String gs(final Event key, final Object... parameters) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(key);
-		sb.append(" "); //$NON-NLS-1$
-		sb.append(getString(key.toString(), parameters));
-		return sb.toString();
-	}	
+
+    public String gs(final String key, final Object... parameters) {
+        return getString(key, parameters);
+    }
+
+    public String gs(final Event key, final Object... parameters) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(key);
+        sb.append(" "); //$NON-NLS-1$
+        sb.append(getString(key.toString(), parameters));
+        return sb.toString();
+    }
 
     public String getStringOrKey(final String key) {
         ArgCheck.isNotNull(key);
 
-        String value = getProductValue(key);
-
-        if (value == null) {
-            try {
-                return this.bundle.getString(key);
-            } catch (final MissingResourceException err) {
-                return key;
-            }
+        try {
+            return this.bundle.getString(key);
+        } catch (final MissingResourceException err) {
+            return key;
         }
-
-        return value;
     }
 
 }

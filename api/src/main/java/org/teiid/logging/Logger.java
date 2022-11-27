@@ -23,9 +23,9 @@ package org.teiid.logging;
  * LogListener
  */
 public interface Logger {
-	
+
     /**
-     * Is the logging for the given context at the specified message level enabled. 
+     * Is the logging for the given context at the specified message level enabled.
      * @param context
      * @param msgLevel
      * @return
@@ -33,7 +33,7 @@ public interface Logger {
     boolean isEnabled(String context, int msgLevel);
 
     void log(int level, String context, Object... msg);
-    
+
     void log(int level, String context, Throwable t, Object... msg);
 
     /**
@@ -44,8 +44,8 @@ public interface Logger {
      */
     void shutdown();
 
-	void putMdc(String key, String val);
+    void putMdc(String key, String val);
 
-	void removeMdc(String key); 
+    void removeMdc(String key);
 
 }

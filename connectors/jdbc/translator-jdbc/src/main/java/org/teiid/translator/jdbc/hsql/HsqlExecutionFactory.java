@@ -38,33 +38,33 @@ import org.teiid.util.Version;
 
 @Translator(name="hsql", description="A translator for open source HSQL Database")
 public class HsqlExecutionFactory extends JDBCExecutionFactory {
-	
-	public static Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, getLanguageFactory()));
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, getLanguageFactory())); 
-	
-		ConvertModifier convert = new ConvertModifier();
-		convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
-		convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
-		convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
-		convert.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-		convert.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
-		convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
-		convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-		convert.addTypeMapping("decimal(38,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
-		convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-		convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-		convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-		convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
-	}
-	
+
+    public static Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
+
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, getLanguageFactory()));
+
+        ConvertModifier convert = new ConvertModifier();
+        convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
+        convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
+        convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
+        convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
+        convert.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+        convert.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
+        convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convert.addTypeMapping("decimal(38,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+        convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
+    }
+
     @Override
     public String translateLiteralDate(Date dateValue) {
         return "DATE '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
@@ -74,19 +74,19 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
     public String translateLiteralTime(Time timeValue) {
         return "TIME '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$ 
+        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
-	
+
     @Override
-	public List<String> getSupportedFunctions() {
+    public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
 
-        supportedFunctions.add(SourceSystemFunctions.ABS); 
-        supportedFunctions.add(SourceSystemFunctions.ACOS); 
+        supportedFunctions.add(SourceSystemFunctions.ABS);
+        supportedFunctions.add(SourceSystemFunctions.ACOS);
         supportedFunctions.add(SourceSystemFunctions.ASIN);
         supportedFunctions.add(SourceSystemFunctions.ATAN);
         supportedFunctions.add(SourceSystemFunctions.ATAN2);
@@ -130,22 +130,22 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
-        
+
         supportedFunctions.add(SourceSystemFunctions.DAYNAME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
         supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
-        
-        //supportedFunctions.add(SourceSystemFunctions.FORMATDATE); 
-        //supportedFunctions.add(SourceSystemFunctions.FORMATTIME); 
-        //supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
+
+        //supportedFunctions.add(SourceSystemFunctions.FORMATDATE);
+        //supportedFunctions.add(SourceSystemFunctions.FORMATTIME);
+        //supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
-        
-        //supportedFunctions.add(SourceSystemFunctions.PARSEDATE); 
-        //supportedFunctions.add(SourceSystemFunctions.PARSETIME); 
+
+        //supportedFunctions.add(SourceSystemFunctions.PARSEDATE);
+        //supportedFunctions.add(SourceSystemFunctions.PARSETIME);
         //supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.QUARTER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
@@ -159,79 +159,79 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         return supportedFunctions;
     }
-	
-	@Override
+
+    @Override
     public boolean supportsInlineViews() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowLimit() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowOffset() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean supportsExcept() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIntersect() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
-    	return "org.hibernate.dialect.HSQLDialect"; //$NON-NLS-1$
+        return "org.hibernate.dialect.HSQLDialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsDependentJoins() {
-    	return getVersion().compareTo(TWO_0) >= 0;
+        return getVersion().compareTo(TWO_0) >= 0;
     }
-    
+
     @Override
-	public List<?> translateCommand(Command command, ExecutionContext context) {
-		if (command instanceof Select) {
-			Select select = (Select)command;
-			if (select.getFrom() == null || select.getFrom().isEmpty()) {
-				List<Object> result = new ArrayList<Object>();
-				result.add("VALUES("); //$NON-NLS-1$
-				for (int i = 0; i < select.getDerivedColumns().size(); i++) {
-					DerivedColumn dc = select.getDerivedColumns().get(i);
-					if (i != 0) {
-						result.add(", "); //$NON-NLS-1$
-					}
-					result.add(dc.getExpression());
-					
-				}
-				result.add(")"); //$NON-NLS-1$
-				return result;
-			}
-		}
-		return super.translateCommand(command, context);
-	}
-    
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+        if (command instanceof Select) {
+            Select select = (Select)command;
+            if (select.getFrom() == null || select.getFrom().isEmpty()) {
+                List<Object> result = new ArrayList<Object>();
+                result.add("VALUES("); //$NON-NLS-1$
+                for (int i = 0; i < select.getDerivedColumns().size(); i++) {
+                    DerivedColumn dc = select.getDerivedColumns().get(i);
+                    if (i != 0) {
+                        result.add(", "); //$NON-NLS-1$
+                    }
+                    result.add(dc.getExpression());
+
+                }
+                result.add(")"); //$NON-NLS-1$
+                return result;
+            }
+        }
+        return super.translateCommand(command, context);
+    }
+
     @Override
     public boolean useParensForJoins() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean isSourceRequiredForCapabilities() {
         return true;

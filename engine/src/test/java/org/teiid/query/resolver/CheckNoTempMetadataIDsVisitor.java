@@ -38,15 +38,15 @@ import org.teiid.query.sql.symbol.Symbol;
 public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
 
     private Collection<Symbol> symbolsWithTempMetadataIDs;
-    
+
     /**
      * By default, this visitor deeply traverses all commands, and there are
      * no symbols to ignore
      */
-	public CheckNoTempMetadataIDsVisitor() { 
-        symbolsWithTempMetadataIDs = new ArrayList<Symbol>();    
+    public CheckNoTempMetadataIDsVisitor() {
+        symbolsWithTempMetadataIDs = new ArrayList<Symbol>();
     }
-    
+
     /**
      * Get the Collection of any unresolved symbols
      * @return Collection of any unresolved Symbols; may
@@ -67,7 +67,7 @@ public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
     }
 
     // visitor methods
-    
+
     public void visit(ElementSymbol obj) {
         if (obj.getMetadataID() instanceof TempMetadataID){
             this.symbolsWithTempMetadataIDs.add(obj);

@@ -38,13 +38,13 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable<QueryCommand>, ContextReference {
 
-	private static AtomicInteger ID = new AtomicInteger();
-	
+    private static AtomicInteger ID = new AtomicInteger();
+
     private QueryCommand command;
     private Class<?> type;
     private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
     private boolean shouldEvaluate;
-    
+
     private SubqueryHint subqueryHint = new SubqueryHint();
 
     /**
@@ -57,20 +57,20 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
     public ScalarSubquery(QueryCommand subqueryCommand){
         this.setCommand(subqueryCommand);
     }
-    
+
     public boolean shouldEvaluate() {
-    	return shouldEvaluate;
+        return shouldEvaluate;
     }
-    
+
     public void setShouldEvaluate(boolean shouldEvaluate) {
-		this.shouldEvaluate = shouldEvaluate;
-	}
-    
+        this.shouldEvaluate = shouldEvaluate;
+    }
+
     @Override
     public String getContextSymbol() {
-    	return id;
+        return id;
     }
-    
+
     /**
      * @see org.teiid.query.sql.symbol.Expression#getType()
      */
@@ -96,7 +96,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
     }
 
     /**
-     * Sets the command.  
+     * Sets the command.
      */
     public void setCommand(QueryCommand command){
         this.command = command;
@@ -122,7 +122,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
         ScalarSubquery other = (ScalarSubquery) obj;
 
         return other.getCommand().equals(this.getCommand()) &&
-        		EquivalenceUtil.areEqual(this.subqueryHint, other.subqueryHint);
+                EquivalenceUtil.areEqual(this.subqueryHint, other.subqueryHint);
     }
 
     /**
@@ -130,10 +130,10 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
      * @return Hash code
      */
     public int hashCode() {
-    	if (command != null) {
-    		return command.hashCode();
-    	}
-    	return 0;
+        if (command != null) {
+            return command.hashCode();
+        }
+        return 0;
     }
 
     /**
@@ -141,7 +141,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
      * @see java.lang.Object#clone()
      */
     public Object clone() {
-    	QueryCommand copyCommand = null;
+        QueryCommand copyCommand = null;
         if(getCommand() != null) {
             copyCommand = (QueryCommand) getCommand().clone();
         }
@@ -150,7 +150,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
         clone.setType(this.type);
         clone.shouldEvaluate = this.shouldEvaluate;
         if (this.subqueryHint != null) {
-        	clone.subqueryHint = subqueryHint.clone();
+            clone.subqueryHint = subqueryHint.clone();
         }
         return clone;
     }
@@ -162,13 +162,13 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public SubqueryHint getSubqueryHint() {
-		return subqueryHint;
-	}
-    
+        return subqueryHint;
+    }
+
     public void setSubqueryHint(SubqueryHint subqueryHint) {
-		this.subqueryHint = subqueryHint;
-	}
+        this.subqueryHint = subqueryHint;
+    }
 
 }

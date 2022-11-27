@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-parent</artifactId>
+      <version>35</version>
+      <relativePath />
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>wildfly-parent</artifactId>
+  <groupId>org.teiid.wildfly</groupId>
+  <version>17.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Teiid Wildfly Parent</name>
+  <description>This project is aggregator for all the wildfly related modules.</description>
+  
+  <properties>
+        <site.url>http://teiid.io</site.url>
+        <version.org.wildfly>19.1.0.Final</version.org.wildfly>
+	    <version.org.wildfly.core>11.1.1.Final</version.org.wildfly.core>
+	    <version.org.wildfly.arquillian>2.2.0.Final</version.org.wildfly.arquillian>
+        <version.org.wildfly.build-tools>1.2.12.Final</version.org.wildfly.build-tools>
+        <version.org.jboss.arquillian.testenricher>1.4.1.Final</version.org.jboss.arquillian.testenricher>
+        <version.org.springframework>5.1.14.RELEASE</version.org.springframework>
+
+        <!-- override Teiid to align with wildfly -->
+        <version.com.fasterxml.jackson.dataformat>2.10.1</version.com.fasterxml.jackson.dataformat>
+        <version.com.fasterxml.jackson.core.jackson-databind.test>2.10.1</version.com.fasterxml.jackson.core.jackson-databind.test>
+        <version.teiid.console>3.1.3</version.teiid.console>
+        <!-- <version.org.teiid>${project.version}</version.org.teiid> -->
+        
+        <!-- align with wildfly infinispan, but there is a conflict with wildfly jgroups, so we override -->
+        <version.wildfly.org.infinispan>9.4.18.Final</version.wildfly.org.infinispan>
+        <version.org.jgroups>4.0.21.Final</version.org.jgroups>
+  </properties>
+  
+    <!-- copied from the teiid-parent when things separate-->
+    <profiles>
+
+	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
+	
+	<profile>
+		<id>release</id>
+		<modules>
+			<module>wildfly-build</module>
+		</modules>
+	</profile>
+      
+	<profile>		
+		<id>final-release</id>
+		<modules>
+			<module>wildfly-build</module>
+		</modules>
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>${version.javadoc.plugin}</version>
+					<configuration>
+						<maxmemory>512m</maxmemory>
+						<!-- <excludePackageNames>retroruntime.*,*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames> -->
+						<failOnError>false</failOnError>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>sign-artifacts</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>sign</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                        <serverId>oss.sonatype.org</serverId>
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
+                </plugin>
+			</plugins>
+		</build>
+	</profile>
+    
+    <profile>
+         <!--
+          This is to enable faster build for development time.
+          -->
+      <id>dev</id>
+      <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <skipTests>true</skipTests>
+      </properties>
+      <modules>
+        <module>wildfly-build</module>
+      </modules>
+    </profile>   
+	</profiles>
+  
+  	<dependencyManagement>
+		<dependencies>
+            <dependency>
+                <groupId>org.teiid</groupId>
+                <artifactId>teiid-parent</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+              <groupId>org.teiid</groupId>
+              <artifactId>cache-infinispan</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-resource-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>rest-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-admin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.wildfly</groupId>
+                <artifactId>teiid-wildfly-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.teiid.wildfly.connectors</groupId>
+                <artifactId>connector-google</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+				<groupId>org.teiid.wildfly.connectors</groupId>
+				<artifactId>connector-salesforce</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.teiid.wildfly.connectors</groupId>
+				<artifactId>connector-salesforce-34</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.teiid.wildfly.connectors</groupId>
+				<artifactId>connector-salesforce-41</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+            <dependency>
+				<groupId>org.teiid.wildfly.connectors</groupId>
+				<artifactId>connector-file</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			
+            <!-- ====== -->            
+            <!-- Import the core parent to get all the managed dependencies from core -->
+            <dependency>
+                <groupId>org.wildfly.core</groupId>
+                <artifactId>wildfly-core-parent</artifactId>
+                <type>pom</type>
+                <version>${version.org.wildfly.core}</version>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+			    <groupId>org.wildfly</groupId>
+			    <artifactId>wildfly-parent</artifactId>
+                <type>pom</type>
+                <version>${version.org.wildfly}</version>
+                <scope>import</scope>			    
+            </dependency>
+            
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-naming</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-security</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-weld</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-common</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-container-managed</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-container-remote</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-protocol-jmx</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.arquillian</groupId>
+            <artifactId>wildfly-arquillian-testenricher-msc</artifactId>
+            <version>${version.org.wildfly.arquillian}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.arquillian.testenricher</groupId>
+            <artifactId>arquillian-testenricher-initialcontext</artifactId>
+            <version>${version.org.jboss.arquillian.testenricher}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-controller</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-controller-client</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-server</artifactId>
+            <version>${version.org.wildfly.core}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-clustering-jgroups-api</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>    
+        
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-connector</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-clustering-jgroups-spi</artifactId>
+            <version>${version.org.wildfly}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.wildfly.build</groupId>
+            <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+            <version>${version.org.wildfly.build-tools}</version>
+        </dependency>
+        <dependency>
+			<groupId>org.wildfly</groupId>
+			<artifactId>wildfly-feature-pack</artifactId>
+			<version>${version.org.wildfly}</version>
+			<type>zip</type>
+		</dependency>
+		
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-joda</artifactId>
+                <version>${version.com.fasterxml.jackson.dataformat}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${version.com.fasterxml.jackson.dataformat}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${version.com.fasterxml.jackson.dataformat}</version>
+            </dependency>
+            <dependency>
+	            <groupId>org.jgroups</groupId>
+	            <artifactId>jgroups</artifactId>
+	            <version>${version.org.jgroups}</version>
+            </dependency>
+        </dependencies>
+	</dependencyManagement>
+  
+    <dependencies>
+
+          
+    <!--  Internal Test Dependencies -->
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-api</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope><!--module>test-integration</module-->
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>	
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>        
+
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
+        <scope>test</scope>
+    </dependency> 
+    <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
+        <scope>test</scope>        
+    </dependency>
+    
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <scope>test</scope>
+    </dependency>
+    
+  </dependencies>
+  
+  <build>
+      <pluginManagement>
+           <plugins>
+		      <!-- Build a test-jar for each project, so that src/test/* resources and 
+		            classes can be used in other projects. Also customize how the jar files are 
+		            assembled. -->
+		       <plugin>
+		           <groupId>org.apache.maven.plugins</groupId>
+		           <artifactId>maven-jar-plugin</artifactId>
+		           <executions>
+		               <execution>
+		                   <goals>
+		                       <goal>test-jar</goal>
+		                   </goals>
+		               </execution>
+		           </executions>
+		           <configuration>
+		               <archive>
+		                   <manifest>
+		                       <addDefaultSpecificationEntries> true</addDefaultSpecificationEntries>
+		                       <addDefaultImplementationEntries> true</addDefaultImplementationEntries>
+		                   </manifest>
+		                   <manifestEntries>
+		                       <Implementation-URL>${project.url}</Implementation-URL>
+		                   </manifestEntries>
+		               </archive>
+		           </configuration>
+		       </plugin>
+		       <plugin>
+                   <groupId>org.sonatype.plugins</groupId>
+                   <artifactId>nexus-staging-maven-plugin</artifactId>
+                   <version>1.6.8</version>
+               </plugin>
+          </plugins>
+      </pluginManagement>
+  </build>
+  
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+    
+    <distributionManagement>
+        <repository>
+            <id>oss.sonatype.org</id>
+            <name>oss.sonatype.org</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>oss.sonatype.org</id>
+            <name>oss.sonatype.org</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+  
+  <modules>
+        <module>cache-infinispan</module>
+ 		<module>wildfly-admin</module>
+		<module>wildfly-client</module>
+        <module>wildfly-integration</module>
+        <module>wildfly-security</module>
+        <module>teiid-feature-pack</module>
+        <module>resource-spi</module>
+        <module>rest-service</module>
+        <module>connectors</module>
+        <module>test-integration</module>
+  </modules>
+</project>

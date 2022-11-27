@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.resource.cci.ConnectionFactory;
-
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
@@ -35,6 +34,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
@@ -48,37 +48,42 @@ import org.teiid.translator.UpdateExecution;
 
 @Translator(name = "infinispan-hotrod", description = "The Infinispan Translator Using Protobuf & Hotrod")
 public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFactory, InfinispanConnection>{
-	public static final int MAX_SET_SIZE = 1024;
-	public static final String TEIID_ALIAS_NAMING_CACHE = PropertiesUtils.getHierarchicalProperty("org.teiid.aliasCacheName", "teiid-alias-naming-cache"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final int MAX_SET_SIZE = 1024;
 
-	private boolean supportsCompareCriteriaOrdered = true;
-	private boolean supportsUpsert = true;
-	private boolean supportsBulkUpdates = false;
+    private boolean supportsCompareCriteriaOrdered = true;
+    private boolean supportsUpsert = true;
+    private boolean supportsBulkUpdates = false;
 
-	public InfinispanExecutionFactory() {
-		setMaxInCriteriaSize(MAX_SET_SIZE);
-		setMaxDependentInPredicates(MAX_SET_SIZE);
-		setSupportsOrderBy(true);
-		setSupportsSelectDistinct(false);
-		setSupportsInnerJoins(true);
-		setSupportsFullOuterJoins(true);
-		setSupportsOuterJoins(true);
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-		setTransactionSupport(TransactionSupport.NONE);
-		setSourceRequiredForMetadata(true);
-	}
+    public InfinispanExecutionFactory() {
+        setMaxInCriteriaSize(MAX_SET_SIZE);
+        setMaxDependentInPredicates(MAX_SET_SIZE);
+        setSupportsOrderBy(true);
+        setSupportsSelectDistinct(false);
+        setSupportsInnerJoins(true);
+        setSupportsFullOuterJoins(true);
+        setSupportsOuterJoins(true);
+        setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+        setTransactionSupport(TransactionSupport.NONE);
+        setSourceRequiredForMetadata(true);
+    }
 
     @Override
-    public void start() throws TranslatorException {
-        super.start();
+    public void initCapabilities(InfinispanConnection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+
+        TransactionSupport transactionSupport = connection.getTransactionSupport();
+        if (transactionSupport != TransactionSupport.NONE) {
+            supportsBulkUpdates = true;
+            setTransactionSupport(transactionSupport);
+        }
     }
 
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
-		return new InfinispanQueryExecution(this, command, executionContext, metadata, connection,
-				supportsDirectQueryProcedure());
+        return new InfinispanQueryExecution(this, command, executionContext, metadata, connection);
     }
 
     @Override
@@ -86,24 +91,24 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
         return new InfinispanUpdateExecution(command, executionContext, metadata,
-                connection, supportsDirectQueryProcedure());
+                connection);
     }
 
-	@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection)
-			throws TranslatorException {
-		return new InfinispanDirectQueryExecution(arguments, command, executionContext,
-				metadata, connection);
-	}
-    
+    @Override
+    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection)
+            throws TranslatorException {
+        return new InfinispanDirectQueryExecution(arguments, command, executionContext,
+                metadata, connection);
+    }
+
     @Override
     public void getMetadata(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
         ProtobufMetadataProcessor metadataProcessor = (ProtobufMetadataProcessor)getMetadataProcessor();
         PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 
         // This block is only invoked when NATIVE metadata is defined, by the time code got here if we have
-        // tables already in schema, then user defined through other metadata repositories. In this case, 
+        // tables already in schema, then user defined through other metadata repositories. In this case,
         // a .proto file need to be generated based on schema, then use that to generate final metadata and
         // register the .proto with the Infinispan
         Schema schema = metadataFactory.getSchema();
@@ -124,7 +129,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
         }
 
         metadataProcessor.process(metadataFactory, conn);
-        
+
         // TEIID-4896: In the process of DDL->proto, the extension properties defined on the schema
         // may be not carried forward, we need to make sure we copy those back.
         for (Table oldT : removedTables) {
@@ -137,7 +142,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
             if (oldT.getAnnotation() != null) {
                 newT.setAnnotation(oldT.getAnnotation());
             }
-            
+
             List<Column> columns = oldT.getColumns();
             for (Column c : columns) {
                 Column newCol = newT.getColumnByName(c.getName());
@@ -152,7 +157,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
                     }
                 }
             }
-        }        
+        }
 
         resource = metadataProcessor.getProtobufResource();
         if(resource == null) {
@@ -288,14 +293,24 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsHaving() {
         return true;
     }
-    
+
     @TranslatorProperty(display="Supports Bulk Update", description="If true, translator can support Bulk Updates",advanced=true)
     @Override
     public boolean supportsBulkUpdate() {
-    	return supportsBulkUpdates;
+        return supportsBulkUpdates;
     }
 
     public boolean setSupportsBulkUpdate(boolean supports) {
         return supportsBulkUpdates = supports;
+    }
+
+    @Override
+    public int getMaxFromGroups() {
+        return 2;
+    }
+
+    @Override
+    public boolean returnsSingleUpdateCount() {
+        return true;
     }
 }

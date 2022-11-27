@@ -28,25 +28,25 @@ import org.teiid.core.util.Assertion;
  * Class for creating fully qualified names
  */
 public class FullyQualifiedName {
-    
+
     public static final String SEPARATOR = "/"; //$NON-NLS-1$
-    
+
     private StringBuilder builder = new StringBuilder();
-    
+
     public FullyQualifiedName() {
-        
+
     }
-    
+
     public FullyQualifiedName(String name, String value) {
         super();
         append(name, value);
     }
-    
+
     public FullyQualifiedName append(String name, String value) {
         Assertion.isNotNull(name);
         Assertion.isNotNull(value);
         if (builder.length() > 0) {
-            builder.append(SEPARATOR); 
+            builder.append(SEPARATOR);
         }
         try {
             builder.append(URLEncoder.encode(name, "UTF-8")).append("=").append(URLEncoder.encode(value, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -55,10 +55,10 @@ public class FullyQualifiedName {
         }
         return this;
     }
-    
+
     @Override
     public String toString() {
         return builder.toString();
     }
-    
+
 }

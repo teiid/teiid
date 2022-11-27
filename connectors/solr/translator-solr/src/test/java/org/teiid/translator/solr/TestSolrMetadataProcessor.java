@@ -37,44 +37,44 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestSolrMetadataProcessor {
 
-	private FieldInfo buildField(String name, String type, EnumSet<FieldFlag> flags) {
-		FieldInfo info = Mockito.mock(FieldInfo.class);
-		Mockito.stub(info.getName()).toReturn(name);
-		Mockito.stub(info.getType()).toReturn(type);
-		Mockito.stub(info.getFlags()).toReturn(flags);
-		return info;
-	}
-	
+    private FieldInfo buildField(String name, String type, EnumSet<FieldFlag> flags) {
+        FieldInfo info = Mockito.mock(FieldInfo.class);
+        Mockito.stub(info.getName()).toReturn(name);
+        Mockito.stub(info.getType()).toReturn(type);
+        Mockito.stub(info.getFlags()).toReturn(flags);
+        return info;
+    }
+
     @Test
     public void testMetadata() throws TranslatorException {
         SolrMetadataProcessor mp = new SolrMetadataProcessor();
-        
+
         MetadataFactory mf = new MetadataFactory("vdb", 1, "solr", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
         SolrConnection conn = Mockito.mock(SolrConnection.class);
         Mockito.stub(conn.getCoreName()).toReturn("SomeTable");
-        
-        
+
+
         LinkedHashMap<String, FieldInfo> fields = new LinkedHashMap<String, LukeResponse.FieldInfo>();
         fields.put("col1", buildField("col1", "string", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED)));
         fields.put("col2", buildField("col2", "int", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED)));
         fields.put("col3", buildField("col3", "int", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED, FieldFlag.MULTI_VALUED)));
         fields.put("id", buildField("id", "long", EnumSet.of(FieldFlag.STORED, FieldFlag.INDEXED)));
-        
+
         LukeResponse response = Mockito.mock(LukeResponse.class);;
         Mockito.stub(response.getFieldInfo()).toReturn(fields);
-        
+
         Mockito.stub(conn.metadata(Mockito.any(LukeRequest.class))).toReturn(response);
-        
+
         mp.process(mf, conn);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "CREATE FOREIGN TABLE SomeTable (\n" + 
-        		"	col1 string OPTIONS (SEARCHABLE 'Searchable'),\n" + 
-        		"	col2 integer OPTIONS (SEARCHABLE 'Searchable'),\n" + 
-        		"	col3 integer[] OPTIONS (SEARCHABLE 'Searchable'),\n" + 
-        		"	id long OPTIONS (SEARCHABLE 'Searchable'),\n" + 
-        		"	CONSTRAINT PK0 PRIMARY KEY(id)\n" + 
-        		") OPTIONS (UPDATABLE TRUE);";
+        String expected = "CREATE FOREIGN TABLE SomeTable (\n" +
+                "	col1 string OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	col2 integer OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	col3 integer[] OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	id long OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (UPDATABLE TRUE);";
         assertEquals(expected, metadataDDL);
     }
 }

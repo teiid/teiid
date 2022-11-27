@@ -36,56 +36,56 @@ import org.teiid.translator.ExecutionFactory;
 @SuppressWarnings("nls")
 public class TestVDBStatusChecker {
 
-	@Test public void testDataSourceReplaced() throws Exception {
-		final VDBRepository repo = new VDBRepository();
-		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
-		repo.start();
-		
-		VDBStatusChecker vsc = new VDBStatusChecker() {
-			
-			@Override
-			public VDBRepository getVDBRepository() {
-				return repo;
-			}
-			
-			@Override
-			public Executor getExecutor() {
-				return null;
-			}
-		};
-		VDBTranslatorMetaData factory = new VDBTranslatorMetaData();
-		factory.setExecutionFactoryClass(ExecutionFactory.class);
-		
-		assertFalse(vsc.dataSourceReplaced("x", "1", "y", "z", "t", "dsName"));
-		
-		MetadataStore metadataStore = RealMetadataFactory.exampleBQTCached().getMetadataStore();
-		VDBMetaData vdb = TestCompositeVDB.createVDBMetadata(metadataStore, "bqt");
-		
-		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
-		cmr.setProvider(new ExecutionFactoryProvider() {
-			
-			@Override
-			public ExecutionFactory<Object, Object> getExecutionFactory(String name)
-					throws ConnectorManagerException {
-				return new ExecutionFactory<Object, Object>();
-			}
-		});
-		ExecutionFactory ef1 = new ExecutionFactory();
-		ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);
-		cmr.addConnectorManager("BQT1", mgr);
-		repo.addVDB(vdb, metadataStore, null, null, cmr);
-		
-		assertTrue(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "oracle", "dsName1"));
-		ExecutionFactory ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
-		assertSame(ef, ef1);
-		assertFalse(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "sqlserver", "dsName1"));
-		ExecutionFactory ef2 = cmr.getConnectorManager("BQT1").getExecutionFactory();
-		assertNotNull(ef2);
-		assertNotSame(ef, ef2);
-		assertTrue(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "oracle", "dsName2"));
-		ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
-		assertNotNull(ef);
-		assertNotSame(ef, ef2);
-	}
-	
+    @Test public void testDataSourceReplaced() throws Exception {
+        final VDBRepository repo = new VDBRepository();
+        repo.setSystemFunctionManager(RealMetadataFactory.SFM);
+        repo.start();
+
+        VDBStatusChecker vsc = new VDBStatusChecker() {
+
+            @Override
+            public VDBRepository getVDBRepository() {
+                return repo;
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return null;
+            }
+        };
+        VDBTranslatorMetaData factory = new VDBTranslatorMetaData();
+        factory.setExecutionFactoryClass(ExecutionFactory.class);
+
+        assertFalse(vsc.dataSourceReplaced("x", "1", "y", "z", "t", "dsName"));
+
+        MetadataStore metadataStore = RealMetadataFactory.exampleBQTCached().getMetadataStore();
+        VDBMetaData vdb = TestCompositeVDB.createVDBMetadata(metadataStore, "bqt");
+
+        ConnectorManagerRepository cmr = new ConnectorManagerRepository();
+        cmr.setProvider(new ExecutionFactoryProvider() {
+
+            @Override
+            public ExecutionFactory<Object, Object> getExecutionFactory(String name)
+                    throws ConnectorManagerException {
+                return new ExecutionFactory<Object, Object>();
+            }
+        });
+        ExecutionFactory ef1 = new ExecutionFactory();
+        ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);
+        cmr.addConnectorManager("BQT1", mgr);
+        repo.addVDB(vdb, metadataStore, null, null, cmr);
+
+        assertTrue(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "oracle", "dsName1"));
+        ExecutionFactory ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
+        assertSame(ef, ef1);
+        assertFalse(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "sqlserver", "dsName1"));
+        ExecutionFactory ef2 = cmr.getConnectorManager("BQT1").getExecutionFactory();
+        assertNotNull(ef2);
+        assertNotSame(ef, ef2);
+        assertTrue(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "oracle", "dsName2"));
+        ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
+        assertNotNull(ef);
+        assertNotSame(ef, ef2);
+    }
+
 }

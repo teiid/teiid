@@ -37,13 +37,13 @@ import org.teiid.query.sql.symbol.Symbol;
 
 /**
  * <p> This class is used to update LanguageObjects by replacing one set of symbols with
- * another.  There is one abstract method which must be overridden to define how the 
- * mapping lookup occurs.</p>
+ * another.  There is one abstract method which must be overridden to define how the
+ * mapping lookup occurs.
  */
 public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisitor {
-	
-	private List unmappedSymbols;
-	
+
+    private List unmappedSymbols;
+
     protected AbstractSymbolMappingVisitor() {
         super(null);
     }
@@ -55,97 +55,97 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      * @return Target symbol
      */
     protected abstract Symbol getMappedSymbol(Symbol symbol);
-            
+
     // ############### Visitor methods for language objects ##################
 
     /**
      * <p> This method updates the <code>Insert</code> object it receives as an
      * argument by replacing the virtual groups/elements with their physical
-     * counterparts.</p>
+     * counterparts.
      * @param obj The Insert object to be updated with physical groups/elements
      */
     public void visit(Insert obj) {
-    	
-    	List physicalElements = new ArrayList();
-    	
-    	// get the GroupSymbol on the insert
-    	GroupSymbol virtualGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(virtualGroup));
-    	
-    	// get all virtual columns present on the Insert and  replace them with
-    	// physical elements
-    	if(obj.getVariables() != null) { 
-        	Iterator elementIter = obj.getVariables().iterator();
-        	while(elementIter.hasNext()) {
-        		ElementSymbol virtualElement = (ElementSymbol) elementIter.next();
-        		physicalElements.add(getMappedElement(virtualElement));
-        	}
-        	obj.setVariables(physicalElements);
-    	}
+
+        List physicalElements = new ArrayList();
+
+        // get the GroupSymbol on the insert
+        GroupSymbol virtualGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(virtualGroup));
+
+        // get all virtual columns present on the Insert and  replace them with
+        // physical elements
+        if(obj.getVariables() != null) {
+            Iterator elementIter = obj.getVariables().iterator();
+            while(elementIter.hasNext()) {
+                ElementSymbol virtualElement = (ElementSymbol) elementIter.next();
+                physicalElements.add(getMappedElement(virtualElement));
+            }
+            obj.setVariables(physicalElements);
+        }
     }
-    
+
     /**
      * <p> This method updates the <code>Delete</code> object it receives as an
      * argument by replacing the virtual groups/elements with their physical
-     * counterparts.</p>
+     * counterparts.
      * @param obj The Delete object to be updated with physical groups
      */
     public void visit(Delete obj) {
-    	
-    	// get the GroupSymbol on the delete
-    	GroupSymbol virtualGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(virtualGroup));    	
+
+        // get the GroupSymbol on the delete
+        GroupSymbol virtualGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(virtualGroup));
     }
-    
+
     /**
      * <p> This method updates the <code>Update</code> object it receives as an
      * argument by replacing the virtual groups/elements with their physical
-     * counterparts.</p>
+     * counterparts.
      * @param obj The Update object to be updated with physical groups
      */
     public void visit(Update obj) {
-    	
-    	// get the GroupSymbol on the update
-    	GroupSymbol virtualGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(virtualGroup));
-    }
-    
-    public void visit(SetClause obj) {
-    	obj.setSymbol(getMappedElement(obj.getSymbol()));
-    }
-    
-	/**
-	 * Swap each ElementSymbol referenced by AllInGroupSymbol
-	 * @param obj Object to remap
-	 */
-    public void visit(MultipleElementSymbol obj) {   
-		List<ElementSymbol> oldSymbols = obj.getElementSymbols();
-		if(oldSymbols != null && oldSymbols.size() > 0) {
-			List<ElementSymbol> newSymbols = new ArrayList<ElementSymbol>(oldSymbols.size());
-			
-			Iterator<ElementSymbol> iter = oldSymbols.iterator();
-			while(iter.hasNext()) {
-				ElementSymbol es = iter.next();    
-				ElementSymbol mappedSymbol = getMappedElement(es);
-				newSymbols.add( mappedSymbol );
-			}
-			obj.setElementSymbols(newSymbols);
-		} 	
-		
-		if (obj.getGroup() == null) {
-			return;
-		}
-		
-		obj.setGroup(getMappedGroup(obj.getGroup()));
+
+        // get the GroupSymbol on the update
+        GroupSymbol virtualGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(virtualGroup));
     }
 
-	/**
-	 * Swap group in unary from clause.
-	 * @param obj Object to remap
-	 */
+    public void visit(SetClause obj) {
+        obj.setSymbol(getMappedElement(obj.getSymbol()));
+    }
+
+    /**
+     * Swap each ElementSymbol referenced by AllInGroupSymbol
+     * @param obj Object to remap
+     */
+    public void visit(MultipleElementSymbol obj) {
+        List<ElementSymbol> oldSymbols = obj.getElementSymbols();
+        if(oldSymbols != null && oldSymbols.size() > 0) {
+            List<ElementSymbol> newSymbols = new ArrayList<ElementSymbol>(oldSymbols.size());
+
+            Iterator<ElementSymbol> iter = oldSymbols.iterator();
+            while(iter.hasNext()) {
+                ElementSymbol es = iter.next();
+                ElementSymbol mappedSymbol = getMappedElement(es);
+                newSymbols.add( mappedSymbol );
+            }
+            obj.setElementSymbols(newSymbols);
+        }
+
+        if (obj.getGroup() == null) {
+            return;
+        }
+
+        obj.setGroup(getMappedGroup(obj.getGroup()));
+    }
+
+    /**
+     * Swap group in unary from clause.
+     * @param obj Object to remap
+     */
     public void visit(UnaryFromClause obj) {
-    	GroupSymbol srcGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(srcGroup));        
+        GroupSymbol srcGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(srcGroup));
     }
 
     /**
@@ -162,13 +162,13 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
         }
         GroupSymbol mappedGroup = getMappedGroup(fakeGroup);
         obj.setProcedureName(mappedGroup.getName());
-        
+
         super.visit(obj);
     }
 
     /* ############### Helper Methods ##################   */
-    
-    /** 
+
+    /**
      * @see org.teiid.query.sql.visitor.ExpressionMappingVisitor#replaceExpression(org.teiid.query.sql.symbol.Expression)
      */
     @Override
@@ -178,61 +178,61 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
         }
         return element;
     }
-    
+
     /**
      * <p> This method looks up the symbol map for a physical <code>ElementSymbol</code>
-     * given a virtual <code>ElementSymbol</code> object.</p>
+     * given a virtual <code>ElementSymbol</code> object.
      * @param obj The virtual <code>ElementSymbol</code> object whose physical counterpart is returned
      * @return The physical <code>ElementSymbol</code> object or null if the object could not be mapped
-     */    
+     */
     private ElementSymbol getMappedElement(ElementSymbol obj) {
-    	
-    	ElementSymbol element = (ElementSymbol) getMappedSymbol(obj);   
-    	
-    	if(element != null) { 
-    	    return element;    		    
-    	}
-		markUnmapped(obj);			
-		return obj;    	    
+
+        ElementSymbol element = (ElementSymbol) getMappedSymbol(obj);
+
+        if(element != null) {
+            return element;
+        }
+        markUnmapped(obj);
+        return obj;
     }
-    
+
     /**
      * <p> This method looks up the symbol map for a physical <code>GroupSymbol</code>
-     * given a virtual <code>GroupSymbol</code> object.</p>
+     * given a virtual <code>GroupSymbol</code> object.
      * @param obj The virtual <code>GroupSymbol</code> object whose physical counterpart is returned
      * @return The physical <code>GroupSymbol</code> object or null if the object could not be mapped
-     */    
+     */
     private GroupSymbol getMappedGroup(GroupSymbol obj) {
-    	
-    	GroupSymbol group = (GroupSymbol) getMappedSymbol(obj);
-    	
-    	if(group != null) { 
-    	    return group;    		    
-    	}
-		markUnmapped(obj);			
-		return obj;    	    
-    }    
-    
+
+        GroupSymbol group = (GroupSymbol) getMappedSymbol(obj);
+
+        if(group != null) {
+            return group;
+        }
+        markUnmapped(obj);
+        return obj;
+    }
+
     /**
-     * Mark an element as unmapped as no mapping could be found. 
+     * Mark an element as unmapped as no mapping could be found.
      * @param symbol Unmapped symbol
      */
-    private void markUnmapped(Symbol symbol) { 
-    	if(unmappedSymbols == null) { 
-    	 	unmappedSymbols = new ArrayList();   
-    	}    
-    	
-    	unmappedSymbols.add(symbol);
+    private void markUnmapped(Symbol symbol) {
+        if(unmappedSymbols == null) {
+             unmappedSymbols = new ArrayList();
+        }
+
+        unmappedSymbols.add(symbol);
     }
-    
+
     /**
      * Get all symbols that were not mapped during life of visitor.  If all symbols
      * were mapped, this will return null.
-     * @return List of ElementSymbol and GroupSymbol that were unmapped OR null if 
+     * @return List of ElementSymbol and GroupSymbol that were unmapped OR null if
      * all symbols mapped successfully
      */
-    public List getUnmappedSymbols() { 
-    	return unmappedSymbols;    
+    public List getUnmappedSymbols() {
+        return unmappedSymbols;
     }
 
 }

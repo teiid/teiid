@@ -20,59 +20,59 @@ package org.teiid.common.buffer;
 
 public class CacheKey implements Comparable<CacheKey> {
 
-	final private Long id;
-	final protected long lastAccess;
-	final protected long orderingValue;
-	
-	public CacheKey(Long id, long lastAccess, long orderingValue) {
-		this.id = id;
-		this.lastAccess = lastAccess;
-		this.orderingValue = orderingValue;
-	}
-	
-	public Long getId() {
-		return id;
-	}
+    final private Long id;
+    final protected long lastAccess;
+    final protected long orderingValue;
 
-	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
-	
-	@Override
-	public String toString() {
-		return id.toString();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof CacheKey)) {
-			return false;
-		}
-		return this.id.equals(((CacheKey)obj).getId());
-	}
+    public CacheKey(Long id, long lastAccess, long orderingValue) {
+        this.id = id;
+        this.lastAccess = lastAccess;
+        this.orderingValue = orderingValue;
+    }
 
-	public long getLastAccess() {
-		return lastAccess;
-	}
-	
-	public long getOrderingValue() {
-		return orderingValue;
-	}
-	
-	@Override
-	public int compareTo(CacheKey o) {
-		int result = orderingValue < o.orderingValue ? -1 : (orderingValue == o.orderingValue ? 0 : 1);
-		if (result == 0) {
-			result = lastAccess < o.lastAccess ? -1 : (lastAccess == o.lastAccess ? 0 : 1);
-			if (result == 0) {
-				return id.compareTo(o.id);
-			}
-		}
-		return result;
-	}
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return id.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof CacheKey)) {
+            return false;
+        }
+        return this.id.equals(((CacheKey)obj).getId());
+    }
+
+    public long getLastAccess() {
+        return lastAccess;
+    }
+
+    public long getOrderingValue() {
+        return orderingValue;
+    }
+
+    @Override
+    public int compareTo(CacheKey o) {
+        int result = orderingValue < o.orderingValue ? -1 : (orderingValue == o.orderingValue ? 0 : 1);
+        if (result == 0) {
+            result = lastAccess < o.lastAccess ? -1 : (lastAccess == o.lastAccess ? 0 : 1);
+            if (result == 0) {
+                return id.compareTo(o.id);
+            }
+        }
+        return result;
+    }
 
 }

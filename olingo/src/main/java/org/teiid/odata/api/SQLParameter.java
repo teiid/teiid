@@ -17,6 +17,8 @@
  */
 package org.teiid.odata.api;
 
+import org.teiid.core.util.EquivalenceUtil;
+
 public class SQLParameter {
     final Object value;
     final Integer sqlType;
@@ -27,22 +29,35 @@ public class SQLParameter {
         this.value = value;
         this.sqlType = sqlType;
     }
-    
+
     public SQLParameter(String name, Object value, Integer sqlType) {
         this.name = name;
         this.value = value;
         this.sqlType = sqlType;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public Object getValue() {
         return value;
     }
 
     public Integer getSqlType() {
         return sqlType;
+    }
+
+    @Override
+    public int hashCode() {
+        return value == null ? 0 : value.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof SQLParameter)) {
+            return false;
+        }
+        return EquivalenceUtil.areEqual(value, ((SQLParameter)obj).value);
     }
 }

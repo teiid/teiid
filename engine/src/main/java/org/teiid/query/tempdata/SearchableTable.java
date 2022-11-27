@@ -23,13 +23,13 @@ import java.util.Map;
 import org.teiid.query.sql.symbol.Expression;
 
 public interface SearchableTable {
-	
-	Map<Expression, Integer> getColumnMap();
 
-	int getPkLength();
-	
-	Object matchesPkColumn(int pkIndex, Expression ex);
-	
-	boolean supportsOrdering(int pkIndex, Expression ex);
+    Map<Expression, Integer> getColumnMap();
+
+    int getPkLength();
+
+    Object matchesPkColumn(int pkIndex, Expression ex);
+
+    boolean supportsOrdering(int pkIndex, Expression ex);
 
 }

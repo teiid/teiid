@@ -28,13 +28,13 @@ public class IsDistinct extends Condition implements Predicate {
     private Expression leftExpression;
     private Expression rightExpression;
     private boolean negated;
-    
+
     public IsDistinct(Expression left, Expression right, boolean negated) {
         leftExpression = left;
         rightExpression = right;
         this.negated = negated;
     }
-    
+
     /**
      * Get left expression.
      * @return Left expression
@@ -57,24 +57,24 @@ public class IsDistinct extends Condition implements Predicate {
     public void setLeftExpression(Expression expression) {
         this.leftExpression = expression;
     }
-    
+
     /**
      * Set right expression of criteria
      */
     public void setRightExpression(Expression expression) {
         this.rightExpression = expression;
     }
-    
+
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public void setNegated(boolean negated) {
         this.negated = negated;
     }
-    
+
     public boolean isNegated() {
         return negated;
     }
-    
+
 }

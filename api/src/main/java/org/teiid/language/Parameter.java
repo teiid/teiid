@@ -25,44 +25,44 @@ public class Parameter extends BaseLanguageObject implements Expression {
     private Class<?> type;
     private int valueIndex;
     private String dependentValueId;
-    
-	@Override
-	public Class<?> getType() {
-		return type;
-	}
-	
-	public void setType(Class<?> type) {
-		this.type = type;
-	}
 
-	@Override
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public Class<?> getType() {
+        return type;
+    }
 
-	public void setValueIndex(int valueIndex) {
-		this.valueIndex = valueIndex;
-	}
+    public void setType(Class<?> type) {
+        this.type = type;
+    }
 
-	/**
-	 * 0-based index of the parameter values in the {@link BulkCommand#getParameterValues()} row value
-	 * @return
-	 */
-	public int getValueIndex() {
-		return valueIndex;
-	}
-	
-	/**
-	 * The id of the dependent values this parameter references.  Dependent values are available via {@link Select#getDependentValues()}
-	 * Will only be set for dependent join pushdown.
-	 * @return
-	 */
-	public String getDependentValueId() {
-		return dependentValueId;
-	}
-	
-	public void setDependentValueId(String dependentValueId) {
-		this.dependentValueId = dependentValueId;
-	}
-	
+    @Override
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public void setValueIndex(int valueIndex) {
+        this.valueIndex = valueIndex;
+    }
+
+    /**
+     * 0-based index of the parameter values in the {@link BulkCommand#getParameterValues()} row value
+     * @return
+     */
+    public int getValueIndex() {
+        return valueIndex;
+    }
+
+    /**
+     * The id of the dependent values this parameter references.  Dependent values are available via {@link Select#getDependentValues()}
+     * Will only be set for dependent join pushdown.
+     * @return
+     */
+    public String getDependentValueId() {
+        return dependentValueId;
+    }
+
+    public void setDependentValueId(String dependentValueId) {
+        this.dependentValueId = dependentValueId;
+    }
+
 }

@@ -38,11 +38,11 @@ public class TestLiteralImpl extends TestCase {
     public static Constant helpExample(int val) {
         return new Constant(new Integer(val));
     }
-    
+
     public static Constant helpExample(Object val) {
         return new Constant(val);
     }
-    
+
     public static Literal example(int val) {
         Constant c = helpExample(val);
         return new Literal(c.getValue(), c.getType());

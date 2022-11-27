@@ -42,17 +42,17 @@ public class TestExistsCriteriaImpl extends TestCase {
         crit.setNegated(negated);
         return crit;
     }
-    
+
     public static Exists example() throws Exception {
         return (Exists)TstLanguageBridgeFactory.factory.translate(helpExample(false));
     }
 
     public void testGetQuery() throws Exception {
-        assertNotNull(example().getSubquery());    
+        assertNotNull(example().getSubquery());
     }
-    
+
     public void testNegated() throws Exception {
-        assertTrue(TstLanguageBridgeFactory.factory.translate(helpExample(true)) instanceof Not);    
+        assertTrue(TstLanguageBridgeFactory.factory.translate(helpExample(true)) instanceof Not);
     }
-    
+
 }

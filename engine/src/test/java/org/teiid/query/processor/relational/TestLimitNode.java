@@ -28,10 +28,10 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.query.sql.symbol.Constant;
 
 public class TestLimitNode {
-    
+
     @Test public void testLimitInFirstBatch() throws Exception {
         LimitNode node = getLimitNode(40, new FakeRelationalNode(2, getRows(100), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(40, batch.getRowCount());
@@ -42,7 +42,7 @@ public class TestLimitNode {
 
     @Test public void testLimitAtBatchSize() throws Exception {
         LimitNode node = getLimitNode(50, new FakeRelationalNode(2, getRows(100), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
@@ -53,14 +53,14 @@ public class TestLimitNode {
 
     @Test public void testLimitInSecondBatch() throws Exception {
         LimitNode node = getLimitNode(55, new FakeRelationalNode(2, getRows(100), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
         assertEquals(1, batch.getBeginRow());
         assertEquals(50, batch.getEndRow());
         assertFalse(batch.getTerminationFlag());
-        
+
         batch = node.nextBatch();
         assertEquals(5, batch.getRowCount());
         assertEquals(51, batch.getBeginRow());
@@ -70,14 +70,14 @@ public class TestLimitNode {
 
     @Test public void testLimitMultipleOfBatchSize() throws Exception {
         LimitNode node = getLimitNode(100, new FakeRelationalNode(2, getRows(150), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
         assertEquals(1, batch.getBeginRow());
         assertEquals(50, batch.getEndRow());
         assertFalse(batch.getTerminationFlag());
-        
+
         batch = node.nextBatch();
         assertEquals(50, batch.getRowCount());
         assertEquals(51, batch.getBeginRow());
@@ -87,14 +87,14 @@ public class TestLimitNode {
 
     @Test public void testLimitProducesMultipleBatches() throws Exception {
         LimitNode node = getLimitNode(130, new FakeRelationalNode(2, getRows(300), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
         assertEquals(1, batch.getBeginRow());
         assertEquals(50, batch.getEndRow());
         assertFalse(batch.getTerminationFlag());
-        
+
         batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
@@ -112,18 +112,18 @@ public class TestLimitNode {
 
     @Test public void testLimitGetsNoRows() throws Exception {
         LimitNode node = getLimitNode(100, new FakeRelationalNode(2, getRows(0), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(0, batch.getRowCount());
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testZeroLimit() throws Exception {
         LimitNode node = getLimitNode(0, new FakeRelationalNode(2, getRows(100), 50));
-        
+
         TupleBatch batch = node.nextBatch();
-        
+
         batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(0, batch.getRowCount());
@@ -131,7 +131,7 @@ public class TestLimitNode {
         assertEquals(0, batch.getEndRow());
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetInFirstBatch() throws Exception {
         LimitNode node = getOffsetNode(49, new FakeRelationalNode(2, getRows(100), 50));
         // batch 1
@@ -151,7 +151,7 @@ public class TestLimitNode {
         assertEquals(Arrays.asList(new Object[] {new Integer(51)}), batch.getTuple(2));
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetAtBatchSize() throws Exception {
         LimitNode node = getOffsetNode(50, new FakeRelationalNode(2, getRows(100), 50));
 
@@ -163,7 +163,7 @@ public class TestLimitNode {
         assertEquals(Arrays.asList(new Object[] {new Integer(51)}), batch.getTuple(1));
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetInSecondBatch() throws Exception {
         LimitNode node = getOffsetNode(55, new FakeRelationalNode(2, getRows(100), 50));
         // batch 1
@@ -175,7 +175,7 @@ public class TestLimitNode {
         assertEquals(Arrays.asList(new Object[] {new Integer(56)}), batch.getTuple(1));
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetMultipleOfBatchSize() throws Exception {
         LimitNode node = getOffsetNode(100, new FakeRelationalNode(2, getRows(300), 50));
 
@@ -187,7 +187,7 @@ public class TestLimitNode {
         assertEquals(Arrays.asList(new Object[] {new Integer(101)}), batch.getTuple(1));
         assertFalse(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetGreaterThanRowCount() throws Exception {
         LimitNode node = getOffsetNode(100, new FakeRelationalNode(2, getRows(10), 50));
 
@@ -196,7 +196,7 @@ public class TestLimitNode {
         assertEquals(0, batch.getRowCount());
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetNoRows() throws Exception {
         LimitNode node = getOffsetNode(100, new FakeRelationalNode(2, getRows(0), 50));
 
@@ -205,17 +205,17 @@ public class TestLimitNode {
         assertEquals(0, batch.getRowCount());
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testZeroOffset() throws Exception {
         LimitNode node = getOffsetNode(0, new FakeRelationalNode(2, getRows(100), 50));
-        
+
         TupleBatch batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
         assertEquals(1, batch.getBeginRow());
         assertEquals(50, batch.getEndRow());
         assertFalse(batch.getTerminationFlag());
-        
+
         batch = node.nextBatch();
         assertNotNull(batch);
         assertEquals(50, batch.getRowCount());
@@ -223,7 +223,7 @@ public class TestLimitNode {
         assertEquals(100, batch.getEndRow());
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     @Test public void testOffsetWithoutLimit() throws Exception {
         LimitNode node = new LimitNode(1, null, new Constant(new Integer(10)));
         node.addChild(new FakeRelationalNode(2, getRows(10), 50));
@@ -234,7 +234,7 @@ public class TestLimitNode {
         assertEquals(0, batch.getRowCount());
         assertTrue(batch.getTerminationFlag());
     }
-    
+
     static List<?>[] getRows(int rows) {
         List<?>[] data = new List[rows];
         for (int i = 0; i < rows; i++) {
@@ -242,32 +242,32 @@ public class TestLimitNode {
         }
         return data;
     }
-    
+
     private static LimitNode getOffsetNode(int offset, RelationalNode child) throws Exception {
         LimitNode node = new LimitNode(1, null, new Constant(new Integer(offset)));
         node.addChild(child);
         node.open();
         return node;
     }
-    
+
     private static LimitNode getLimitNode(int limit, RelationalNode child) throws Exception {
         LimitNode node = new LimitNode(1, new Constant(new Integer(limit)), new Constant(new Integer(0)));
         node.addChild(child);
         node.open();
         return node;
     }
-    
-    @Test public void testClone() {
-    	LimitNode node = new LimitNode(1, new Constant(new Integer(-1)), null);
-    	
-    	LimitNode clone = (LimitNode)node.clone();
-    	
-    	assertEquals(node.getLimitExpr(), clone.getLimitExpr());
-    	assertNull(clone.getOffsetExpr());
-    	
-    	node = new LimitNode(1, null, new Constant(new Integer(-1)));
-    	clone = (LimitNode)node.clone();
 
-    	assertNull(clone.getLimitExpr());
+    @Test public void testClone() {
+        LimitNode node = new LimitNode(1, new Constant(new Integer(-1)), null);
+
+        LimitNode clone = (LimitNode)node.clone();
+
+        assertEquals(node.getLimitExpr(), clone.getLimitExpr());
+        assertNull(clone.getOffsetExpr());
+
+        node = new LimitNode(1, null, new Constant(new Integer(-1)));
+        clone = (LimitNode)node.clone();
+
+        assertNull(clone.getLimitExpr());
     }
 }

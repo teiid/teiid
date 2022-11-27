@@ -22,15 +22,15 @@ import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.symbol.Expression;
 
 /**
- * This is an abstract class to define some common functionality in the two varieties of 
+ * This is an abstract class to define some common functionality in the two varieties of
  * IN criteria:  {@link SetCriteria} (where values are specified) and {@link SubquerySetCriteria}
- * (where a subquery is defined and will supply the values for the IN set).  
+ * (where a subquery is defined and will supply the values for the IN set).
  */
 public abstract class AbstractSetCriteria extends PredicateCriteria implements Negatable {
 
     /** The left expression */
     private Expression expression;
-    
+
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
     private boolean negated = false;
 
@@ -48,7 +48,7 @@ public abstract class AbstractSetCriteria extends PredicateCriteria implements N
     public Expression getExpression() {
         return this.expression;
     }
-    
+
     /**
      * Sets the membership expression
      * @param expression The membership expression
@@ -64,7 +64,7 @@ public abstract class AbstractSetCriteria extends PredicateCriteria implements N
     public boolean isNegated() {
         return negated;
     }
-    
+
     /**
      * Sets the negation flag for this criteria.
      * @param negationFlag true if this criteria contains a NOT; false otherwise
@@ -72,10 +72,10 @@ public abstract class AbstractSetCriteria extends PredicateCriteria implements N
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
     }
-    
+
     @Override
     public void negate() {
-    	this.negated = !this.negated;
+        this.negated = !this.negated;
     }
 
     /**

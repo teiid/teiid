@@ -31,8 +31,8 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * Represents a FROM clause in a SELECT query.  The from clause holds a set of 
- * FROM subclauses.  Each FROM subclause can be either a single group 
+ * Represents a FROM clause in a SELECT query.  The from clause holds a set of
+ * FROM subclauses.  Each FROM subclause can be either a single group
  * ({@link UnaryFromClause}) or a join predicate ({@link JoinPredicate}).
  */
 public class From implements LanguageObject {
@@ -43,7 +43,7 @@ public class From implements LanguageObject {
      * Constructs a default instance of this class.
      */
     public From() {
-    	clauses = new ArrayList<FromClause>();
+        clauses = new ArrayList<FromClause>();
     }
 
     /**
@@ -57,59 +57,59 @@ public class From implements LanguageObject {
     // =========================================================================
     //                             M E T H O D S
     // =========================================================================
-	
-	/**
-	 * Add a clause to the FROM
-	 * @param clause Add a clause to the FROM
-	 */
-	public void addClause(FromClause clause) {
-		this.clauses.add(clause);
-	}
-	
-	/**
-	 * Add clauses to the FROM 
-	 * @param clauses Collection of {@link FromClause}s
-	 */
-	public void addClauses(Collection<? extends FromClause> toAdd) {
-		this.clauses.addAll(toAdd);
-	}
-	
-	/** 
-	 * Get all the clauses in FROM
-	 * @return List of {@link FromClause}
-	 */
-	public List<FromClause> getClauses() {
-		return this.clauses;
-	}
-    
-	/** 
-	 * Set all the clauses
-	 * @param clauses List of {@link FromClause}
-	 */
-	public void setClauses(List<FromClause> clauses) {
-		this.clauses = clauses;
-	}
-	
-	
+
+    /**
+     * Add a clause to the FROM
+     * @param clause Add a clause to the FROM
+     */
+    public void addClause(FromClause clause) {
+        this.clauses.add(clause);
+    }
+
+    /**
+     * Add clauses to the FROM
+     * @param toAdd Collection of {@link FromClause}s
+     */
+    public void addClauses(Collection<? extends FromClause> toAdd) {
+        this.clauses.addAll(toAdd);
+    }
+
+    /**
+     * Get all the clauses in FROM
+     * @return List of {@link FromClause}
+     */
+    public List<FromClause> getClauses() {
+        return this.clauses;
+    }
+
+    /**
+     * Set all the clauses
+     * @param clauses List of {@link FromClause}
+     */
+    public void setClauses(List<FromClause> clauses) {
+        this.clauses = clauses;
+    }
+
+
     /**
      * Adds a new group to the list (it will be wrapped in a UnaryFromClause)
      * @param group Group to add
      */
     public void addGroup( GroupSymbol group ) {
-    	if( group != null ) {
-			clauses.add(new UnaryFromClause(group));
+        if( group != null ) {
+            clauses.add(new UnaryFromClause(group));
         }
-    }   
+    }
 
     /**
      * Adds a new collection of groups to the list
      * @param groups Collection of {@link GroupSymbol}
      */
     public void addGroups( Collection<GroupSymbol> groups ) {
-    	if(groups != null) {
-    		for (GroupSymbol groupSymbol : groups) {
-				clauses.add(new UnaryFromClause(groupSymbol));
-			}
+        if(groups != null) {
+            for (GroupSymbol groupSymbol : groups) {
+                clauses.add(new UnaryFromClause(groupSymbol));
+            }
         }
     }
 
@@ -125,10 +125,10 @@ public class From implements LanguageObject {
                 clause.collectGroups(groups);
             }
         }
-            
+
         return groups;
     }
-    
+
     /**
      * Checks if a group is in the From
      * @param group Group to check for
@@ -137,11 +137,11 @@ public class From implements LanguageObject {
     public boolean containsGroup( GroupSymbol group ) {
         return getGroups().contains(group);
     }
-	
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
+
     // =========================================================================
     //          O V E R R I D D E N     O B J E C T     M E T H O D S
     // =========================================================================
@@ -150,42 +150,42 @@ public class From implements LanguageObject {
      * Return copy of this From clause.
      */
     public Object clone() {
-		return new From(LanguageObject.Util.deepClone(clauses, FromClause.class));
+        return new From(LanguageObject.Util.deepClone(clauses, FromClause.class));
     }
 
-	/**
-	 * Compare two Froms for equality.  Order is not important in the from, so
-	 * this is a set comparison.
-	 */
-	public boolean equals(Object obj) {
+    /**
+     * Compare two Froms for equality.  Order is not important in the from, so
+     * this is a set comparison.
+     */
+    public boolean equals(Object obj) {
 
-		if(obj == this) {
-			return true;
-		}
+        if(obj == this) {
+            return true;
+        }
 
-		if(!(obj instanceof From)) {
-			return false;
-		}
-        
+        if(!(obj instanceof From)) {
+            return false;
+        }
+
         return EquivalenceUtil.areEqual(getClauses(), ((From)obj).getClauses());
-   	}
+       }
 
-	/**
-	 * Get hashcode for From.  WARNING: The hash code relies on the variables
-	 * in the select, so changing the variables will change the hash code, causing
-	 * a select to be lost in a hash structure.  Do not hash a From if you plan
-	 * to change it.
-	 */
-	public int hashCode() {
-		return HashCodeUtil.hashCode(0, getGroups());
-	}
+    /**
+     * Get hashcode for From.  WARNING: The hash code relies on the variables
+     * in the select, so changing the variables will change the hash code, causing
+     * a select to be lost in a hash structure.  Do not hash a From if you plan
+     * to change it.
+     */
+    public int hashCode() {
+        return HashCodeUtil.hashCode(0, getGroups());
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 
 }

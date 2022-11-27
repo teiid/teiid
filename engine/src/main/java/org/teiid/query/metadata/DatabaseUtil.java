@@ -25,36 +25,47 @@ import org.teiid.adminapi.DataPolicy.DataPermission;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.metadata.*;
+import org.teiid.core.util.StringUtil;
+import org.teiid.metadata.DataWrapper;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Permission;
+import org.teiid.metadata.Permission.Privilege;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Role;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Server;
+import org.teiid.metadata.Table;
 
 public class DatabaseUtil {
 
-    public static Database convert(VDBMetaData vdb, MetadataStore metadataStore) {                 
+    public static Database convert(VDBMetaData vdb, MetadataStore metadataStore) {
         Database db = new Database(vdb.getName(), vdb.getVersion());
         db.setProperties(vdb.getPropertiesMap());
         if (vdb.getDescription() != null) {
             db.setAnnotation(vdb.getDescription());
         }
-        db.setProperty("connection-type", vdb.getConnectionType().name());
-        
+        if (ConnectionType.BY_VERSION != vdb.getConnectionType()) {
+            db.setProperty("connection-type", vdb.getConnectionType().name());
+        }
+
         db.getMetadataStore().addDataTypes(metadataStore.getDatatypes());
-        
+
         // override translators
         List<Translator> translators = vdb.getOverrideTranslators();
         for (Translator t: translators) {
             // add the base
             if (db.getDataWrapper(t.getType()) == null) {
                 DataWrapper dw = new DataWrapper(t.getType());
-                db.addDataWrapper(dw);                
+                db.addDataWrapper(dw);
             }
             // add override with properties
             if (db.getDataWrapper(t.getName()) == null) {
@@ -67,92 +78,77 @@ public class DatabaseUtil {
                     dw.setAnnotation(t.getDescription());
                 }
                 db.addDataWrapper(dw);
-            }            
+            }
         }
-        
-        Collection<ModelMetaData> models = vdb.getModelMetaDatas().values(); 
+
+        Collection<ModelMetaData> models = vdb.getModelMetaDatas().values();
         for (ModelMetaData m:models) {
-        	Schema schema = metadataStore.getSchema(m.getName());
+            Schema schema = metadataStore.getSchema(m.getName());
 
             // add servers
             if (m.isSource()){
-            	Collection<SourceMappingMetadata> sources = m.getSourceMappings();
-                
-                
+                Collection<SourceMappingMetadata> sources = m.getSourceMappings();
+
+
                 for (SourceMappingMetadata s: sources) {
-                	// add translators, that are not override
-                	if (db.getDataWrapper(s.getTranslatorName()) == null) {
+                    // add translators, that are not override
+                    if (db.getDataWrapper(s.getTranslatorName()) == null) {
                         DataWrapper dw = new DataWrapper(s.getTranslatorName());
                         db.addDataWrapper(dw);
                     }
 
-                	// add servers
+                    // add servers
                     Server server = new Server(s.getName());
-                    server.setJndiName(s.getConnectionJndiName());
-	                server.setDataWrapper(s.getTranslatorName());
-	                // no need to add duplicate definitions.
-	                if (db.getServer(s.getName()) == null) {
-	                	db.addServer(server);
-	                	schema.addServer(server);
-	                }
-	            }
+                    server.setResourceName(s.getConnectionJndiName());
+                    server.setDataWrapper(s.getTranslatorName());
+                    // no need to add duplicate definitions.
+                    if (db.getServer(s.getName()) == null) {
+                        db.addServer(server);
+                        schema.addServer(server);
+                    }
+                }
             }
-            
+
             db.addSchema(schema);
         }
-        
+
         for (String key : vdb.getDataPolicyMap().keySet()) {
             DataPolicyMetadata dpm = vdb.getDataPolicyMap().get(key);
             Role role = new Role(dpm.getName());
             if (dpm.getMappedRoleNames() != null && !dpm.getMappedRoleNames().isEmpty()) {
-                role.setJaasRoles(dpm.getMappedRoleNames());
+                role.setMappedRoles(dpm.getMappedRoleNames());
             }
-            
+
             if (dpm.isAnyAuthenticated()) {
                 role.setAnyAuthenticated(true);
             }
 
-            Grant grant = null;         
             if (dpm.isGrantAll()) {
-                if (grant == null) {
-                    grant = new Grant();
-                    grant.setRole(role.getName());
-                }
                 Permission permission = new Permission();
                 permission.setAllowAllPrivileges(true);
                 permission.setResourceType(ResourceType.DATABASE);
-                grant.addPermission(permission);
+                role.addGrant(permission);
             }
-            
+
             if (dpm.isAllowCreateTemporaryTables() != null && dpm.isAllowCreateTemporaryTables()) {
-                if (grant == null) {
-                    grant = new Grant();
-                    grant.setRole(role.getName());
-                }
                 Permission permission = new Permission();
                 permission.setAllowTemporyTables(true);
                 permission.setResourceType(ResourceType.DATABASE);
-                grant.addPermission(permission);                
+                role.addGrant(permission);
             }
-            
+
             for (DataPolicy.DataPermission dp: dpm.getPermissions()) {
-                if (grant == null) {
-                    grant = new Grant();
-                    grant.setRole(role.getName());
-                }
-                
-                Permission permission = convert(dp);
-                grant.addPermission(permission);
+                Permission permission = convert(dp, metadataStore);
+                role.addGrant(permission);
             }
             db.addRole(role);
-            db.addGrant(grant);
         }
         return db;
     }
-    
-    private static Permission convert(DataPermission dp) {
+
+    private static Permission convert(DataPermission dp, MetadataStore store) {
         Permission p = new Permission();
-        
+
         p.setAllowAlter(dp.getAllowAlter());
         p.setAllowDelete(dp.getAllowDelete());
         p.setAllowExecute(dp.getAllowExecute());
@@ -160,37 +156,70 @@ public class DatabaseUtil {
         p.setAllowSelect(dp.getAllowRead());
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
-        
-        if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
+
+        if (dp.getAllowLanguage() != null) {
             p.setAllowUsage(true);
             p.setResourceType(ResourceType.LANGUAGE);
         } else if (dp.getResourceType() != null) {
             p.setResourceType(ResourceType.valueOf(dp.getResourceType().name()));
         } else {
-            int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
-            
-            if (dotCount == 0) {
+            List<String> parts = StringUtil.split(dp.getResourceName(), "."); //$NON-NLS-1$
+
+            if (parts.size() == 1) {
                 p.setResourceType(ResourceType.SCHEMA);
-            } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
-                // this may not be correct as it could be a function as well
-                p.setResourceType(ResourceType.PROCEDURE);
-            } else if (dotCount >= 2) {
-                // this may not be correct as it could be a table
-                p.setResourceType(ResourceType.COLUMN);
             } else {
-                p.setResourceType(ResourceType.TABLE);
+                if (dp.getMask() != null && parts.size() > 2) {
+                    p.setResourceType(ResourceType.COLUMN);
+                }
+                Schema s = store.getSchema(parts.get(0));
+                if (s != null) {
+                    if (parts.size() > 2) {
+                        ResourceType fullType = getType(s, StringUtil.join(parts.subList(1, parts.size()), ".")); //$NON-NLS-1$
+                        ResourceType type = getType(s, StringUtil.join(parts.subList(1, parts.size()-1), ".")); //$NON-NLS-1$
+                        if (fullType != null && type == null) {
+                            p.setResourceType(fullType);
+                        } else if (type != null && fullType == null) {
+                            if (type == ResourceType.TABLE) {
+                                p.setResourceType(ResourceType.COLUMN);
+                            }
+                        }
+                    } else {
+                        String name = parts.get(1);
+
+                        ResourceType type = getType(s, name);
+                        if (type != null) {
+                            p.setResourceType(type);
+                        }
+                    }
+                }
             }
         }
-        
+
         if (dp.getMask() != null) {
             p.setMask(dp.getMask());
             p.setMaskOrder(dp.getOrder());
         }
-        
+
         if (dp.getCondition() != null) {
             p.setCondition(dp.getCondition(), dp.getConstraint());
         }
         return p;
+    }
+
+    private static ResourceType getType(Schema s, String name) {
+        Table t = s.getTable(name);
+        Procedure proc = s.getProcedure(name);
+        boolean hasFunction = s.getFunctions().values().stream().anyMatch(f->(name.equalsIgnoreCase(f.getName())));
+
+        if (t != null && proc == null && !hasFunction) {
+            return ResourceType.TABLE;
+        } else if (proc != null && t == null && !hasFunction) {
+            return ResourceType.PROCEDURE;
+        } else if (hasFunction && t == null && proc == null) {
+            return ResourceType.FUNCTION;
+        }
+
+        return null;
     }
 
     public static VDBMetaData convert(Database database) {
@@ -198,24 +227,24 @@ public class DatabaseUtil {
         vdb.setName(database.getName());
         vdb.setVersion(database.getVersion());
         vdb.setDescription(database.getAnnotation());
-        
+
         if (database.getProperty("connection-type", false) != null) {
             vdb.setConnectionType(VDB.ConnectionType.valueOf(database.getProperty("connection-type", false)));
         }
         vdb.getPropertiesMap().putAll(database.getProperties());
-        
+
         String domainDDLString = DDLStringVisitor.getDomainDDLString(database);
         if (!domainDDLString.isEmpty()) {
             vdb.addProperty(VDBMetaData.TEIID_DOMAINS, domainDDLString);
         }
-        
+
         // translators
         for (DataWrapper dw : database.getDataWrappers()) {
             if (dw.getType() == null) {
                 // we only care about the override types in the VDB
                 continue;
             }
-            
+
             VDBTranslatorMetaData translator = new VDBTranslatorMetaData();
             translator.setName(dw.getName());
             translator.setType(dw.getType());
@@ -232,10 +261,10 @@ public class DatabaseUtil {
             mmd.getPropertiesMap().putAll(schema.getProperties());
             if (schema.isPhysical()) {
                 mmd.setModelType(Model.Type.PHYSICAL);
-                
+
                 for (Server server : schema.getServers()) {
                     // if there are more properties to create DS they will be lost in this translation
-                    String connectionName = server.getJndiName();
+                    String connectionName = server.getResourceName();
                     if (connectionName == null) {
                         connectionName = server.getName();
                     }
@@ -246,30 +275,23 @@ public class DatabaseUtil {
             }
             vdb.addModel(mmd);
         }
-        
+
         copyDatabaseGrantsAndRoles(database, vdb);
-        
+
         return vdb;
     }
 
     public static void copyDatabaseGrantsAndRoles(Database database,
             VDBMetaData vdb) {
         // roles
-        for (Grant grant:database.getGrants()) {
-            Role role = database.getRole(grant.getRole());
-            DataPolicyMetadata dpm = convert(grant, role);
+        for (Role role : database.getRoles()) {
+            //there will be placeholder roles from the structure parsing, we just simply replace them
+            DataPolicyMetadata dpm = convert(role, null);
             vdb.addDataPolicy(dpm);
         }
-        
-        for (Role role : database.getRoles()) {
-            if (vdb.getDataPolicyMap().get(role.getName()) == null) {
-                DataPolicyMetadata dpm = convert(null, role);
-                vdb.addDataPolicy(dpm);
-            }
-        }
     }
-    
-    static PermissionMetaData convert(Permission from) {
+
+    public static PermissionMetaData convert(Permission from) {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
         pmd.setResourceType(DataPolicy.ResourceType.valueOf(from.getResourceType().name()));
@@ -280,7 +302,7 @@ public class DatabaseUtil {
         pmd.setAllowRead(from.hasPrivilege(Privilege.SELECT));
         pmd.setAllowUpdate(from.hasPrivilege(Privilege.UPDATE));
         pmd.setAllowLanguage(from.hasPrivilege(Privilege.USAGE));
-        
+
         pmd.setCondition(from.getCondition());
         pmd.setConstraint(from.isConditionAConstraint());
         pmd.setMask(from.getMask());
@@ -288,36 +310,39 @@ public class DatabaseUtil {
 
         return pmd;
     }
-    
-    static DataPolicyMetadata convert(Grant from, Role role) {
-        DataPolicyMetadata dpm = new DataPolicyMetadata();
-        dpm.setName(role.getName());
-        
-        if (from != null) {
-            for (Permission p : from.getPermissions()) {
-                if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
-                    dpm.setGrantAll(true);
-                    continue;
-                } else if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
-                    dpm.setAllowCreateTemporaryTables(true);
-                    continue;
-                }
-                
-                PermissionMetaData pmd = convert(p);            
-                dpm.addPermission(pmd);
+
+    public static DataPolicyMetadata convert(Role role, DataPolicyMetadata dpm) {
+        if (dpm == null) {
+            dpm = new DataPolicyMetadata();
+            dpm.setName(role.getName());
+
+            dpm.setDescription(role.getAnnotation());
+
+            if (role.getMappedRoles() != null && !role.getMappedRoles().isEmpty()) {
+                dpm.setMappedRoleNames(role.getMappedRoles());
             }
         }
-        
-        dpm.setDescription(role.getAnnotation());
-        
-        if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
-            dpm.setMappedRoleNames(role.getJassRoles());
-        }
-        
+
         if (role.isAnyAuthenticated()) {
             dpm.setAnyAuthenticated(true);
         }
-        
+
+        for (Permission grant:role.getGrants().values()) {
+            if (Boolean.TRUE.equals(grant.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
+                dpm.setGrantAll(true);
+                continue;
+            } else if (Boolean.TRUE.equals(grant.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
+                dpm.setAllowCreateTemporaryTables(true);
+                continue;
+            }
+
+            PermissionMetaData pmd = convert(grant);
+            dpm.addPermission(pmd);
+        }
+
+        dpm.addPolicies(role.getPolicies());
+
         return dpm;
-    }    
+    }
+
 }

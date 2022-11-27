@@ -20,21 +20,21 @@ package org.teiid.query.sql.lang;
 import org.teiid.query.sql.LanguageVisitor;
 
 public class AlterView extends Alter<QueryCommand> {
-	
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public AlterView clone() {
-		AlterView clone = new AlterView();
-		this.cloneOnTo(clone);
-		return clone;
-	}
-	
-	@Override
-	public int getType() {
-		return TYPE_ALTER_VIEW;
-	}
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public AlterView clone() {
+        AlterView clone = new AlterView();
+        this.cloneOnTo(clone);
+        return clone;
+    }
+
+    @Override
+    public int getType() {
+        return TYPE_ALTER_VIEW;
+    }
 }

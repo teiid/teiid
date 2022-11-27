@@ -68,12 +68,12 @@ import org.teiid.query.util.CommandContext;
  * Handles the planning of triggers from source events
  */
 public final class SourceTriggerActionPlanner implements CommandPlanner {
-    
+
     /**
      * TODO: elevate the transaction handling?
      */
     public static class CompositeProcessorPlan extends ProcessorPlan {
-        
+
         private List<ProcessorPlan> plans;
         private int planIndex;
         private boolean open;
@@ -95,7 +95,7 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
         public void open() throws TeiidComponentException,
                 TeiidProcessingException {
         }
-        
+
         @Override
         public void initialize(CommandContext context,
                 ProcessorDataManager dataMgr, BufferManager bufferMgr) {
@@ -131,16 +131,16 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
 
         @Override
         public void close() throws TeiidComponentException {
-            
+
         }
 
         @Override
         public ProcessorPlan clone() {
             throw new UnsupportedOperationException();
         }
-        
+
     }
-    
+
     /**
      * Represents a source event as a Command - is localized here
      * as it's not directly callable by a user
@@ -151,7 +151,7 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
         private Object[] oldValues;
         private Object[] newValues;
         private String[] columnNames;
-        
+
         public SourceEventCommand(Table t, Object[] old, Object[] newValues,
                 String[] columnNames) {
             this.table = t;
@@ -183,51 +183,51 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
         public boolean areResultsCachable() {
             return false;
         }
-        
+
         public Table getTable() {
             return table;
         }
-        
+
         public Object[] getOldValues() {
             return oldValues;
         }
-        
+
         public Object[] getNewValues() {
             return newValues;
         }
-        
+
         public String[] getColumnNames() {
             return columnNames;
         }
-        
+
         @Override
         public String toString() {
             return "AFTER EVENT ON " + table; //$NON-NLS-1$
         }
-        
+
     }
-    
+
     @Override
     public ProcessorPlan optimize(Command command, IDGenerator idGenerator,
             QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
             AnalysisRecord analysisRecord, CommandContext context)
             throws QueryPlannerException, QueryMetadataException,
             TeiidComponentException {
-		SourceEventCommand sec = (SourceEventCommand)command;
-        
+        SourceEventCommand sec = (SourceEventCommand)command;
+
         Map<Expression, Integer> lookup = new HashMap<Expression, Integer>();
         Map<ElementSymbol, Expression> params = new HashMap<ElementSymbol, Expression>();
-		List<Object> tuple = new ArrayList<Object>();
-		
+        List<Object> tuple = new ArrayList<Object>();
+
         Map<String, Integer> map = null;
-        
+
         if (sec.getColumnNames() != null) {
             map = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
             for (String name : sec.getColumnNames()) {
                 map.put(name, map.size());
             }
         }
-        
+
         GroupSymbol changingGroup = new GroupSymbol(ProcedureReservedWords.CHANGING);
         if (sec.newValues != null) {
             GroupSymbol newGroup = new GroupSymbol(SQLConstants.Reserved.NEW);
@@ -278,10 +278,10 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
                 }
             }
         }
-        
+
         List<ProcessorPlan> plans = new ArrayList<ProcessorPlan>();
         List<String> names = new ArrayList<String>();
-        
+
         for (Trigger tr : sec.getTable().getTriggers().values()) {
             int updateType = Command.TYPE_UPDATE;
             switch (tr.getEvent()) {
@@ -331,8 +331,8 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
             plans.add(result);
             names.add(tr.getName());
         }
-        
+
         return new CompositeProcessorPlan(plans, names, sec.table);
-	}
+    }
 
 }

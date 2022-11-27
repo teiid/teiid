@@ -28,20 +28,20 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 
-/** 
+/**
  * @since 5.5
  */
 public class Drop extends Command implements TargetedCommand {
     /** Identifies the table to be dropped. */
     private GroupSymbol table;
-    
+
     public GroupSymbol getTable() {
         return table;
     }
-    
+
     @Override
     public GroupSymbol getGroup() {
-    	return table;
+        return table;
     }
 
     public void setTable(GroupSymbol table) {
@@ -71,17 +71,17 @@ public class Drop extends Command implements TargetedCommand {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public int hashCode() {
         int myHash = 0;
         myHash = HashCodeUtil.hashCode(myHash, this.table);
         return myHash;
     }
-    
+
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public boolean equals(Object obj) {
         // Quick same object test
         if(this == obj) {
@@ -94,7 +94,7 @@ public class Drop extends Command implements TargetedCommand {
         }
 
         Drop other = (Drop) obj;
-        
+
         return EquivalenceUtil.areEqual(getTable(), other.getTable());
     }
 }

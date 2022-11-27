@@ -31,9 +31,9 @@ import org.teiid.query.validator.TestValidator;
 
 
 public class TestAccessPatterns {
-    
+
     /**
-     * The virtual access patterns should get satisfied 
+     * The virtual access patterns should get satisfied
      */
     @Test public void testVirtualAccessPatternPassing() {
         String sql = "SELECT e0, e2 FROM vTest.vGroup2 where e0=1 and e1='2'"; //$NON-NLS-1$
@@ -44,12 +44,12 @@ public class TestAccessPatterns {
         String sql = "delete from vm1.g37 where e1 = 1"; //$NON-NLS-1$
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {});
     }
-    
+
     @Test public void testVirtualAccessPatternFailing() {
         String sql = "SELECT e0, e2 FROM vTest.vGroup2 where e0=1"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
+        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL);
     }
-    
+
     @Test public void testVirtualAccessPatternFailing1() {
         String sql = "delete from vm1.g37"; //$NON-NLS-1$
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, null, null, TestOptimizer.SHOULD_FAIL);
@@ -57,46 +57,46 @@ public class TestAccessPatterns {
 
     @Test public void testAccessPattern1() throws Exception {
         String sql = "SELECT e0, e2 FROM vTest.vGroup where e0=1 and e1='2'"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, 
-                               TestValidator.exampleMetadata4(), 
+        TestOptimizer.helpPlan(sql,
+                               TestValidator.exampleMetadata4(),
                                new String[] {"SELECT g_0.e0, g_0.e2 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2')" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
     }
-    
+
     @Test public void testAccessPattern2() {
         String sql = "SELECT e0, e2 FROM vTest.vGroup where e0=1"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
+        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL);
     }
-    
+
     @Test public void testAccessPattern3() {
         String sql = "SELECT e0, e2 FROM vTest.vGroup where e0=1 and e2='2'"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
-    } 
-    
+        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL);
+    }
+
     @Test public void testAccessPattern4() throws Exception {
         String sql = "(SELECT e0, e2 FROM vTest.vGroup where e0=1 and e1='2') union all (SELECT e0, e2 FROM vTest.vGroup where e0=1 and e1='2')"; //$NON-NLS-1$
         TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), new String[] {"SELECT g_0.e0, g_0.e2 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2')"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-    } 
-    
+    }
+
     @Test public void testAccessPattern5() {
         String sql = "(SELECT e0, e2 FROM vTest.vGroup where e0=1 and e1='2') union all (SELECT e0, e2 FROM vTest.vGroup where e0=1)"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
-    } 
-    
+        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL);
+    }
+
     @Test public void testAccessPattern6() {
         String sql = "SELECT e0, e2 FROM test.group where e1 IN /*+ no_unnest */ (SELECT e2 FROM vTest.vGroup where e0=1 and e1='2')"; //$NON-NLS-1$
         TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), new String[] {"SELECT e1, e0, e2 FROM test.\"group\""}); //$NON-NLS-1$
-    }   
-    
+    }
+
     @Test public void testAccessPattern7() {
         String sql = "SELECT e0, e2 FROM test.group where e1 IN (SELECT e2 FROM vTest.vGroup where e0=1)"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
-    } 
-    
+        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL);
+    }
+
     @Test public void testAccessPattern8() {
         String sql = "SELECT e0, e2 FROM vTest.vGroup"; //$NON-NLS-1$
-        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
-    } 
-        
+        TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL);
+    }
+
     /**
      * Tests two access nodes, each with access patterns, but one already
      * satisfied by user criteria - the other should be made dependent
@@ -141,7 +141,7 @@ public class TestAccessPatterns {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });         
+        });
     }
 
     @Test public void testAccessPatternsFails() {
@@ -167,7 +167,7 @@ public class TestAccessPatterns {
             RealMetadataFactory.example1Cached(),
             null, null, null, TestOptimizer.SHOULD_FAIL);
     }
-    
+
     @Test public void testUnionWithAccessPattern() {
         TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1 UNION ALL select pm4.g1.e1 from pm4.g1 where pm4.g1.e1 = 'abc'", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm4.g1.e1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }); //$NON-NLS-1$ //$NON-NLS-2$
@@ -195,7 +195,7 @@ public class TestAccessPatterns {
             null, null, null,
             TestOptimizer.SHOULD_FAIL);
     }
-    
+
     /**
      * Access patterns on models that support joins requires that the access patterns are satisfied prior to
      * RulePlanJoins
@@ -205,7 +205,7 @@ public class TestAccessPatterns {
             RealMetadataFactory.example1Cached(),
             null, null, null, TestOptimizer.SHOULD_FAIL);
     }
-    
+
     // ==================================================================================
     // ACCESS PATTERNS
     // ==================================================================================
@@ -219,12 +219,12 @@ public class TestAccessPatterns {
     /**
      * pm4.g2.e5 or pm4.g2.e2 also need to be in criteria
      */
-    @Test public void testPushingCriteriaThroughFrameAccessPattern1() { 
+    @Test public void testPushingCriteriaThroughFrameAccessPattern1() {
         TestOptimizer.helpPlan("select * from vm1.g1, vm1.g10 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g10.e1", RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), //$NON-NLS-1$
             null, TestOptimizer.SHOULD_FAIL );
     }
 
-    @Test public void testPushingCriteriaThroughFrameAccessPattern2() { 
+    @Test public void testPushingCriteriaThroughFrameAccessPattern2() {
         TestOptimizer.helpPlan("select e1 from vm1.g11 where vm1.g11.e1='abc' and vm1.g11.e2=123", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm4.g2.e1 FROM pm4.g2 WHERE (pm4.g2.e1 = 'abc') AND (pm4.g2.e2 = 123)" }); //$NON-NLS-1$
     }
@@ -235,62 +235,62 @@ public class TestAccessPatterns {
                           "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                           "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'"} ); //$NON-NLS-1$
     }
-    
+
     /**
      * pm4.g2.e5 or pm4.g2.e2 also need to be in criteria
      */
-    @Test public void testPushingCriteriaThroughFrameAccessPattern4() { 
+    @Test public void testPushingCriteriaThroughFrameAccessPattern4() {
         TestOptimizer.helpPlan("select * from vm1.g10 where vm1.g10.e1='abc'", RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), //$NON-NLS-1$
            null, TestOptimizer.SHOULD_FAIL );
     }
-    
+
     /**
      * TODO: in this case we should perform a criteria optimization to create set criteria
      */
     @Test public void testCase6425() {
         String sql = "SELECT e1 FROM pm4.g1 WHERE e1 = '1' OR e1 = '2'"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT e1 FROM pm4.g1 WHERE (e1 = '1') OR (e1 = '2')"}); //$NON-NLS-1$
-        
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
-        
+
     @Test public void testCase6425_2() {
         String sql = "SELECT e1 FROM pm4.g1 WHERE e1 = '1' OR (e1 = '2' AND e2 = 3)"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT e1 FROM pm4.g1 WHERE (e1 = '1') OR ((e1 = '2') AND (e2 = 3))"}); //$NON-NLS-1$
-        
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
-        
+
     @Test public void testCase6425_4() throws Exception {
         String sql = "SELECT e1 FROM pm4.g1 WHERE e1 = '1' OR e2 = '2'"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-        
+
         TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.ComparisonMode.FAILED_PLANNING);
     }
-    
+
     /*
      * Criteria was preventing rule choose dependent from creating the appropriate dependent join
      */
     @Test public void testMultiAccessPatternWithCriteria() throws Exception {
-    	String sql = "SELECT pm1.g1.* FROM pm4.g1, pm5.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1 and pm5.g1.e1 = pm1.g1.e1 and pm5.g1.e2 like '%x' "; //$NON-NLS-1$
-        
+        String sql = "SELECT pm1.g1.* FROM pm4.g1, pm5.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1 and pm5.g1.e1 = pm1.g1.e1 and pm5.g1.e2 like '%x' "; //$NON-NLS-1$
+
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-        
+
         AnalysisRecord record = new AnalysisRecord(true, true);
-        
-        TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, metadata), metadata, TestOptimizer.getGenericFinder(false), record, 
-						new String[] {
-								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$ 
-								"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
-								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
-        
+
+        TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, metadata), metadata, TestOptimizer.getGenericFinder(false), record,
+                        new String[] {
+                                "SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$
+                                "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
+                                "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
         assertTrue(record.getAnnotations().toString().contains("access pattern not satisfied by join"));
     }
 

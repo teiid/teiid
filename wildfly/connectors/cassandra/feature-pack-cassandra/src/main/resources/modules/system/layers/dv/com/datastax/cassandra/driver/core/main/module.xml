@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="com.datastax.cassandra.driver.core">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${com.datastax.cassandra:cassandra-driver-core}"/>
+        <artifact name="${io.dropwizard.metrics:metrics-core}"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="sun.jdk" />
+        <module name="org.slf4j" />
+        <module name="io.netty"/>
+        <module name="com.google.guava"  export="true"/>
+    </dependencies>
+
+</module>

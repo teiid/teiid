@@ -30,82 +30,82 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class SetClauseList implements LanguageObject {
-	
-	private static final long serialVersionUID = 8174681510498719451L;
-	
-	private List<SetClause> setClauses;
-	
-	public SetClauseList() {
-		this.setClauses = new ArrayList<SetClause>();
-	}
-	
-	public SetClauseList(List<SetClause> setClauses) {
-		this.setClauses = setClauses;
-	}
-	
-	public void addClause(ElementSymbol symbol, Expression expression) {
-		this.setClauses.add(new SetClause(symbol, expression));
-	}
-	
-	public void addClause(SetClause clause) {
-		this.setClauses.add(clause);
-	}
 
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
-	@Override
-	public Object clone() {
-		SetClauseList copy = new SetClauseList();
-		for (SetClause clause : this.setClauses) {
-			copy.addClause((SetClause)clause.clone());
-		}
-		return copy;
-	}
-	
-	/**
-	 * @return a non-updateable map representation
-	 */
-	public LinkedHashMap<ElementSymbol, Expression> getClauseMap() {
-		LinkedHashMap<ElementSymbol, Expression> result = new LinkedHashMap<ElementSymbol, Expression>();
-		for (SetClause clause : this.setClauses) {
-			result.put(clause.getSymbol(), clause.getValue());
-		}
-		return result;
-	}
-	
-	public List<SetClause> getClauses() {
-		return this.setClauses;
-	}
-	
-	public boolean isEmpty() {
-		return this.setClauses.isEmpty();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if(this == obj) {
-    		return true;
-		}
+    private static final long serialVersionUID = 8174681510498719451L;
 
-    	if(!(obj instanceof SetClauseList)) {
-    		return false;
-		}
+    private List<SetClause> setClauses;
 
-    	SetClauseList other = (SetClauseList) obj;
-    	
-    	return this.setClauses.equals(other.setClauses);
-	}
-	
-	@Override
-	public int hashCode() {
-		return setClauses.hashCode();
-	}
-	
+    public SetClauseList() {
+        this.setClauses = new ArrayList<SetClause>();
+    }
+
+    public SetClauseList(List<SetClause> setClauses) {
+        this.setClauses = setClauses;
+    }
+
+    public void addClause(ElementSymbol symbol, Expression expression) {
+        this.setClauses.add(new SetClause(symbol, expression));
+    }
+
+    public void addClause(SetClause clause) {
+        this.setClauses.add(clause);
+    }
+
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
+    @Override
+    public Object clone() {
+        SetClauseList copy = new SetClauseList();
+        for (SetClause clause : this.setClauses) {
+            copy.addClause((SetClause)clause.clone());
+        }
+        return copy;
+    }
+
+    /**
+     * @return a non-updateable map representation
+     */
+    public LinkedHashMap<ElementSymbol, Expression> getClauseMap() {
+        LinkedHashMap<ElementSymbol, Expression> result = new LinkedHashMap<ElementSymbol, Expression>();
+        for (SetClause clause : this.setClauses) {
+            result.put(clause.getSymbol(), clause.getValue());
+        }
+        return result;
+    }
+
+    public List<SetClause> getClauses() {
+        return this.setClauses;
+    }
+
+    public boolean isEmpty() {
+        return this.setClauses.isEmpty();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
+        if(!(obj instanceof SetClauseList)) {
+            return false;
+        }
+
+        SetClauseList other = (SetClauseList) obj;
+
+        return this.setClauses.equals(other.setClauses);
+    }
+
+    @Override
+    public int hashCode() {
+        return setClauses.hashCode();
+    }
+
 }

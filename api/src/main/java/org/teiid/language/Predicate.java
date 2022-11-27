@@ -19,8 +19,8 @@
 package org.teiid.language;
 
 /**
- * Represents a criteria that can occur at the leaf of a tree of 
- * criteria.  
+ * Represents a criteria that can occur at the leaf of a tree of
+ * criteria.
  */
 public interface Predicate {
 

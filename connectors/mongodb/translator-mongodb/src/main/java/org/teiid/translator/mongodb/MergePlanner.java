@@ -25,7 +25,7 @@ import org.teiid.translator.TranslatorException;
 
 public class MergePlanner {
     protected LinkedHashSet<ProcessingNode> mergeProcessing = new LinkedHashSet<ProcessingNode>();
-    
+
     public void addNode(ExistsNode node) throws TranslatorException {
         // only add exists node when no $unwind on that document, as unwind is implicit null check
         for (ProcessingNode pn: this.mergeProcessing) {
@@ -52,7 +52,7 @@ public class MergePlanner {
         }
         this.mergeProcessing.add(node);
     }
-    
+
     public void addNode(ProjectionNode node, String alias) {
         for (ProcessingNode pn: this.mergeProcessing) {
             if (pn instanceof ProjectionNode) {
@@ -61,10 +61,10 @@ public class MergePlanner {
                 return;
             }
         }
-        
+
         this.mergeProcessing.add(node);
     }
-    
+
     public Set<ProcessingNode> getNodes(){
         return this.mergeProcessing;
     }

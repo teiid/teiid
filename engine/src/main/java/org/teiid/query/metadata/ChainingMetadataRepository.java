@@ -34,78 +34,78 @@ import org.teiid.metadata.TableStats;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class ChainingMetadataRepository extends MetadataRepository<Object, Object> {
+public class ChainingMetadataRepository implements MetadataRepository<Object, Object> {
 
-	final ArrayList<MetadataRepository<Object, Object>> repositories;
+    final ArrayList<MetadataRepository<Object, Object>> repositories;
 
-	@SuppressWarnings("unchecked")
-	public ChainingMetadataRepository(List<? extends MetadataRepository> repos) {
-		this.repositories = new ArrayList<MetadataRepository<Object,Object>>((Collection<? extends MetadataRepository<Object, Object>>)repos);
-	}
-	
-	@Override
-	public void loadMetadata(MetadataFactory factory,
-			ExecutionFactory<Object, Object> executionFactory,
-			Object connectionFactory) throws TranslatorException {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.loadMetadata(factory, executionFactory, connectionFactory);
-		}
-	}
+    @SuppressWarnings("unchecked")
+    public ChainingMetadataRepository(List<? extends MetadataRepository> repos) {
+        this.repositories = new ArrayList<MetadataRepository<Object,Object>>((Collection<? extends MetadataRepository<Object, Object>>)repos);
+    }
 
-	@Override
-	public void setColumnStats(String vdbName, String vdbVersion, Column column,
-			ColumnStats columnStats) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setColumnStats(vdbName, vdbVersion, column, columnStats);
-		}
-	}
+    @Override
+    public void loadMetadata(MetadataFactory factory,
+            ExecutionFactory<Object, Object> executionFactory,
+            Object connectionFactory) throws TranslatorException {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.loadMetadata(factory, executionFactory, connectionFactory);
+        }
+    }
 
-	@Override
-	public void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion,
-			Table table, TriggerEvent triggerOperation, String triggerDefinition) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setInsteadOfTriggerDefinition(vdbName, vdbVersion, table, triggerOperation, triggerDefinition);
-		}		
-	}
+    @Override
+    public void setColumnStats(String vdbName, String vdbVersion, Column column,
+            ColumnStats columnStats) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setColumnStats(vdbName, vdbVersion, column, columnStats);
+        }
+    }
 
-	@Override
-	public void setInsteadOfTriggerEnabled(String vdbName, String vdbVersion,
-			Table table, TriggerEvent triggerOperation, boolean enabled) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setInsteadOfTriggerEnabled(vdbName, vdbVersion, table, triggerOperation, enabled);
-		}
-	}
+    @Override
+    public void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion,
+            Table table, TriggerEvent triggerOperation, String triggerDefinition) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setInsteadOfTriggerDefinition(vdbName, vdbVersion, table, triggerOperation, triggerDefinition);
+        }
+    }
 
-	@Override
-	public void setProcedureDefinition(String vdbName, String vdbVersion,
-			Procedure procedure, String procedureDefinition) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setProcedureDefinition(vdbName, vdbVersion, procedure, procedureDefinition);
-		}
-	}
+    @Override
+    public void setInsteadOfTriggerEnabled(String vdbName, String vdbVersion,
+            Table table, TriggerEvent triggerOperation, boolean enabled) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setInsteadOfTriggerEnabled(vdbName, vdbVersion, table, triggerOperation, enabled);
+        }
+    }
 
-	@Override
-	public void setProperty(String vdbName, String vdbVersion,
-			AbstractMetadataRecord record, String name, String value) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setProperty(vdbName, vdbVersion, record, name, value);
-		}
-	}
+    @Override
+    public void setProcedureDefinition(String vdbName, String vdbVersion,
+            Procedure procedure, String procedureDefinition) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setProcedureDefinition(vdbName, vdbVersion, procedure, procedureDefinition);
+        }
+    }
 
-	@Override
-	public void setTableStats(String vdbName, String vdbVersion, Table table,
-			TableStats tableStats) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setTableStats(vdbName, vdbVersion, table, tableStats);
-		}	
-	}
+    @Override
+    public void setProperty(String vdbName, String vdbVersion,
+            AbstractMetadataRecord record, String name, String value) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setProperty(vdbName, vdbVersion, record, name, value);
+        }
+    }
 
-	@Override
-	public void setViewDefinition(String vdbName, String vdbVersion, Table table,
-			String viewDefinition) {
-		for (MetadataRepository<Object, Object> repo : repositories) {
-			repo.setViewDefinition(vdbName, vdbVersion, table, viewDefinition);
-		}
-	}
-	
+    @Override
+    public void setTableStats(String vdbName, String vdbVersion, Table table,
+            TableStats tableStats) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setTableStats(vdbName, vdbVersion, table, tableStats);
+        }
+    }
+
+    @Override
+    public void setViewDefinition(String vdbName, String vdbVersion, Table table,
+            String viewDefinition) {
+        for (MetadataRepository<Object, Object> repo : repositories) {
+            repo.setViewDefinition(vdbName, vdbVersion, table, viewDefinition);
+        }
+    }
+
 }

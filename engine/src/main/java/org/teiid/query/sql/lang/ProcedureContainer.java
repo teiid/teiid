@@ -29,7 +29,7 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
     private int updateCount = -1;
     private UpdateInfo updateInfo;
     private Set<String> tags;
-    
+
     protected void copyMetadataState(ProcedureContainer copy) {
         super.copyMetadataState(copy);
         copy.setUpdateInfo(this.getUpdateInfo());
@@ -38,16 +38,16 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
             copy.tags = new HashSet<String>(tags);
         }
     }
-    
-    /** 
+
+    /**
      * @return Returns the updateCount.
      */
     public int getUpdateCount() {
         return this.updateCount;
     }
 
-    
-    /** 
+
+    /**
      * @param updateCount The updateCount to set.
      */
     public void setUpdateCount(int updateCount) {
@@ -59,24 +59,24 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
         }
         this.updateCount = updateCount;
     }
-    
+
     public UpdateInfo getUpdateInfo() {
-		return updateInfo;
-	}
-    
+        return updateInfo;
+    }
+
     public void setUpdateInfo(UpdateInfo updateInfo) {
-		this.updateInfo = updateInfo;
-	}
-    
+        this.updateInfo = updateInfo;
+    }
+
     public boolean hasTag(String name) {
         return tags != null && tags.contains(name);
     }
-    
+
     public void addTag(String name) {
         if (tags == null) {
             tags = new HashSet<String>();
         }
         tags.add(name);
     }
-    
+
 }

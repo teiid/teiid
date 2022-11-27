@@ -59,45 +59,36 @@ public class SocketListener implements ChannelListenerFactory {
     private Channel serverChannel;
     private boolean isClientEncryptionEnabled;
     private ClientServiceRegistryImpl csr;
-	private ServerBootstrap bootstrap;
-    
+    private ServerBootstrap bootstrap;
+
     private int maxMessageSize = PropertiesUtils.getHierarchicalProperty("org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE, Integer.class); //$NON-NLS-1$
     private long maxLobSize = PropertiesUtils.getHierarchicalProperty("org.teiid.maxStreamingLobSize", ObjectDecoder.MAX_LOB_SIZE, Long.class); //$NON-NLS-1$
-	
+
     public SocketListener(InetSocketAddress address, SocketConfiguration config, ClientServiceRegistryImpl csr, StorageManager storageManager) {
-		this(address, config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
-		LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {address.getHostName(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
+        this(address, config.getInputBufferSize(), config.getOutputBufferSize(), config.getMaxSocketThreads(), config.getSSLConfiguration(), csr, storageManager);
+        LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {address.getHostName(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
     }
-    
-    /**
-     * 
-     * @param port
-     * @param inputBufferSize
-     * @param outputBufferSize
-     * @param engine null if SSL is disabled
-     * @param bindaddress
-     * @param server
-     */
+
     public SocketListener(final InetSocketAddress address, final int inputBufferSize,
             final int outputBufferSize, int maxWorkers,
             final SSLConfiguration config, final ClientServiceRegistryImpl csr,
             final StorageManager storageManager) {
 
         if (config != null) {
-    		this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
-    	}
-    	this.csr = csr;
-
-    	NamedThreadFactory nettyPool = new NamedThreadFactory("NIO"); //$NON-NLS-1$
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
-            LogManager.logDetail(LogConstants.CTX_TRANSPORT, "server = " + address.getAddress() + "binding to port:" + address.getPort()); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-        
-        if (maxWorkers == 0) {
-        	maxWorkers = Math.max(4, PropertiesUtils.getIntProperty(System.getProperties(), "io.netty.eventLoopThreads", 2*Runtime.getRuntime().availableProcessors())); //$NON-NLS-1$
+            this.isClientEncryptionEnabled = config.isClientEncryptionEnabled();
         }
-        EventLoopGroup workers = new NioEventLoopGroup(maxWorkers, nettyPool); 
-        
+        this.csr = csr;
+
+        NamedThreadFactory nettyPool = new NamedThreadFactory("NIO"); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_TRANSPORT, "server = " + address.getAddress() + "binding to port:" + address.getPort()); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+
+        if (maxWorkers == 0) {
+            maxWorkers = Math.max(4, PropertiesUtils.getIntProperty(System.getProperties(), "io.netty.eventLoopThreads", 2*Runtime.getRuntime().availableProcessors())); //$NON-NLS-1$
+        }
+        EventLoopGroup workers = new NioEventLoopGroup(maxWorkers, nettyPool);
+
         bootstrap = new ServerBootstrap();
         bootstrap.group(workers).channel(NioServerSocketChannel.class);
         this.channelHandler = createChannelHandler();
@@ -109,18 +100,18 @@ public class SocketListener implements ChannelListenerFactory {
             }
         });
         if (inputBufferSize != 0) {
-        	bootstrap.childOption(ChannelOption.SO_RCVBUF, new Integer(inputBufferSize)); 
+            bootstrap.childOption(ChannelOption.SO_RCVBUF, new Integer(inputBufferSize));
         }
         if (outputBufferSize != 0) {
-        	bootstrap.childOption(ChannelOption.SO_SNDBUF, new Integer(outputBufferSize)); 
+            bootstrap.childOption(ChannelOption.SO_SNDBUF, new Integer(outputBufferSize));
         }
-        bootstrap.childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE); 
-        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, Boolean.TRUE); 
+        bootstrap.childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE);
+        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, Boolean.TRUE);
         ChannelFuture future = bootstrap.bind(address);
-		future.syncUninterruptibly();
+        future.syncUninterruptibly();
         this.serverChannel = future.channel();
     }
-    
+
     protected void configureChannelPipeline(ChannelPipeline pipeline,
             SSLConfiguration config, StorageManager storageManager) throws Exception {
         if (config != null) {
@@ -129,41 +120,41 @@ public class SocketListener implements ChannelListenerFactory {
                 pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
             }
         }
-        pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, //$NON-NLS-1$ 
-                maxLobSize, 
-                Thread.currentThread().getContextClassLoader(), 
-                storageManager)); 
+        pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, //$NON-NLS-1$
+                maxLobSize,
+                Thread.currentThread().getContextClassLoader(),
+                storageManager));
         pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
-        pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$        
-        pipeline.addLast("handler", this.channelHandler); //$NON-NLS-1$                
+        pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
+        pipeline.addLast("handler", this.channelHandler); //$NON-NLS-1$
     }
-    
+
     public int getPort() {
-    	return ((InetSocketAddress)this.serverChannel.localAddress()).getPort();
+        return ((InetSocketAddress)this.serverChannel.localAddress()).getPort();
     }
-    
+
     /**
      * Stops the {@link SocketListener}
-     * @return a Future if the transport was started successfully 
+     * @return a Future if the transport was started successfully
      * that can notify of successfully killing all clients
      */
     public Future<?> stop() {
-    	ChannelFuture future = this.serverChannel.closeFuture();
-    	Future<?> shutdown = null;
-    	if (this.bootstrap != null) {
-        	shutdown = bootstrap.group().shutdownGracefully(0, 0, TimeUnit.SECONDS);
-        	bootstrap = null;
-    	}
-    	try {
-			future.await();
-		} catch (InterruptedException e) {
-			throw new TeiidRuntimeException(e);
-		}
-    	return shutdown;
+        ChannelFuture future = this.serverChannel.closeFuture();
+        Future<?> shutdown = null;
+        if (this.bootstrap != null) {
+            shutdown = bootstrap.config().group().shutdownGracefully(0, 0, TimeUnit.SECONDS);
+            bootstrap = null;
+        }
+        try {
+            future.await();
+        } catch (InterruptedException e) {
+            throw new TeiidRuntimeException(e);
+        }
+        return shutdown;
     }
-   
+
     public SocketListenerStats getStats() {
-        SocketListenerStats stats = new SocketListenerStats();             
+        SocketListenerStats stats = new SocketListenerStats();
         stats.objectsRead = this.channelHandler.getObjectsRead();
         stats.objectsWritten = this.channelHandler.getObjectsWritten();
         stats.sockets = this.channelHandler.getConnectedChannels();
@@ -172,26 +163,26 @@ public class SocketListener implements ChannelListenerFactory {
     }
 
     protected SSLAwareChannelHandler createChannelHandler() {
-    	return new SSLAwareChannelHandler(this);
+        return new SSLAwareChannelHandler(this);
     }
-    
-	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new SocketClientInstance(channel, csr, this.isClientEncryptionEnabled);
-	}
-	
-	SSLAwareChannelHandler getChannelHandler() {
-		return channelHandler;
-	}
-	
+
+    public ChannelListener createChannelListener(ObjectChannel channel) {
+        return new SocketClientInstance(channel, csr, this.isClientEncryptionEnabled);
+    }
+
+    SSLAwareChannelHandler getChannelHandler() {
+        return channelHandler;
+    }
+
     public int getMaxMessageSize() {
         return maxMessageSize;
     }
-    
+
     public void setMaxMessageSize(int maxMessageSize) {
         this.maxMessageSize = maxMessageSize;
     }
-    
+
     public void setMaxLobSize(long maxLobSize) {
         this.maxLobSize = maxLobSize;
-    }	
+    }
 }

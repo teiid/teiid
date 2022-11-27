@@ -45,21 +45,21 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         this.condition = condition;
         this.label = label;
     }
-    
+
     @Override
     public String getLabel() {
-    	return label;
+        return label;
     }
-    
+
     @Override
     public void setLabel(String label) {
-    	this.label = label;
+        this.label = label;
     }
 
     public void process(ProcedurePlan env) throws TeiidComponentException {
         //do nothing
     }
-    
+
     public Program getWhileProgram() { //Defect 13291 - added method to support changes to ProcedurePlan
         return whileProgram;
     }
@@ -74,22 +74,22 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
     public String toString() {
         return "WHILE INSTRUCTION:"; //$NON-NLS-1$
     }
-    
+
     public PlanNode getDescriptionProperties() {
         PlanNode props = new PlanNode("WHILE"); //$NON-NLS-1$
         props.addProperty(PROP_CRITERIA, this.condition.toString());
         props.addProperty(PROP_PROGRAM, this.whileProgram.getDescriptionProperties());
         return props;
     }
-    
-    /** 
-     * @throws TeiidProcessingException 
+
+    /**
+     * @throws TeiidProcessingException
      */
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException {
         return procEnv.evaluateCriteria(condition);
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.proc.RepeatedInstruction#getNestedProgram()
      */
     public Program getNestedProgram() {
@@ -98,7 +98,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
 
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException {
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
         Boolean conditionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(condition));
@@ -111,5 +111,5 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         }
         return false;
     }
-    
+
 }

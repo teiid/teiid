@@ -20,13 +20,13 @@ package org.teiid.query.optimizer.relational.plantree;
 
 public class NodeFactory {
 
-	// Can't instantiate
-	private NodeFactory() { }
+    // Can't instantiate
+    private NodeFactory() { }
 
-	public static PlanNode getNewNode(int nodeType) {
-		PlanNode node = new PlanNode();
-		node.setType(nodeType);
-		return node;
-	}
-	
+    public static PlanNode getNewNode(int nodeType) {
+        PlanNode node = new PlanNode();
+        node.setType(nodeType);
+        return node;
+    }
+
 }

@@ -29,16 +29,16 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * A FromClause is an interface for subparts held in a FROM clause.  One 
- * type of FromClause is {@link UnaryFromClause}, which is the more common 
+ * A FromClause is an interface for subparts held in a FROM clause.  One
+ * type of FromClause is {@link UnaryFromClause}, which is the more common
  * use and represents a single group.  Another, less common type of FromClause
  * is the {@link JoinPredicate} which represents a join between two FromClauses
  * and may contain criteria.
  */
 public abstract class FromClause implements LanguageObject {
-	
-	public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
-	
+
+    public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
+
     private boolean optional;
     private MakeDep makeDep;
     private boolean makeNotDep;
@@ -49,58 +49,58 @@ public abstract class FromClause implements LanguageObject {
     public boolean isOptional() {
         return optional;
     }
-    
+
     public void setOptional(boolean optional) {
         this.optional = optional;
     }
-    
+
     public MakeDep getMakeInd() {
-		return makeInd;
-	}
-    
+        return makeInd;
+    }
+
     public void setMakeInd(MakeDep makeInd) {
-		this.makeInd = makeInd;
-	}
-    
+        this.makeInd = makeInd;
+    }
+
     public abstract void acceptVisitor(LanguageVisitor visitor);
     public abstract void collectGroups(Collection<GroupSymbol> groups);
     protected abstract FromClause cloneDirect();
-    
+
     public FromClause clone() {
-    	FromClause clone = cloneDirect();
-    	clone.makeDep = makeDep;
-    	clone.makeInd = makeInd;
-    	clone.makeNotDep = makeNotDep;
-    	clone.optional = optional;
-    	clone.noUnnest = noUnnest;
-    	clone.preserve = preserve;
-    	return clone;
+        FromClause clone = cloneDirect();
+        clone.makeDep = makeDep;
+        clone.makeInd = makeInd;
+        clone.makeNotDep = makeNotDep;
+        clone.optional = optional;
+        clone.noUnnest = noUnnest;
+        clone.preserve = preserve;
+        return clone;
     }
-    
+
     public void setNoUnnest(boolean noUnnest) {
-		this.noUnnest = noUnnest;
-	}
-    
+        this.noUnnest = noUnnest;
+    }
+
     public boolean isNoUnnest() {
-		return noUnnest;
-	}
+        return noUnnest;
+    }
 
     public boolean isMakeDep() {
         return this.makeDep != null;
     }
-    
+
     public MakeDep getMakeDep() {
-		return makeDep;
-	}
+        return makeDep;
+    }
 
     public void setMakeDep(boolean makeDep) {
-    	if (makeDep) {
-    		if (this.makeDep == null) {
-    			this.makeDep = new MakeDep();
-    		}
-    	} else {
-    		this.makeDep = null;
-    	}
+        if (makeDep) {
+            if (this.makeDep == null) {
+                this.makeDep = new MakeDep();
+            }
+        } else {
+            this.makeDep = null;
+        }
     }
 
     public boolean isMakeNotDep() {
@@ -110,29 +110,29 @@ public abstract class FromClause implements LanguageObject {
     public void setMakeNotDep(boolean makeNotDep) {
         this.makeNotDep = makeNotDep;
     }
-    
+
     public void setMakeDep(MakeDep makedep) {
-    	this.makeDep = makedep;
+        this.makeDep = makedep;
     }
-    
+
     public boolean isPreserve() {
-		return preserve;
-	}
-    
+        return preserve;
+    }
+
     public void setPreserve(boolean preserve) {
-		this.preserve = preserve;
-	}
-    
+        this.preserve = preserve;
+    }
+
     public boolean hasHint() {
         return optional || makeDep != null || makeNotDep || makeInd != null || noUnnest || preserve;
     }
-    
+
     public boolean equals(Object obj) {
         if(obj == this) {
             return true;
-        } 
-        
-        if(! (obj instanceof FromClause)) { 
+        }
+
+        if(! (obj instanceof FromClause)) {
             return false;
         }
 
@@ -141,13 +141,13 @@ public abstract class FromClause implements LanguageObject {
         return other.isOptional() == this.isOptional()
                && EquivalenceUtil.areEqual(this.makeDep, other.makeDep)
                && other.isMakeNotDep() == this.isMakeNotDep()
-        	   && EquivalenceUtil.areEqual(this.makeInd, other.makeInd)
-        	   && other.isNoUnnest() == this.isNoUnnest()
-			   && other.isNoUnnest() == this.isNoUnnest();
+               && EquivalenceUtil.areEqual(this.makeInd, other.makeInd)
+               && other.isNoUnnest() == this.isNoUnnest()
+               && other.isNoUnnest() == this.isNoUnnest();
     }
-    
+
     @Override
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 }

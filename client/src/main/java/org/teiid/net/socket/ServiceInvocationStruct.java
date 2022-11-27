@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.net.socket;
 
@@ -31,39 +31,39 @@ import org.teiid.core.util.ExternalizeUtil;
 
 
 public final class ServiceInvocationStruct implements Externalizable {
-	private static final long serialVersionUID = 1207674062670068350L;
-	public Class<?> targetClass;
-	public String methodName;
-	public Object[] args;
-	
-	public ServiceInvocationStruct() {
-		
-	}
+    private static final long serialVersionUID = 1207674062670068350L;
+    public Class<?> targetClass;
+    public String methodName;
+    public Object[] args;
 
-	public ServiceInvocationStruct(Object[] args, String methodName,
-			Class<?> targetClass) {
-		ArgCheck.isNotNull(methodName);
-		ArgCheck.isNotNull(targetClass);
-		this.args = args;
-		this.methodName = methodName;
-		this.targetClass = targetClass;
-	}
+    public ServiceInvocationStruct() {
 
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		this.targetClass = (Class<?>)in.readObject();
-		this.methodName = (String)in.readObject();
-		this.args = ExternalizeUtil.readArray(in, Object.class);
-	}
+    }
 
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(targetClass);
-		out.writeObject(methodName);
-		ExternalizeUtil.writeArray(out, args);
-	}
-	
-	@Override
-	public String toString() {
-		return "Invoke " + targetClass + "." + methodName + " " + args.length ; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
+    public ServiceInvocationStruct(Object[] args, String methodName,
+            Class<?> targetClass) {
+        ArgCheck.isNotNull(methodName);
+        ArgCheck.isNotNull(targetClass);
+        this.args = args;
+        this.methodName = methodName;
+        this.targetClass = targetClass;
+    }
+
+    public void readExternal(ObjectInput in) throws IOException,
+            ClassNotFoundException {
+        this.targetClass = (Class<?>)in.readObject();
+        this.methodName = (String)in.readObject();
+        this.args = ExternalizeUtil.readArray(in, Object.class);
+    }
+
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(targetClass);
+        out.writeObject(methodName);
+        ExternalizeUtil.writeArray(out, args);
+    }
+
+    @Override
+    public String toString() {
+        return "Invoke " + targetClass + "." + methodName + " " + args.length ; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
 }

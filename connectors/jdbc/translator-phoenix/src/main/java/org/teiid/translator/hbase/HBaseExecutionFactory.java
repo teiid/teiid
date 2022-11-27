@@ -23,10 +23,10 @@ import org.teiid.translator.phoenix.PhoenixExecutionFactory;
 @Deprecated
 @Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase", deprecated="phoenix")
 public class HBaseExecutionFactory extends PhoenixExecutionFactory {
-    
+
     public HBaseExecutionFactory() {
         super();
         setSupportsFullOuterJoins(false);
     }
-    
+
 }

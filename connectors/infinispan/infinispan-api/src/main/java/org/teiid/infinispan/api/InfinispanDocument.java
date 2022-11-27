@@ -20,8 +20,8 @@ package org.teiid.infinispan.api;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.translator.document.Document;
@@ -31,16 +31,16 @@ public class InfinispanDocument extends Document {
     private boolean matched = true;
     private Map<String, Stats> statsMap = new HashMap<>();
     private Object identifier;
-    
+
     public Object getIdentifier() {
-		return identifier;
-	}
+        return identifier;
+    }
 
-	public void setIdentifier(Object identifier) {
-		this.identifier = identifier;
-	}
+    public void setIdentifier(Object identifier) {
+        this.identifier = identifier;
+    }
 
-	static class Stats {
+    static class Stats {
         AtomicInteger matched = new AtomicInteger(0);
         AtomicInteger unmatched = new AtomicInteger(0);
     }
@@ -97,11 +97,12 @@ public class InfinispanDocument extends Document {
             return s.unmatched.get();
         }
     }
-    
+
     public int merge(InfinispanDocument updates) {
-        int updated = 1;
+        int updated = 0;
         for (Entry<String, Object> entry:updates.getProperties().entrySet()) {
             addProperty(entry.getKey(), entry.getValue());
+            updated = 1;
         }
 
         // update children if any
@@ -131,5 +132,5 @@ public class InfinispanDocument extends Document {
             }
         }
         return updated;
-    }    
+    }
 }

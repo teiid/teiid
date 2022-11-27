@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="com.jayway.jsonpath">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    <resources>
+        <artifact name="${com.jayway.jsonpath:json-path}"/>
+        <artifact name="${net.minidev:json-smart}"/>
+        <artifact name="${net.minidev:accessors-smart}"/>
+    </resources>
+    <dependencies>
+        <module name="javax.api" />
+        <module name="asm.asm" />
+        <module name="org.slf4j" />
+    </dependencies>
+</module>

@@ -21,20 +21,20 @@ import org.teiid.metadata.AbstractMetadataRecord;
 public class TransformationRecordImpl extends AbstractMetadataRecord {
 
     public static interface Types {
-	    public static final String MAPPING            = "Mapping"; //$NON-NLS-1$
-	    public static final String SELECT             = "Select"; //$NON-NLS-1$
-	    public static final String INSERT             = "Insert"; //$NON-NLS-1$
-	    public static final String UPDATE             = "Update"; //$NON-NLS-1$
-	    public static final String DELETE             = "Delete"; //$NON-NLS-1$
-	    public static final String PROCEDURE          = "Procedure"; //$NON-NLS-1$
-	}
+        public static final String MAPPING            = "Mapping"; //$NON-NLS-1$
+        public static final String SELECT             = "Select"; //$NON-NLS-1$
+        public static final String INSERT             = "Insert"; //$NON-NLS-1$
+        public static final String UPDATE             = "Update"; //$NON-NLS-1$
+        public static final String DELETE             = "Delete"; //$NON-NLS-1$
+        public static final String PROCEDURE          = "Procedure"; //$NON-NLS-1$
+    }
 
-	private String transformation;
+    private String transformation;
     private String transformationType;
     private List bindings;
     private List schemaPaths;
     private String resourcePath;
-    
+
     public String getTransformation() {
         return transformation;
     }
@@ -73,9 +73,6 @@ public class TransformationRecordImpl extends AbstractMetadataRecord {
         transformationType = string;
     }
 
-    /**
-     * @param collection
-     */
     public void setBindings(List bindings) {
         this.bindings = bindings;
     }
@@ -86,7 +83,7 @@ public class TransformationRecordImpl extends AbstractMetadataRecord {
     public void setSchemaPaths(List collection) {
         schemaPaths = collection;
     }
-    
+
     /**
      * @return
      */

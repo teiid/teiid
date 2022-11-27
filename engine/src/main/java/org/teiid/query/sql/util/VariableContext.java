@@ -41,32 +41,32 @@ public class VariableContext {
      * Constructor for VariableContext.
      */
     public VariableContext() {
-    	this(false);
+        this(false);
     }
-    
+
     public VariableContext(boolean delegateSets) {
-    	this.delegateSets = delegateSets;
+        this.delegateSets = delegateSets;
     }
 
     public void setGlobalValue(String variable, Object value) {
-    	if (this.parentContext != null) {
-    		this.parentContext.setGlobalValue(variable, value);
-    	} else {
-    		variableMap.put(variable, value);
-    	}
+        if (this.parentContext != null) {
+            this.parentContext.setGlobalValue(variable, value);
+        } else {
+            variableMap.put(variable, value);
+        }
     }
-    
+
     public Object getGlobalValue(String variable) throws TeiidComponentException {
-    	if (this.parentContext != null) {
-    		return this.parentContext.getGlobalValue(variable);
-    	} 
-    	Object value = variableMap.get(variable);
-    	if (value == null && !variableMap.containsKey(variable)) {
-    		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, variable, "No value was available")); //$NON-NLS-1$
-    	}
-    	return value;
+        if (this.parentContext != null) {
+            return this.parentContext.getGlobalValue(variable);
+        }
+        Object value = variableMap.get(variable);
+        if (value == null && !variableMap.containsKey(variable)) {
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, variable, "No value was available")); //$NON-NLS-1$
+        }
+        return value;
     }
-    
+
     /**
      * Set the value for the given, if the variable already exits replaces its value
      * with the given value else adds a new variable to the map.
@@ -74,10 +74,10 @@ public class VariableContext {
      * @param value The value to be set for the given variable.
      */
     public Object setValue(Object variable, Object value) {
-    	if (delegateSets && parentContext != null && parentContext.containsVariable(variable)) {
-    		return parentContext.setValue(variable, value);
-    	}
-		return variableMap.put(variable, value);
+        if (delegateSets && parentContext != null && parentContext.containsVariable(variable)) {
+            return parentContext.setValue(variable, value);
+        }
+        return variableMap.put(variable, value);
     }
 
     /**
@@ -157,36 +157,36 @@ public class VariableContext {
         }
         return false;
     }
-    
+
     public Object remove(Object symbol) {
-    	if (!this.variableMap.containsKey(symbol)) {
-    		if (this.parentContext != null) {
-    			return this.parentContext.remove(symbol);
-    		}
-    		return null;
-    	}
-    	return this.variableMap.remove(symbol);
+        if (!this.variableMap.containsKey(symbol)) {
+            if (this.parentContext != null) {
+                return this.parentContext.remove(symbol);
+            }
+            return null;
+        }
+        return this.variableMap.remove(symbol);
     }
-    
+
     @Override
     public String toString() {
-    	return this.variableMap.toString();
+        return this.variableMap.toString();
     }
-    
+
     public void clear() {
-    	this.variableMap.clear();
+        this.variableMap.clear();
     }
-    
+
     public void putAll(VariableContext other) {
-    	this.variableMap.putAll(other.variableMap);
+        this.variableMap.putAll(other.variableMap);
     }
-    
+
     public List<Object> getLocalValues() {
-    	return new ArrayList<Object>(this.variableMap.values());
+        return new ArrayList<Object>(this.variableMap.values());
     }
-    
+
     public Map<Object, Object> getVariableMap() {
-		return variableMap;
-	}
-    
+        return variableMap;
+    }
+
 }

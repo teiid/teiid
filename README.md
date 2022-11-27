@@ -1,7 +1,7 @@
 teiid
 =====
 
-[![Build Status](https://travis-ci.org/teiid/teiid.svg?branch=master)](https://travis-ci.org/teiid/teiid)
+[![Build Status](https://api.travis-ci.com/teiid/teiid.svg?branch=master)](https://travis-ci.org/teiid/teiid)
 [![Join the chat at https://gitter.im/teiid](https://badges.gitter.im/teiid/teiid.svg)](https://gitter.im/teiid?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Teiid is a data virtualization system that allows applications to use data from multiple, heterogeneous data stores.
@@ -15,7 +15,7 @@ Teiid is a data virtualization system that allows applications to use data from 
 - Wiki - https://community.jboss.org/wiki/TheTeiidProject
 
 ## To build Teiid
-- install JDK 1.8 or higher
+- install JDK 1.9 or higher
 - install maven 3.2+ - http://maven.apache.org/download.html
 - Create a github account and fork Teiid
 
@@ -27,17 +27,20 @@ Enter the following:
 	
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
 
-## To start Teiid
+## Travis Builds
 
-Once built you can start up the Wildfly server with Teiid by extracting "build/target/teiid-<version>-wildfly-server.zip" and running:
+Teiid includes a travis build config.  By default it performs only an "install" on every commit.  It allows for a
+cron based build to be configured as well for deploying snapshots.  The snapshot build requires add the environment
+variables SONATYPE_USERNAME and SONATYPE_PASSWORD that should set to the user access token values of an
+authorized sonatype account.
 
-	{server-dir}/bin/standalone.sh -c=standalone-teiid.xml
+## Teiid for WildFly
 
-In order to be able to access the Wildfly console you need to setup a user by running "./bin/add-user.sh" or "bin/add-user.bat" from the server directory.
+Teiid for WildFly may be built by including the wildfly profile with the relevant build command.  For example:
 
-You should be able to access the Wildfly console at http://localhost:9990 and the Teiid console at http://localhost:9990/console/App.html#teiid.
-
-For more info see [Installation Guide](http://teiid.github.io/teiid-documents/master/content/admin/Installation_Guide.html).
+    $ mvn clean install -P dev,wildfly -s settings.xml
+    
+The Teiid WildFly kits will then be located under wildfly/wildfly-build/target
 
 Licenses
 -------

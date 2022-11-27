@@ -1,0 +1,24 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="hdfs">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.hdfs"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.hdfs.HdfsManagedConnectionFactory" 
+                        jndi-name="java:/hdfsDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-hdfs-ds">
+                        
+                       <config-property name="FsUri">hdfs://host:port</config-property>
+                      
+                      <!-- Optional properties -->
+                      
+                      <!-- Set ResourcePath to provide additional configuration -->
+                      <!-- <config-property name="AllowParentPaths">true</config-property> -->
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

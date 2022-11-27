@@ -26,15 +26,15 @@ import org.teiid.core.BundleUtil;
  */
 public class QueryValidatorException extends QueryProcessingException {
 
-	private static final long serialVersionUID = 7003393883967513820L;
+    private static final long serialVersionUID = 7003393883967513820L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryValidatorException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -47,7 +47,7 @@ public class QueryValidatorException extends QueryProcessingException {
     public QueryValidatorException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -57,16 +57,16 @@ public class QueryValidatorException extends QueryProcessingException {
     public QueryValidatorException(Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public QueryValidatorException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public QueryValidatorException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public QueryValidatorException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }    
+    }
 }

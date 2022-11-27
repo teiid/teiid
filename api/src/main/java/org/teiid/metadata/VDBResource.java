@@ -25,24 +25,24 @@ import java.io.InputStream;
  * Represents a resource available with the VDB deployment.
  */
 public interface VDBResource {
-	
-	/**
-	 * Open an {@link InputStream} to the resource
-	 * @return
-	 * @throws IOException
-	 */
-	InputStream openStream() throws IOException;
-	
-	/**
-	 * Get the size in bytes
-	 * @return
-	 */
-	long getSize();
-	
-	/**
-	 * Get the resource name.
-	 * @return
-	 */
-	String getName();
-	
+
+    /**
+     * Open an {@link InputStream} to the resource
+     * @return
+     * @throws IOException
+     */
+    InputStream openStream() throws IOException;
+
+    /**
+     * Get the size in bytes
+     * @return
+     */
+    long getSize();
+
+    /**
+     * Get the resource name.
+     * @return
+     */
+    String getName();
+
 }

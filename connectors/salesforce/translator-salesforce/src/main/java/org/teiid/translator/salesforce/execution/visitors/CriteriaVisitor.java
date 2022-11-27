@@ -26,14 +26,26 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Not;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Constants;
+import org.teiid.translator.salesforce.SalesForceExecutionFactory;
+import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.Util;
 
@@ -42,13 +54,13 @@ import org.teiid.translator.salesforce.Util;
  * Parses Criteria in support of all of the ExecutionImpl classes.
  */
 public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
-	
-	private static final double SCIENTIFIC_LOW = Math.pow(10, -3);
+
+    private static final double SCIENTIFIC_LOW = Math.pow(10, -3);
     private static final double SCIENTIFIC_HIGH = Math.pow(10, 7);
 
     private static final String RESTRICTEDMULTISELECTPICKLIST = "restrictedmultiselectpicklist"; //$NON-NLS-1$
-	private static final String MULTIPICKLIST = "multipicklist"; //$NON-NLS-1$
-	protected static final String SELECT = "SELECT"; //$NON-NLS-1$
+    private static final String MULTIPICKLIST = "multipicklist"; //$NON-NLS-1$
+    protected static final String SELECT = "SELECT"; //$NON-NLS-1$
     protected static final String FROM = "FROM"; //$NON-NLS-1$
     protected static final String WHERE = "WHERE"; //$NON-NLS-1$
     protected static final String ORDER_BY = "ORDER BY"; //$NON-NLS-1$
@@ -63,18 +75,17 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected static final String CLOSE = ")"; //$NON-NLS-1$
 
     protected RuntimeMetadata metadata;
-    
+
     //buffer of criteria parts
     protected List<String> criteriaBuffer = new ArrayList<String>();
-    protected boolean hasCriteria;
     protected List<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-    protected Table table;
-    boolean onlyIDCriteria;
+    protected NamedTable table;
+    Boolean onlyIDCriteria = null;
     protected boolean queryAll = Boolean.FALSE;
-    
+
     // support for invoking a retrieve when possible.
     protected In idInCriteria = null;
-	
+
 
     public CriteriaVisitor( RuntimeMetadata metadata ) {
         this.metadata = metadata;
@@ -84,16 +95,17 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     public void visit( Comparison criteria ) {
         addCompareCriteria(criteria);
         boolean isAcceptableID = (Operator.EQ == criteria.getOperator() && isIdColumn(criteria.getLeftExpression()));
-        setHasCriteria(true, isAcceptableID);
+        setHasCriteria(isAcceptableID);
         if (isAcceptableID) {
-        	this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
+            this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
         }
     }
-    
+
+    @Override
     public void visit(IsNull obj) {
-    	visit(new Comparison(obj.getExpression(), new Literal(null, obj.getExpression().getType()), obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ));
+        visit(new Comparison(obj.getExpression(), new Literal(null, obj.getExpression().getType()), obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ));
     }
-    
+
     @Override
     public void visit( Like criteria ) {
         if (isIdColumn(criteria.getLeftExpression())) {
@@ -107,52 +119,66 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         boolean negated = criteria.isNegated();
         criteria.setNegated(false);
         if (negated) {
-        	criteriaBuffer.add("NOT ("); //$NON-NLS-1$
+            criteriaBuffer.add("NOT ("); //$NON-NLS-1$
         }
-        criteriaBuffer.add(criteria.toString());
+        criteriaBuffer.add(getValue(criteria.getLeftExpression(), false));
+        criteriaBuffer.add(SPACE + SQLConstants.Reserved.LIKE + SPACE);
+        criteriaBuffer.add(getValue(criteria.getRightExpression(), false));
         if (negated) {
-        	criteriaBuffer.add(CLOSE);
-        	criteria.setNegated(true);
+            criteriaBuffer.add(CLOSE);
+            criteria.setNegated(true);
         }
         // don't check if it's ID, Id LIKE '123%' still requires a query
-        setHasCriteria(true, false);
+        setHasCriteria(false);
     }
-        
+
     @Override
     public void visit(AndOr obj) {
-    	this.criteriaBuffer.add(OPEN);
-		super.visitNode(obj.getLeftCondition());
-		this.criteriaBuffer.add(CLOSE);
-		this.criteriaBuffer.add(SPACE);
-		this.criteriaBuffer.add(obj.getOperator().toString());
-		this.criteriaBuffer.add(SPACE);
-		this.criteriaBuffer.add(OPEN);
-		super.visitNode(obj.getRightCondition());
-		this.criteriaBuffer.add(CLOSE);
+        this.criteriaBuffer.add(OPEN);
+        super.visitNode(obj.getLeftCondition());
+        this.criteriaBuffer.add(CLOSE);
+        this.criteriaBuffer.add(SPACE);
+        this.criteriaBuffer.add(obj.getOperator().toString());
+        this.criteriaBuffer.add(SPACE);
+        this.criteriaBuffer.add(OPEN);
+        super.visitNode(obj.getRightCondition());
+        this.criteriaBuffer.add(CLOSE);
     }
-    
+
     @Override
     public void visit(Not obj) {
-    	criteriaBuffer.add("NOT ("); //$NON-NLS-1$
-    	super.visit(obj);
-    	criteriaBuffer.add(CLOSE);
+        criteriaBuffer.add("NOT ("); //$NON-NLS-1$
+        super.visit(obj);
+        criteriaBuffer.add(CLOSE);
     }
 
     @Override
     public void visit( In criteria ) {
         Expression lExpr = criteria.getLeftExpression();
         if (lExpr instanceof ColumnReference) {
-        	ColumnReference cr = (ColumnReference)lExpr;
+            ColumnReference cr = (ColumnReference)lExpr;
             Column column = cr.getMetadataObject();
             if (column != null && (MULTIPICKLIST.equalsIgnoreCase(column.getNativeType()) || RESTRICTEDMULTISELECTPICKLIST.equalsIgnoreCase(column.getNativeType()))) {
-                appendMultiselectIn(column, criteria);
+                appendMultiselectIn(cr, criteria);
             } else {
                 appendCriteria(criteria);
             }
         } else {
-        	appendCriteria(criteria);
+            appendCriteria(criteria);
         }
-        setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
+        criteriaBuffer.add(OPEN);
+        Iterator<Expression> iter = criteria.getRightExpressions().iterator();
+        while (iter.hasNext()) {
+            criteriaBuffer.add(getValue(iter.next(), false));
+            if (iter.hasNext()) {
+                criteriaBuffer.add(COMMA);
+            }
+        }
+        criteriaBuffer.add(CLOSE);
+        setHasCriteria(!criteria.isNegated()
+                && isIdColumn(criteria.getLeftExpression())
+                && criteria.getRightExpressions()
+                        .size() <= SalesForceExecutionFactory.MAX_RETRIEVE);
     }
 
     public void parseFunction( Function func ) {
@@ -178,38 +204,43 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         criteriaBuffer.add(SPACE);
         criteriaBuffer.add(funcName);
         criteriaBuffer.add(OPEN);
-        String fullParam = ((Literal)expressions.get(1)).toString();
+        //TODO: this should be a vararg array, rather than a single value
+        String fullParam = (String)((Literal)expressions.get(1)).getValue();
         String[] params = fullParam.split(","); //$NON-NLS-1$
         for (int i = 0; i < params.length; i++) {
             String token = params[i];
             if (i != 0) {
-            	criteriaBuffer.add(COMMA);
+                criteriaBuffer.add(COMMA);
             }
-            criteriaBuffer.add(Util.addSingleQuotes(token));
+            criteriaBuffer.add("'" + token + "'"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         criteriaBuffer.add(CLOSE);
     }
 
-    private void appendMultiselectIn( Column column,
+    private void appendCriteria( In criteria ) {
+        Expression leftExp = criteria.getLeftExpression();
+        if(isIdColumn(leftExp)) {
+            idInCriteria  = criteria;
+        }
+        criteriaBuffer.add(getValue(leftExp, false));
+        criteriaBuffer.add(SPACE);
+        if (criteria.isNegated()) {
+            criteriaBuffer.add("NOT "); //$NON-NLS-1$
+        }
+        criteriaBuffer.add("IN"); //$NON-NLS-1$
+    }
+
+    private void appendMultiselectIn( ColumnReference column,
                                       In criteria ) {
-        criteriaBuffer.add(column.getSourceName());
+        StringBuilder sb = new StringBuilder();
+        appendColumnReference(sb, column);
+        criteriaBuffer.add(sb.toString());
         criteriaBuffer.add(SPACE);
         if (criteria.isNegated()) {
             criteriaBuffer.add(EXCLUDES);
         } else {
             criteriaBuffer.add(INCLUDES);
         }
-        criteriaBuffer.add(OPEN);
-        List<Expression> rightExpressions = criteria.getRightExpressions();
-        Iterator<Expression> iter = rightExpressions.iterator();
-        while (iter.hasNext()) {
-            Expression rightExpression = iter.next();
-            criteriaBuffer.add(rightExpression.toString());
-            if (iter.hasNext()) {
-            	criteriaBuffer.add(COMMA);
-            }
-        }
-        criteriaBuffer.add(CLOSE);
     }
 
     private void validateFunction( List<Expression> expressions ) throws TranslatorException {
@@ -246,127 +277,108 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         }
     }
 
-	void appendColumnReference(StringBuilder queryString,
-			ColumnReference ref) {
-		queryString.append(ref.getMetadataObject().getParent().getSourceName());
-		queryString.append('.');
-		queryString.append(ref.getMetadataObject().getSourceName());
-	}
-
-    private void appendCriteria( In criteria ) {
-        Expression leftExp = criteria.getLeftExpression();
-        if(isIdColumn(leftExp)) {
-        	idInCriteria  = criteria;
-        }
-        criteriaBuffer.add(getValue(leftExp, false));
-        criteriaBuffer.add(SPACE);
-        if (criteria.isNegated()) {
-        	criteriaBuffer.add("NOT "); //$NON-NLS-1$
-        }
-        criteriaBuffer.add("IN"); //$NON-NLS-1$
-        criteriaBuffer.add(OPEN);
-        Iterator<Expression> iter = criteria.getRightExpressions().iterator();
-        while (iter.hasNext()) {
-        	criteriaBuffer.add(getValue(iter.next(), false));
-            if (iter.hasNext()) {
-            	criteriaBuffer.add(COMMA);
-            }
-        }
-        criteriaBuffer.add(CLOSE);
+    void appendColumnReference(StringBuilder queryString,
+            ColumnReference ref) {
+        queryString.append(ref.getMetadataObject().getSourceName());
     }
-    
+
     protected String getValue( Expression expr, boolean raw) {
         StringBuilder result = new StringBuilder();
         if (expr instanceof ColumnReference) {
-        	appendColumnReference(result, (ColumnReference)expr);
+            appendColumnReference(result, (ColumnReference)expr);
         } else if (expr instanceof Literal) {
-        	Literal literal = (Literal)expr;
-        	if (literal.getValue() == null) {
-    			if (raw) {
-    				return null;
-    			}
-    			return "NULL"; //$NON-NLS-1$
-    		}
-    		if (raw) {
-    			return literal.getValue().toString();
-    		}
-        	appendLiteralValue(result, literal);
+            Literal literal = (Literal)expr;
+            if (literal.getValue() == null) {
+                if (raw) {
+                    return null;
+                }
+                return "NULL"; //$NON-NLS-1$
+            }
+            if (raw) {
+                return literal.getValue().toString();
+            }
+            appendLiteralValue(result, literal);
         } else if (expr instanceof AggregateFunction) {
-        	appendAggregateFunction(result, (AggregateFunction)expr);
+            appendAggregateFunction(result, (AggregateFunction)expr);
         } else {
             throw new RuntimeException("unknown type in SalesforceQueryExecution.getValue(): " + expr.toString()); //$NON-NLS-1$
         }
         return result.toString();
     }
 
-	public static void appendLiteralValue(StringBuilder result, Literal literal) {
-		if (literal.getValue().getClass().equals(Boolean.class)) {
-			result.append(((Boolean)literal.getValue()).toString());
-		} else if (literal.getValue().getClass().equals(java.sql.Timestamp.class)) {
-			Timestamp datetime = (java.sql.Timestamp)literal.getValue();
-			String value = datetime.toString();
-			int fractionalPlace = value.lastIndexOf('.');
-			int fractionalLength = value.length() - fractionalPlace - 1;
-			if (fractionalLength > 3) {
-				value = value.substring(0, fractionalPlace + 3);
-			} else if (fractionalLength < 3) {
-				value += "00".substring(fractionalLength - 1); //$NON-NLS-1$
-			}
-			result.append(value).setCharAt(result.length()-value.length()+10, 'T');
-			Calendar c = TimestampWithTimezone.getCalendar();
-			c.setTime(datetime);
-			int minutes = (c.get(Calendar.ZONE_OFFSET) +
-				     c.get(Calendar.DST_OFFSET)) / 60000;
-			int val = minutes/60;
-			result.append(String.format("%1$+03d", val)); //$NON-NLS-1$
-			result.append(':');
-			val = minutes%60;
-			result.append(val/10);
-			result.append(val%10);
-		} else if (literal.getValue().getClass().equals(java.sql.Time.class)) {
-			result.append(literal.getValue()).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
-		} else if (literal.getValue().getClass().equals(java.sql.Date.class)) {
-			result.append(literal.getValue());
-		} else if (literal.getValue() instanceof Double) {
-			Double doubleVal = (Double)literal.getValue();
-			double value = Math.abs(doubleVal.doubleValue());
-            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) { 
-            	result.append(BigDecimal.valueOf(doubleVal).toPlainString());
-            } else {
-            	result.append(literal.toString());
+    public static void appendLiteralValue(StringBuilder result, Literal literal) {
+        Object v = literal.getValue();
+        if (v.getClass().equals(Boolean.class)) {
+            result.append(((Boolean)v).toString());
+        } else if (v.getClass().equals(java.sql.Timestamp.class)) {
+            Timestamp datetime = (java.sql.Timestamp)v;
+            String value = datetime.toString();
+            int fractionalPlace = value.lastIndexOf('.');
+            int fractionalLength = value.length() - fractionalPlace - 1;
+            if (fractionalLength > 3) {
+                value = value.substring(0, fractionalPlace + 3);
+            } else if (fractionalLength < 3) {
+                value += "00".substring(fractionalLength - 1); //$NON-NLS-1$
             }
-		} else if (literal.getValue() instanceof Float) {
-			Float floatVal = (Float)literal.getValue();
-			float value = Math.abs(floatVal);
-            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) { 
-            	result.append(BigDecimal.valueOf(floatVal).toPlainString());
+            result.append(value).setCharAt(result.length()-value.length()+10, 'T');
+            Calendar c = TimestampWithTimezone.getCalendar();
+            c.setTime(datetime);
+            int minutes = (c.get(Calendar.ZONE_OFFSET) +
+                     c.get(Calendar.DST_OFFSET)) / 60000;
+            int val = minutes/60;
+            result.append(String.format("%1$+03d", val)); //$NON-NLS-1$
+            result.append(':');
+            val = minutes%60;
+            result.append(val/10);
+            result.append(val%10);
+        } else if (v.getClass().equals(java.sql.Time.class)) {
+            result.append(v).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
+        } else if (v.getClass().equals(java.sql.Date.class)) {
+            result.append(v);
+        } else if (v instanceof Double) {
+            Double doubleVal = (Double)v;
+            double value = Math.abs(doubleVal.doubleValue());
+            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) {
+                result.append(BigDecimal.valueOf(doubleVal).toPlainString());
             } else {
-            	result.append(literal.toString());
+                result.append(literal.toString());
             }
-		} else if (literal.getValue() instanceof BigDecimal) {
-			result.append(((BigDecimal)literal.getValue()).toPlainString());
-		} else {
-			result.append(literal.toString());
-		}
-	}
-    
-	protected void appendAggregateFunction(StringBuilder result,
-			AggregateFunction af) {
-		if (af.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) 
-				&& (af.getExpression() == null || af.getExpression() instanceof Literal)) {
-			result.append("COUNT(Id)"); //$NON-NLS-1$
-		} else {
-			result.append(af.getName() + "(" + getValue(af.getExpression(), false) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-	}
+        } else if (v instanceof Float) {
+            Float floatVal = (Float)v;
+            float value = Math.abs(floatVal);
+            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) {
+                result.append(BigDecimal.valueOf(floatVal).toPlainString());
+            } else {
+                result.append(literal.toString());
+            }
+        } else if (v instanceof BigDecimal) {
+            result.append(((BigDecimal)v).toPlainString());
+        } else if (v instanceof String) {
+            String stringVal = (String)v;
+            stringVal = stringVal.replaceAll("['\\\\]", "\\\\$0");
+            result.append("'").append(stringVal).append("'");
+        } else {
+            result.append(literal.toString());
+        }
+    }
+
+    protected void appendAggregateFunction(StringBuilder result,
+            AggregateFunction af) {
+        if (af.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT)
+                && (af.getExpression() == null || af.getExpression() instanceof Literal)) {
+            result.append("COUNT(Id)"); //$NON-NLS-1$
+        } else {
+            result.append(af.getName() + "(" + getValue(af.getExpression(), false) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+    }
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
-        table = group.getMetadataObject();
-        String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
+        table = group;
+        String supportsQuery = table.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
         if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
-            throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new TranslatorException(table.getMetadataObject().getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        List<Column> columnIds = table.getColumns();
+        List<Column> columnIds = table.getMetadataObject().getColumns();
         for (Column element : columnIds) {
             // influences queryAll behavior
             if (element.getSourceName().equals("IsDeleted")) { //$NON-NLS-1$
@@ -402,43 +414,35 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         return result;
     }
 
-    public boolean hasCriteria() {
-        return hasCriteria;
-    }
-
-    public void setHasCriteria( boolean hasCriteria,
-                                boolean isIdCriteria ) {
-        if (isIdCriteria) {
-            if (hasCriteria()) {
-                this.onlyIDCriteria = false;
-            } else {
-                this.onlyIDCriteria = true;
-            }
-        } else if (this.onlyIDCriteria) {
-            this.onlyIDCriteria = false;
+    public void setHasCriteria( boolean isIdCriteria ) {
+        if (isIdCriteria && onlyIDCriteria == null) {
+            onlyIDCriteria = Boolean.TRUE;
+        } else {
+            onlyIDCriteria = Boolean.FALSE;
         }
-        this.hasCriteria = hasCriteria;
     }
 
+    @Override
     public boolean hasOnlyIDCriteria() {
-        return this.onlyIDCriteria;
+        return Boolean.TRUE.equals(this.onlyIDCriteria);
     }
 
+    @Override
     public String getTableName() {
-        return table.getSourceName();
+        return table.getMetadataObject().getSourceName();
     }
-    
+
     protected void addCriteriaString(StringBuilder result) {
-    	addCriteriaString(WHERE, result);
-	}
-    
+        addCriteriaString(WHERE, result);
+    }
+
     protected void addCriteriaString(String clause, StringBuilder result) {
-    	if(!criteriaBuffer.isEmpty()) {
-			result.append(clause).append(SPACE);
-			for (String string : criteriaBuffer) {
-				result.append(string);
-			}
-			result.append(SPACE);
-		}
-	}
+        if(!criteriaBuffer.isEmpty()) {
+            result.append(clause).append(SPACE);
+            for (String string : criteriaBuffer) {
+                result.append(string);
+            }
+            result.append(SPACE);
+        }
+    }
 }

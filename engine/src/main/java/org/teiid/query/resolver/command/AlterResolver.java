@@ -34,40 +34,40 @@ import org.teiid.query.sql.lang.Command;
 
 public class AlterResolver implements CommandResolver {
 
-	@Override
-	public void resolveCommand(Command command, TempMetadataAdapter metadata,
-			boolean resolveNullLiterals) throws QueryMetadataException,
-			QueryResolverException, TeiidComponentException {
-		Alter<? extends Command> alter = (Alter<? extends Command>)command;
-		ResolverUtil.resolveGroup(alter.getTarget(), metadata);
-		int type = Command.TYPE_QUERY;
-		boolean viewTarget = true;
-		if (alter instanceof AlterTrigger) {
-			TriggerEvent event = ((AlterTrigger)alter).getEvent();
-			switch (event) {
-			case DELETE:
-				type = Command.TYPE_DELETE;
-				break;
-			case INSERT:
-				type = Command.TYPE_INSERT;
-				break;
-			case UPDATE:
-				type = Command.TYPE_UPDATE;
-				break;
-			}
-			if (((AlterTrigger)alter).isAfter()) {
-			    viewTarget = false;
-			}
-		} else if (alter instanceof AlterProcedure) {
-			type = Command.TYPE_STORED_PROCEDURE;
-			viewTarget = false;
-		}
-		if (viewTarget && !QueryResolver.isView(alter.getTarget(), metadata)) {
-			 throw new QueryResolverException(QueryPlugin.Event.TEIID30116, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30116, alter.getTarget()));
-		}
-		if (alter.getDefinition() != null) {
-			QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata(), false);
-		}
-	}
+    @Override
+    public void resolveCommand(Command command, TempMetadataAdapter metadata,
+            boolean resolveNullLiterals) throws QueryMetadataException,
+            QueryResolverException, TeiidComponentException {
+        Alter<? extends Command> alter = (Alter<? extends Command>)command;
+        ResolverUtil.resolveGroup(alter.getTarget(), metadata);
+        int type = Command.TYPE_QUERY;
+        boolean viewTarget = true;
+        if (alter instanceof AlterTrigger) {
+            TriggerEvent event = ((AlterTrigger)alter).getEvent();
+            switch (event) {
+            case DELETE:
+                type = Command.TYPE_DELETE;
+                break;
+            case INSERT:
+                type = Command.TYPE_INSERT;
+                break;
+            case UPDATE:
+                type = Command.TYPE_UPDATE;
+                break;
+            }
+            if (((AlterTrigger)alter).isAfter()) {
+                viewTarget = false;
+            }
+        } else if (alter instanceof AlterProcedure) {
+            type = Command.TYPE_STORED_PROCEDURE;
+            viewTarget = false;
+        }
+        if (viewTarget && !QueryResolver.isView(alter.getTarget(), metadata)) {
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30116, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30116, alter.getTarget()));
+        }
+        if (alter.getDefinition() != null) {
+            QueryResolver.resolveCommand(alter.getDefinition(), alter.getTarget(), type, metadata.getDesignTimeMetadata(), false);
+        }
+    }
 
 }

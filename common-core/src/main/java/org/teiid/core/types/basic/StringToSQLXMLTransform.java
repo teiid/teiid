@@ -37,65 +37,65 @@ import org.teiid.core.types.XMLType.Type;
 
 public class StringToSQLXMLTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
         String xml = (String)value;
         Reader reader = new StringReader(xml);
         Type type = isXml(reader);
         XMLType result = new XMLType(new SQLXMLImpl(xml));
         result.setType(type);
         return result;
-	}
+    }
 
-	public static Type isXml(Reader reader) throws TransformationException {
-		Type type = Type.ELEMENT;
-		XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
-        try{        
+    public static Type isXml(Reader reader) throws TransformationException {
+        Type type = Type.ELEMENT;
+        XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
+        try{
              XMLStreamReader xmlReader = inputFactory.createXMLStreamReader(reader);
              int event = xmlReader.getEventType();
-        	 if  (event == XMLEvent.START_DOCUMENT && xmlReader.getLocation().getColumnNumber() != 1) {
-        		 type = Type.DOCUMENT;
-        	 } 
+             if  (event == XMLEvent.START_DOCUMENT && xmlReader.getLocation().getColumnNumber() != 1) {
+                 type = Type.DOCUMENT;
+             }
              while (xmlReader.hasNext()) {
-            	 xmlReader.next();
+                 xmlReader.next();
              }
         } catch (Exception e){
               throw new TransformationException(CorePlugin.Event.TEIID10070, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10070));
         } finally {
-        	try {
-				reader.close();
-			} catch (IOException e) {
-			}
+            try {
+                reader.close();
+            } catch (IOException e) {
+            }
         }
         return type;
-	}
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DataTypeManager.DefaultDataClasses.STRING;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return DataTypeManager.DefaultDataClasses.STRING;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.XML;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
-	
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.XML;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
+
 }

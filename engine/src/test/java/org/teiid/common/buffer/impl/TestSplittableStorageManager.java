@@ -24,54 +24,54 @@ import org.junit.Test;
 import org.teiid.common.buffer.FileStore;
 
 public class TestSplittableStorageManager {
-	
+
     @Test public void testCreatesSpillFiles() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         SplittableStorageManager ssm = new SplittableStorageManager(msm);
         ssm.setMaxFileSizeDirect(2048);
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = ssm.createFileStore(tsID);
         TestFileStorageManager.writeBytes(store);
-        
+
         assertEquals(1, msm.getCreated());
 
         TestFileStorageManager.writeBytes(store);
-        
+
         assertEquals(2, msm.getCreated());
 
         store.setLength(10000);
-        
+
         assertEquals(5, msm.getCreated());
-        
+
         store.setLength(100);
 
         assertEquals(4, msm.getRemoved());
 
         store.remove();
-        
+
         assertEquals(5, msm.getRemoved());
     }
-    
+
     @Test public void testTruncate() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         SplittableStorageManager ssm = new SplittableStorageManager(msm);
         ssm.setMaxFileSizeDirect(2048);
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = ssm.createFileStore(tsID);
         TestFileStorageManager.writeBytes(store);
-        
+
         assertEquals(1, msm.getCreated());
 
         TestFileStorageManager.writeBytes(store);
-        
+
         assertEquals(2, msm.getCreated());
-        
+
         store.setLength(100);
-        
+
         assertEquals(1, msm.getRemoved());
-        
+
     }
 
 }

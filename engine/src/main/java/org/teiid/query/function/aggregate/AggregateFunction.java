@@ -24,6 +24,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -35,16 +36,16 @@ import org.teiid.query.util.CommandContext;
  */
 public abstract class AggregateFunction {
 
-	protected int[] argIndexes;
-	private int conditionIndex = -1;
-	
-	public void setArgIndexes(int[] argIndexes) {
-		this.argIndexes = argIndexes;
-	}
-	
-	public void setConditionIndex(int conditionIndex) {
-		this.conditionIndex = conditionIndex;
-	}
+    protected int[] argIndexes;
+    private int conditionIndex = -1;
+
+    public void setArgIndexes(int[] argIndexes) {
+        this.argIndexes = argIndexes;
+    }
+
+    public void setConditionIndex(int conditionIndex) {
+        this.conditionIndex = conditionIndex;
+    }
 
     /**
      * Called to initialize the function.  In the future this may expand
@@ -53,10 +54,10 @@ public abstract class AggregateFunction {
      * @param inputTypes
      */
     public void initialize(Class<?> dataType, Class<?>[] inputTypes) {}
-    
+
     public int[] getArgIndexes() {
-		return argIndexes;
-	}
+        return argIndexes;
+    }
 
     /**
      * Called to reset the state of the function.
@@ -64,35 +65,35 @@ public abstract class AggregateFunction {
     public abstract void reset();
 
     public void addInput(List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
-    	if (conditionIndex != -1 && !Boolean.TRUE.equals(tuple.get(conditionIndex))) {
-			return;
-    	}
-    	if (filter(tuple)) {
-    		return;
-    	}
-		addInputDirect(tuple, commandContext);
+        if (conditionIndex != -1 && !Boolean.TRUE.equals(tuple.get(conditionIndex))) {
+            return;
+        }
+        if (filter(tuple)) {
+            return;
+        }
+        addInputDirect(tuple, commandContext);
     }
 
-	public boolean filter(List<?> tuple) {
-		if (!respectsNull()) {
-    		for (int i = 0; i < argIndexes.length; i++) {
-    			if (tuple.get(argIndexes[i]) == null) {
-    				return true;
-    			}
-    		}
-    	}
-		return false;
-	}
-    
-    public boolean respectsNull() {
-    	return false;
+    public boolean filter(List<?> tuple) {
+        if (!respectsNull()) {
+            for (int i = 0; i < argIndexes.length; i++) {
+                if (tuple.get(argIndexes[i]) == null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
-    
+
+    public boolean respectsNull() {
+        return false;
+    }
+
     /**
      * Called for the element value in every row of a group.
-     * @param tuple 
+     * @param tuple
      * @param commandContext
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      */
     public abstract void addInputDirect(List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException;
 
@@ -100,21 +101,25 @@ public abstract class AggregateFunction {
      * Called after all values have been processed to get the result.
      * @param commandContext
      * @return Result value
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      */
     public abstract Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException;
-    
+
     public List<? extends Class<?>> getStateTypes() {
-    	return null;
+        return null;
     }
-    
+
     public void getState(List<Object> state) {
-    	
+
     }
-    
+
     public int setState(List<?> state, int index) {
-    	return 0;
+        return 0;
+    }
+
+    public Class<?> getOutputType(AggregateSymbol function) {
+        return function.getType();
     }
 
 }

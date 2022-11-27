@@ -18,26 +18,20 @@
 package org.teiid.translator.infinispan.hotrod;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.commons.api.BasicCache;
 import org.teiid.infinispan.api.DocumentFilter;
-import org.teiid.infinispan.api.InfinispanConnection;
-import org.teiid.infinispan.api.TeiidTableMarsheller;
 import org.teiid.infinispan.api.DocumentFilter.Action;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
+import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.DataNotAvailableException;
@@ -52,91 +46,52 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     private RuntimeMetadata metadata;
     private ExecutionContext executionContext;
     private InfinispanResponse results;
-    private TeiidTableMarsheller marshaller;
-    private boolean useAliasCache;
 
-	public InfinispanQueryExecution(InfinispanExecutionFactory translator, QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection,
-			boolean useAliasCache) throws TranslatorException {
+    public InfinispanQueryExecution(InfinispanExecutionFactory translator, QueryExpression command,
+            ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection) {
         this.command = (Select)command;
         this.connection = connection;
         this.metadata = metadata;
         this.executionContext = executionContext;
-        this.useAliasCache = useAliasCache;
     }
 
     @Override
     public void execute() throws TranslatorException {
-        try {
-            if (useAliasCache) {
-            	useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
-            }
-            
-            final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
-            visitor.append(this.command);
-            Table table = visitor.getParentTable();
-            
-            String queryStr = visitor.getQuery();
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SourceQuery:", queryStr);
-            
-            DocumentFilter docFilter = null;
-            if (queryStr.startsWith("FROM ") && ((Select)command).getWhere() != null) {
-                SQLStringVisitor ssv = new SQLStringVisitor() {
-                    @Override
-                    public String getName(AbstractMetadataRecord object) {
-                        return object.getName();
-                    }
-                };
-                ssv.append(((Select)command).getWhere());
-                docFilter = new ComplexDocumentFilter(visitor.getParentNamedTable(), visitor.getQueryNamedTable(),
-                        this.metadata, ssv.toString(), Action.ADD);
-            }
+        final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
+        visitor.append(this.command);
+        Table table = visitor.getParentTable();
 
-            this.marshaller = MarshallerBuilder.getMarshaller(table, this.metadata, docFilter);
-            this.connection.registerMarshaller(this.marshaller);
+        String queryStr = visitor.getQuery();
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SourceQuery:", queryStr);
 
-            // if the message in defined in different cache than the default, switch it out now.
-            RemoteCache<Object, Object> cache =  getCache(table, connection);
-			results = new InfinispanResponse(cache, queryStr, this.executionContext.getBatchSize(),
-					visitor.getRowLimit(), visitor.getRowOffset(), visitor.getProjectedDocumentAttributes(),
-					visitor.getDocumentNode());
-        } finally {
-            this.connection.unRegisterMarshaller(this.marshaller);
+        DocumentFilter docFilter = null;
+        if (queryStr.startsWith("FROM ") && command.getWhere() != null) {
+            SQLStringVisitor ssv = new SQLStringVisitor() {
+                @Override
+                public String getName(AbstractMetadataRecord object) {
+                    return object.getName();
+                }
+            };
+            ssv.append(command.getWhere());
+            docFilter = new ComplexDocumentFilter(visitor.getParentNamedTable(), visitor.getQueryNamedTable(),
+                    this.metadata, ssv.toString(), Action.ADD);
         }
-    }
 
-	static void useModifiedGroups(InfinispanConnection connection, ExecutionContext context, RuntimeMetadata metadata,
-			Command command) throws TranslatorException {
-		BasicCache<String, String> aliasCache = InfinispanDirectQueryExecution.getAliasCache(connection);
-		CollectorVisitor.collectGroups(command).forEach(namedTable -> {
-			try {
-				Table table = InfinispanDirectQueryExecution.getAliasTable(context, metadata, aliasCache,
-						namedTable.getMetadataObject());
-				Collection<ColumnReference> columns = CollectorVisitor.collectElements(command);
-				columns.forEach(reference -> {
-					if (reference.getTable().getMetadataObject().equals(namedTable.getMetadataObject())) {
-						Column column = table.getColumnByName(reference.getMetadataObject().getName());
-						reference.getTable().setMetadataObject(table);
-						reference.setMetadataObject(column);
-					}
-				});
-				namedTable.setMetadataObject(table);
-			} catch (TranslatorException e) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
-			}
-		});
-	}
+        this.connection.registerMarshaller(table, this.metadata);
+
+        // if the message in defined in different cache than the default, switch it out now.
+        RemoteCache<Object, Object> cache =  getCache(table, connection);
+        results = new InfinispanResponse(cache, queryStr, this.executionContext.getBatchSize(),
+                visitor.getRowLimit(), visitor.getRowOffset(), visitor.getProjectedDocumentAttributes(),
+                visitor.getDocumentNode(), docFilter);
+    }
 
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         try {
-            this.connection.registerMarshaller(this.marshaller);
             return results.getNextRow();
         } catch(IOException e) {
-        	throw new TranslatorException(e);
-        }
-        finally {
-            this.connection.unRegisterMarshaller(this.marshaller);
+            throw new TranslatorException(e);
         }
     }
 
@@ -149,12 +104,12 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     }
 
     static RemoteCache<Object, Object> getCache(Table table, InfinispanConnection connection) throws TranslatorException {
-    	RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
+        RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
         String cacheName = table.getProperty(ProtobufMetadataProcessor.CACHE, false);
         if (cacheName != null && !cacheName.equals(connection.getCache().getName())) {
-            cache = (RemoteCache<Object, Object>)connection.getCache(cacheName, true);
+            cache = (RemoteCache<Object, Object>)connection.getCache(cacheName);
             if (cache == null) {
-            	throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020, cacheName));
+                throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020, cacheName));
             }
         }
         return cache;

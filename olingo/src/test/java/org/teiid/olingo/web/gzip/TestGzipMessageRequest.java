@@ -17,32 +17,33 @@
  */
 package org.teiid.olingo.web.gzip;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import javax.servlet.ReadListener;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-
 public class TestGzipMessageRequest{
 
     private GzipMessageRequest request;
     private ServletInputStream stream;
-    private ByteArrayInputStream streamBytes;
+    private ByteBuffer streamBytes;
 
     @Before
     public void prepareRequest() throws IOException{
-        streamBytes = new ByteArrayInputStream(TestGzipMessageResponse.TEST_STRING_IN_GZIP);
+        streamBytes = TestGzipMessageResponse.TEST_STRING_IN_GZIP.duplicate();
         stream = new ServletInputStream(){
             @Override public boolean isReady(){ return true; }
             @Override public boolean isFinished(){ return false; }
             @Override public void setReadListener(ReadListener readListener){ }
-            @Override public int read() throws IOException{ return streamBytes.read(); }
+            @Override public int read() throws IOException{ return streamBytes.remaining()==0?-1:(streamBytes.get()&0xff); }
         };
         request = new GzipMessageRequest(mockRequest(stream));
     }
@@ -71,7 +72,7 @@ public class TestGzipMessageRequest{
         String read = r.readLine();
         Assert.assertEquals("Expected read String.", TestGzipMessageResponse.TEST_STRING, read);
         Assert.assertNull("No next line expected.", r.readLine());
-        Assert.assertEquals("There should be no more bytes in stream.", 0, streamBytes.available());
+        Assert.assertEquals("There should be no more bytes in stream.", 0, streamBytes.remaining());
     }
 
     @Test
@@ -80,7 +81,7 @@ public class TestGzipMessageRequest{
         byte[] buff = new byte[TestGzipMessageResponse.TEST_STRING.getBytes().length];
         sis.read(buff);
         Assert.assertEquals("Expected String output.", TestGzipMessageResponse.TEST_STRING, new String(buff));
-        Assert.assertEquals("There should be no more bytes in stream.", 0, streamBytes.available());
+        Assert.assertEquals("There should be no more bytes in stream.", 0, streamBytes.remaining());
     }
 
     private static HttpServletRequest mockRequest(ServletInputStream stream) throws IOException{

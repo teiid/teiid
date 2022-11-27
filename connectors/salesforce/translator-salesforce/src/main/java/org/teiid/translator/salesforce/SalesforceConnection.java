@@ -22,9 +22,8 @@ import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
-
+import org.teiid.resource.api.Connection;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
@@ -39,109 +38,109 @@ import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 
 public interface SalesforceConnection extends Connection {
-	
-	public static class BatchResultInfo {
-		private String batchId;
-		private int waitCount;
-		
-		//batch state
-		private String[] resultList;
-		private int resultNum;
-        
-		//pk chunk state
-		private LinkedHashMap<String, BatchInfo> pkBatches;
 
-		public BatchResultInfo(String batchInfo) {
-			this.batchId = batchInfo;
-		}
-		
-		public String[] getResultList() {
+    public static class BatchResultInfo {
+        private String batchId;
+        private int waitCount;
+
+        //batch state
+        private String[] resultList;
+        private int resultNum;
+
+        //pk chunk state
+        private LinkedHashMap<String, BatchInfo> pkBatches;
+
+        public BatchResultInfo(String batchInfo) {
+            this.batchId = batchInfo;
+        }
+
+        public String[] getResultList() {
             return resultList;
         }
-		
-		public void setResultList(String[] resultList) {
+
+        public void setResultList(String[] resultList) {
             this.resultList = resultList;
             this.resultNum = 0;
         }
-		
-		public int getAndIncrementResultNum() {
+
+        public int getAndIncrementResultNum() {
             return resultNum++;
         }
-		
-		public void setResultNum(int resultNum) {
+
+        public void setResultNum(int resultNum) {
             this.resultNum = resultNum;
         }
-		
-		public String getBatchId() {
-			return batchId;
-		}
-		
-		public void setPkBatches(LinkedHashMap<String, BatchInfo> pkBatches) {
-		    this.pkBatches = pkBatches;
+
+        public String getBatchId() {
+            return batchId;
         }
-		
-		public LinkedHashMap<String, BatchInfo> getPkBatches() {
+
+        public void setPkBatches(LinkedHashMap<String, BatchInfo> pkBatches) {
+            this.pkBatches = pkBatches;
+        }
+
+        public LinkedHashMap<String, BatchInfo> getPkBatches() {
             return pkBatches;
         }
-		
-		public int incrementAndGetWaitCount() {
-		    return ++waitCount;
-		}
-        
-		public void resetWaitCount() {
-		    waitCount = 0;
-		}
-	}
-	
-	public interface BulkBatchResult {
-	    
-	    public List<String> nextRecord() throws IOException;
-	    
-	    public void close();
-	    
-	}
 
-	public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws ResourceException;
+        public int incrementAndGetWaitCount() {
+            return ++waitCount;
+        }
 
-	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException;
-	
-	public boolean isValid();
-	
-	public int delete(String[] ids) throws ResourceException ;
+        public void resetWaitCount() {
+            waitCount = 0;
+        }
+    }
 
-	public int create(DataPayload data) throws ResourceException;
-	
-	public int upsert(DataPayload data) throws ResourceException;
+    public interface BulkBatchResult {
 
-	public int update(List<DataPayload> updateDataList) throws ResourceException;
+        public List<String> nextRecord() throws IOException;
 
-	public UpdatedResult getUpdated(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
+        public void close();
 
-	public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
-	
-	public com.sforce.soap.partner.sobject.SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
-	
-	public DescribeGlobalResult getObjects() throws ResourceException;
-	
-	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws ResourceException;
-	
-	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws ResourceException;
+    }
 
-	public void cancelBulkJob(JobInfo job) throws ResourceException;
+    public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws TranslatorException;
 
-	JobInfo closeJob(String jobId) throws ResourceException;
+    public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException;
 
-	String addBatch(List<SObject> payload, JobInfo job)
-			throws ResourceException;
+    public boolean isValid();
 
-	JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws ResourceException;
+    public int delete(String[] ids) throws TranslatorException ;
 
-	Long getCardinality(String sobject) throws ResourceException;
-	
-	String getVersion();
+    public int create(DataPayload data) throws TranslatorException;
 
-	BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException;
+    public int upsert(DataPayload data) throws TranslatorException;
 
-	BulkBatchResult getBatchQueryResults(String id, BatchResultInfo info) throws ResourceException;
+    public int update(List<DataPayload> updateDataList) throws TranslatorException;
+
+    public UpdatedResult getUpdated(String objectName, Calendar startCalendar, Calendar endCalendar) throws TranslatorException;
+
+    public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws TranslatorException;
+
+    public com.sforce.soap.partner.sobject.SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException;
+
+    public DescribeGlobalResult getObjects() throws TranslatorException;
+
+    public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException;
+
+    public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws TranslatorException;
+
+    public void cancelBulkJob(JobInfo job) throws TranslatorException;
+
+    JobInfo closeJob(String jobId) throws TranslatorException;
+
+    String addBatch(List<SObject> payload, JobInfo job)
+            throws TranslatorException;
+
+    JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws TranslatorException;
+
+    Long getCardinality(String sobject) throws TranslatorException;
+
+    String getVersion();
+
+    BatchResultInfo addBatch(String query, JobInfo job) throws TranslatorException;
+
+    BulkBatchResult getBatchQueryResults(String id, BatchResultInfo info) throws TranslatorException;
 
 }

@@ -26,77 +26,77 @@ import java.util.Map;
 import java.util.Stack;
 
 public class SimpleContentHandler implements ContentHandler {
-	
-	private Stack<Object> stack = new Stack<Object>();
-	private Stack<String> nameStack = new Stack<String>();
-	private Object result;
 
-	@Override
-	public void startJSON() throws ParseException, IOException {
-		
-	}
+    private Stack<Object> stack = new Stack<Object>();
+    private Stack<String> nameStack = new Stack<String>();
+    private Object result;
 
-	@Override
-	public void endJSON() throws ParseException, IOException {
-		
-	}
+    @Override
+    public void startJSON() throws ParseException, IOException {
 
-	@Override
-	public boolean startObject() throws ParseException, IOException {
-		Map<String, Object> current = new LinkedHashMap<String, Object>();
-		stack.add(current);
-		return true;
-	}
+    }
 
-	@Override
-	public boolean endObject() throws ParseException, IOException {
-		end(stack.pop());
-		return true;
-	}
+    @Override
+    public void endJSON() throws ParseException, IOException {
 
-	private void end(Object current) {
-		if (!stack.isEmpty() && stack.lastElement() instanceof List) {
-			((List)stack.lastElement()).add(current);
-		} else {
-			result = current;
-		}
-	}
+    }
 
-	@Override
-	public boolean startObjectEntry(String key) throws ParseException,
-			IOException {
-		nameStack.push(key);
-		return true;
-	}
+    @Override
+    public boolean startObject() throws ParseException, IOException {
+        Map<String, Object> current = new LinkedHashMap<String, Object>();
+        stack.add(current);
+        return true;
+    }
 
-	@Override
-	public boolean endObjectEntry() throws ParseException, IOException {
-		Object parent = stack.lastElement();
-		((Map<String, Object>)parent).put(nameStack.pop(), result);
-		return true;
-	}
+    @Override
+    public boolean endObject() throws ParseException, IOException {
+        end(stack.pop());
+        return true;
+    }
 
-	@Override
-	public boolean startArray() throws ParseException, IOException {
-		List<Object> current = new ArrayList<Object>();
-		stack.add(current);
-		return true;
-	}
+    private void end(Object current) {
+        if (!stack.isEmpty() && stack.lastElement() instanceof List) {
+            ((List)stack.lastElement()).add(current);
+        } else {
+            result = current;
+        }
+    }
 
-	@Override
-	public boolean endArray() throws ParseException, IOException {
-		end(stack.pop());
-		return true;
-	}
+    @Override
+    public boolean startObjectEntry(String key) throws ParseException,
+            IOException {
+        nameStack.push(key);
+        return true;
+    }
 
-	@Override
-	public boolean primitive(Object value) throws ParseException, IOException {
-		end(value);
-		return true;
-	}
-	
-	public Object getResult() {
-		return result;
-	}
-	
+    @Override
+    public boolean endObjectEntry() throws ParseException, IOException {
+        Object parent = stack.lastElement();
+        ((Map<String, Object>)parent).put(nameStack.pop(), result);
+        return true;
+    }
+
+    @Override
+    public boolean startArray() throws ParseException, IOException {
+        List<Object> current = new ArrayList<Object>();
+        stack.add(current);
+        return true;
+    }
+
+    @Override
+    public boolean endArray() throws ParseException, IOException {
+        end(stack.pop());
+        return true;
+    }
+
+    @Override
+    public boolean primitive(Object value) throws ParseException, IOException {
+        end(value);
+        return true;
+    }
+
+    public Object getResult() {
+        return result;
+    }
+
 }

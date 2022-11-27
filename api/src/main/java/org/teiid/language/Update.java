@@ -27,12 +27,12 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  * Represents an UPDATE command in the language objects.
  */
 public class Update extends BaseLanguageObject implements BulkCommand {
-    
+
     private NamedTable table;
-	private List<SetClause> changes;
+    private List<SetClause> changes;
     private Condition where;
     private Iterator<? extends List<?>> parameterValues;
-    
+
     public Update(NamedTable group, List<SetClause> changes, Condition criteria) {
         this.table = group;
         this.changes = changes;
@@ -66,14 +66,14 @@ public class Update extends BaseLanguageObject implements BulkCommand {
     public void setWhere(Condition criteria) {
         this.where = criteria;
     }
-    
+
     @Override
     public Iterator<? extends List<?>> getParameterValues() {
-    	return parameterValues;
+        return parameterValues;
     }
-    
+
     public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
-		this.parameterValues = parameterValues;
-	}
+        this.parameterValues = parameterValues;
+    }
 
 }

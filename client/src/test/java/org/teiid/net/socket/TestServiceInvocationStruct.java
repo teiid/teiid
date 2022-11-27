@@ -29,8 +29,8 @@ import junit.framework.TestCase;
 public class TestServiceInvocationStruct extends TestCase {
 
     public void testSerialize() throws Exception {
-    	ServiceInvocationStruct struct = new ServiceInvocationStruct(new Object[] {new Integer(1), "hello"}, "doSomething", TestServiceInvocationStruct.class); 
-    	
+        ServiceInvocationStruct struct = new ServiceInvocationStruct(new Object[] {new Integer(1), "hello"}, "doSomething", TestServiceInvocationStruct.class);
+
         Object serialized = UnitTestUtil.helpSerialize(struct);
         assertNotNull(serialized);
         assertTrue(serialized instanceof ServiceInvocationStruct);

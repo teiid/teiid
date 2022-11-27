@@ -25,44 +25,44 @@ import org.teiid.core.types.TransformationException;
 
 public class StringToBooleanTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		String str = ((String)value).trim();
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        String str = ((String)value).trim();
         if ("0".equals(str) || "false".equalsIgnoreCase(str)) { //$NON-NLS-1$ //$NON-NLS-2$
             return Boolean.FALSE;
         }
         if ("unknown".equals(str)) { //$NON-NLS-1$
-        	return null;
+            return null;
         }
-		return Boolean.TRUE;
-	}
+        return Boolean.TRUE;
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DefaultDataClasses.STRING;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return DefaultDataClasses.STRING;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DefaultDataClasses.BOOLEAN;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
-	
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DefaultDataClasses.BOOLEAN;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
+
 }

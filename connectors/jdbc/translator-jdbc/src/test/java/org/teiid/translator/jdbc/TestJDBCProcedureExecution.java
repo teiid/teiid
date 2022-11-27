@@ -31,34 +31,34 @@ import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 
 public class TestJDBCProcedureExecution {
-	
-	@Test public void testProcedureExecution() throws Exception {
-		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
-		Connection connection = Mockito.mock(Connection.class);
-		CallableStatement cs = Mockito.mock(CallableStatement.class);
-		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-		Mockito.stub(cs.getInt(1)).toReturn(5);
-		Mockito.stub(connection.prepareCall("{call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
-		JDBCExecutionFactory ef = new JDBCExecutionFactory();
-		
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
-		procedureExecution.execute();
-		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
-		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, Types.INTEGER);
-	}
-	@Test public void testProcedureExecution1() throws Exception {
-		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
-		Connection connection = Mockito.mock(Connection.class);
-		CallableStatement cs = Mockito.mock(CallableStatement.class);
-		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-		Mockito.stub(cs.getInt(2)).toReturn(5);
-		Mockito.stub(connection.prepareCall("{call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
-		JDBCExecutionFactory config = new JDBCExecutionFactory();
 
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
-		procedureExecution.execute();
-		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
-		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, Types.INTEGER);
-	}
+    @Test public void testProcedureExecution() throws Exception {
+        Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
+        Connection connection = Mockito.mock(Connection.class);
+        CallableStatement cs = Mockito.mock(CallableStatement.class);
+        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        Mockito.stub(cs.getInt(1)).toReturn(5);
+        Mockito.stub(connection.prepareCall("{call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
+        JDBCExecutionFactory ef = new JDBCExecutionFactory();
+
+        JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+        procedureExecution.execute();
+        assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
+        Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, Types.INTEGER);
+    }
+    @Test public void testProcedureExecution1() throws Exception {
+        Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
+        Connection connection = Mockito.mock(Connection.class);
+        CallableStatement cs = Mockito.mock(CallableStatement.class);
+        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        Mockito.stub(cs.getInt(2)).toReturn(5);
+        Mockito.stub(connection.prepareCall("{call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+        JDBCExecutionFactory config = new JDBCExecutionFactory();
+
+        JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
+        procedureExecution.execute();
+        assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
+        Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, Types.INTEGER);
+    }
 
 }

@@ -73,6 +73,20 @@
              <param-value>?</param-value>
        </init-param>
        -->
+       
+        <!-- 
+            When explicit-vdb-version is true, an explicit vdb version needs to be part of the 
+            url to use anything other than the default verion 1 vdb.
+            
+            When explicit-vdb-version is false, the odata vdb version will be determined 
+            just like a JDBC connection.
+        -->
+       <!-- 
+       <init-param>
+            <param-name>explicit-vdb-version</param-name>
+            <param-value>true</param-value>       
+       </init-param>
+       -->
     </filter>
     
     <filter-mapping>

@@ -27,8 +27,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.InputStreamFactory;
@@ -46,9 +44,9 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseProcedureExecution extends CouchbaseExecution implements ProcedureExecution {
-    
+
     private final Call call;
-    
+
     private N1QLVisitor visitor;
     private Iterator<N1qlQueryRow> results;
 
@@ -59,18 +57,13 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
 
     @Override
     public void execute() throws TranslatorException {
-        
+
         this.visitor = this.executionFactory.getN1QLVisitor();
         this.visitor.append(call);
         String n1ql = this.visitor.toString();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29002, call, n1ql));
         executionContext.logCommand(n1ql);
-        N1qlQueryResult queryResult;
-        try {
-            queryResult = connection.execute(n1ql);
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
-        }
+        N1qlQueryResult queryResult = connection.execute(n1ql);
         this.results = queryResult.iterator();
     }
 
@@ -91,22 +84,22 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
                 Object value = new BlobType(new BlobImpl(isf));
                 result.add(value);
                 return result;
-            } 
+            }
         }
-        
+
         return null;
     }
-    
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         return Collections.emptyList();// not define out parameter
     }
-    
+
     @Override
     public void cancel() throws TranslatorException {
         close();
     }
-    
+
     @Override
     public void close() {
         this.results = null;

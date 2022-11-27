@@ -29,23 +29,23 @@ import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.translator.jdbc.TranslatedCommand;
 
 public class PhoenixUpdateExecution extends JDBCUpdateExecution {
-    
+
     private TranslatedCommand translatedComm = null;
 
     public PhoenixUpdateExecution(Command command,
-                                ExecutionContext executionContext, 
+                                ExecutionContext executionContext,
                                 RuntimeMetadata metadata,
-                                Connection conn, 
+                                Connection conn,
                                 PhoenixExecutionFactory executionFactory) throws TranslatorException {
         super(command, conn, executionContext, executionFactory);
-        
+
         setCommitMode(conn);
-        
+
         translatedComm = translateCommand(command);
-    
+
     }
 
-    // By default, Phoenix Connection AutoCommit is false, doesn't like other vendors 
+    // By default, Phoenix Connection AutoCommit is false, doesn't like other vendors
     private void setCommitMode(Connection conn) throws JDBCExecutionException {
         try {
             if(!conn.getAutoCommit()) {
@@ -58,12 +58,12 @@ public class PhoenixUpdateExecution extends JDBCUpdateExecution {
 
     @Override
     protected TranslatedCommand translateCommand(Command command) throws TranslatorException {
-        
+
         if(null == translatedComm) {
             translatedComm = super.translateCommand(command);
         }
-        
+
         return translatedComm ;
     }
-    
+
 }

@@ -1,0 +1,58 @@
+<vdb name="myVDB" version="1">
+    <description>vdb description</description>
+    <connection-type>NONE</connection-type>
+    <property name="vdb-property2">vdb-value2</property>
+    <property name="vdb-property" value="vdb-value"></property>
+    <import-vdb name="x" version="2"/>
+    <model name="model-one" type="PHYSICAL" visible="false">
+        <description>model description</description>
+        <property name="model-prop" value="model-value-override"></property>
+        <source name="s1" translator-name="translator" connection-jndi-name="java:mybinding"></source>
+        <metadata type="DDL"><![CDATA[DDL Here]]></metadata>
+        <metadata type="OTHER">other text</metadata>
+        <validation-error severity="ERROR">There is an error in VDB</validation-error>
+    </model>
+    <model name="model-two" type="VIRTUAL" visible="true">
+        <property name="model-prop" value="model-value"></property>
+        <source name="s1" translator-name="translator" connection-jndi-name="java:binding-one"></source>
+        <source name="s2" translator-name="translator" connection-jndi-name="java:binding-two"></source>
+        <metadata type="DDL"><![CDATA[DDL Here]]></metadata>
+    </model>
+    <translator name="oracleOverride" type="oracle" description="hello world">
+        <property name="my-property" value="my-value"></property>
+    </translator>
+    <data-role name="roleOne" any-authenticated="false" grant-all="true" allow-create-temporary-tables="true">
+        <description>roleOne described</description>
+        <permission>
+            <resource-name>myTable.T1</resource-name>
+            <allow-read>true</allow-read>
+            <condition constraint="false">col1 = user()</condition>
+        </permission>
+        <permission>
+            <resource-name>myTable.T2</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>false</allow-read>
+            <allow-update>true</allow-update>
+            <allow-delete>true</allow-delete>
+            <allow-execute>true</allow-execute>
+            <allow-alter>true</allow-alter>
+            <condition constraint="true">col1 = user()</condition>
+        </permission>
+        <permission>
+            <resource-name>myTable.T2.col1</resource-name>
+            <mask order="1">col2</mask>
+        </permission>
+        <permission>
+            <resource-name>javascript</resource-name>
+            <allow-language>true</allow-language>
+        </permission>
+        <mapped-role-name>ROLE1</mapped-role-name>
+        <mapped-role-name>ROLE2</mapped-role-name>
+    </data-role>
+    <entry path="/path-one">
+        <description>path one description</description>
+        <property name="entryone" value="1"></property>
+    </entry>
+    <entry path="/path-two"/>
+</vdb>
+

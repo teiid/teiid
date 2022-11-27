@@ -26,9 +26,9 @@ import java.util.List;
  */
 @Deprecated
 public interface BatchedCommand extends Command {
-	
-	Iterator<? extends List<?>> getParameterValues();
-	
-	void setParameterValues(Iterator<? extends List<?>> values);
+
+    Iterator<? extends List<?>> getParameterValues();
+
+    void setParameterValues(Iterator<? extends List<?>> values);
 
 }

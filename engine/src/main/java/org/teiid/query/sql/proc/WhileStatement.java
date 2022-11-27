@@ -32,7 +32,7 @@ import org.teiid.query.sql.proc.Statement.Labeled;
  * <p> This class represents a while statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
  * a block and a criteria that
- * determines when to exit the while loop.</p>
+ * determines when to exit the while loop.
  */
 public class WhileStatement extends Statement implements Labeled {
 
@@ -44,21 +44,20 @@ public class WhileStatement extends Statement implements Labeled {
     /**
      * Constructor for IfStatement.
      * @param criteria The criteria determining which block should be executed
-     * @param ifBlock The IF <code>Block</code> object.
-     * @param ifBlock The ELSE <code>Block</code> object.
+     * @param block The block to execute
      */
     public WhileStatement(Criteria criteria, Block block) {
         this.whileBlock = block;
         this.condition = criteria;
     }
-    
+
     public void setLabel(String label) {
-		this.label = label;
-	}
-    
+        this.label = label;
+    }
+
     public String getLabel() {
-		return label;
-	}
+        return label;
+    }
 
     /**
      * Get the condition that determines which block needs to be executed.
@@ -67,7 +66,7 @@ public class WhileStatement extends Statement implements Labeled {
     public Criteria getCondition() {
         return condition;
     }
-    
+
     /**
      * Set the condition that determines which block needs to be executed.
      * @param criteria The <code>Criteria</code> to determine block execution
@@ -75,7 +74,7 @@ public class WhileStatement extends Statement implements Labeled {
     public void setCondition(Criteria criteria) {
         this.condition = criteria;
     }
-    
+
     /**
      * @return
      */
@@ -89,7 +88,7 @@ public class WhileStatement extends Statement implements Labeled {
     public void setBlock(Block block) {
         whileBlock = block;
     }
-    
+
     /**
      * Return the type for this statement, this is one of the types
      * defined on the statement object.
@@ -97,29 +96,29 @@ public class WhileStatement extends Statement implements Labeled {
      */
     public int getType() {
         return Statement.TYPE_WHILE;
-    }   
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
-    }  
-    
+    }
+
     /**
      * Deep clone statement to produce a new identical statement.
-     * @return Deep clone 
+     * @return Deep clone
      */
     public Object clone() {
         Block otherBlock = this.whileBlock.clone();
-        Criteria otherCrit = (Criteria) this.condition.clone();     
+        Criteria otherCrit = (Criteria) this.condition.clone();
 
         WhileStatement ws = new WhileStatement(otherCrit, otherBlock);
         ws.setLabel(label);
         return ws;
     }
-    
+
     /**
      * Compare two WhileStatements for equality.  They will only evaluate to equal if
      * they are IDENTICAL: the block is same and the condition on  is same.
@@ -132,20 +131,20 @@ public class WhileStatement extends Statement implements Labeled {
             return true;
         }
 
-        // Quick fail tests     
+        // Quick fail tests
         if(!(obj instanceof WhileStatement)) {
             return false;
         }
 
         WhileStatement other = (WhileStatement) obj;
-        
-        return 
+
+        return
             // Compare the condition
             EquivalenceUtil.areEqual(getCondition(), other.getCondition()) &&
             // Compare the if block
             EquivalenceUtil.areEqual(whileBlock, other.whileBlock)
             && StringUtil.equalsIgnoreCase(this.label, other.label);
-    } 
+    }
 
     /**
      * Get hashcode for WhileStatement. WARNING: This hash code relies on the

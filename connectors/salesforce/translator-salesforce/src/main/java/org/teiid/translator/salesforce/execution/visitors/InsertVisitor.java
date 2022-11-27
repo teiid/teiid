@@ -23,18 +23,18 @@ import org.teiid.translator.TranslatorException;
 
 
 public class InsertVisitor extends CriteriaVisitor {
-	
-	public InsertVisitor(RuntimeMetadata metadata) {
-		super(metadata);
-	}
-	
-	@Override
-	public void visit(Insert insert) {
-		super.visit(insert);
-		try {
-			loadColumnMetadata(insert.getTable());
-		} catch (TranslatorException ce) {
-			exceptions.add(ce);
-		}
-	}
+
+    public InsertVisitor(RuntimeMetadata metadata) {
+        super(metadata);
+    }
+
+    @Override
+    public void visit(Insert insert) {
+        super.visit(insert);
+        try {
+            loadColumnMetadata(insert.getTable());
+        } catch (TranslatorException ce) {
+            exceptions.add(ce);
+        }
+    }
 }

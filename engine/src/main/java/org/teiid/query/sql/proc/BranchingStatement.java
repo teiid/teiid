@@ -26,87 +26,87 @@ import org.teiid.query.sql.LanguageVisitor;
 
 /**
  * <p> This class represents a break statement in the storedprocedure language.
- * It extends the <code>Statement</code> that could part of a block.</p>
+ * It extends the <code>Statement</code> that could part of a block.
  */
 public class BranchingStatement extends Statement {
-	
-	public enum BranchingMode {
-		/**
-		 * Teiid specific - only allowed to target loops
-		 */
-		BREAK,
-		/**
-		 * Teiid specific - only allowed to target loops
-		 */
-		CONTINUE,
-		/**
-		 * ANSI - allowed to leave any block 
-		 */
-		LEAVE
-	}
-	
-	private String label;
-	private BranchingMode mode;
-	
-	public BranchingStatement() {
-		this(BranchingMode.BREAK);
-	}
-	
-	public BranchingStatement(BranchingMode mode) {
-		this.mode = mode;
-	}
-	
-	public String getLabel() {
-		return label;
-	}
-	
-	public void setLabel(String label) {
-		this.label = label;
-	}
-	
-	public void setMode(BranchingMode mode) {
-		this.mode = mode;
-	}
-	
-	public BranchingMode getMode() {
-		return mode;
-	}
-	
+
+    public enum BranchingMode {
+        /**
+         * Teiid specific - only allowed to target loops
+         */
+        BREAK,
+        /**
+         * Teiid specific - only allowed to target loops
+         */
+        CONTINUE,
+        /**
+         * ANSI - allowed to leave any block
+         */
+        LEAVE
+    }
+
+    private String label;
+    private BranchingMode mode;
+
+    public BranchingStatement() {
+        this(BranchingMode.BREAK);
+    }
+
+    public BranchingStatement(BranchingMode mode) {
+        this.mode = mode;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public void setMode(BranchingMode mode) {
+        this.mode = mode;
+    }
+
+    public BranchingMode getMode() {
+        return mode;
+    }
+
     /**
      * Return the type for this statement, this is one of the types
      * defined on the statement object.
      */
     public int getType() {
-    	switch (mode) {
-    	case BREAK:
-    		return Statement.TYPE_BREAK;
-    	case CONTINUE:
-    		return Statement.TYPE_CONTINUE;
-    	case LEAVE:
-    		return Statement.TYPE_LEAVE;
-    	}
-    	throw new AssertionError();
-    }       
+        switch (mode) {
+        case BREAK:
+            return Statement.TYPE_BREAK;
+        case CONTINUE:
+            return Statement.TYPE_CONTINUE;
+        case LEAVE:
+            return Statement.TYPE_LEAVE;
+        }
+        throw new AssertionError();
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     /**
      * Deep clone statement to produce a new identical statement.
-     * @return Deep clone 
+     * @return Deep clone
      */
-    public BranchingStatement clone() {     
+    public BranchingStatement clone() {
         BranchingStatement clone = new BranchingStatement();
         clone.mode = mode;
         clone.label = label;
         return clone;
     }
-    
+
     /**
      * Compare two BreakStatements for equality.
      * @param obj Other object
@@ -118,15 +118,15 @@ public class BranchingStatement extends Statement {
             return true;
         }
         if (!(obj instanceof BranchingStatement)) {
-        	return false;
+            return false;
         }
         BranchingStatement other = (BranchingStatement)obj;
-        return StringUtil.equalsIgnoreCase(label, other.label) 
+        return StringUtil.equalsIgnoreCase(label, other.label)
         && mode == other.mode;
-    } 
-    
+    }
+
     public int hashCode() {
         return HashCodeUtil.hashCode(mode.hashCode());
     }
-      
+
 }

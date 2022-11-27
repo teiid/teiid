@@ -49,28 +49,28 @@ public class TestEscapeSyntaxModifier extends TestCase {
         Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral("arg1", String.class); //$NON-NLS-1$
         Literal arg2 = CommandBuilder.getLanuageFactory().createLiteral("arg2", String.class);//$NON-NLS-1$
         Function func = CommandBuilder.getLanuageFactory().createFunction("concat", Arrays.asList( arg1, arg2), Integer.class); //$NON-NLS-1$
-                
+
         helpTest(func, "{fn concat('arg1', 'arg2')}");
     }
-    
+
     public void testTimestampAdd() {
-        Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral(NonReserved.SQL_TSI_HOUR, String.class); 
+        Literal arg1 = CommandBuilder.getLanuageFactory().createLiteral(NonReserved.SQL_TSI_HOUR, String.class);
         Literal arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);
         Literal arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);
         Function func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$
-                
+
         helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts '1899-12-31 00:00:00.0'})}");
     }
 
-	private void helpTest(Function func, String expected) {
+    private void helpTest(Function func, String expected) {
         EscapeSyntaxModifier mod = new EscapeSyntaxModifier();
 
         List parts = mod.translate(func);
         StringBuffer sb = new StringBuffer();
         for (Object object : parts) {
-			sb.append(object);
-		}
+            sb.append(object);
+        }
         assertEquals(expected, sb.toString());
-	}
-    
+    }
+
 }

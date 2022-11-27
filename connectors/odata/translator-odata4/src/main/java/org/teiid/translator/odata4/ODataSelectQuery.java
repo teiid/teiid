@@ -33,20 +33,20 @@ public class ODataSelectQuery extends ODataQuery {
     private Integer skip;
     private Integer top;
     private boolean count;
-    
+
     public ODataSelectQuery(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
         super(executionFactory, metadata);
     }
-    
+
     public URIBuilderImpl buildURL(String serviceRoot,
             List<Column> projectedColumns, Condition condition)
             throws TranslatorException {
-        
+
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
         if (!this.rootDocument.isComplexType()) {
             uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
         }
-        
+
         if (this.count) {
             uriBuilder.count();
         } else {
@@ -57,7 +57,7 @@ public class ODataSelectQuery extends ODataQuery {
                 uriBuilder.select(columns.toArray(new String[columns.size()]));
             }
         }
-        
+
         String filter = processFilter(condition);
         if (filter != null) {
             uriBuilder.filter(filter);
@@ -71,28 +71,28 @@ public class ODataSelectQuery extends ODataQuery {
         if (this.skip != null) {
             uriBuilder.skip(this.skip);
         }
-        
+
         if (this.top != null) {
             uriBuilder.top(this.top);
         }
-        
+
         return uriBuilder;
     }
-    
+
     private Set<String> processSelect(List<Column> projectedColumns) {
         LinkedHashSet<String> columns = new LinkedHashSet<String>();
         for (Column column: projectedColumns) {
             ODataDocumentNode use = getSchemaElement((Table)column.getParent());
             use.appendSelect(column.getName());
         }
-        
-        columns.addAll(this.rootDocument.getSelects());        
+
+        columns.addAll(this.rootDocument.getSelects());
         for (ODataDocumentNode use:this.complexTables) {
             columns.addAll(use.getSelects());
         }
         return columns;
-    }    
-    
+    }
+
     public void setSkip(Integer integer) {
         this.skip = integer;
     }
@@ -103,5 +103,5 @@ public class ODataSelectQuery extends ODataQuery {
 
     public void setAsCount() {
         this.count = true;
-    }   
+    }
 }

@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.teiid.infinispan.api.InfinispanDocument;
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.TableWireFormat;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Condition;
@@ -43,7 +46,6 @@ import org.teiid.translator.TranslatorException;
 
 public class InfinispanUpdateVisitor extends IckleConversionVisitor {
     protected enum OperationType {INSERT, UPDATE, DELETE, UPSERT};
-    protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private OperationType operationType;
     private InfinispanDocument insertPayload;
     private Map<String, Object> updatePayload = new HashMap<>();
@@ -84,71 +86,69 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
                     InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, getParentTable().getName())));
             return;
         }
-        
+
         if (obj.getParameterValues() == null) {
-        	List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-        	this.insertPayload = buildInsertPayload(obj, values);
-        	if (this.insertPayload != null) {
-        		this.identity = this.insertPayload.getIdentifier();
-        	}
+            List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
+            this.insertPayload = buildInsertPayload(obj, values);
+            if (this.insertPayload != null) {
+                this.identity = this.insertPayload.getIdentifier();
+            }
         }
     }
 
     Map<Object, InfinispanDocument> getBulkInsertPayload(Insert obj, int batchSize, Iterator<? extends List<Expression>> iter){
-    	Map<Object, InfinispanDocument> updates = new TreeMap<>();
-    	int count = 0;
-    	while (iter.hasNext()) {
-    		InfinispanDocument doc = buildInsertPayload(obj, iter.next());
-    		updates.put(doc.getIdentifier(), doc);
-    		if (count++ == batchSize) {
-    			break;
-    		}
-    	}
-    	return updates;
+        Map<Object, InfinispanDocument> updates = new TreeMap<>();
+        int count = 0;
+        while (iter.hasNext() && count++ < batchSize) {
+            InfinispanDocument doc = buildInsertPayload(obj, iter.next());
+            updates.put(doc.getIdentifier(), doc);
+        }
+        return updates;
     }
-    
-	private InfinispanDocument buildInsertPayload(Insert obj, List<Expression> values) {
+
+    private InfinispanDocument buildInsertPayload(Insert obj, List<Expression> values) {
         InfinispanDocument targetDocument = null;
-		try {
-	        // table that insert issued for
-	        Table table = obj.getTable().getMetadataObject();
-	        Column pkColumn = getPrimaryKey();
-	        
-	        // create the top table parent document, where insert is actually being done at
-			targetDocument = buildTargetDocument(table, true);
-			
+        try {
+            // table that insert issued for
+            Table table = obj.getTable().getMetadataObject();
+            Column pkColumn = getPrimaryKey();
+
+            // create the top table parent document, where insert is actually being done at
+            targetDocument = buildTargetDocument(table, true);
+
             // build the payload object from insert
             int elementCount = obj.getColumns().size();
-        	
-        	for (int i = 0; i < elementCount; i++) {
+
+            for (int i = 0; i < elementCount; i++) {
                 ColumnReference columnReference = obj.getColumns().get(i);
                 Column column = columnReference.getMetadataObject();
-                
+
                 Object value = null;
                 if (values.get(i) instanceof Expression) {
-	                Expression expr = values.get(i);
-	                value = resolveExpressionValue(expr);
+                    Expression expr = values.get(i);
+                    value = resolveExpressionValue(expr);
                 } else {
-                	value = values.get(i);
+                    value = values.get(i);
                 }
                 updateDocument(targetDocument, column, value);
 
-                if (column.equals(pkColumn) || pkColumn.equals(normalizePseudoColumn(column))) {
+                if (column.getName().equalsIgnoreCase(pkColumn.getName()) || pkColumn.getName()
+                        .equalsIgnoreCase(normalizePseudoColumn(column, this.metadata).getName())) {
                     targetDocument.setIdentifier(value);
                 }
             }
             if (targetDocument.getIdentifier() == null) {
                 this.exceptions.add(new TranslatorException(
                         InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, getParentTable().getName())));
-            }	            
+            }
         } catch (NumberFormatException e) {
             this.exceptions.add(new TranslatorException(e));
         } catch (TranslatorException e) {
             this.exceptions.add(new TranslatorException(e));
         }
-		return targetDocument;
-	}
-    
+        return targetDocument;
+    }
+
 
     @SuppressWarnings("unchecked")
     private void updateDocument(InfinispanDocument parentDocument, Column column, Object value)
@@ -254,13 +254,13 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
                     values.add(((Literal)exp).getValue());
                 }
                 else {
-                    this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003)));
+                    this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, expr.getClass())));
                 }
             }
             value = values;
         }
         else {
-            this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003)));
+            this.exceptions.add(new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25003, expr.getClass())));
         }
         return value;
     }
@@ -282,7 +282,7 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
         if (!table.equals(getParentTable())) {
             this.nested = true;
         }
-        
+
         // read the properties
         try {
             InfinispanDocument targetDocument = buildTargetDocument(table, false);
@@ -290,8 +290,8 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
             for (int i = 0; i < elementCount; i++) {
                 Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
                 if (isPartOfPrimaryKey(column.getName())) {
-					throw new TranslatorException(InfinispanPlugin.Event.TEIID25019,
-							InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25019, column.getName()));
+                    throw new TranslatorException(InfinispanPlugin.Event.TEIID25019,
+                            InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25019, column.getName()));
                 }
                 Expression expr = obj.getChanges().get(i).getValue();
                 Object value = resolveExpressionValue(expr);

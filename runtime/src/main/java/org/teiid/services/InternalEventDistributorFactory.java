@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.services;
 
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 
 public interface InternalEventDistributorFactory extends EventDistributorFactory {
-	
-	EventDistributor getReplicatedEventDistributor();
+
+    EventDistributor getReplicatedEventDistributor();
 
 }

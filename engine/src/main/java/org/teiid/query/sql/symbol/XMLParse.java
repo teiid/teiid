@@ -24,74 +24,74 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLParse implements Expression {
 
-	private boolean document;
-	private Expression expression;
-	private boolean wellFormed;
-	
-	@Override
-	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.XML;
-	}
-	
-	public Expression getExpression() {
-		return expression;
-	}
-	
-	public boolean isDocument() {
-		return document;
-	}
-	
-	public void setDocument(boolean document) {
-		this.document = document;
-	}
-	
-	public void setExpression(Expression expression) {
-		this.expression = expression;
-	}
-	
-	public boolean isWellFormed() {
-		return wellFormed;
-	}
-	
-	public void setWellFormed(boolean wellFormed) {
-		this.wellFormed = wellFormed;
-	}
-	
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-		
-	@Override
-	public XMLParse clone() {
-		XMLParse clone = new XMLParse();
-		clone.document = this.document;
-		clone.expression = (Expression)this.expression.clone();
-		clone.wellFormed = this.wellFormed;
-		return clone;
-	}
-	
-	@Override
-	public int hashCode() {
-		return expression.hashCode();
-	}
-	
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof XMLParse)) {
-			return false;
-		}
-		XMLParse other = (XMLParse)obj;
-		return document == other.document 
-			&& this.expression.equals(other.expression)
-			&& this.wellFormed == other.wellFormed;
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
+    private boolean document;
+    private Expression expression;
+    private boolean wellFormed;
+
+    @Override
+    public Class<?> getType() {
+        return DataTypeManager.DefaultDataClasses.XML;
+    }
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public boolean isDocument() {
+        return document;
+    }
+
+    public void setDocument(boolean document) {
+        this.document = document;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
+    public boolean isWellFormed() {
+        return wellFormed;
+    }
+
+    public void setWellFormed(boolean wellFormed) {
+        this.wellFormed = wellFormed;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public XMLParse clone() {
+        XMLParse clone = new XMLParse();
+        clone.document = this.document;
+        clone.expression = (Expression)this.expression.clone();
+        clone.wellFormed = this.wellFormed;
+        return clone;
+    }
+
+    @Override
+    public int hashCode() {
+        return expression.hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof XMLParse)) {
+            return false;
+        }
+        XMLParse other = (XMLParse)obj;
+        return document == other.document
+            && this.expression.equals(other.expression)
+            && this.wellFormed == other.wellFormed;
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
 }

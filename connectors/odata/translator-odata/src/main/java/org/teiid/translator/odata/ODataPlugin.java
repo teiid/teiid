@@ -23,31 +23,31 @@ import java.util.ResourceBundle;
 import org.teiid.core.BundleUtil;
 
 
-public class ODataPlugin { 
+public class ODataPlugin {
 
     public static final String PLUGIN_ID = "org.teiid.translator.odata" ; //$NON-NLS-1$
 
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID
-			+ ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$	
-	
-	public static enum Event implements BundleUtil.Event{
-		TEIID17001,
-		TEIID17002,
-		TEIID17003,
-		TEIID17004,
-		TEIID17005,
-		TEIID17006,
-		TEIID17007,
-		TEIID17008,
-		TEIID17009,
-		TEIID17010,	// ex	
-		TEIID17011,
-		TEIID17012,
-		TEIID17013,
-		TEIID17014,
-		TEIID17015,
-		TEIID17016,
-		TEIID17017,
-		TEIID17018
-	}
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID
+            + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+
+    public static enum Event implements BundleUtil.Event{
+        TEIID17001,
+        TEIID17002,
+        TEIID17003,
+        TEIID17004,
+        TEIID17005,
+        TEIID17006,
+        TEIID17007,
+        TEIID17008,
+        TEIID17009,
+        TEIID17010,    // ex
+        TEIID17011,
+        TEIID17012,
+        TEIID17013,
+        TEIID17014,
+        TEIID17015,
+        TEIID17016,
+        TEIID17017,
+        TEIID17018
+    }
 }

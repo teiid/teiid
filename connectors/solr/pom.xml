@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid</groupId>
 		<artifactId>connectors</artifactId>
-		<version>11.1.0-SNAPSHOT</version>
+		<version>17.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.teiid.connectors</groupId>
@@ -15,8 +15,6 @@
 
 	<modules>
 		<module>translator-solr</module>
-		<module>connector-solr</module>
-		<module>feature-pack-solr</module>
 	</modules>
 
 </project>

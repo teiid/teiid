@@ -17,6 +17,7 @@ import java.math.BigInteger;
 import java.util.*;
 import org.teiid.core.types.*;
 import org.teiid.core.util.StringUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.proc.*;
@@ -133,7 +134,6 @@ TOKEN: /* Data types */
 |	<DATE: "date">
 |	<TIME: "time">
 |	<TIMESTAMP: "timestamp">
-|	<OBJECT: "object">
 |	<BLOB: "blob">
 |	<CLOB: "clob">
 |	<XML: "xml">
@@ -425,10 +425,17 @@ TOKEN : /* NonReserved words */
 |   <KEY: "key">
 |   <SERIAL: "serial">
 |   <TEXTAGG: "textagg">
+|   <COUNT_BIG: "count_big">
 |   <COUNT: "count">
 |   <ROW_NUMBER: "row_number">
 |   <RANK: "rank">
 |   <DENSE_RANK: "dense_rank">
+|   <PERCENT_RANK: "percent_rank">
+|   <CUME_DIST: "cume_dist">
+|   <CURRENT: "current">
+|   <UNBOUNDED: "unbounded">
+|   <PRECEDING: "preceding">
+|   <FOLLOWING: "following">
 |   <SUM: "sum">
 |   <AVG: "avg">
 |   <MIN: "min">
@@ -471,6 +478,7 @@ TOKEN : /* NonReserved words */
 |   <SQL_TSI_YEAR: "sql_tsi_year">
 |   <TEXTTABLE: "texttable">
 |   <ARRAYTABLE: "arraytable">
+|   <JSONTABLE: "jsontable">
 |   <SELECTOR: "selector">
 |   <SKIP_KEYWORD: "skip">
 |   <WIDTH: "width">
@@ -491,10 +499,12 @@ TOKEN : /* NonReserved words */
 |   <EXCEPTION: "exception">
 |   <RAISE: "raise">
 |   <CHAIN: "chain">
+|   <JSON: "json">
 |   <JSONARRAY_AGG: "jsonarray_agg">
 |   <JSONOBJECT: "jsonobject">
 |   <PRESERVE: "preserve">
 |   <GEOMETRY: "geometry">
+|   <GEOGRAPHY: "geography">
 |   <UPSERT: "upsert">
 |   <AFTER: "after">
 |   <DEFAULT_KEYWORD: "default">
@@ -520,6 +530,19 @@ TOKEN : /* NonReserved words */
 |   <DOMAIN: "domain">
 |   <USAGE: "usage">
 |   <POSITION: "position">
+|   <LISTAGG: "listagg">
+|   <OBJECT: "object">
+|   <EXPLAIN: "explain">
+|   <ANALYZE: "analyze">
+|   <TEXT: "text">
+|   <FORMAT: "format">
+|   <YAML: "yaml">
+|   <HANDLER: "handler">
+|   <POLICY: "policy">
+|   <EPOCH: "epoch">
+|   <QUARTER: "quarter">
+|   <DOW: "dow">
+|   <DOY: "doy">
 }
 /*
 name=all in group identifier
@@ -622,17 +645,28 @@ Token nonReserved() :
 {
 }
 {
-    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>
-     |<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>
-     |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
-     |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
-     |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>)
+    (<EXCEPTION>|<SERIAL>|<OBJECT>|<INDEX>|<JSON>|<GEOMETRY>|<GEOGRAPHY>|<DEFAULT_KEYWORD>|basicNonReserved())
     {
     	return getToken(0);
     }	
+}
+
+Token basicNonReserved() :
+{
+}
+{
+    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<TEXTAGG>|<COUNT>|<COUNT_BIG>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>
+     |<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>
+     |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
+     |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<JSONTABLE>
+     |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
+     |<DOMAIN>|<USAGE>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>
+     |<EXPLAIN>|<ANALYZE>|<TEXT>|<FORMAT>|<YAML>|<EPOCH>|<QUARTER>|<POLICY>)
+    {
+        return getToken(0);
+    }   
 }
 
 /*
@@ -687,26 +721,8 @@ Command command(ParseInfo info) :
 {
 	 (LOOKAHEAD(2) command = createProcedure(info) |
 	  command = userCommand(info) |
-	  command = callableStatement(info)
-	)
-	[<SEMICOLON>]
-	<EOF>
-	{
-		return command;
-	}
-}
-
-/*
-unused=true
-*/
-Command designerCommand(ParseInfo info) :
-{
-	Command command = null;
-}
-{
-	(LOOKAHEAD (2) command = createProcedure(info) |
-	 command = forEachRowTriggerAction(info) |
-	 command = userCommand(info)	  
+	  command = callableStatement(info) |
+	  command = explainCommand(info)
 	)
 	[<SEMICOLON>]
 	<EOF>
@@ -850,6 +866,61 @@ TriggerAction forEachRowTriggerAction(ParseInfo info) :
 }
 
 /*
+name=explain
+description=Returns the query plan for the statement
+example=EXPLAIN select 1
+index=true
+*/
+Command explainCommand(ParseInfo info) :
+{
+    Command command = null;
+    ExplainCommand explain = new ExplainCommand();
+    Token comment = null;
+}
+{
+    <EXPLAIN> 
+    [LOOKAHEAD(2) <LPAREN> 
+      explainOption(info, explain) (<COMMA> explainOption(info, explain))*
+    <RPAREN>] 
+    {
+      comment = getToken(1).specialToken;
+    }
+    command = userCommand(info)
+    {
+        if (comment != null) {
+          command.setCacheHint(getQueryCacheOption(comment.image));
+        }
+        explain.setCommand(command);
+        return explain;
+    }
+}
+
+/*
+name=explain option
+description=Option for the explain statement
+example=FORMAT YAML
+*/
+void explainOption(ParseInfo info, ExplainCommand explain) :
+{
+  boolean val = true;
+  ExplainCommand.Format format = null;
+}
+{
+      (<ANALYZE> 
+        [ <TRUE>|(<FALSE> {val=false;}) ] 
+        {explain.setAnalyze(val);}
+      )
+     |(<FORMAT> 
+        [  
+           (<XML> {format=ExplainCommand.Format.XML;})
+          |(<TEXT> {format=ExplainCommand.Format.TEXT;})
+          |(<YAML> {format=ExplainCommand.Format.YAML;}) 
+        ] 
+        {explain.setFormat(format);}
+      )   
+}
+
+/*
 name=directly executable statement
 description=A statement that can be executed at runtime.
 example=[source,sql]\n----\nSELECT * FROM tbl\n----\n
@@ -914,7 +985,7 @@ Command createTempTable(ParseInfo info) :
 }
 {
 	<CREATE> [<LOCAL>] <TEMPORARY> <TABLE> 
-	table = id(null)
+	table = unqualifiedId()
 	<LPAREN>
 	{
 		create.setTable(new GroupSymbol(table));
@@ -1428,7 +1499,7 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
 name=procedure body definition
 description=Defines a procedure body on a Procedure metadata object.
 example=[source,sql]\n----\nBEGIN ... END\n----\n
-index=true
+unused=true
 */
 CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
 {
@@ -1439,6 +1510,7 @@ CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
 { 
     [LOOKAHEAD(2) <CREATE> [<VIRTUAL>] <PROCEDURE>]
     stmt = statement(info)
+    <EOF>
     {        
         procCmd.setBlock(asBlock(stmt));
         return procCmd;        
@@ -2278,13 +2350,13 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 {
 	(
 		// COUNT(*)
-		LOOKAHEAD(3) (func = <COUNT>
+		LOOKAHEAD(3) ((func = <COUNT> | func = <COUNT_BIG>)
 			<LPAREN>
 			starToken = <STAR>
 			<RPAREN> )	
 		| 
 		// Remaining aggregates
-		(	(<COUNT> | <SUM> | <AVG> | <MIN> | <MAX> | <EVERY> | <STDDEV_POP> | <STDDEV_SAMP> | <VAR_SAMP> | <VAR_POP> | <SOME> | <ANY>) {func = getToken(0);}
+		(	(<COUNT> | <COUNT_BIG> | <SUM> | <AVG> | <MIN> | <MAX> | <EVERY> | <STDDEV_POP> | <STDDEV_SAMP> | <VAR_SAMP> | <VAR_POP> | <SOME> | <ANY>) {func = getToken(0);}
 			<LPAREN>
 			[ <DISTINCT> {isDistinct=true;} | <ALL>]
 			expression = expression(info)
@@ -2314,7 +2386,7 @@ AggregateSymbol analyticAggregateSymbol(ParseInfo info) :
 	Token func = null;
 }
 {
-	(<ROW_NUMBER> | <RANK> | <DENSE_RANK>) {func = getToken(0);}
+	(<ROW_NUMBER> | <RANK> | <DENSE_RANK> | <PERCENT_RANK> | <CUME_DIST>) {func = getToken(0);}
 	<LPAREN> <RPAREN>
 	{
 		return new AggregateSymbol(func.image.toUpperCase(), false, null);	
@@ -2331,7 +2403,7 @@ Expression filterClause(ParseInfo info) :
 	Expression condition = null;
 }
 {
-	<FILTER> <LPAREN> <WHERE> condition = booleanPrimary(info) <RPAREN>
+	<FILTER> <LPAREN> <WHERE> condition = criteria(info) <RPAREN>
 	{
 		return condition;	
 	}
@@ -2481,6 +2553,8 @@ FromClause tablePrimary(ParseInfo info) :
 	    |
 	    LOOKAHEAD(2) clause = arrayTable(info)
 	    |
+	    LOOKAHEAD(2) clause = jsonTable(info)
+	    |
 	    clause = xmlTable(info)
 	    |
 	    LOOKAHEAD(2) clause = objectTable(info)
@@ -2577,25 +2651,97 @@ example=[source,sql]\n----\nARRAYTABLE (col1 COLUMNS x STRING) AS y\n----\n
 */
 ArrayTable arrayTable(ParseInfo info) :
 {
-	Expression array = null;
-	List<TableFunctionReference.ProjectedColumn> columns;
-	String aliasID = null;
+    Expression array = null;
+    List<TableFunctionReference.ProjectedColumn> columns;
+    String aliasID = null;
+    Boolean single = null;
 }
 {
- 	<ARRAYTABLE> <LPAREN> array = valueExpressionPrimary(info)
- 	<COLUMNS>
- 	columns = createElementsWithTypes(info) 
- 	<RPAREN>
- 	[<AS>] aliasID=id(null) {
- 	    validateQuotedName(aliasID, getToken(0).image);
-	}
- 	{
- 		ArrayTable result = new ArrayTable();
- 		result.setArrayValue(array);
- 		result.setColumns(columns);
- 		result.setName(aliasID);
- 		return result;
- 	}
+    <ARRAYTABLE> <LPAREN> [(<ROW>|<ROWS> {single=false;})] array = valueExpressionPrimary(info)
+    <COLUMNS>
+    columns = createElementsWithTypes(info) 
+    <RPAREN>
+    [<AS>] aliasID=id(Boolean.FALSE)
+    {
+        ArrayTable result = new ArrayTable();
+        result.setArrayValue(array);
+        result.setColumns(columns);
+        result.setName(aliasID);
+        result.setSingleRow(single);
+        return result;
+    }
+}
+
+/*
+name=json table
+description=The JSONTABLE table function creates tabular results from JSON.  It can be used as a nested table reference.
+example=[source,sql]\n----\nJSONTABLE (col1, '$..book', false COLUMNS x STRING) AS y\n----\n
+*/
+JsonTable jsonTable(ParseInfo info) :
+{
+    Expression json = null;
+    JsonTable.JsonColumn column = null;
+    List<JsonTable.JsonColumn> columns = new ArrayList<JsonTable.JsonColumn>();
+    String aliasID = null;
+    Boolean nullLeaf = null;
+    String rowPath = null;
+}
+{
+    <JSONTABLE> <LPAREN> json = valueExpressionPrimary(info)
+    <COMMA> rowPath = stringVal()
+    [<COMMA> (<TRUE>{nullLeaf=true;}|<FALSE>{nullLeaf=false;})]
+    <COLUMNS>
+    column = jsonColumn(info)
+    {
+      columns.add(column);
+    }
+    (<COMMA>
+      column = jsonColumn(info)
+      {
+        columns.add(column);      
+      }
+    )*
+    <RPAREN>
+    [<AS>] aliasID=id(Boolean.FALSE)
+    {
+        JsonTable result = new JsonTable();
+        result.setJson(json);
+        result.setRowPath(rowPath);
+        result.setNullLeaf(nullLeaf);
+        result.setColumns(columns);
+        result.setName(aliasID);
+        return result;
+    }
+}
+
+/*
+name=json table column
+description=json table column.
+example=[source,sql]\n----\ncol FOR ORDINALITY\n----\n
+*/
+JsonTable.JsonColumn jsonColumn(ParseInfo info):
+{
+    String name = null;
+    ParsedDataType datatype = null;
+    String path = null;
+}
+{
+    name = id(Boolean.TRUE)
+    
+    ((
+      <FOR> <ORDINALITY> 
+      {
+        return new JsonTable.JsonColumn(name); 
+      } 
+    ) | (
+      datatype = parseBasicDataType()
+      [ 
+        <PATH> path = stringVal()
+      ]
+      {
+        return new JsonTable.JsonColumn(name, datatype.type, path);
+      }
+    ))
 }
 
 /*
@@ -4191,23 +4337,32 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 /*
 name=ARRAY expression constructor
 description=Creates and array of the given expressions.
-example=[source,sql]\n----\ARRAY[1,2]\n----\n
+example=[source,sql]\n----\nARRAY[1,2]\n----\n
 */
 Expression arrayExpression(ParseInfo info) :
 {
     Expression arrayExpression = null;
     List<Expression> arrayExpressions = new ArrayList<Expression>();
+    QueryCommand subquery = null;
 }
 {
-    ( <ARRAY> <LSBRACE> 
+    <ARRAY> 
+    (( <LSBRACE> 
         [arrayExpression = expression(info) {arrayExpressions.add(arrayExpression);}
          (<COMMA> arrayExpression = expression(info) {arrayExpressions.add(arrayExpression);})*
         ]
       <RSBRACE>
-    )
-    {
+      {
         return new Array(arrayExpressions);
-    }
+      }
+    ) | 
+    ( <LPAREN> 
+        subquery = queryExpression(info)
+      <RPAREN>
+      {
+        return arrayFromQuery(subquery);
+      }
+    ))
 }    
 
 
@@ -4220,6 +4375,7 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
 {
 	List<Expression> partitionList = null;
 	OrderBy orderBy = null;
+	WindowFrame frame = null;
 }
 {
 	<OVER> { 
@@ -4234,6 +4390,7 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     <LPAREN> 
     [<PARTITION> <BY> partitionList = expressionList(info)]
     [orderBy = orderby(info)]
+    [frame = windowFrame(info)]
     <RPAREN>
     {
     	WindowFunction result = new WindowFunction();
@@ -4241,9 +4398,60 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     	result.setFunction((AggregateSymbol)agg);
     	ws.setPartition(partitionList);
     	ws.setOrderBy(orderBy);
+    	ws.setWindowFrame(frame);
     	result.setWindowSpecification(ws);
     	return result;
     }
+}
+
+/*
+name=window frame
+description=Defines the mode, start, and optionally end of the window frame
+example=[source,sql]\n----\nRANGE UNBOUNDED PRECEDING\n----\n
+*/
+WindowFrame windowFrame(ParseInfo info) :
+{
+    WindowFrame.FrameBound start = null;
+    WindowFrame.FrameBound end = null;
+    org.teiid.language.WindowFrame.FrameMode mode = org.teiid.language.WindowFrame.FrameMode.RANGE;
+}
+{
+   (<RANGE>|<ROWS> {mode = org.teiid.language.WindowFrame.FrameMode.ROWS;})
+   (
+    (<BETWEEN> start = windowFrameBound(info) 
+     <AND> end = windowFrameBound(info))
+   | start = windowFrameBound(info)
+   )
+   {
+     WindowFrame result = new WindowFrame(mode);
+     result.setStart(start);
+     result.setEnd(end);
+     return result;
+   }
+}
+
+/*
+name=window frame bound
+description=Defines the start or end of a window frame
+example=[source,sql]\n----\nCURRENT ROW\n----\n
+*/
+WindowFrame.FrameBound  windowFrameBound(ParseInfo info) :
+{
+   Integer val = null;
+   org.teiid.language.WindowFrame.BoundMode boundMode = null;
+}
+{
+   (
+    ((<UNBOUNDED>|val = intVal()) (<FOLLOWING> {boundMode=org.teiid.language.WindowFrame.BoundMode.FOLLOWING;}|
+                                   <PRECEDING> {boundMode=org.teiid.language.WindowFrame.BoundMode.PRECEDING;}))
+    |
+    (<CURRENT> <ROW> {boundMode=org.teiid.language.WindowFrame.BoundMode.CURRENT_ROW;})
+   )
+   {
+     WindowFrame.FrameBound result = new WindowFrame.FrameBound(boundMode);
+     result.setBound(val);
+     return result;
+   }
 }
 
 /*
@@ -4387,15 +4595,16 @@ Expression function(ParseInfo info) :
 	   <LPAREN>
 	   (funcToken = <YEAR> | 
 	    funcToken = <MONTH> |
-	    funcToken = <DAY> |
+	    funcToken = <DAY> {funcName = "DAYOFMONTH";}|
 	    funcToken = <HOUR> |
 	    funcToken = <MINUTE> |
-	    funcToken = <SECOND>)
+	    funcToken = <SECOND> |
+	    funcToken = <QUARTER> |
+	    funcToken = <EPOCH> |
+	    funcToken = <DOW> {funcName = "DAYOFWEEK";} |
+	    funcToken = <DOY> {funcName = "DAYOFYEAR";})
 	   <FROM> expression = expression(info)
 	   {
-	   	  if (funcToken.image.equalsIgnoreCase("DAY")) {
-	         funcName = "DAYOFMONTH";
-	      }  	      
 	      args.add(expression);
 	   }
 	   <RPAREN>
@@ -4538,6 +4747,22 @@ Expression function(ParseInfo info) :
 		}
 	|   LOOKAHEAD(<POSITION><LPAREN>) (funcToken = <POSITION> {funcToken.image="locate";} <LPAREN> expression = commonValueExpression(info) {args.add(expression);} 
 	     <IN> expression = commonValueExpression(info) {args.add(expression);} <RPAREN>)
+	| LOOKAHEAD(1)
+	(   funcToken = <LISTAGG> <LPAREN> 
+	    expression = expression(info) {args.add(new Function("cast", new Expression[] {expression, new Constant("string")}));}
+	    [<COMMA> literal = stringVal() {args.add(new Constant(literal));}]
+	    <RPAREN>
+	    <WITHIN> <GROUP> <LPAREN>
+	    orderBy = orderby(info)
+	    <RPAREN>
+	    {
+	      if (args.size() == 1) {
+	        //oracle's default is described as null, but be need an empty string for consistency
+	        args.add(new Constant(""));
+	      }
+	      return new AggregateSymbol("string_agg", false, (Expression[])args.toArray(new Expression[args.size()]), orderBy);
+	    }
+	)
 	|
 	(	funcName = id(null)
 		<LPAREN>
@@ -4552,7 +4777,8 @@ Expression function(ParseInfo info) :
     (   (funcToken = <CURRENT_TIMESTAMP>| funcToken = <CURRENT_TIME>)
     	[<LPAREN> intVal = intVal() <RPAREN> {args.add(new Constant(intVal));}]
     )
-	)		
+    |   (funcToken = <SESSION_USER> {funcName = "user"; args.add(new Constant(false));})
+    )		
 	{
 		if(funcName == null) { 
 			funcName = funcToken.image;
@@ -4845,12 +5071,22 @@ ParsedDataType parseDataTypePrimary() :
 		(typeToken = <DECIMAL> [<LPAREN>length=intVal()[<COMMA>scale=intVal()]<RPAREN>])| 
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
-		typeToken = <TIMESTAMP> |
+		(typeToken = <TIMESTAMP> [<LPAREN>scale=intVal()<RPAREN> {
+		      if (scale >= 9) {
+		        scale = null; //default
+		      } else if (scale == 0) {
+		        length = 19;
+		      } else {
+                length = scale + 20;
+              }
+		    } ] )|
 		(typeToken = <OBJECT> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
+		typeToken = <JSON> |
 		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
 		typeToken = <GEOMETRY> |
+		typeToken = <GEOGRAPHY> |
 		typeToken = <XML>
 	)
 	{
@@ -4911,7 +5147,7 @@ ParsedDataType parseDataType() :
         return type;
     }
     |
-    (idToken = <ID> 
+    ((idToken = <ID> | idToken = basicNonReserved())
     {
         String id = normalizeId(idToken.image);
         id = validateName(id, true);
@@ -4969,7 +5205,7 @@ Constant nonNumericLiteral() :
 		strVal=stringVal()	{ 
 			constant = new Constant(strVal, DataTypeManager.DefaultDataClasses.STRING);
 		} |
-		t=<BINARYSTRINGVAL> { constant = new Constant(new BinaryType(javax.xml.bind.DatatypeConverter.parseHexBinary(t.image.substring(2, t.image.length() - 1))), DataTypeManager.DefaultDataClasses.VARBINARY); } |
+		t=<BINARYSTRINGVAL> { constant = new Constant(new BinaryType(PropertiesUtils.fromHex(t.image.substring(2, t.image.length() - 1))), DataTypeManager.DefaultDataClasses.VARBINARY); } |
 		t=<FALSE>    { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
 		t=<TRUE>     { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
         t=<UNKNOWN>  { constant = new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN); }       |
@@ -5099,11 +5335,13 @@ void ddlStmt(DatabaseStore dbStore) :
 	 LOOKAHEAD(3)  createServer(dbStore) |
 	 LOOKAHEAD(3)  createRole(dbStore) |
 	 LOOKAHEAD(3)  dropRole(dbStore) |
-	 LOOKAHEAD(2)  grantOption(dbStore) |
-	 LOOKAHEAD(2)  revokeGrantOption(dbStore) | 
+	 LOOKAHEAD(2)  grant(dbStore) |
+	 LOOKAHEAD(2)  revokeGrant(dbStore) | 
+	 LOOKAHEAD(2)  createPolicy(dbStore, ParseInfo.DEFAULT_INSTANCE) |
+	 LOOKAHEAD(2)  dropPolicy(dbStore) |
 	 LOOKAHEAD(3)  dropServer(dbStore) |
 	 LOOKAHEAD(3)  dropTableView(dbStore) |
-	 LOOKAHEAD(3)  importSchema(dbStore) |
+	 LOOKAHEAD(2)  importSchema(dbStore) |
 	 LOOKAHEAD(3)  importDatabase(dbStore) |
 	 LOOKAHEAD(2)  createDatabase(dbStore) |
 	 //LOOKAHEAD(2)  dropDatabase(dbStore) |
@@ -5138,7 +5376,7 @@ void createNameSpace(DatabaseStore dbStore) :
 /*
 name=create database
 description=create a new database
-example=[source,sql]\n----\nCREATE DATABASE foo [VERSION 'version'] OPTIONS(...)\n----\n
+example=[source,sql]\n----\nCREATE DATABASE foo OPTIONS(x 'y')\n----\n
 */
 void createDatabase(DatabaseStore dbStore) :
 {
@@ -5158,7 +5396,7 @@ void createDatabase(DatabaseStore dbStore) :
         }
       )   
     ] 
-    [ optionsClause(database, null)
+    [ optionsClause(database, database.getNamespaceContainer())
       {
          OptionsUtil.setOptions(database);
       }
@@ -5171,7 +5409,7 @@ void createDatabase(DatabaseStore dbStore) :
 /*
 name=use database
 description=database into working context
-example=[source,sql]\n----\nUSE DATABASE foo [VERSION 'version']\n----\n
+example=[source,sql]\n----\nUSE DATABASE foo\n----\n
 */
 void useDatabase(DatabaseStore dbStore) :
 {
@@ -5189,7 +5427,7 @@ void useDatabase(DatabaseStore dbStore) :
 /*
 name=drop database
 description=drop database 
-example=[source,sql]\n----\nDROP DATABASE foo [VERSION 'version']\n----\n
+example=[source,sql]\n----\nDROP DATABASE\n----\n
 */
 /*void dropDatabase(DatabaseStore dbStore) :
 {
@@ -5208,7 +5446,7 @@ example=[source,sql]\n----\nDROP DATABASE foo [VERSION 'version']\n----\n
 /*
 name=create schema
 description=create a schema in database
-example=[source,sql]\n----\nCREATE [VIRTUAL] SCHEMA foo SERVER (s1,s2,s3) OPTIONS(...)\n----\n
+example=[source,sql]\n----\nCREATE VIRTUAL SCHEMA foo SERVER (s1,s2,s3);\n----\n
 */
 void createSchema(DatabaseStore dbStore) :
 {
@@ -5226,8 +5464,8 @@ void createSchema(DatabaseStore dbStore) :
         schema.setName(name);
         schema.setPhysical(physical);
     }
-    [<SERVER> readCSVString(servers)]     
-    [ optionsClause(schema, null)
+    [<SERVER> identifierList(servers)]     
+    [ optionsClause(schema, dbStore.getCurrentNamespaceContainer())
       {
          OptionsUtil.setOptions(schema);
       }
@@ -5254,7 +5492,7 @@ void createSchema(DatabaseStore dbStore) :
 /*
 name=drop schema
 description=drop a schema in database
-example=[source,sql]\n----\DROP SCHEMA foo \n----\n
+example=[source,sql]\n----\nDROP SCHEMA foo \n----\n
 */
 void dropSchema(DatabaseStore dbStore) :
 {
@@ -5269,9 +5507,9 @@ void dropSchema(DatabaseStore dbStore) :
 }
 
 /*
-name=use schema
-description=use schema for following database resources 
-example=[source,sql]\n----\nUSE SCHEMA foo \n----\n
+name=set schema
+description=set the schema for subsequent ddl statements 
+example=[source,sql]\n----\nSET SCHEMA foo\n----\n
 */
 void useSchema(DatabaseStore dbStore) :
 {
@@ -5297,8 +5535,7 @@ void createDomain(DatabaseStore dbStore) :
     Token idToken = null;
 }
 {
-    <CREATE> <DOMAIN> idToken = <ID> {
-        //restricting to only unqualfied ids (excluding non-reserved)
+    <CREATE> <DOMAIN> (idToken = <ID> | idToken = basicNonReserved()) {
         String id = normalizeId(idToken.image);
         domainName = validateName(id, true);
     }
@@ -5314,7 +5551,7 @@ void createDomain(DatabaseStore dbStore) :
 /*
 name=create data wrapper
 description=Defines a translator; use the options to override the translator properties.
-example=[source,sql]\n----\nCREATE FOREIGN (DATA WRAPPER|TRANSLATOR)  wrapper OPTIONS(properties)\n----\n
+example=[source,sql]\n----\nCREATE FOREIGN DATA WRAPPER wrapper OPTIONS (x true)\n----\n
 */
 void createDataWrapper(DatabaseStore dbStore) :
 {
@@ -5323,17 +5560,18 @@ void createDataWrapper(DatabaseStore dbStore) :
     String type = null;
 }
 {
-    <CREATE> <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>) 
+    <CREATE> <FOREIGN> ((<DATA> <WRAPPER>)|<TRANSLATOR>) 
     ( wrapperName = unqualifiedId()
       {
         wrapper = new DataWrapper(wrapperName);
       } 
     )
-    [ <TYPE> (type = id(null) { wrapper.setType(type);}) ]      
-    [ optionsClause(wrapper, null)
-      {
-         OptionsUtil.setOptions(wrapper);
-      }
+    [ <TYPE> type = id(null) { wrapper.setType(type);}
+      [ optionsClause(wrapper, dbStore.getCurrentNamespaceContainer())
+        {
+           OptionsUtil.setOptions(wrapper);
+        }
+      ]
     ]    
     {
         dbStore.dataWrapperCreated(wrapper);
@@ -5343,14 +5581,14 @@ void createDataWrapper(DatabaseStore dbStore) :
 /*
 name=Drop data wrapper
 description=Deletes a translator
-example=[source,sql]\n----\nDROP FOREIGN (DATA WRAPPER|TRANSLATOR) wrapper\n----\n
+example=[source,sql]\n----\nDROP FOREIGN DATA WRAPPER wrapper\n----\n
 */
 void dropDataWrapper(DatabaseStore dbStore) :
 {
     String wrapperName = null;
 }
 {
-    <DROP> <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>)  
+    <DROP> <FOREIGN> ((<DATA> <WRAPPER>)|<TRANSLATOR>)  
     ( wrapperName = id(null)
       {
         dbStore.dataWrapperDropped(wrapperName);
@@ -5362,7 +5600,7 @@ void dropDataWrapper(DatabaseStore dbStore) :
 /*
 name=create role 
 description=Defines data role for the database
-example=[source,sql]\n----\nCREATE DATA ROLE <data-role>  [WITH JAAS ROLE <string>(,<string>)*]\n----\n
+example=[source,sql]\n----\nCREATE ROLE lowly WITH FOREIGN ROLE "role"\n----\n
 */
 void createRole(DatabaseStore dbStore) :
 {
@@ -5387,16 +5625,15 @@ name=with role
 */
 void readWith(Role role) :
 {
-    List<String> jaasNames = new ArrayList<String>();
+    List<String> mappedRoles = new ArrayList<String>();
     boolean anyAuthenticated = false;
 }
 {        
-    (<JAAS> <ROLE> readCSVString(jaasNames) | <ANY> <AUTHENTICATED> {anyAuthenticated=true;}) 
-    (<WITH>
-        (<JAAS> <ROLE> readCSVString(jaasNames) | <ANY> <AUTHENTICATED> {anyAuthenticated=true;})
-    )*
+    ((<ANY> <AUTHENTICATED> {anyAuthenticated=true;})
+    |
+    ((<JAAS>|<FOREIGN>) <ROLE> identifierList(mappedRoles))) 
     {
-        role.setJaasRoles(jaasNames);
+        role.setMappedRoles(mappedRoles);
         role.setAnyAuthenticated(anyAuthenticated);    
     } 
 }
@@ -5420,11 +5657,93 @@ void dropRole(DatabaseStore dbStore) :
 }
 
 /*
-name=Create GRANT
+name=CREATE POLICY
+description=CREATE row level policy
+example=[source,sql]\n----\nCREATE POLICY pname ON tbl FOR SELECT,INSERT TO role USING (col = user());\n----\n
+*/
+void createPolicy(DatabaseStore dbStore, ParseInfo info) :
+{
+    Database.ResourceType on= Database.ResourceType.TABLE;
+    Policy policy = new Policy();
+    String resource = null;
+    String policyName = null;
+    Expression condition = null;
+    String to = null;
+    Token operation = null;
+}
+{
+    <CREATE> <POLICY>
+    policyName = id(Boolean.TRUE)
+    <ON> ( 
+      (resource = id(null)
+       [ <FOR> (<ALL> 
+                | ((operation = <SELECT> | operation = <INSERT> | operation = <UPDATE> | operation = <DELETE>) 
+                   {policy.getOperations().add(Policy.Operation.valueOf(operation.image.toUpperCase()));} 
+                   (<COMMA> 
+                    (operation = <SELECT> | operation = <INSERT> | operation = <UPDATE> | operation = <DELETE>)
+                    {policy.getOperations().add(Policy.Operation.valueOf(operation.image.toUpperCase()));} )*)
+               ) 
+       ]
+      )
+      |
+      (<PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;}
+       [ <FOR> ( token = <ALL> ) {policy.getOperations().add(Policy.Operation.ALL);}] 
+      )
+    ) 
+    <TO>( to = id(null) )
+    <USING> <LPAREN> condition = criteria(info) <RPAREN>
+    {
+        policy.setName(policyName);
+        policy.setResourceName(resource);
+        policy.setResourceType(on);
+        if (condition instanceof ExpressionCriteria) {
+            ExpressionCriteria exc = (ExpressionCriteria)condition;
+            Expression ex = exc.getExpression();
+            if (ex instanceof Constant && ex.getType() == DataTypeManager.DefaultDataClasses.STRING) {
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.string_condition", ex));
+            }
+        }
+        policy.setCondition(condition.toString());
+        dbStore.policyCreated(to, policy);
+    } 
+}
+
+/*
+name=DROP POLICY
+description=DROP row level policy
+example=[source,sql]\n----\nDROP POLICY pname ON tbl TO role\n----\n
+*/
+void dropPolicy(DatabaseStore dbStore) :
+{
+    Policy policy = new Policy();
+    Database.ResourceType on= Database.ResourceType.TABLE;
+    String resource = null;
+    String policyName = null;
+    String to = null;
+}
+{
+    <DROP> <POLICY>
+    policyName = id(Boolean.TRUE)
+    <ON> ( 
+      resource = id(null)
+      |
+      (<PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;})
+    ) 
+    <TO>( to = id(null) )
+    {
+      policy.setName(policyName);
+      policy.setResourceName(resource);
+      policy.setResourceType(on);
+      dbStore.policyDropped(to, policy);
+    }
+}
+
+/*
+name=GRANT
 description=Defines GRANT for a role
 example=[source,sql]\n----\nGRANT SELECT ON TABLE x.y TO role\n----\n
 */
-void grantOption(DatabaseStore dbStore) :
+void grant(DatabaseStore dbStore) :
 {
     Database.ResourceType on= null;
     Grant grant = new Grant();
@@ -5432,32 +5751,38 @@ void grantOption(DatabaseStore dbStore) :
     String mask = null;
     int maskOrder = -1;
     String condition = null;
-    boolean isConstraint = false;
+    Boolean isConstraint = null;
+    if (!CONDITION_CONSTRAINT_DEFAULT) {
+        isConstraint = false;
+    }
     String to = null;
-    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
-    Grant.Permission permission = new Grant.Permission();
+    ArrayList<Permission.Privilege> privileges = new ArrayList<Permission.Privilege>();
+    Permission permission = new Permission();
+    Expression booleanExpr = null;
 }
 {
     <GRANT> 
     ((
        [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
        <ON> ( 
-        <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
-        <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
-        <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
-        <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
-        <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
-            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
+        (<TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
+        	[<CONDITION> [[<NOT>{isConstraint=false;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()]) |
+        (<FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;}) |
+        (<PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
+        	[<CONDITION> [[<NOT>{isConstraint=true;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()]) |
+        (<SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;}) |
+        (<COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
+            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()]
+            [<CONDITION> (LOOKAHEAD(criteria(ParseInfo.DEFAULT_INSTANCE)) booleanExpr = criteria(ParseInfo.DEFAULT_INSTANCE) | condition = stringVal())]
+        ) 
        )
       ) 
       |
-      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      (<ALL> <PRIVILEGES> {privileges.add(Permission.Privilege.ALL_PRIVILEGES);})
       |
-      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      (<TEMPORARY> <TABLE> {privileges.add(Permission.Privilege.TEMPORARY_TABLE);}) 
       |
-      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+      (<USAGE> {privileges.add(Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
     )
     <TO>( to = id(null)
         {
@@ -5466,7 +5791,10 @@ void grantOption(DatabaseStore dbStore) :
             }
             permission.setResourceName(resource);
             permission.setPrivileges(privileges);
-            permission.setResourceType(on);            
+            permission.setResourceType(on);
+            if (booleanExpr != null) {
+                condition = booleanExpr.toString();
+            }           
             if (mask != null) {
                 permission.setMask(mask);
                 if (maskOrder != -1) {
@@ -5477,7 +5805,7 @@ void grantOption(DatabaseStore dbStore) :
                 permission.setCondition(condition, isConstraint);               
             }
             grant.setRole(to);
-            grant.addPermission(permission);
+            grant.setPermission(permission);
             dbStore.grantCreated(grant);
         } 
     )
@@ -5488,7 +5816,7 @@ name=Revoke GRANT
 description=Revokes GRANT for a role
 example=[source,sql]\n----\nREVOKE SELECT ON TABLE x.y TO role\n----\n
 */
-void revokeGrantOption(DatabaseStore dbStore) :
+void revokeGrant(DatabaseStore dbStore) :
 {
     Database.ResourceType on= null;
     Grant grant = new Grant();
@@ -5496,8 +5824,8 @@ void revokeGrantOption(DatabaseStore dbStore) :
     String mask = null;
     String condition = null;
     String to = null;
-    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
-    Grant.Permission permission = new Grant.Permission();
+    ArrayList<Permission.Privilege> privileges = new ArrayList<Permission.Privilege>();
+    Permission permission = new Permission();
 }
 {
     <REVOKE> 
@@ -5515,11 +5843,11 @@ void revokeGrantOption(DatabaseStore dbStore) :
        )
       ) 
       |
-      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      (<ALL> <PRIVILEGES> {privileges.add(Permission.Privilege.ALL_PRIVILEGES);})
       |
-      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      (<TEMPORARY> <TABLE> {privileges.add(Permission.Privilege.TEMPORARY_TABLE);}) 
       |
-      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+      (<USAGE> {privileges.add(Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
     )
     <FROM>( to = id(null)
         {
@@ -5536,16 +5864,16 @@ void revokeGrantOption(DatabaseStore dbStore) :
                 permission.setCondition(condition, null);               
             }
             grant.setRole(to);
-            grant.addPermission(permission);
+            grant.setPermission(permission);
             dbStore.grantRevoked(grant);
         } 
     )
 }
 
 /*
-name=create server, aka data source
-description=Defines connection to foreign source
-example=[source,sql]\n----\nCREATE SERVER server_name [ TYPE 'server_type' ] [ VERSION 'server_version' ] FOREIGN (<DATA> <WRAPPER>|<TRANSLATOR>)  fdw_name [ OPTIONS ( option 'value' [, ... ] ) ]\n----\n
+name=create server
+description=Defines a connection to a source
+example=[source,sql]\n----\nCREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("resource-name" 'java:/accounts-ds');\n----\n
 */
 void createServer(DatabaseStore dbStore) :
 {
@@ -5576,13 +5904,13 @@ void createServer(DatabaseStore dbStore) :
         }
       )   
     ]    
-    <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>) 
+    <FOREIGN> ((<DATA> <WRAPPER>)|<TRANSLATOR>) 
     ( wrapperName = unqualifiedId()
       {
         server.setDataWrapper(wrapperName);
       } 
     )      
-    [ optionsClause(server, null)
+    [ optionsClause(server, dbStore.getCurrentNamespaceContainer())
       {
          OptionsUtil.setOptions(server);
       }
@@ -5593,9 +5921,9 @@ void createServer(DatabaseStore dbStore) :
 }
 
 /*
-name=drop server, aka data source
+name=drop server
 description=Defines dropping connection to foreign source
-example=[source,sql]\n----\DROP SERVER server_name\n----\n
+example=[source,sql]\n----\nDROP SERVER server_name\n----\n
 */
 void dropServer(DatabaseStore dbStore) :
 {
@@ -5656,7 +5984,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 		      OptionsUtil.setOptions(proc);
 		   }
 		]
-		[<AS> { comment = getToken(1).specialToken; } 
+		[<AS> { comment = getToken(1); } 
 		stmt = statement(info)])
 		{
 			proc.setVirtual(virtual);
@@ -5665,7 +5993,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 			    if (!virtual) {
 			         throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
 			    }
-				proc.setQueryPlan((comment != null?comment.image+" ":"") + stmt.toString());
+				proc.setQueryPlan(getFullComment(comment, true) + stmt.toString());
 			}
 			
 	        if (returnDataType != null){
@@ -5689,7 +6017,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 /*
 name=drop procedure
 description=Drops a table or view.
-example=[source,sql]\n----\nDROP [FOREIGN (TABLE|VIEW) table-name\n----\n
+example=[source,sql]\n----\nDROP FOREIGN TABLE table-name\n----\n
 */
 void dropProcedure(DatabaseStore dbStore) :
 {
@@ -5793,7 +6121,20 @@ example=[source,sql]\n----\nCREATE VIEW vw AS SELECT 1\n----\n
 */
 void createTable(DatabaseStore dbStore) :
 {
-	boolean view = false;
+
+}
+{
+    <CREATE> (createView(dbStore) 
+              | createForeignOrGloablTable(dbStore))
+}
+
+/*
+name=create foreign or global temporary table
+description=Defines a foreign or global temporary table.
+example=[source,sql]\n----\nFOREIGN TABLE ft (col integer)\n----\n
+*/
+void createForeignOrGloablTable(DatabaseStore dbStore) :
+{
 	boolean globalTemp = false;
 	String tableName = null;
 	Table table = null;
@@ -5802,42 +6143,64 @@ void createTable(DatabaseStore dbStore) :
 	MetadataFactory factory = null;
 }
 {
-	<CREATE> (
+	(
 		(<FOREIGN> <TABLE>) | 
-		([<VIRTUAL>] <VIEW> {view = true;}) |
-		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
+		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true;})
 	) 
 	tableName = unqualifiedId()
 	{	    
 	    factory = DatabaseStore.createMF(dbStore);
 	    table = factory.addTable(tableName);
-	    table.setVirtual(view);
+	    table.setVirtual(globalTemp);
 	    if (globalTemp) {
 	    	table.setTableType(Table.Type.TemporaryTable);
 	    }
 	}
-	(createTableBody(table, factory) | [optionsClause(table, factory)
-	   {
-	      OptionsUtil.setOptions(table);
-	   }
-	])
-	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
-	  {
-		   if (!view || globalTemp) {
-     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", table.getName()));
-		   }
-		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
-	  }
-	]
+	createTableBody(table, factory)
 	{
 	   dbStore.tableCreated(table);
 	}
 }
 
 /*
+name=create view
+description=Defines a view.
+example=[source,sql]\n----\nVIEW vw AS SELECT 1\n----\n
+*/
+void createView(DatabaseStore dbStore) :
+{
+    String tableName = null;
+    Table table = null;
+    Token comment = null;
+    Command query = null;
+    MetadataFactory factory = null;
+}
+{
+    [<VIRTUAL>] <VIEW>
+    tableName = unqualifiedId()
+    {       
+        factory = DatabaseStore.createMF(dbStore);
+        table = factory.addTable(tableName);
+        table.setVirtual(true);
+    }
+    (createViewBody(table, factory) | [optionsClause(table, factory)
+       {
+          OptionsUtil.setOptions(table);
+       }
+    ])
+    <AS> { comment = getToken(1); } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
+      {
+           table.setSelectTransformation(getFullComment(comment, true) + query.toString());    
+      }
+    {
+       dbStore.tableCreated(table);
+    }
+}
+
+/*
 name=drop table
 description=Drops a table or view.
-example=[source,sql]\n----\nDROP (FOREIGN TABLE | [VIRTUAL] VIEW) table-name\n----\n
+example=[source,sql]\n----\nDROP VIEW name\n----\n
 */
 void dropTableView(DatabaseStore dbStore) :
 {
@@ -5871,7 +6234,7 @@ Create createForeignTempTable(ParseInfo info) :
 }
 {
 	<CREATE> [<LOCAL>] <FOREIGN> <TEMPORARY> <TABLE>
-	tableName = id(null)
+	tableName = unqualifiedId()
 	{
 		table = new Table();
 		//need to set a dummy/stable uuid
@@ -5896,23 +6259,13 @@ example=[source,sql]\n----\n(x string) OPTIONS (CARDINALITY 100)\n----\n
 */
 void createTableBody(Table table, MetadataFactory factory) :
 {
-	String name = null;
-	AbstractMetadataRecord constraint = null;
-	Server server = null;
-	String serverName = null;
 }
 {
 	<LPAREN>
     createColumn(factory, table)
-    (LOOKAHEAD(3) <COMMA>
-      createColumn(factory, table)
-    )*	
-    (<COMMA>{name=null;} [<CONSTRAINT> name = id(null)] (constraint = primaryKey(factory, table, name) | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) | constraint = foreignKey(factory, table, name))
-       [optionsClause(constraint, factory)
-	   {
-	      OptionsUtil.setCommonProperties(constraint, constraint.getProperties());
-	   }
-	]
+    (<COMMA>
+      (LOOKAHEAD(2) tableConstraint(factory, table)
+       | createColumn(factory, table))
     )*
     <RPAREN>
     [optionsClause(table, factory)
@@ -5928,6 +6281,58 @@ void createTableBody(Table table, MetadataFactory factory) :
 		}
 	}
 }
+
+/*
+name=create view body
+description=Defines a view.
+example=[source,sql]\n----\n(x) OPTIONS (CARDINALITY 100)\n----\n
+*/
+void createViewBody(Table table, MetadataFactory factory) :
+{
+}
+{
+    <LPAREN>
+    createViewColumn(factory, table)
+    (<COMMA>
+      (LOOKAHEAD(2) tableConstraint(factory, table)
+       | createViewColumn(factory, table))
+    )*
+    <RPAREN>
+    [optionsClause(table, factory)
+       {
+          OptionsUtil.setOptions(table);
+       }
+    ]
+    {
+        if (table.getColumns() != null && !table.supportsUpdate()) {
+            for (Column c : table.getColumns()) {
+                c.setUpdatable(false);
+            }
+        }
+    }
+}
+
+/*
+name=table constraint
+description=Defines a constraint on a table or view.
+example=[source,sql]\n----\nFOREIGN KEY (a, b) REFERENCES tbl (x, y)\n----\n
+*/
+void tableConstraint(MetadataFactory factory, Table table) :
+{
+    String name = null;
+    AbstractMetadataRecord constraint = null;
+}
+{
+  [<CONSTRAINT> name = id(null)] 
+  (constraint = primaryKey(factory, table, name) 
+   | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) 
+   | constraint = foreignKey(factory, table, name)
+  )
+  [optionsClause(constraint, factory) {
+      OptionsUtil.setCommonProperties(constraint, constraint.getProperties());
+   }]
+}
+
 
 /*
 name=foreign key
@@ -6060,10 +6465,6 @@ void createColumn(MetadataFactory factory, Table table) :
 	Expression defaultValue = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
-	boolean index = false;
-	boolean unique = false;
-	boolean pk = false;
-	Token word = null;
 }
 {
 	 element = id(Boolean.TRUE)
@@ -6081,35 +6482,104 @@ void createColumn(MetadataFactory factory, Table table) :
         [<AUTO_INCREMENT> {  autoIncrement = true; }]
 	  )
 	 )
-	 {
+	      postCreateColumn(factory, table, element, type, autoIncrement, notNull)
+}
+
+/*
+name=view element
+description=Defines a view column with optional type.
+example=[source,sql]\n----\nx INTEGER NOT NULL\n----\n
+*/
+void createViewColumn(MetadataFactory factory, Table table) :
+{
+    String element = null;
+    ParsedDataType type = null;
+    boolean autoIncrement = false;
+    boolean notNull = false;
+}
+{
+     element = id(Boolean.TRUE)
+     [(
+      <SERIAL>
+      {
+        type = new ParsedDataType("INTEGER");
+        autoIncrement = true;
+        notNull = true;
+      }
+      |
+      (
+        type = parseDataType()
+        [<NOT> <NULL> { notNull = true; }]
+        [<AUTO_INCREMENT> {  autoIncrement = true; }]
+      )
+     )]
+     postCreateColumn(factory, table, element, type, autoIncrement, notNull)
+}
+
+/*
+name=post create column
+description=Common options trailing a column
+example=[source,sql]\n----\nPRIMARY KEY\n----\n
+*/
+void postCreateColumn(MetadataFactory factory, Table table, String element, ParsedDataType type, boolean autoIncrement, boolean notNull) :
+{
+    Column column = null;
+    List<String> columnName = new ArrayList<String>();
+    Expression defaultValue = null;
+}
+{
+{
+       boolean inferType = false;
+       if (type == null) {
+         type = new ParsedDataType("STRING");
+         inferType = true;
+       }
        column = factory.addColumn(element, type.type, table);
        column.setUpdatable(true);
        setTypeInfo(type, column);                
        columnName.add(element);
+       if (inferType) {
+         column.setProperty(MetadataValidator.UNTYPED, "true");
+       }
      }
-	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
-	 [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
-	 [optionsClause(column, factory)
-	   {
-	      OptionsUtil.setOptions(column);
-	   }
-	 ]
-	 {
-	    if (index){
-	 		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table);
-	 	} else if (unique){
-	 		factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnName, table);
-	 	} else if (pk) {
-	    	if (table.getPrimaryKey() != null) {
-	    		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
-	    	}
-	 		factory.addPrimaryKey("PK", columnName, table);
-	 	}
-	 	if (notNull) {
-	       column.setNullType(Column.NullType.No_Nulls);
-	    }
-	    column.setAutoIncremented(autoIncrement);
-	 }
+     [inlineConstraint(factory, table, columnName)]
+     [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
+     [optionsClause(column, factory)
+       {
+          OptionsUtil.setOptions(column);
+       }
+     ]
+     {
+        if (notNull) {
+           column.setNullType(Column.NullType.No_Nulls);
+        }
+        column.setAutoIncremented(autoIncrement);
+     }
+}
+
+/*
+name=inline constraint
+description=Defines a constraint on a single column
+example=[source,sql]\n----\nx INTEGER PRIMARY KEY\n----\n
+*/
+void inlineConstraint(MetadataFactory factory, Table table, List<String> columnName) :
+{
+}
+{
+    (<PRIMARY> <KEY> { 
+       if (table.getPrimaryKey() != null) {
+            throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
+       }
+       factory.addPrimaryKey("PK", columnName, table);
+    }) 
+    | 
+    (<UNIQUE> {
+       factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnName, table);    
+    })
+    |
+    (<INDEX> { 
+       factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table); 
+    })
 }
 
 /*
@@ -6117,12 +6587,12 @@ name=options clause
 description=A list of statement options.
 example=[source,sql]\n----\nOPTIONS ('x' 'y', 'a' 'b')\n----\n
 */
-void optionsClause(AbstractMetadataRecord record, MetadataFactory factory) :
+void optionsClause(AbstractMetadataRecord record, NamespaceContainer namespaceContainer) :
 {
 }
 {
   <OPTIONS> <LPAREN>
-  optionPair(record, factory) (<COMMA> optionPair(record, factory))*	   
+  optionPair(record, namespaceContainer) (<COMMA> optionPair(record, namespaceContainer))*	   
   <RPAREN> 
 }
 
@@ -6131,7 +6601,7 @@ name=option pair
 description=An option key/value pair.
 example=[source,sql]\n----\n'key' 'value'\n----\n
 */
-void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
+void optionPair(AbstractMetadataRecord record, NamespaceContainer namespaceContainer) :
 {
 	Constant value = null;
 	String key = null;
@@ -6143,10 +6613,7 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	if (factory != null){
-            key = MetadataFactory.resolvePropertyKey(factory, key);
-	 	}
-	 	String val = null;
+	 	String val = MetadataFactory.resolvePropertyKey(key);
 	 	if (!value.isNull()) {
 	 		val = value.getValue().toString();
 	 	}
@@ -6200,7 +6667,7 @@ void alterStatement(DatabaseStore dbStore) :
 /*
 name=ALTER TABLE 
 description=alters options of database
-example=[source,sql]\n----\nALTER TABLE foo (ADD|DROP|ALTER) COLUMN <name> <type> OPTIONS ( (ADD|SET|DROP) x y)\n----\n
+example=[source,sql]\n----\nALTER TABLE foo ADD COLUMN x xml\n----\n
 */
 void alterTable(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -6223,8 +6690,9 @@ void alterTable(DatabaseStore dbStore, ParseInfo info) :
             dbStore.setViewDefinition(objectName, command.toString());        
         }
       ) |
+      LOOKAHEAD(2) alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
+      alterAddConstraint(objectName, Database.ResourceType.TABLE, dbStore) |
       alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |         
-      alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
       alterDropColumn(objectName, Database.ResourceType.TABLE, dbStore) |
       (<ALTER> <COLUMN> alterColumn(objectName, Database.ResourceType.TABLE, Database.ResourceType.COLUMN, dbStore)) |
       (<RENAME> (alterRenameTable(objectName, Database.ResourceType.TABLE, dbStore) | 
@@ -6246,6 +6714,22 @@ void alterRenameTable(String objectName, Database.ResourceType type, DatabaseSto
 	{
 		dbStore.modifyTableName(objectName, type, id);
 	}
+}
+
+/*
+name=ADD constraint
+description=alters table and adds a constraint
+example=[source,sql]\n----\nADD PRIMARY KEY (ID)\n----\n
+*/
+void alterAddConstraint(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+    Database.ResourceType childType = Database.ResourceType.COLUMN;
+    MetadataFactory factory = DatabaseStore.createMF(dbStore);
+    Table table = dbStore.getTableForCreateColumn(objectName, type);
+    
+}
+{ 
+    <ADD> tableConstraint(factory, table)
 }
 
 /*
@@ -6271,7 +6755,7 @@ void alterAddColumn(String objectName, Database.ResourceType type, DatabaseStore
 /*
 name=DROP column
 description=alters table and adds a column
-example=[source,sql]\n----\DROP COLUMN bar\n----\n
+example=[source,sql]\n----\nDROP COLUMN bar\n----\n
 */
 void alterDropColumn(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
 {
@@ -6347,7 +6831,7 @@ void alterRenameColumn(String objectName, Database.ResourceType type, DatabaseSt
 /*
 name=ALTER PROCEDURE 
 description=alters options of database
-example=[source,sql]\n----\nALTER PROCEDURE foo [AS <stmt>] OPTIONS (ADD x y)\n----\n
+example=[source,sql]\n----\nALTER PROCEDURE foo OPTIONS (ADD x y)\n----\n
 */
 void alterProcedure(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -6375,7 +6859,7 @@ void alterProcedure(DatabaseStore dbStore, ParseInfo info) :
 /*
 name=ALTER TRIGGER 
 description=alters options of table triggers
-example=[source,sql]\n----\nALTER TRIGGER ON <id> INSTEAD OF (INSERT|UPDATE|DELETE) AS [ENABLED|DISABLED]\n----\n
+example=[source,sql]\n----\nALTER TRIGGER ON vw INSTEAD OF INSERT ENABLED\n----\n
 */
 void alterTrigger(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -6413,14 +6897,14 @@ void alterServer(DatabaseStore dbStore) :
 /*
 name=ALTER DATA WRAPPER 
 description=alters options of data wrapper
-example=[source,sql]\n----\nALTER [DATA WRAPPER|TRANSLATOR] foo OPTIONS (ADD x y)\n----\n
+example=[source,sql]\n----\nALTER DATA WRAPPER foo OPTIONS (ADD x y)\n----\n
 */
 void alterTranslator(DatabaseStore dbStore) :
 {
     String objectName = null;
 }
 {
-    (<DATA> <WRAPPER>|<TRANSLATOR>) objectName = id(null)
+    ((<DATA> <WRAPPER>)|<TRANSLATOR>) objectName = id(null)
     (alterOptionsList(objectName, Database.ResourceType.DATAWRAPPER, dbStore))    
 }
 
@@ -6558,7 +7042,7 @@ void alterChildOptionPair(String objectName, Database.ResourceType type, String 
 /*
 name=Import foreign schema
 description=imports schema metadata from server
-example=[source,sql]\n----\nIMPORT FOREIGN SCHEMA foo [LIMIT TO (x,y,z)|EXCEPT (x,y,z)] FROM SERVER bar\n----\n
+example=[source,sql]\n----\nIMPORT FOREIGN SCHEMA foo FROM SERVER bar\n----\n
 */
 void importSchema(DatabaseStore dbStore) :
 {
@@ -6572,12 +7056,12 @@ void importSchema(DatabaseStore dbStore) :
     Server server = new Server("__temp__"); 
 }
 { 
-    <IMPORT> <FOREIGN> <SCHEMA> 
-    foreignSchemaName = id(null)
-    //[(<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> readCSVString(excludeTables) <RPAREN>)]
+    <IMPORT> [<FOREIGN> <SCHEMA> 
+    foreignSchemaName = id(null)]
+    //[(<LIMIT> <TO> <LPAREN> identifierList(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> identifierList(excludeTables) <RPAREN>)]
     <FROM> (<SERVER>{serverType = "native";}|<REPOSITORY>) serverName = id(null)    
     <INTO> schemaName = id(null)
-    [optionsClause(server, null)
+    [optionsClause(server, dbStore.getCurrentNamespaceContainer())
 	   {
 	      OptionsUtil.setOptions(server);
 	   }
@@ -6592,9 +7076,9 @@ void importSchema(DatabaseStore dbStore) :
 }
 
 /*
-name=Import another Database
-description=imports another database into current database
-example=[source,sql]\n----\nIMPORT DATABASE <id> VERSION <string-val> [WITH ACCESS CONTROL]\n----\n
+name=Import VDB
+description=imports another VDB into current database
+example=[source,sql]\n----\nIMPORT DATABASE vdb VERSION '1.2.3' WITH ACCESS CONTROL\n----\n
 */
 void importDatabase(DatabaseStore dbStore) :
 {
@@ -6616,7 +7100,7 @@ void importDatabase(DatabaseStore dbStore) :
 /*
 name=identifier list
 */
-void readCSVString(List<String> strings) :
+void identifierList(List<String> strings) :
 {
     String name = null;
 }
@@ -6636,15 +7120,15 @@ void readCSVString(List<String> strings) :
 /*
 name=grant type
 */
-void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
+void readGrantTypes(ArrayList<Permission.Privilege> privileges) :
 {
 }
 {        
-    <SELECT> {privileges.add(Grant.Permission.Privilege.SELECT);} |
-    <INSERT> {privileges.add(Grant.Permission.Privilege.INSERT);} |
-    <UPDATE> {privileges.add(Grant.Permission.Privilege.UPDATE);} |
-    <DELETE> {privileges.add(Grant.Permission.Privilege.DELETE);} |
-    <EXECUTE> {privileges.add(Grant.Permission.Privilege.EXECUTE);} |
-    <ALTER> {privileges.add(Grant.Permission.Privilege.ALTER);} |
-    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);}
+    <SELECT> {privileges.add(Permission.Privilege.SELECT);} |
+    <INSERT> {privileges.add(Permission.Privilege.INSERT);} |
+    <UPDATE> {privileges.add(Permission.Privilege.UPDATE);} |
+    <DELETE> {privileges.add(Permission.Privilege.DELETE);} |
+    <EXECUTE> {privileges.add(Permission.Privilege.EXECUTE);} |
+    <ALTER> {privileges.add(Permission.Privilege.ALTER);} |
+    <DROP> {privileges.add(Permission.Privilege.DROP);}
 }

@@ -28,7 +28,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
- * <p>This is a subclass of Symbol representing multiple output columns.</p>
+ * <p>This is a subclass of Symbol representing multiple output columns.
  */
 public class MultipleElementSymbol implements Expression {
     private List<ElementSymbol> elementSymbols;
@@ -36,7 +36,7 @@ public class MultipleElementSymbol implements Expression {
 
     public MultipleElementSymbol() {
     }
-    
+
     /**
      * Construct a multiple element symbol
      * @param name Name of the symbol
@@ -44,10 +44,10 @@ public class MultipleElementSymbol implements Expression {
     public MultipleElementSymbol(String name){
         this.group = new GroupSymbol(name);
     }
-    
+
     @Override
     public Class<?> getType() {
-    	return null;
+        return null;
     }
 
     /**
@@ -71,65 +71,65 @@ public class MultipleElementSymbol implements Expression {
      * @param symbol Element symbol referenced by this multiple element symbol
      */
     public void addElementSymbol(ElementSymbol symbol) {
-		if(getElementSymbols() == null) { 
-			setElementSymbols(new LinkedList<ElementSymbol>());
-		}
-		getElementSymbols().add(symbol);
+        if(getElementSymbols() == null) {
+            setElementSymbols(new LinkedList<ElementSymbol>());
+        }
+        getElementSymbols().add(symbol);
     }
-	
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
-	/**
-	 * Return a deep copy of this object
-	 * @return Deep copy of this object
-	 */
-	public Object clone() {
-		MultipleElementSymbol copy = new MultipleElementSymbol();
-		if (group != null) {
-			copy.group = group.clone();
-		}
+    /**
+     * Return a deep copy of this object
+     * @return Deep copy of this object
+     */
+    public Object clone() {
+        MultipleElementSymbol copy = new MultipleElementSymbol();
+        if (group != null) {
+            copy.group = group.clone();
+        }
 
-		List<ElementSymbol> elements = getElementSymbols();
-		if(elements != null && elements.size() > 0) {
-			copy.setElementSymbols(LanguageObject.Util.deepClone(elements, ElementSymbol.class));				
-		}	
+        List<ElementSymbol> elements = getElementSymbols();
+        if(elements != null && elements.size() > 0) {
+            copy.setElementSymbols(LanguageObject.Util.deepClone(elements, ElementSymbol.class));
+        }
 
-		return copy;
-	}
-	
-	/**
-	 * @return null if selecting all groups, otherwise the specific group
-	 */
-	public GroupSymbol getGroup() {
-		return group;
-	}
-	
-	public void setGroup(GroupSymbol group) {
-		this.group = group;
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(0, group);
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof MultipleElementSymbol)) {
-			return false;
-		}
-		MultipleElementSymbol other = (MultipleElementSymbol)obj;
-		return EquivalenceUtil.areEqual(this.group, other.group);
-	}
+        return copy;
+    }
+
+    /**
+     * @return null if selecting all groups, otherwise the specific group
+     */
+    public GroupSymbol getGroup() {
+        return group;
+    }
+
+    public void setGroup(GroupSymbol group) {
+        this.group = group;
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(0, group);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof MultipleElementSymbol)) {
+            return false;
+        }
+        MultipleElementSymbol other = (MultipleElementSymbol)obj;
+        return EquivalenceUtil.areEqual(this.group, other.group);
+    }
 
 }

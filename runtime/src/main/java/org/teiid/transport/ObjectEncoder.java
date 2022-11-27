@@ -37,7 +37,7 @@ import io.netty.handler.stream.ChunkedStream;
 
 
 /**
- * An encoder which serializes a Java object into a {@link ChannelBuffer}.
+ * An encoder which serializes a Java object into a message.
  * <p>
  * Please note that the serialized form this encoder produces is not
  * compatible with the standard {@link ObjectInputStream}.  Please use
@@ -49,31 +49,29 @@ import io.netty.handler.stream.ChunkedStream;
  *
  * @version $Rev:231 $, $Date:2008-06-12 16:44:50 +0900 (목, 12 6월 2008) $
  *
- * @apiviz.landmark
- * @apiviz.has org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream - - - compatible with
  */
 public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
-	
-	public static class FailedWriteException extends Exception {
-		private static final long serialVersionUID = -998903582526732966L;
-		private Object object;
-		
-		FailedWriteException(Object object, Throwable t) {
-			super(t);
-			this.object = object;
-		}
-		
-		public Object getObject() {
-			return object;
-		}
-	}
-	
+
+    public static class FailedWriteException extends Exception {
+        private static final long serialVersionUID = -998903582526732966L;
+        private Object object;
+
+        FailedWriteException(Object object, Throwable t) {
+            super(t);
+            this.object = object;
+        }
+
+        public Object getObject() {
+            return object;
+        }
+    }
+
     private static final byte[] LENGTH_PLACEHOLDER = new byte[4];
-	private static final int CHUNK_SIZE = (1 << 16) - 1;
+    private static final int CHUNK_SIZE = (1 << 16) - 1;
 
     private final int estimatedLength;
     private final boolean preferDirect;
-    
+
     /**
      * Creates a new encoder with the estimated length of 512 bytes.
      */
@@ -100,7 +98,7 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
         this.estimatedLength = estimatedLength;
         this.preferDirect = preferDirect;
     }
-    
+
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         ByteBuf out = allocateBuffer(ctx, this.estimatedLength, this.preferDirect);
@@ -109,34 +107,34 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
         bout.write(LENGTH_PLACEHOLDER);
         final CompactObjectOutputStream oout = new CompactObjectOutputStream(bout);
         try {
-	        oout.writeObject(msg);
-	        ExternalizeUtil.writeCollection(oout, oout.getReferences());
-	        oout.flush();
-	        oout.close();
-	        
-	        int endIdx = out.writerIndex();
-	        out.setInt(startIdx, endIdx - startIdx - 4);
-	        
-	        if (out.isReadable()) {
-	            ctx.write(out, promise);
-	            for (InputStream is : oout.getStreams()) {
-	                ctx.write(new AnonymousChunkedStream(new BufferedInputStream(is, CHUNK_SIZE)), promise);
-	            }
-	        } else {
-	            out.release();
-	            ctx.write(Unpooled.EMPTY_BUFFER, promise);
-	        }
-	        ctx.flush();
-	        out = null;
+            oout.writeObject(msg);
+            ExternalizeUtil.writeCollection(oout, oout.getReferences());
+            oout.flush();
+            oout.close();
+
+            int endIdx = out.writerIndex();
+            out.setInt(startIdx, endIdx - startIdx - 4);
+
+            if (out.isReadable()) {
+                ctx.write(out, promise);
+                for (InputStream is : oout.getStreams()) {
+                    ctx.write(new AnonymousChunkedStream(new BufferedInputStream(is, CHUNK_SIZE)), promise);
+                }
+            } else {
+                out.release();
+                ctx.write(Unpooled.EMPTY_BUFFER, promise);
+            }
+            ctx.flush();
+            out = null;
         } catch (Throwable t) {
-        	throw new FailedWriteException(msg, t);
+            throw new FailedWriteException(msg, t);
         } finally {
             if (out != null) {
                 out.release();
             }
         }
     }
-    
+
     protected ByteBuf allocateBuffer(ChannelHandlerContext ctx,
             int estimatedSize, boolean preferDirect)
             throws Exception {
@@ -145,27 +143,27 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
         } else {
             return ctx.alloc().heapBuffer(estimatedSize);
         }
-    }    
-    
+    }
+
     static class AnonymousChunkedStream extends ChunkedStream {
 
-		public AnonymousChunkedStream(InputStream in) {
-			super(in, CHUNK_SIZE);
-		}
-		
-		@Override
-		public ByteBuf readChunk(ByteBufAllocator allocator) throws Exception {
-		    ByteBuf cb = super.readChunk(allocator);
-			int length = cb.capacity();
-			ByteBuf prefix = Unpooled.wrappedBuffer(new byte[2]);
-			prefix.setShort(0, (short)length);
-			if (isEndOfInput()) {
-				//append a 0 short
-				return Unpooled.wrappedBuffer(prefix, cb, Unpooled.wrappedBuffer(new byte[2]));
-			}
-			return Unpooled.wrappedBuffer(prefix, cb);
-		}
-		
+        public AnonymousChunkedStream(InputStream in) {
+            super(in, CHUNK_SIZE);
+        }
+
+        @Override
+        public ByteBuf readChunk(ByteBufAllocator allocator) throws Exception {
+            ByteBuf cb = super.readChunk(allocator);
+            int length = cb.capacity();
+            ByteBuf prefix = Unpooled.wrappedBuffer(new byte[2]);
+            prefix.setShort(0, (short)length);
+            if (isEndOfInput()) {
+                //append a 0 short
+                return Unpooled.wrappedBuffer(prefix, cb, Unpooled.wrappedBuffer(new byte[2]));
+            }
+            return Unpooled.wrappedBuffer(prefix, cb);
+        }
+
     }
 
 }

@@ -18,16 +18,15 @@
 
 package org.teiid.translator.excel;
 
-import javax.resource.cci.ConnectionFactory;
-
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.resource.api.ConnectionFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
@@ -35,77 +34,67 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 
 @Translator(name="excel", description="Excel file translator")
-public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
+public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, VirtualFileConnection> {
 
     private boolean formatStrings;
-    
-	public ExcelExecutionFactory() {
-		setSourceRequiredForMetadata(true);
-		setTransactionSupport(TransactionSupport.NONE);
-	}
-	
-    @Override
-    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, FileConnection connection)
-    		throws TranslatorException {
-    	ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
-    	if (formatStrings) {
-    	    ex.setDataFormatter(new DataFormatter()); //assume default locale
-    	}
-    	return ex;
+
+    public ExcelExecutionFactory() {
+        setSourceRequiredForMetadata(true);
+        setTransactionSupport(TransactionSupport.NONE);
     }
-    
+
     @Override
-    public ExcelUpdateExecution createUpdateExecution(Command command,
-            ExecutionContext executionContext, RuntimeMetadata metadata,
-            FileConnection connection) throws TranslatorException {
-        ExcelUpdateExecution ex = new ExcelUpdateExecution(command, executionContext, metadata, connection);
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, VirtualFileConnection connection)
+            throws TranslatorException {
+        ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection, this.isImmutable());
         if (formatStrings) {
             ex.setDataFormatter(new DataFormatter()); //assume default locale
         }
         return ex;
     }
-    	
+
     @Override
-    public MetadataProcessor<FileConnection> getMetadataProcessor(){
+    public ExcelUpdateExecution createUpdateExecution(Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            VirtualFileConnection connection) throws TranslatorException {
+        ExcelUpdateExecution ex = new ExcelUpdateExecution(command, executionContext, metadata, connection, this.isImmutable());
+        if (formatStrings) {
+            ex.setDataFormatter(new DataFormatter()); //assume default locale
+        }
+        return ex;
+    }
+
+    @Override
+    public MetadataProcessor<VirtualFileConnection> getMetadataProcessor(){
         return new ExcelMetadataProcessor();
     }
-	
-	@Override
-	public boolean supportsCompareCriteriaEquals() {
-		return true; // only on ROW_ID
-	}
-	
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return true; //Only on ROW_ID
-	}
-	
-	@Override
-	public boolean supportsRowLimit() {
-		return true; 
-	}
-	
-	@Override
-	public boolean supportsRowOffset() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsOnlyLiteralComparison() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsInCriteria() {
-		return true;
-	}
-	
-	@TranslatorProperty(display="Format Strings", description="Format non-string cell values in a string column according to the worksheet format.", advanced=true)
-	public boolean isFormatStrings() {
+
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true; // only on ROW_ID
+    }
+
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true; //Only on ROW_ID
+    }
+
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsInCriteria() {
+        return true;
+    }
+
+    @TranslatorProperty(display="Format Strings", description="Format non-string cell values in a string column according to the worksheet format.", advanced=true)
+    public boolean isFormatStrings() {
         return formatStrings;
     }
-	
-	public void setFormatStrings(boolean formatStrings) {
+
+    public void setFormatStrings(boolean formatStrings) {
         this.formatStrings = formatStrings;
     }
 }

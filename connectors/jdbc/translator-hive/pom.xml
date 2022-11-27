@@ -3,14 +3,12 @@
     <parent>
         <artifactId>jdbc</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-hive</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>Hive Translator</name>
     <description>This translator provides access HDFS system using Hive.</description>
-    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -29,10 +27,6 @@
             <artifactId>translator-jdbc</artifactId>      
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
     </dependencies>
 

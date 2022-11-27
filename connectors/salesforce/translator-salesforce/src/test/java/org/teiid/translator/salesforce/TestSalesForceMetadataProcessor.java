@@ -32,7 +32,7 @@ public class TestSalesForceMetadataProcessor {
         p.setIncludeTables("table.*");
         assertTrue(p.allowedToAdd("tableName"));
     }
-    
+
     @Test
     public void testExclude() {
         SalesForceMetadataProcessor p = new SalesForceMetadataProcessor();
@@ -50,5 +50,5 @@ public class TestSalesForceMetadataProcessor {
         assertFalse(p.allowedToAdd("tableName"));
         assertTrue(p.allowedToAdd("taName"));
     }
-    
+
 }

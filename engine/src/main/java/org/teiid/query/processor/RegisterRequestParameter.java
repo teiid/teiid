@@ -20,26 +20,26 @@ package org.teiid.query.processor;
 
 public class RegisterRequestParameter {
 
-	public static class SharedAccessInfo {
-		public int id;
-		public int sharingCount = 1;
-	}
-	
-	public String connectorBindingId;
-	public int nodeID = 0;
-	public int limit = -1;
-	public SharedAccessInfo info;
-	public boolean doNotCache;
-	public int fetchSize;
+    public static class SharedAccessInfo {
+        public int id;
+        public int sharingCount = 1;
+    }
+
+    public String connectorBindingId;
+    public int nodeID = 0;
+    public int limit = -1;
+    public SharedAccessInfo info;
+    public boolean doNotCache;
+    public int fetchSize;
     public boolean copyStreamingLobs;
 
-	public RegisterRequestParameter(String connectorBindingId, int nodeID,
-			int limit) {
-		this.connectorBindingId = connectorBindingId;
-		this.nodeID = nodeID;
-		this.limit = limit;
-	}
+    public RegisterRequestParameter(String connectorBindingId, int nodeID,
+            int limit) {
+        this.connectorBindingId = connectorBindingId;
+        this.nodeID = nodeID;
+        this.limit = limit;
+    }
 
-	public RegisterRequestParameter() {
-	}
+    public RegisterRequestParameter() {
+    }
 }

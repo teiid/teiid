@@ -35,40 +35,40 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 public class AbstractValidationVisitor extends LanguageVisitor {
-    
+
     // Exception handling
     private TeiidComponentException exception;
     private LanguageObject exceptionObject;
-        
+
     // Validation error handling
     protected ValidatorReport report;
-    
+
     private QueryMetadataInterface metadata;
-    
+
     protected Command currentCommand;
     protected Stack<LanguageObject> stack = new Stack<LanguageObject>();
-    
+
     public AbstractValidationVisitor() {
         this.report = new ValidatorReport();
     }
-        
+
     public void setMetadata(QueryMetadataInterface metadata) {
         this.metadata = metadata;
     }
-    
+
     protected QueryMetadataInterface getMetadata() {
         return this.metadata;
-    } 
-    
+    }
+
     /**
-     * Reset so visitor can be used on a different language object.  This does 
+     * Reset so visitor can be used on a different language object.  This does
      * not wipe the report.
      */
     public void reset() {
         this.currentCommand = null;
         this.stack.clear();
     }
-    
+
     // ######################### Store results info #########################
 
     protected void handleValidationError(String message) {
@@ -83,60 +83,60 @@ public class AbstractValidationVisitor extends LanguageVisitor {
         this.report.addItem(new ValidatorFailure(message, invalidObjs));
     }
 
-    protected void handleException(TeiidException e) { 
+    protected void handleException(TeiidException e) {
         handleException(e, null);
     }
 
-    protected void handleException(TeiidException e, LanguageObject obj) { 
+    protected void handleException(TeiidException e, LanguageObject obj) {
         // Store exception information
         this.exceptionObject = obj;
         if(e instanceof TeiidComponentException) {
             this.exception = (TeiidComponentException) e;
         } else {
             this.exception = new TeiidComponentException(e);
-        }    
-        
+        }
+
         // Abort the validation process
         setAbort(true);
     }
 
     // ######################### Report results info #########################
 
-    public TeiidComponentException getException() { 
+    public TeiidComponentException getException() {
         return this.exception;
     }
-    
-    public LanguageObject getExceptionObject() { 
+
+    public LanguageObject getExceptionObject() {
         return this.exceptionObject;
     }
-    
-    public ValidatorReport getReport() { 
+
+    public ValidatorReport getReport() {
         return this.report;
     }
-    
+
     // ######################### Helper methods for validation #########################
-	
+
     protected Collection<ElementSymbol> validateElementsSupport(Collection<ElementSymbol> elements, int supportsFlag) {
-	    // Collect any identifiers not supporting flag
-	    List<ElementSymbol> dontSupport = null;  
-        ElementSymbol symbol = null;              
+        // Collect any identifiers not supporting flag
+        List<ElementSymbol> dontSupport = null;
+        ElementSymbol symbol = null;
 
         try {
-	        Iterator<ElementSymbol> elemIter = elements.iterator();
+            Iterator<ElementSymbol> elemIter = elements.iterator();
             while(elemIter.hasNext()) {
-		    symbol = elemIter.next();
+            symbol = elemIter.next();
                if(! getMetadata().elementSupports(symbol.getMetadataID(), supportsFlag)) {
-                    if(dontSupport == null) { 
+                    if(dontSupport == null) {
                         dontSupport = new ArrayList<ElementSymbol>();
-                    } 
-                    dontSupport.add(symbol);    
-                }            
-		    }
+                    }
+                    dontSupport.add(symbol);
+                }
+            }
         } catch(QueryMetadataException e) {
             handleException(e, symbol);
-        } catch(TeiidComponentException e) { 
+        } catch(TeiidComponentException e) {
             handleException(e, symbol);
-        }    
+        }
 
         return dontSupport;
     }

@@ -52,62 +52,62 @@ public class TestQueryProcessor {
         TupleBuffer tsID = null;
         while(true) {
             try {
-                tsID = collector.collectTuples();         
+                tsID = collector.collectTuples();
                 break;
             } catch(BlockedException e) {
             }
         }
-        
+
         // Compare # of rows in actual and expected
         assertEquals("Did not get expected # of rows", expectedResults.length, tsID.getRowCount()); //$NON-NLS-1$
-        
+
         // Compare actual with expected results
         TupleSource actual = tsID.createIndexedTupleSource();
         if(expectedResults.length > 0) {
             for(int i=0; i<expectedResults.length; i++) {
                 List actRecord = actual.nextTuple();
-                List expRecord = expectedResults[i];                    
+                List expRecord = expectedResults[i];
                 assertEquals("Did not match row at row index " + i, expRecord, actRecord); //$NON-NLS-1$
             }
         }
         tsID.remove();
     }
-    
+
     @Test public void testNoResults() throws Exception {
         List elements = new ArrayList();
         elements.add(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)); //$NON-NLS-1$
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, null);
-        helpTestProcessor(plan, new List[0]);    
+        helpTestProcessor(plan, new List[0]);
     }
 
     @Test public void testBlockNoResults() throws Exception {
         List elements = new ArrayList();
         elements.add(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)); //$NON-NLS-1$
-        
+
         List batches = new ArrayList();
         batches.add(BlockedException.INSTANCE);
         TupleBatch batch = new TupleBatch(1, new List[0]);
         batch.setTerminationFlag(true);
         batches.add(batch);
-        
+
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
-        helpTestProcessor(plan, new List[0]);    
+        helpTestProcessor(plan, new List[0]);
     }
-    
+
     @Test public void testProcessWithOccasionalBlocks() throws Exception {
         List elements = new ArrayList();
         elements.add(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)); //$NON-NLS-1$
-                
+
         HashSet blocked = new HashSet(Arrays.asList(new Integer[] { new Integer(0), new Integer(2), new Integer(7) }));
         int numBatches = 10;
-        int batchRow = 1;        
+        int batchRow = 1;
         int rowsPerBatch = 50;
         List[] expectedResults = new List[rowsPerBatch*(numBatches-blocked.size())];
         List batches = new ArrayList();
         for(int b=0; b<numBatches; b++) {
             if(blocked.contains(new Integer(b))) {
                 batches.add(BlockedException.INSTANCE);
-            } else {    
+            } else {
                 List[] rows = new List[rowsPerBatch];
                 for(int i=0; i<rowsPerBatch; i++) {
                     rows[i] = new ArrayList();
@@ -115,28 +115,28 @@ public class TestQueryProcessor {
                     expectedResults[batchRow-1] = rows[i];
                     batchRow++;
                 }
-                                                
+
                 TupleBatch batch = new TupleBatch(batchRow-rows.length, rows);
                 if(b == numBatches-1) {
                     batch.setTerminationFlag(true);
-                } 
+                }
                 batches.add(batch);
             }
         }
-        
+
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
-        helpTestProcessor(plan, expectedResults);                    
+        helpTestProcessor(plan, expectedResults);
     }
-    
+
     @Test public void testCloseBeforeInitialization() throws TeiidComponentException {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager();
 
         CommandContext context = new CommandContext("pid", "group", null, null, 1); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	QueryProcessor processor = new QueryProcessor(null, context, bufferMgr, dataManager);
-    	processor.closeProcessing();
+        QueryProcessor processor = new QueryProcessor(null, context, bufferMgr, dataManager);
+        processor.closeProcessing();
     }
-    
-    
+
+
 }

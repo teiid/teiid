@@ -25,14 +25,14 @@ import org.teiid.language.Function;
 
 
 /**
- * Wrap a function in standard JDBC escape syntax.  In some cases, the 
- * driver can then convert to the correct database syntax for us. 
+ * Wrap a function in standard JDBC escape syntax.  In some cases, the
+ * driver can then convert to the correct database syntax for us.
  * @since 5.0
  */
 public class EscapeSyntaxModifier extends FunctionModifier {
 
     public List<?> translate(Function function) {
-    	List<Object> objs = new ArrayList<Object>();
+        List<Object> objs = new ArrayList<Object>();
         objs.add("{fn "); //$NON-NLS-1$
         objs.add(function);
         objs.add("}"); //$NON-NLS-1$

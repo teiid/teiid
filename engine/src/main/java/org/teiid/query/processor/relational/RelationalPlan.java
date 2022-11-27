@@ -47,12 +47,12 @@ import org.teiid.query.util.CommandContext;
  */
 public class RelationalPlan extends ProcessorPlan {
 
-	// Initialize state - don't reset
-	private RelationalNode root;
-	private List<? extends Expression> outputCols;
-	private List<WithQueryCommand> with;
-	
-	private TempTableStore tempTableStore;
+    // Initialize state - don't reset
+    private RelationalNode root;
+    private List<? extends Expression> outputCols;
+    private List<WithQueryCommand> with;
+
+    private TempTableStore tempTableStore;
 
     /**
      * Constructor for RelationalPlan.
@@ -64,44 +64,42 @@ public class RelationalPlan extends ProcessorPlan {
     public RelationalNode getRootNode() {
         return this.root;
     }
-    
+
     public void setRootNode(RelationalNode root) {
         this.root = root;
     }
-    
+
     public void setWith(List<WithQueryCommand> with) {
-		this.with = with;
-	}
-    
-    /**
-     * @see ProcessorPlan#connectDataManager(ProcessorDataManager)
-     */
+        this.with = with;
+    }
+
+    @Override
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
-    	if (this.with != null) {
-    		context = context.clone();
-    		tempTableStore = new TempTableStore(context.getConnectionId(), TransactionMode.NONE);
+        if (this.with != null) {
+            context = context.clone();
+            tempTableStore = new TempTableStore(context.getConnectionId(), TransactionMode.NONE);
             tempTableStore.setParentTempTableStore(context.getTempTableStore());
             context.setTempTableStore(tempTableStore);
-        } 
-    	setContext(context);
-        connectExternal(this.root, context, dataMgr, bufferMgr);	
-    }        
+        }
+        setContext(context);
+        connectExternal(this.root, context, dataMgr, bufferMgr);
+    }
 
-	static void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {		
-                                    
+    static void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+
         node.initialize(context, bufferMgr, dataMgr);
 
         RelationalNode[] children = node.getChildren();
         int childCount = node.getChildCount();
         for(int i=0; i<childCount; i++) {
             if(children[i] != null) {
-                connectExternal(children[i], context, dataMgr, bufferMgr);                
+                connectExternal(children[i], context, dataMgr, bufferMgr);
             } else {
                 break;
             }
         }
     }
-    
+
     /**
      * Get list of resolved elements describing output columns for this plan.
      * @return List of SingleElementSymbol
@@ -113,22 +111,22 @@ public class RelationalPlan extends ProcessorPlan {
     @Override
     public void open()
         throws TeiidComponentException, TeiidProcessingException {
-    	if (with != null && tempTableStore.getProcessors() == null) {
-	    	HashMap<String, TableProcessor> processors = new HashMap<String, TableProcessor>();
-	        tempTableStore.setProcessors(processors);
-			for (WithQueryCommand withCommand : this.with) {
-				if (withCommand.isRecursive()) {
-					SetQuery setQuery = (SetQuery)withCommand.getCommand();
-					ProcessorPlan initial = setQuery.getLeftQuery().getProcessorPlan();
-					QueryProcessor withProcessor = new QueryProcessor(initial, getContext().clone(), root.getBufferManager(), root.getDataManager());
-					processors.put(withCommand.getGroupSymbol().getName(), new RecursiveTableProcessor(withProcessor, withCommand.getColumns(), setQuery.getRightQuery().getProcessorPlan(), setQuery.isAll()));
-					continue;
-				}
-				ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
-				QueryProcessor withProcessor = new QueryProcessor(plan, getContext().clone(), root.getBufferManager(), root.getDataManager()); 
-				processors.put(withCommand.getGroupSymbol().getName(), new TableProcessor(withProcessor, withCommand.getColumns()));
-			}
-    	}
+        if (with != null && tempTableStore.getProcessors() == null) {
+            HashMap<String, TableProcessor> processors = new HashMap<String, TableProcessor>();
+            tempTableStore.setProcessors(processors);
+            for (WithQueryCommand withCommand : this.with) {
+                if (withCommand.isRecursive()) {
+                    SetQuery setQuery = (SetQuery)withCommand.getCommand();
+                    ProcessorPlan initial = setQuery.getLeftQuery().getProcessorPlan();
+                    QueryProcessor withProcessor = new QueryProcessor(initial, getContext().clone(), root.getBufferManager(), root.getDataManager());
+                    processors.put(withCommand.getGroupSymbol().getName(), new RecursiveTableProcessor(withProcessor, withCommand.getColumns(), setQuery.getRightQuery().getProcessorPlan(), setQuery.isAll()));
+                    continue;
+                }
+                ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
+                QueryProcessor withProcessor = new QueryProcessor(plan, getContext().clone(), root.getBufferManager(), root.getDataManager());
+                processors.put(withCommand.getGroupSymbol().getName(), new TableProcessor(withProcessor, withCommand.getColumns()));
+            }
+        }
         this.root.open();
     }
 
@@ -143,15 +141,15 @@ public class RelationalPlan extends ProcessorPlan {
 
     public void close()
         throws TeiidComponentException {
-		if (this.tempTableStore != null) {
-			this.tempTableStore.removeTempTables();
-			if (this.tempTableStore.getProcessors() != null) {
-    			for (TableProcessor proc : this.tempTableStore.getProcessors().values()) {
-    				proc.close();
-    			}
-    			this.tempTableStore.setProcessors(null);
-			}
-		}
+        if (this.tempTableStore != null) {
+            this.tempTableStore.removeTempTables();
+            if (this.tempTableStore.getProcessors() != null) {
+                for (TableProcessor proc : this.tempTableStore.getProcessors().values()) {
+                    proc.close();
+                }
+                this.tempTableStore.setProcessors(null);
+            }
+        }
         this.root.close();
     }
 
@@ -160,136 +158,136 @@ public class RelationalPlan extends ProcessorPlan {
      */
     public void reset() {
         super.reset();
-        
+
         this.root.reset();
         if (this.with != null) {
-        	for (WithQueryCommand withCommand : this.with) {
-        		if (withCommand.isRecursive()) {
-					SetQuery setQuery = (SetQuery)withCommand.getCommand();
-					setQuery.getLeftQuery().getProcessorPlan().reset();
-					setQuery.getLeftQuery().getProcessorPlan().reset();
-				} else {
-					withCommand.getCommand().getProcessorPlan().reset();
-				}
-			}
+            for (WithQueryCommand withCommand : this.with) {
+                if (withCommand.isRecursive()) {
+                    SetQuery setQuery = (SetQuery)withCommand.getCommand();
+                    setQuery.getLeftQuery().getProcessorPlan().reset();
+                    setQuery.getLeftQuery().getProcessorPlan().reset();
+                } else {
+                    withCommand.getCommand().getProcessorPlan().reset();
+                }
+            }
         }
     }
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		if (this.with != null) {
-			sb.append(SQLConstants.Reserved.WITH);
-			for (WithQueryCommand withCommand : this.with) {
-				sb.append("\n"); //$NON-NLS-1$
-				sb.append(withCommand.getGroupSymbol());
-				if (withCommand.isRecursive()) {
-					sb.append(" anchor\n").append(((SetQuery)withCommand.getCommand()).getLeftQuery().getProcessorPlan()); //$NON-NLS-1$
-					sb.append("recursive\n").append(((SetQuery)withCommand.getCommand()).getRightQuery().getProcessorPlan()); //$NON-NLS-1$
-				} else {
-					sb.append("\n"); //$NON-NLS-1$
-					sb.append(withCommand.getCommand().getProcessorPlan());
-				}
-			}
-			sb.append("body\n"); //$NON-NLS-1$
-		}
-		sb.append(this.root.toString());
-		return sb.toString();
-	}
-    
-	public RelationalPlan clone(){
-		RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
-		plan.setOutputElements(outputCols);
-		if (with != null) {
-			List<WithQueryCommand> newWith = LanguageObject.Util.deepClone(this.with, WithQueryCommand.class);
-			for (WithQueryCommand withQueryCommand : newWith) {
-				if (withQueryCommand.isRecursive()) {
-					SetQuery setQuery = (SetQuery)withQueryCommand.getCommand();
-					setQuery.getLeftQuery().setProcessorPlan(setQuery.getLeftQuery().getProcessorPlan().clone());
-					setQuery.getRightQuery().setProcessorPlan(setQuery.getRightQuery().getProcessorPlan().clone());
-				} else {
-					withQueryCommand.getCommand().setProcessorPlan(withQueryCommand.getCommand().getProcessorPlan().clone());
-				}
-			}
-			plan.setWith(newWith);
-		}
-		return plan;
-	}
-	
-    public PlanNode getDescriptionProperties() {
-    	PlanNode node = this.root.getDescriptionProperties();
-    	if (this.with != null) {
-    		AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_WITH, this.with);
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (this.with != null) {
+            sb.append(SQLConstants.Reserved.WITH);
+            for (WithQueryCommand withCommand : this.with) {
+                sb.append("\n"); //$NON-NLS-1$
+                sb.append(withCommand.getGroupSymbol());
+                if (withCommand.isRecursive()) {
+                    sb.append(" anchor\n").append(((SetQuery)withCommand.getCommand()).getLeftQuery().getProcessorPlan()); //$NON-NLS-1$
+                    sb.append("recursive\n").append(((SetQuery)withCommand.getCommand()).getRightQuery().getProcessorPlan()); //$NON-NLS-1$
+                } else {
+                    sb.append("\n"); //$NON-NLS-1$
+                    sb.append(withCommand.getCommand().getProcessorPlan());
+                }
+            }
+            sb.append("body\n"); //$NON-NLS-1$
         }
-    	return node;
+        sb.append(this.root.toString());
+        return sb.toString();
     }
-    
-    /** 
+
+    public RelationalPlan clone(){
+        RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
+        plan.setOutputElements(outputCols);
+        if (with != null) {
+            List<WithQueryCommand> newWith = LanguageObject.Util.deepClone(this.with, WithQueryCommand.class);
+            for (WithQueryCommand withQueryCommand : newWith) {
+                if (withQueryCommand.isRecursive()) {
+                    SetQuery setQuery = (SetQuery)withQueryCommand.getCommand();
+                    setQuery.getLeftQuery().setProcessorPlan(setQuery.getLeftQuery().getProcessorPlan().clone());
+                    setQuery.getRightQuery().setProcessorPlan(setQuery.getRightQuery().getProcessorPlan().clone());
+                } else {
+                    withQueryCommand.getCommand().setProcessorPlan(withQueryCommand.getCommand().getProcessorPlan().clone());
+                }
+            }
+            plan.setWith(newWith);
+        }
+        return plan;
+    }
+
+    public PlanNode getDescriptionProperties() {
+        PlanNode node = this.root.getDescriptionProperties();
+        if (this.with != null) {
+            AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_WITH, this.with);
+        }
+        return node;
+    }
+
+    /**
      * @param outputCols The outputCols to set.
      */
     public void setOutputElements(List<? extends Expression> outputCols) {
         this.outputCols = outputCols;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-		if (this.with != null) {
-    		for (WithQueryCommand withCommand : this.with) {
-    			if (withCommand.isRecursive()) {
-    				SetQuery setQuery = (SetQuery)withCommand.getCommand();
-    				Boolean leftRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
-    				Boolean rightRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads); 
-    				if (!Boolean.FALSE.equals(leftRequires) || !Boolean.FALSE.equals(rightRequires)) {
-    					return true;
-    				}
-    			} else {
-    				Boolean requires = withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads);
-    				if (!Boolean.FALSE.equals(requires)) {
-    					return true;
-    				}
-				}
-			}
-    	}
-    	return requiresTransaction(transactionalReads, root);
+        if (this.with != null) {
+            for (WithQueryCommand withCommand : this.with) {
+                if (withCommand.isRecursive()) {
+                    SetQuery setQuery = (SetQuery)withCommand.getCommand();
+                    Boolean leftRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
+                    Boolean rightRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
+                    if (!Boolean.FALSE.equals(leftRequires) || !Boolean.FALSE.equals(rightRequires)) {
+                        return true;
+                    }
+                } else {
+                    Boolean requires = withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads);
+                    if (!Boolean.FALSE.equals(requires)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return requiresTransaction(transactionalReads, root);
     }
-    
+
     static Boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
-    	Boolean requiresTxn = node.requiresTransaction(transactionalReads);
-    	if (Boolean.TRUE.equals(requiresTxn)) {
-    		return true;
-    	}
-    	boolean last = true;
-		for (RelationalNode child : node.getChildren()) {
-			if (child == null) {
-				continue;
-			}
-			Boolean childRequires = requiresTransaction(transactionalReads, child);
-			if (Boolean.TRUE.equals(childRequires)) {
-				return true;
-			}
-			if (childRequires == null) {
-				if (requiresTxn == null) {
-					return true;
-				}
-				requiresTxn = null;
-				last = true;
-			} else {
-			    last = false;
-			}
-		}
-		if (requiresTxn == null && !last) {
-		    return true;
-		}
-		return requiresTxn;
+        Boolean requiresTxn = node.requiresTransaction(transactionalReads);
+        if (Boolean.TRUE.equals(requiresTxn)) {
+            return true;
+        }
+        boolean last = true;
+        for (RelationalNode child : node.getChildren()) {
+            if (child == null) {
+                continue;
+            }
+            Boolean childRequires = requiresTransaction(transactionalReads, child);
+            if (Boolean.TRUE.equals(childRequires)) {
+                return true;
+            }
+            if (childRequires == null) {
+                if (requiresTxn == null) {
+                    return true;
+                }
+                requiresTxn = null;
+                last = true;
+            } else {
+                last = false;
+            }
+        }
+        if (requiresTxn == null && !last) {
+            return true;
+        }
+        return requiresTxn;
     }
-    
+
     @Override
     public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-    	return root.getBuffer(maxRows);
+        return root.getBuffer(maxRows);
     }
-    
+
     @Override
     public boolean hasBuffer() {
-    	return root.hasBuffer();
+        return root.hasBuffer();
     }
-	
+
 }

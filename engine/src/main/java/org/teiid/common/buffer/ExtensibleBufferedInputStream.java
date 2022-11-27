@@ -23,50 +23,50 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public abstract class ExtensibleBufferedInputStream extends InputStream {
-	ByteBuffer buf;
+    ByteBuffer buf;
 
-	@Override
-	public int read() throws IOException {
-		if (!ensureBytes()) {
-			return -1;
-		}
-		return buf.get() & 0xff;
-	}
+    @Override
+    public int read() throws IOException {
+        if (!ensureBytes()) {
+            return -1;
+        }
+        return buf.get() & 0xff;
+    }
 
-	private boolean ensureBytes() throws IOException {
-		if (buf == null || buf.remaining() == 0) {
-			buf = nextBuffer();
-			if (buf == null) {
-				return false;
-			}
-		}
-		return true;
-	}
+    private boolean ensureBytes() throws IOException {
+        if (buf == null || buf.remaining() == 0) {
+            buf = nextBuffer();
+            if (buf == null) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	protected abstract ByteBuffer nextBuffer() throws IOException;
+    protected abstract ByteBuffer nextBuffer() throws IOException;
 
-	@Override
-	public int read(byte[] b, int off, int len) throws IOException {
-		if (!ensureBytes()) {
-			return -1;
-		}
-		len = Math.min(len, buf.remaining());
-		buf.get(b, off, len);
-		return len;
-	}
-	
-	@Override
-	public void reset() throws IOException {
-		if (buf != null) {
-			buf.rewind();
-		}
-	}
-		
-	public ByteBuffer getBuffer() throws IOException {
-		if (!ensureBytes()) {
-			return null;
-		}
-		return buf;
-	}
-	
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (!ensureBytes()) {
+            return -1;
+        }
+        len = Math.min(len, buf.remaining());
+        buf.get(b, off, len);
+        return len;
+    }
+
+    @Override
+    public void reset() throws IOException {
+        if (buf != null) {
+            buf.rewind();
+        }
+    }
+
+    public ByteBuffer getBuffer() throws IOException {
+        if (!ensureBytes()) {
+            return null;
+        }
+        return buf;
+    }
+
 }

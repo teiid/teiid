@@ -36,25 +36,18 @@ import org.teiid.translator.TranslatorException;
  */
 public class JDBCProcedureExecution extends JDBCQueryExecution implements ProcedureExecution {
 
-    /**
-     * @param connection
-     * @param sqlTranslator
-     * @param logger
-     * @param props
-     * @param id
-     */
-	public JDBCProcedureExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
+    public JDBCProcedureExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
         super(command, connection, context, env);
     }
 
     @Override
     public void execute() throws TranslatorException {
-    	Call procedure = (Call)command;
+        Call procedure = (Call)command;
         columnDataTypes = procedure.getResultSetColumnTypes();
 
         //translate command
         TranslatedCommand translatedComm = translateCommand(procedure);
-        
+
         //create statement or CallableStatement and execute
         String sql = translatedComm.getSql();
         try{
@@ -64,51 +57,51 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             addStatementWarnings();
         }catch(SQLException e){
              throw new TranslatorException(JDBCPlugin.Event.TEIID11004, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, sql));
-        }           
-        
+        }
+
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
-    	if (results == null) {
-    		return null;
-    	}
-    	return super.next();
+        if (results == null) {
+            return null;
+        }
+        return super.next();
     }
-        
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         try {
-        	Call proc = (Call)this.command;
-        	List<Object> result = new ArrayList<Object>();
-        	int paramIndex = 1;
-        	if (proc.getReturnType() != null) {
-        		if (proc.getReturnParameter() != null) {
-        			addParameterValue(result, paramIndex, proc.getReturnType());
-        		}
-        		paramIndex++;
-        	}
-        	for (Argument parameter : proc.getArguments()) {
-        		switch (parameter.getDirection()) {
-        		case IN:
-        			paramIndex++;
-        			break;
-        		case INOUT:
-        		case OUT:
-        			addParameterValue(result, paramIndex++, parameter.getType());
-        			break;
-        		}
-			}
-        	return result;
+            Call proc = (Call)this.command;
+            List<Object> result = new ArrayList<Object>();
+            int paramIndex = 1;
+            if (proc.getReturnType() != null) {
+                if (proc.getReturnParameter() != null) {
+                    addParameterValue(result, paramIndex, proc.getReturnType());
+                }
+                paramIndex++;
+            }
+            for (Argument parameter : proc.getArguments()) {
+                switch (parameter.getDirection()) {
+                case IN:
+                    paramIndex++;
+                    break;
+                case INOUT:
+                case OUT:
+                    addParameterValue(result, paramIndex++, parameter.getType());
+                    break;
+                }
+            }
+            return result;
         } catch (SQLException e) {
              throw new TranslatorException(JDBCPlugin.Event.TEIID11005, e);
         }
     }
 
-	private void addParameterValue(List<Object> result, int paramIndex,
-			Class<?> type) throws SQLException {
-		Object value = this.executionFactory.retrieveValue((CallableStatement)this.statement, paramIndex, type);
-		result.add(value);
-	}
-    
+    private void addParameterValue(List<Object> result, int paramIndex,
+            Class<?> type) throws SQLException {
+        Object value = this.executionFactory.retrieveValue((CallableStatement)this.statement, paramIndex, type);
+        result.add(value);
+    }
+
 }

@@ -21,13 +21,13 @@ package org.teiid.metadata;
 import java.io.Reader;
 
 public interface Parser {
-	
-	/**
-	 * Parses the given {@link Reader} into the {@link MetadataFactory}.
-	 * The {@link Reader} will not be closed by this call.
-	 * @param factory
-	 * @param ddl
-	 * @throws MetadataException
-	 */
-	void parseDDL(MetadataFactory factory, Reader ddl) throws MetadataException;
+
+    /**
+     * Parses the given {@link Reader} into the {@link MetadataFactory}.
+     * The {@link Reader} will not be closed by this call.
+     * @param factory
+     * @param ddl
+     * @throws MetadataException
+     */
+    void parseDDL(MetadataFactory factory, Reader ddl) throws MetadataException;
 }

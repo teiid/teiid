@@ -4,19 +4,15 @@
 # START DATABASE Portfolio
 ###########################################
 */
-CREATE DATABASE Portfolio VERSION '1' OPTIONS (ANNOTATION 'A Dynamic VDB', "connection-type" 'BY_VERSION', UseConnectorMetadata 'true');
+CREATE DATABASE Portfolio VERSION '1' OPTIONS (ANNOTATION 'A Dynamic VDB', UseConnectorMetadata 'true');
 USE DATABASE Portfolio VERSION '1';
 
 --############ Translators ############
-CREATE FOREIGN DATA WRAPPER file;
-
-CREATE FOREIGN DATA WRAPPER h2;
-
 
 --############ Servers ############
-CREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("jndi-name" 'java:/accounts-ds');
+CREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("resource-name" 'java:/accounts-ds');
 
-CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("jndi-name" 'java:/marketdata-file');
+CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("resource-name" 'java:/marketdata-file');
 
 
 --############ Schemas ############
@@ -30,15 +26,15 @@ CREATE VIRTUAL SCHEMA Stocks;
 --############ Roles ############
 CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
 
-CREATE ROLE Prices WITH JAAS ROLE prices;
+CREATE ROLE Prices WITH FOREIGN ROLE prices;
 
-CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
+CREATE ROLE ReadWrite WITH FOREIGN ROLE superuser;
 
 
 --############ Schema:MarketData ############
 SET SCHEMA MarketData;
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData;
+IMPORT FROM SERVER "text-connector" INTO MarketData;
 
 
 --############ Schema:Accounts ############
@@ -104,19 +100,19 @@ SET SCHEMA Stocks;
          
 
 --############ Grants ############
-REVOKE SELECT ON SCHEMA Accounts FROM Prices;
-
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK 'null' TO ReadOnly;
-GRANT ON TABLE "Accounts.Customer" CONDITION 'state <> ''New York''' TO ReadOnly;
+CREATE POLICY "grant_policy_Accounts.Customer" ON Accounts.Customer FOR ALL TO ReadOnly USING (state <> 'New York');
 GRANT ON COLUMN "Accounts.Customer.SSN" MASK 'null' TO ReadOnly;
 GRANT SELECT ON SCHEMA MarketData TO ReadOnly;
 GRANT SELECT ON SCHEMA Stocks TO ReadOnly;
 GRANT ON COLUMN "Stocks.StockPrices.Price" MASK ORDER 1 'CASE WHEN hasRole(''Prices'') = true THEN Price END' TO ReadOnly;
 
+REVOKE SELECT ON SCHEMA Accounts FROM Prices;
+
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA Accounts TO ReadWrite;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
-GRANT ON TABLE "Accounts.Customer" CONDITION 'true' TO ReadWrite;
+CREATE POLICY "grant_policy_Accounts.Customer" ON Accounts.Customer FOR ALL TO ReadWrite USING (true);
 GRANT ON COLUMN "Accounts.Customer.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA MarketData TO ReadWrite;
 

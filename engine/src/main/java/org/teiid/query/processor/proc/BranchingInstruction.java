@@ -26,49 +26,49 @@ import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 
 /**
- * <p>This {@link ProgramInstruction} continue with the next loop when processed</p>.
+ * <p>This {@link ProgramInstruction} continue with the next loop when processed.
  */
 public class BranchingInstruction extends ProgramInstruction {
-	
-	private BranchingStatement bs;
-	
-    public BranchingInstruction(BranchingStatement bs) {
-    	this.bs = bs;
-	}
 
-	public String toString() {
+    private BranchingStatement bs;
+
+    public BranchingInstruction(BranchingStatement bs) {
+        this.bs = bs;
+    }
+
+    public String toString() {
         return bs.toString();
     }
 
     public void process(ProcedurePlan env) throws TeiidComponentException {
         Program parentProgram = env.peek();
-        
+
         //find the parent program that contains the loop/while instruction
         while(true){
-        	if (bs.getMode() == BranchingMode.LEAVE && bs.getLabel().equalsIgnoreCase(parentProgram.getLabel())) {
-        		env.pop(true);
-        		break;
-        	}
-            if(parentProgram.getCurrentInstruction() instanceof RepeatedInstruction){
-            	if (bs.getLabel() == null) {
-            		break;
-            	}
-            	RepeatedInstruction ri = (RepeatedInstruction)parentProgram.getCurrentInstruction();
-            	if (bs.getLabel().equalsIgnoreCase(ri.getLabel())) {
-            		break;
-            	}
+            if (bs.getMode() == BranchingMode.LEAVE && bs.getLabel().equalsIgnoreCase(parentProgram.getLabel())) {
+                env.pop(true);
+                break;
             }
-            env.pop(true); 
+            if(parentProgram.getCurrentInstruction() instanceof RepeatedInstruction){
+                if (bs.getLabel() == null) {
+                    break;
+                }
+                RepeatedInstruction ri = (RepeatedInstruction)parentProgram.getCurrentInstruction();
+                if (bs.getLabel().equalsIgnoreCase(ri.getLabel())) {
+                    break;
+                }
+            }
+            env.pop(true);
             parentProgram = env.peek();
-        } 
-        
+        }
+
         if (bs.getMode() != BranchingMode.CONTINUE) {
-        	env.incrementProgramCounter();
+            env.incrementProgramCounter();
         }
     }
-    
+
     public PlanNode getDescriptionProperties() {
         return new PlanNode(bs.toString());
     }
-    
+
 }

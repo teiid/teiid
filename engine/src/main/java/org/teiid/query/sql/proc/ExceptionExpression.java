@@ -27,102 +27,102 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class ExceptionExpression implements Expression, LanguageObject {
-	
-	private Expression message;
-	private Expression sqlState;
-	private Expression errorCode;
-	private Expression parent;
-	
-	@Override
-	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.OBJECT;
-	}
-	
-	public ExceptionExpression() {
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof ExceptionExpression)) {
-			return false;
-		}
-		ExceptionExpression other = (ExceptionExpression)obj;
-		return EquivalenceUtil.areEqual(message, other.message) 
-		&& EquivalenceUtil.areEqual(sqlState, other.sqlState)
-		&& EquivalenceUtil.areEqual(errorCode, other.errorCode)
-		&& EquivalenceUtil.areEqual(parent, other.parent);
-	}
-	
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(0, message, sqlState, errorCode);
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
-	@Override
-	public ExceptionExpression clone() {
-		ExceptionExpression clone = new ExceptionExpression();
-		if (this.message != null) {
-			clone.message = (Expression) this.message.clone();
-		}
-		if (this.sqlState != null) {
-			clone.sqlState = (Expression) this.sqlState.clone();
-		}
-		if (this.errorCode != null) {
-			clone.errorCode = (Expression) this.errorCode.clone();
-		}
-		if (this.parent != null) {
-			clone.parent = (Expression) this.parent.clone();
-		}
-		return clone;
-	}
-	
-	public Expression getErrorCode() {
-		return errorCode;
-	}
-	
-	public void setErrorCode(Expression errCode) {
-		this.errorCode = errCode;
-	}
-	
-	public Expression getSqlState() {
-		return sqlState;
-	}
-	
-	public void setSqlState(Expression sqlState) {
-		this.sqlState = sqlState;
-	}
-	
-	public Expression getMessage() {
-		return message;
-	}
-	
-	public void setMessage(Expression message) {
-		this.message = message;
-	}
-	
-	public Expression getParent() {
-		return parent;
-	}
-	
-	public void setParent(Expression parent) {
-		this.parent = parent;
-	}
-	
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
 
-	public String getDefaultSQLState() {
-		return "50001";
-	}
+    private Expression message;
+    private Expression sqlState;
+    private Expression errorCode;
+    private Expression parent;
+
+    @Override
+    public Class<?> getType() {
+        return DataTypeManager.DefaultDataClasses.OBJECT;
+    }
+
+    public ExceptionExpression() {
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof ExceptionExpression)) {
+            return false;
+        }
+        ExceptionExpression other = (ExceptionExpression)obj;
+        return EquivalenceUtil.areEqual(message, other.message)
+        && EquivalenceUtil.areEqual(sqlState, other.sqlState)
+        && EquivalenceUtil.areEqual(errorCode, other.errorCode)
+        && EquivalenceUtil.areEqual(parent, other.parent);
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(0, message, sqlState, errorCode);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
+    @Override
+    public ExceptionExpression clone() {
+        ExceptionExpression clone = new ExceptionExpression();
+        if (this.message != null) {
+            clone.message = (Expression) this.message.clone();
+        }
+        if (this.sqlState != null) {
+            clone.sqlState = (Expression) this.sqlState.clone();
+        }
+        if (this.errorCode != null) {
+            clone.errorCode = (Expression) this.errorCode.clone();
+        }
+        if (this.parent != null) {
+            clone.parent = (Expression) this.parent.clone();
+        }
+        return clone;
+    }
+
+    public Expression getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(Expression errCode) {
+        this.errorCode = errCode;
+    }
+
+    public Expression getSqlState() {
+        return sqlState;
+    }
+
+    public void setSqlState(Expression sqlState) {
+        this.sqlState = sqlState;
+    }
+
+    public Expression getMessage() {
+        return message;
+    }
+
+    public void setMessage(Expression message) {
+        this.message = message;
+    }
+
+    public Expression getParent() {
+        return parent;
+    }
+
+    public void setParent(Expression parent) {
+        this.parent = parent;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public String getDefaultSQLState() {
+        return "50001";
+    }
 
 }

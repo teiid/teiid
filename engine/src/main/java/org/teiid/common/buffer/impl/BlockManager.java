@@ -25,20 +25,20 @@ import java.nio.ByteBuffer;
  * Represents an INode
  */
 public interface BlockManager {
-	
-	int getInode();
-	
-	ByteBuffer allocateBlock(int index);
-	
-	/**
-	 * Get the block for a given index.  Returns null if the block does not exist.
-	 * @param index
-	 * @return
-	 */
-	ByteBuffer getBlock(int index);
-	
-	void freeBlock(int index);
-	
-	int free(boolean acquireDataBlock);
+
+    int getInode();
+
+    ByteBuffer allocateBlock(int index);
+
+    /**
+     * Get the block for a given index.  Returns null if the block does not exist.
+     * @param index
+     * @return
+     */
+    ByteBuffer getBlock(int index);
+
+    void freeBlock(int index);
+
+    int free(boolean acquireDataBlock);
 
 }

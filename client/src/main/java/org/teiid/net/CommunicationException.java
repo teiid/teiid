@@ -22,14 +22,14 @@ import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
 
 /**
- * An error occurred in communication between client and server.  This 
- * error may or may not be recoverable.  Generally the communication 
+ * An error occurred in communication between client and server.  This
+ * error may or may not be recoverable.  Generally the communication
  * transport should be able to tell the difference and recover if possible.
  */
 public class CommunicationException extends TeiidException {
-	private static final long serialVersionUID = -8352601998078723446L;
+    private static final long serialVersionUID = -8352601998078723446L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public CommunicationException(  ) {
@@ -57,16 +57,16 @@ public class CommunicationException extends TeiidException {
     public CommunicationException(Throwable e, String message) {
         super(e, message);
     }
-    
+
     public CommunicationException(BundleUtil.Event event, Throwable t, String message) {
         super(event, t, message);
-    } 
-    
+    }
+
     public CommunicationException(BundleUtil.Event event, Throwable t) {
         super(event, t);
-    }     
-    
+    }
+
     public CommunicationException(BundleUtil.Event event, String message) {
         super(event, message);
-    }     
+    }
 }

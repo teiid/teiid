@@ -18,42 +18,19 @@
 
 package org.teiid.jdbc;
 
-import java.sql.SQLException;
 import java.util.Properties;
 
 import org.teiid.core.TeiidException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.ServerConnection;
 
+public interface LocalProfile extends ConnectionProfile {
 
-public class LocalProfile implements ConnectionProfile {
-	
     public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
-	public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$
-	public static final String TRANSPORT_NAME = "transportName"; //$NON-NLS-1$
-	public static final Object DQP_WORK_CONTEXT = "dqpWorkContext"; //$NON-NLS-1$
+    public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$
+    public static final String TRANSPORT_NAME = "transportName"; //$NON-NLS-1$
+    public static final Object DQP_WORK_CONTEXT = "dqpWorkContext"; //$NON-NLS-1$
+    public static final Object SSL_SESSION = "sslSession"; //$NON-NLS-1$
 
-	/**
-     * This method tries to make a connection to the given URL. This class
-     * will return a null if this is not the right driver to connect to the given URL.
-     * @param The URL used to establish a connection.
-     * @return Connection object created
-     * @throws SQLException if it is unable to establish a connection
-     */
-    public ConnectionImpl connect(String url, Properties info) 
-        throws TeiidSQLException {
-        try {
-        	ServerConnection sc = createServerConnection(info);
-			return new ConnectionImpl(sc, info, url);
-		} catch (TeiidRuntimeException e) {
-			throw TeiidSQLException.create(e);
-		} catch (TeiidException e) {
-			throw TeiidSQLException.create(e);
-		}
-    }
-
-	public ServerConnection createServerConnection(Properties info) throws TeiidException {
-		return ModuleHelper.createFromModule(info);
-	}
+    public ServerConnection createServerConnection(Properties info) throws TeiidException;
 
 }

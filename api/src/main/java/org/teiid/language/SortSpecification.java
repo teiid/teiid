@@ -21,21 +21,21 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class SortSpecification extends BaseLanguageObject {
-	
-	public enum Ordering {
-		ASC,
-		DESC
-	}
-	
-	public enum NullOrdering {
-		FIRST,
-		LAST
-	}
-	
+
+    public enum Ordering {
+        ASC,
+        DESC
+    }
+
+    public enum NullOrdering {
+        FIRST,
+        LAST
+    }
+
     private Ordering ordering;
     private Expression expression;
     private NullOrdering nullOrdering;
-    
+
     public SortSpecification(Ordering direction, Expression expression) {
         this.ordering = direction;
         this.expression = expression;
@@ -58,15 +58,15 @@ public class SortSpecification extends BaseLanguageObject {
     }
 
     public void setExpression(Expression expression) {
-		this.expression = expression;
-	}
-    
+        this.expression = expression;
+    }
+
     public void setNullOrdering(NullOrdering nullOrdering) {
-		this.nullOrdering = nullOrdering;
-	}
-    
+        this.nullOrdering = nullOrdering;
+    }
+
     public NullOrdering getNullOrdering() {
-		return nullOrdering;
-	}
+        return nullOrdering;
+    }
 
 }

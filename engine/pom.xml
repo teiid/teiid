@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.teiid</groupId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
 	</parent>
 	<licenses>
         <license>
@@ -15,7 +15,6 @@
 	<artifactId>teiid-engine</artifactId>
 	<name>Engine</name>
 	<description>Relational, procedural, and xml core engine.</description>
-    <packaging>bundle</packaging>
     <build>
         <plugins>
 	        <plugin>
@@ -39,6 +38,7 @@
 	        <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>javacc-maven-plugin</artifactId>
+                <version>2.6</version>
                 <executions>
                     <execution>
                         <id>javacc</id>
@@ -48,15 +48,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>            
         </plugins>
     </build>
 
@@ -85,65 +76,24 @@
         
         <dependency>
             <groupId>org.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-        </dependency>        
-
-        <dependency>
-            <groupId>org.teiid</groupId>
             <artifactId>teiid-client</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         
         <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-        </dependency>        
-        
-        <dependency>
-            <groupId>org.jboss.spec.javax.transaction</groupId>
-            <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
         </dependency>
                
         <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jboss-vfs</artifactId>
-        </dependency>
-
-		<dependency>
-		    <!-- dependecy for jboss-vfs -->
-		    <groupId>org.jboss.logging</groupId>
-		    <artifactId>jboss-logging</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>net.sf.saxon</groupId>
-			<artifactId>Saxon-HE</artifactId>
-		</dependency>
-        
-        <dependency>
-            <groupId>org.teiid</groupId>
-            <artifactId>saxon-xom</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.vividsolutions</groupId>
-            <artifactId>jts</artifactId>
-        </dependency>
-                
-        <dependency>
-            <groupId>org.wololo</groupId>
-            <artifactId>jts2geojson</artifactId>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
         </dependency>
         
         <dependency>
-            <groupId>org.osgeo</groupId>
-            <artifactId>proj4j</artifactId>
-        </dependency>
-
-        <dependency>
-              <groupId>com.io7m.xom</groupId>
-              <artifactId>xom</artifactId>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
         </dependency>
         
         <dependency>
@@ -154,11 +104,6 @@
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-api</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-util</artifactId>
         </dependency>
         
         <dependency>

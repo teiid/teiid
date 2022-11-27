@@ -27,9 +27,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class TransformationException extends TeiidProcessingException {
 
-	private static final long serialVersionUID = -4112567582638012800L;
+    private static final long serialVersionUID = -4112567582638012800L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public TransformationException(  ) {
@@ -44,17 +44,17 @@ public class TransformationException extends TeiidProcessingException {
         super(message);
     }
 
-    public TransformationException(Exception e) {
+    public TransformationException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param code A code denoting the exception
+     * @param message A message describing the exception
      * @param e An exception to nest within this one
      */
-    public TransformationException( Exception e, String message ) {
+    public TransformationException( Throwable e, String message ) {
         super( e, message );
     }
     public TransformationException(BundleUtil.Event event, String message) {
@@ -62,7 +62,7 @@ public class TransformationException extends TeiidProcessingException {
     }
     public TransformationException(BundleUtil.Event event, Throwable t, String message) {
         super(event, t, message);
-    }    
-    
+    }
+
 }
 

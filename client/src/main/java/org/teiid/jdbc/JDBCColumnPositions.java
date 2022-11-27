@@ -22,13 +22,13 @@ package org.teiid.jdbc;
  * <p> This class provides constants indicating positions of columns in the
  * <code>ResultSets</code> returned by methods on <code>MMDatabaseMetaData</code>
  * object. The inner classes represent the methods while attributes represent the
- * column positions. The name of the constant explains the column content.</p>
+ * column positions. The name of the constant explains the column content.
  * <p> The constants in the inner classes could include column positions for columns
  * that are hardcoded, columns positions of some columns on server's
- * <code>Results</code> object.</p>
+ * <code>Results</code> object.
  * <p> Each of the inner classes have a constant <code>MAX_COLUMNS</code> that
  * represents the number of columns to be read from the server's <code>Results</code>
- * object.</p>
+ * object.
  * <p> All the column positions are one based. </code>
  */
 
@@ -83,11 +83,11 @@ interface JDBCColumnPositions {
         static final int TABLE_CAT = 1;
 
         static final int TABLE_SCHEM = 2;
-        
+
         static final int TABLE_NAME = 3;
-        
-        static final int COLUMN_NAME = 4; 
-        
+
+        static final int COLUMN_NAME = 4;
+
         /** Position of column that contains SQL type from java.sql.Types for column's data type. */
         static final int DATA_TYPE = 5;
 
@@ -95,14 +95,14 @@ interface JDBCColumnPositions {
         static final int TYPE_NAME = 6;
 
         static final int COLUMN_SIZE = 7;
-        
+
         /** Position of column that is not used will contain nulls */
         static final int BUFFER_LENGTH = 8;
 
         static final int DECIMAL_DIGITS = 9;
-        
+
         static final int NUM_PREC_RADIX = 10;
-        
+
         /** Position of column that has an int value indicating nullablity */
         static final int NULLABLE = 11;
 
@@ -110,7 +110,7 @@ interface JDBCColumnPositions {
         static final int REMARKS = 12;
 
         static final int COLUMN_DEF = 13;
-        
+
         /** Position of column that not used will contain nulls */
         static final int SQL_DATA_TYPE = 14;
 
@@ -118,20 +118,20 @@ interface JDBCColumnPositions {
         static final int SQL_DATETIME_SUB = 15;
 
         static final int CHAR_OCTET_LENGTH = 16;
-        
+
         static final int ORDINAL_POSITION = 17;
-        
+
         /** Position of column that has an String value indicating nullablity */
         static final int IS_NULLABLE = 18;
-        
+
         static final int SCOPE_CATALOG = 19;
-        
+
         static final int SCOPE_SCHEMA = 20;
-        
+
         static final int SCOPE_TABLE = 21;
-        
+
         static final int SOURCE_DATA_TYPE = 22;
-        
+
         static final int IS_AUTOINCREMENT = 23;
 
     }
@@ -149,9 +149,9 @@ interface JDBCColumnPositions {
 
         /** Number of columns to be read from results returned getTables method. */
         static final int MAX_COLUMNS = 11;
-        
+
         /** Position of column that contains catalog name in which the table is present. */
-        static final int TABLE_CAT = 1;    
+        static final int TABLE_CAT = 1;
         static final int TYPE_CAT = 6;
         static final int TYPE_SCHEM = 7;
         static final int TYPE_NAME = 8;
@@ -194,17 +194,17 @@ interface JDBCColumnPositions {
         static final int NULLABLE = 7;
 
         static final int CASE_SENSITIVE = 8;
-        
+
         /** Position of column that contains the searchable value. */
         static final int SEARCHABLE = 9;
-        
+
         /** Position of column that contains the unsigned value. */
         static final int UNSIGNED_ATTRIBUTE = 10;
 
         static final int FIXED_PREC_SCALE = 11;
-        
+
         static final int AUTO_INCREMENT = 12;
-        
+
         /** Position of column that contains local type name used by the data source. */
         static final int LOCAL_TYPE_NAME = 13;
 
@@ -219,12 +219,12 @@ interface JDBCColumnPositions {
 
         /** Position of column that not used will contain nulls */
         static final int SQL_DATETIME_SUB = 17;
-        
+
         static final int NUM_PREC_RADIX = 18;
 
         /** Position of column in server's results containing name of the datatype.*/
         static final int NAME = 19;
-        
+
         /** Position of column in server's results containing isSigned value.*/
         static final int IS_SIGNED = 20;
 
@@ -234,7 +234,7 @@ interface JDBCColumnPositions {
         /** Position of column in server's results containing search type name.*/
         static final int SEARCH_TYPE_NAME = 22;
     }
-    
+
     /**
      * This class contains constants representing column positions on ResultSet
      * returned by getUDTS method on DatabaseMetaData. These constant values
@@ -265,7 +265,7 @@ interface JDBCColumnPositions {
 
         // name of the column containing comments column
        static final int REMARKS = 6;
-       
+
        static final int BASE_TYPE = 7;
         /** Position of column in server's results containing java class name.*/
        static final int JAVA_CLASS = 8;
@@ -276,48 +276,48 @@ interface JDBCColumnPositions {
      * returned by getIndexInfo method on DatabaseMetaData. The class has constants
      * for columns whose values are to be hardcoded in MMDatabaseMetaData object.
      * <code>MAX_COLUMNS</code> is the number of columns to be read from server's
-     * results from the query against System.KeyElements table.</p>
+     * results from the query against System.KeyElements table.
      */
     interface INDEX_INFO {
 
         /** Number of columns to be read from results returned by server results. */
         static final int MAX_COLUMNS = 13;
-        
+
         /** Position of column that contains catalog name of the table. */
         static final int TABLE_CAT = 1;
-        
+
         static final int TABLE_SCHEM = 2;
-        
+
         static final int TABLE_NAME = 3;
-        
+
         /** Position of column that contains non uniqueness of the index. */
         static final int NON_UNIQUE = 4;
-        
+
         /** Position of column that contains qualifier for the index. */
         static final int INDEX_QUALIFIER = 5;
-        
+
         static final int INDEX_NAME = 6;
-        
+
         /** Position of column that contains type of index. */
         static final int TYPE = 7;
-        
+
         static final int ORDINAL_POSITION = 8;
-        
+
         static final int COLUMN_NAME = 9;
-        
+
         /** Position of column that contains desc if index is ascending or descending. */
         static final int ASC_OR_DESC = 10;
-        
+
         /** Position of column that contains cardinality of the index. */
         static final int CARDINALITY = 11;
-        
+
         /** Position of column that contains pages oocupied by table. */
         static final int PAGES = 12;
-        
-        /** Position of column that contains any filter condition. */
-        static final int FILTER_CONDITION = 13;     
 
-    }    
+        /** Position of column that contains any filter condition. */
+        static final int FILTER_CONDITION = 13;
+
+    }
 
     /**
      * <p>This class contains constants representing column positions on ResultSet
@@ -332,13 +332,13 @@ interface JDBCColumnPositions {
 
         /** Number of columns to be read from results returned by getPrimaryKeys. */
         static final int MAX_COLUMNS = 6;
-        
+
         /** Position of column that contains catalog name of the primaryTable. */
-        static final int TABLE_CAT = 1;    
+        static final int TABLE_CAT = 1;
         static final int TABLE_SCHEM = 2;
         static final int TABLE_NAME = 3;
         static final int COLUMN_NAME = 4;
-        static final int KEY_SEQ = 5; 
+        static final int KEY_SEQ = 5;
         static final int PK_NAME = 6;
     }
 
@@ -356,36 +356,36 @@ interface JDBCColumnPositions {
 
         /** Position of column that contains catalog name of the primaryTable. */
         static final int PKTABLE_CAT = 1;
-        
+
         /** Position of column that contains scheam name of the primaryTable. */
-        static final int PKTABLE_SCHEM = 2;   
-        
+        static final int PKTABLE_SCHEM = 2;
+
         static final int PKTABLE_NAME = 3;
-        
-        static final int PKCOLUMN_NAME = 4;     
+
+        static final int PKCOLUMN_NAME = 4;
 
         /** Position of column that contains catalog name of the foreignTable. */
         static final int FKTABLE_CAT = 5;
-        
+
         /** Position of column that contains schema name of the foreignTable. */
-        static final int FKTABLE_SCHEM = 6;        
+        static final int FKTABLE_SCHEM = 6;
 
         static final int FKTABLE_NAME = 7;
-        
-        static final int FKCOLUMN_NAME = 8;   
-        
+
+        static final int FKCOLUMN_NAME = 8;
+
         static final int KEY_SEQ = 9;
-        
+
         /** Position of column that determines how forein key changes if PK is updated. */
-        static final int UPDATE_RULE = 10;                                                     
-                
+        static final int UPDATE_RULE = 10;
+
         /** Position of column that determines how forein key changes if PK is deleted. */
         static final int DELETE_RULE = 11;
 
         static final int FK_NAME = 12;
-        
+
         static final int PK_NAME = 13;
-        
+
         /** Position of column that determines if forein key constraints can be deffered until commit. */
         static final int DEFERRABILITY = 14;
     }
@@ -408,7 +408,7 @@ interface JDBCColumnPositions {
         static final int PROCEDURE_CAT = 1;
         static final int PROCEDURE_SCHEM = 2;
         static final int PROCEDURE_NAME = 3;
-        
+
         /** Position of column the is reserved for future use. */
         static final int RESERVED_1 = 4;
 
@@ -419,10 +419,10 @@ interface JDBCColumnPositions {
         static final int RESERVED_3 = 6;
 
         static final int REMARKS = 7;
-        
+
         /** Position of column Procedure type. */
         static final int PROCEDURE_TYPE = 8;
-        
+
         static final int SPECIFIC_NAME = 9;
     }
 
@@ -439,14 +439,14 @@ interface JDBCColumnPositions {
 
         /** Number of columns to be read from results returned getProcedureColumns method. */
         static final int MAX_COLUMNS = 20;
-        
+
         /** Position of column that contains catalog name of the procedure. */
-        static final int PROCEDURE_CAT = 1;     
+        static final int PROCEDURE_CAT = 1;
 
         static final int PROCEDURE_SCHEM = 2;
-        static final int PROCEDURE_NAME = 3; 
+        static final int PROCEDURE_NAME = 3;
         static final int COLUMN_NAME = 4;
-        
+
         /** Position of the column containing column or element type. */
         static final int COLUMN_TYPE = 5;
 
@@ -460,22 +460,22 @@ interface JDBCColumnPositions {
         static final int LENGTH = 9;
         static final int SCALE = 10;
         static final int RADIX = 11;
-               
+
         /** Position of column that contains the nullable value. */
         static final int NULLABLE = 12;
 
         /** Position of column that contains comments. */
         static final int REMARKS = 13;
         static final int COLUMN_DEF = 14;
-        
+
         static final int SQL_DATA_TYPE = 15;
         static final int SQL_DATETIME_SUB = 16;
         static final int CHAR_OCTET_LENGTH = 17;
-        
+
         static final int ORDINAL_POSITION = 18;
-        
+
         static final int IS_NULLABLE = 19;
-        
+
         static final int SPECIFIC_NAME = 20;
     }
 
@@ -490,23 +490,23 @@ interface JDBCColumnPositions {
 
         /** Number of columns to be read from results returned getGroupEntitlements method. */
         static final int MAX_COLUMNS = 6;
-        
+
         /** Position of VirtualDatabaseName column in server's results object returned by
          getGroupEntitlements method in User API */
         static final int VIRTUAL_DATABASE_NAME = 0;
-        
+
         /** Position of VirtualDatabaseVersion column in server's results object returned by
          getElementEntitlements method in User API */
-        static final int VIRTUAL_DATABASE_VERSION = 1;      
-        
+        static final int VIRTUAL_DATABASE_VERSION = 1;
+
         /** Position of GroupName column in server's results object returned by
          getGroupEntitlements method in User API */
         static final int GROUP_NAME = 2;
-        
+
         /** Position of Grantor column in server's results object returned by
          getGroupEntitlements method in User API */
         static final int GRANTOR = 3;
-        
+
         /** Position of Grantee column in server's results object returned by
          getGroupEntitlements method in User API */
         static final int GRANTEE = 4;
@@ -514,9 +514,9 @@ interface JDBCColumnPositions {
         /** Position of Permission column in server's results object returned by
          getGroupEntitlements method in User API */
         static final int PERMISSION = 5;
-        
+
         /** Position of the column containing catalog name info. */
-        static final int TABLE_CAT = 0;     
+        static final int TABLE_CAT = 0;
 
         /** Position of the column containing privilage grantable info. */
         static final int IS_GRANTABLE = 6;
@@ -533,27 +533,27 @@ interface JDBCColumnPositions {
 
         /** Number of columns to be read from results returned getElementEntitlements method. */
         static final int MAX_COLUMNS = 7;
-        
+
         /** Position of VirtualDatabaseName column in server's results object returned by
          getElementEntitlements method in User API */
         static final int VIRTUAL_DATABASE_NAME = 0;
-        
+
         /** Position of VirtualDatabaseVersion column in server's results object returned by
          getElementEntitlements method in User API */
         static final int VIRTUAL_DATABASE_VERSION = 1;
-        
+
         /** Position of GroupName column in server's results object returned by
          getElementEntitlements method in User API */
         static final int GROUP_NAME = 2;
-        
+
         /** Position of ElementName column in server's results object returned by
          getElementEntitlements method in User API */
         static final int ELEMENT_NAME = 3;
-        
+
         /** Position of Grantor column in server's results object returned by
          getElementEntitlements method in User API */
         static final int GRANTOR = 4;
-        
+
         /** Position of Grantee column in server's results object returned by
          getElementEntitlements method in User API */
         static final int GRANTEE = 5;

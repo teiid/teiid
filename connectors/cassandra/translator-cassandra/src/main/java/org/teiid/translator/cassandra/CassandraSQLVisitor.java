@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 import org.teiid.core.TeiidRuntimeException;
@@ -39,127 +39,127 @@ import org.teiid.translator.TypeFacility;
 
 public class CassandraSQLVisitor extends SQLStringVisitor {
 
-	private static final String ALLOW_FILTERING = "ALLOW FILTERING";
-	
-	public String getTranslatedSQL() {
-		return buffer.toString();
-	}
-	
-	@Override
-	protected String replaceElementName(String group, String element) {
-		return element;
-	}
+    private static final String ALLOW_FILTERING = "ALLOW FILTERING";
 
-	public void translateSQL(LanguageObject obj) {
-		append(obj);
-	}
+    public String getTranslatedSQL() {
+        return buffer.toString();
+    }
 
-	@Override
-	public void visit(Select obj) {
-		boolean allowFiltering = false;
-		
-		buffer.append(SELECT).append(Tokens.SPACE);
-		if (obj.getFrom() != null && !obj.getFrom().isEmpty()){
-			NamedTable table = (NamedTable)obj.getFrom().get(0);
-		
-			allowFiltering = Boolean.parseBoolean(
-			          table.getMetadataObject().getProperties().get(CassandraMetadataProcessor.ALLOWFILTERING));
-			
-			if(table.getMetadataObject().getColumns() !=  null){
-				append(obj.getDerivedColumns());
-			}
-			buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);
-			append(obj.getFrom());
-		}
+    @Override
+    protected String replaceElementName(String group, String element) {
+        return element;
+    }
+
+    public void translateSQL(LanguageObject obj) {
+        append(obj);
+    }
+
+    @Override
+    public void visit(Select obj) {
+        boolean allowFiltering = false;
+
+        buffer.append(SELECT).append(Tokens.SPACE);
+        if (obj.getFrom() != null && !obj.getFrom().isEmpty()){
+            NamedTable table = (NamedTable)obj.getFrom().get(0);
+
+            allowFiltering = Boolean.parseBoolean(
+                      table.getMetadataObject().getProperties().get(CassandraMetadataProcessor.ALLOWFILTERING));
+
+            if(table.getMetadataObject().getColumns() !=  null){
+                append(obj.getDerivedColumns());
+            }
+            buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);
+            append(obj.getFrom());
+        }
 
 
-		if(obj.getWhere() != null){
-			buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);
-			append(obj.getWhere());
-		}
-		
-		if(obj.getOrderBy() != null){
-			buffer.append(Tokens.SPACE);
-			append(obj.getOrderBy());
-		}
-		
-		if(obj.getLimit() != null){
-			buffer.append(Tokens.SPACE);
-			append(obj.getLimit());
-		}
-		
-		if (allowFiltering) {
-		      buffer.append(Tokens.SPACE);
-		      buffer.append(ALLOW_FILTERING);
-		}
-	}
-	
-	@Override
-	public void visit(Literal obj) {
-		if (obj.getValue() == null) {
-			super.visit(obj);
-			return;
-		}
-		if (obj.getValue() instanceof Date) {
-			buffer.append(((Date)obj.getValue()).getTime());
-			return;
-		}
-		//cassandra directly parses uuids
-		if (obj.getValue() instanceof UUID) {
-			buffer.append(obj.getValue());
-			return;
-		}
-		//TODO: only supported with Cassandra 2 or later
-		/*if (obj.isBindEligible() 
-				|| obj.getType() == TypeFacility.RUNTIME_TYPES.OBJECT
-				|| type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
-			if (values == null) {
-				values = new ArrayList<Object>();
-			}
-			buffer.append('?');
-			if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
-				values.add(ByteBuffer.wrap(((BinaryType)obj.getValue()).getBytesDirect()));
-			} else {
-				values.add(obj.getValue());
-			}
-			return;
-		}*/
-		Class<?> type = obj.getType();
-		if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
-			buffer.append("0x") //$NON-NLS-1$
-			  .append(obj.getValue());
-			return;
-		}
-		if (type == TypeFacility.RUNTIME_TYPES.BLOB) {
-			buffer.append("0x"); //$NON-NLS-1$
-			Blob b = (Blob)obj.getValue();
-			InputStream binaryStream = null;
-			try {
-				if (b.length() > Integer.MAX_VALUE) {
-					throw new AssertionError("Blob is too large"); //$NON-NLS-1$
-				}
-				binaryStream = b.getBinaryStream();
-				PropertiesUtils.toHex(buffer, binaryStream);
-			} catch (SQLException e) {
-				throw new TeiidRuntimeException(e);
-			} catch (IOException e) {
-				throw new TeiidRuntimeException(e);
-			} finally {
-				if (binaryStream != null) {
-					try {
-						binaryStream.close();
-					} catch (IOException e) {
-					}
-				}
-			}
-			return;
-		}
-		if (!Number.class.isAssignableFrom(type) 
-				&& type != TypeFacility.RUNTIME_TYPES.BOOLEAN 
-				&& type != TypeFacility.RUNTIME_TYPES.VARBINARY) {
-			//just handle as strings things like timestamp
-			type = TypeFacility.RUNTIME_TYPES.STRING;
-		}
-		super.appendLiteral(obj, type);
-	}
+        if(obj.getWhere() != null){
+            buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);
+            append(obj.getWhere());
+        }
+
+        if(obj.getOrderBy() != null){
+            buffer.append(Tokens.SPACE);
+            append(obj.getOrderBy());
+        }
+
+        if(obj.getLimit() != null){
+            buffer.append(Tokens.SPACE);
+            append(obj.getLimit());
+        }
+
+        if (allowFiltering) {
+              buffer.append(Tokens.SPACE);
+              buffer.append(ALLOW_FILTERING);
+        }
+    }
+
+    @Override
+    public void visit(Literal obj) {
+        if (obj.getValue() == null) {
+            super.visit(obj);
+            return;
+        }
+        if (obj.getValue() instanceof Timestamp) {
+            buffer.append(((Timestamp)obj.getValue()).getTime());
+            return;
+        }
+        //cassandra directly parses uuids
+        if (obj.getValue() instanceof UUID) {
+            buffer.append(obj.getValue());
+            return;
+        }
+        //TODO: only supported with Cassandra 2 or later
+        /*if (obj.isBindEligible()
+                || obj.getType() == TypeFacility.RUNTIME_TYPES.OBJECT
+                || type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+            if (values == null) {
+                values = new ArrayList<Object>();
+            }
+            buffer.append('?');
+            if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+                values.add(ByteBuffer.wrap(((BinaryType)obj.getValue()).getBytesDirect()));
+            } else {
+                values.add(obj.getValue());
+            }
+            return;
+        }*/
+        Class<?> type = obj.getType();
+        if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+            buffer.append("0x") //$NON-NLS-1$
+              .append(obj.getValue());
+            return;
+        }
+        if (type == TypeFacility.RUNTIME_TYPES.BLOB) {
+            buffer.append("0x"); //$NON-NLS-1$
+            Blob b = (Blob)obj.getValue();
+            InputStream binaryStream = null;
+            try {
+                if (b.length() > Integer.MAX_VALUE) {
+                    throw new AssertionError("Blob is too large"); //$NON-NLS-1$
+                }
+                binaryStream = b.getBinaryStream();
+                PropertiesUtils.toHex(buffer, binaryStream);
+            } catch (SQLException e) {
+                throw new TeiidRuntimeException(e);
+            } catch (IOException e) {
+                throw new TeiidRuntimeException(e);
+            } finally {
+                if (binaryStream != null) {
+                    try {
+                        binaryStream.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+            return;
+        }
+        if (!Number.class.isAssignableFrom(type)
+                && type != TypeFacility.RUNTIME_TYPES.BOOLEAN
+                && type != TypeFacility.RUNTIME_TYPES.VARBINARY) {
+            //just handle as strings things like timestamp
+            type = TypeFacility.RUNTIME_TYPES.STRING;
+        }
+        super.appendLiteral(obj, type);
+    }
 }

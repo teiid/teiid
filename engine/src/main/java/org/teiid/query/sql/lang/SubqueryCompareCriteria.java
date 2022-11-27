@@ -32,33 +32,32 @@ import org.teiid.query.sql.symbol.Expression;
  * <p>This class implements a quantified comparison predicate.  This is
  * a criteria which represents a simple operator relationship between an expression and
  * either a scalar subquery or a table subquery preceded by one of the possible quantifiers.
- * </p>
+ *
  *
  * <p>The quantifiers are:
- * <ul><li>{@link #NO_QUANTIFIER}, meaning the subquery has no quantifier and therefore must be
- * a scalar subquery</li>
+ * <ul>
  * <li>{@link #SOME} and {@link #ANY}, which are synonymous - the criteria is true if there is at
  * least one comparison between the left expression and the values of the subquery.  The criteria
  * is false if the subquery returns no rows.</li>
- * <li>{@link #ALL}</li> - the criteria is true only if all of the comparisons between the left
+ * <li>{@link #ALL} - the criteria is true only if all of the comparisons between the left
  * expression and each value of the subquery is true.  The criteria is also true if the subquery
  * returns no rows.</li></ul>
  *
- * <p>Some examples are:</p>
+ * <p>Some examples are:
  * <UL>
  * <LI>ticker = ANY (Select ... FROM ... WHERE ... )</LI>
  * <li>price &gt;= ALL (Select ... FROM ... WHERE ... )</LI>
  * <LI>revenue &lt; (Select ... FROM ... WHERE ... )</LI>
  * </UL>
- * 
+ *
  * This can also represent a quantified comparison against array.  In which case the
  * arrayExpression member will be set and command will not.
- * 
+ *
  */
 public class SubqueryCompareCriteria extends AbstractCompareCriteria
 implements SubqueryContainer<QueryCommand>, ContextReference {
 
-	private static AtomicInteger ID = new AtomicInteger();
+    private static AtomicInteger ID = new AtomicInteger();
 
     /** "Some" predicate quantifier (equivalent to "Any") */
     public static final int SOME = 2;
@@ -74,7 +73,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     private QueryCommand command;
     private Expression arrayExpression;
     private String id = "$scc/id" + ID.getAndIncrement(); //$NON-NLS-1$
-    
+
     private SubqueryHint subqueryHint = new SubqueryHint();
 
     public SubqueryCompareCriteria(){
@@ -87,15 +86,15 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
         setOperator(operator);
         setPredicateQuantifier(predicateQuantifier);
     }
-    
+
     @Override
     public String getContextSymbol() {
-    	return id;
+        return id;
     }
-    
+
     /**
      * Get the predicate quantifier - returns one of the following:
-     * <ul><li>{@link #NO_QUANTIFIER}</li>
+     * <ul>
      * <li>{@link #ANY}</li>
      * <li>{@link #SOME}</li>
      * <li>{@link #ALL}</li></ul>
@@ -107,7 +106,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     /**
      * Set the predicate quantifier - use one of the following:
-     * <ul><li>{@link #NO_QUANTIFIER}</li>
+     * <ul>
      * <li>{@link #ANY}</li>
      * <li>{@link #SOME}</li>
      * <li>{@link #ALL}</li></ul>
@@ -206,38 +205,38 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
         SubqueryCompareCriteria copy = new SubqueryCompareCriteria(leftCopy, copyCommand, this.getOperator(), this.getPredicateQuantifier());
         if (this.subqueryHint != null) {
-        	copy.subqueryHint = this.subqueryHint.clone();
+            copy.subqueryHint = this.subqueryHint.clone();
         }
         if (this.arrayExpression != null) {
-        	copy.arrayExpression = (Expression) this.arrayExpression.clone();
+            copy.arrayExpression = (Expression) this.arrayExpression.clone();
         }
         return copy;
     }
 
     @Override
     public void negate() {
-    	super.negate();
-    	if (this.predicateQuantifier == ALL) {
-    		this.predicateQuantifier = SOME;
-    	} else {
-    		this.predicateQuantifier = ALL;
-    	}
+        super.negate();
+        if (this.predicateQuantifier == ALL) {
+            this.predicateQuantifier = SOME;
+        } else {
+            this.predicateQuantifier = ALL;
+        }
     }
-    
+
     public SubqueryHint getSubqueryHint() {
-		return subqueryHint;
-	}
-    
+        return subqueryHint;
+    }
+
     public void setSubqueryHint(SubqueryHint subqueryHint) {
-		this.subqueryHint = subqueryHint;
-	}
-    
+        this.subqueryHint = subqueryHint;
+    }
+
     public Expression getArrayExpression() {
-		return arrayExpression;
-	}
-    
+        return arrayExpression;
+    }
+
     public void setArrayExpression(Expression expression) {
-		this.arrayExpression = expression;
-	}
+        this.arrayExpression = expression;
+    }
 
 }

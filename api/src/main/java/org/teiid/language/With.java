@@ -23,20 +23,20 @@ import java.util.List;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class With extends BaseLanguageObject {
-	
-	private List<WithItem> items;
 
-	public List<WithItem> getItems() {
-		return items;
-	}
-	
-	public void setItems(List<WithItem> items) {
-		this.items = items;
-	}
+    private List<WithItem> items;
 
-	@Override
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    public List<WithItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<WithItem> items) {
+        this.items = items;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
 
 }

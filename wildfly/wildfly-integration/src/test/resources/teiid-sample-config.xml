@@ -1,0 +1,47 @@
+<subsystem xmlns="urn:jboss:domain:teiid:1.1">
+    <allow-env-function>true</allow-env-function>
+    <async-thread-pool max-thread-count="10"/>
+    <buffer-service use-disk="false" processor-batch-size="2"  
+        max-processing-kb="2" max-reserve-kb="2048" max-file-size="2" max-buffer-space="2" max-open-files="2"
+        memory-buffer-space="-2" memory-buffer-off-heap="true" max-storage-object-size="2048" inline-lobs="false" encrypt-files="true"/>
+
+    <max-threads>2</max-threads>
+    <max-active-plans>2</max-active-plans>
+    <thread-count-for-source-concurrency>2</thread-count-for-source-concurrency>
+    <time-slice-in-milliseconds>2</time-slice-in-milliseconds>
+    <max-row-fetch-size>2</max-row-fetch-size>
+    <lob-chunk-size-in-kb>2</lob-chunk-size-in-kb>
+    <query-threshold-in-seconds>2</query-threshold-in-seconds>
+    <max-source-rows-allowed>2</max-source-rows-allowed>
+    <exception-on-max-source-rows>false</exception-on-max-source-rows>
+    <detect-change-events>false</detect-change-events>
+    <query-timeout>23</query-timeout>
+    <workmanager>wm</workmanager>
+    <!-- 
+    <authorization-validator-module="javax.api"/>
+    <policy-decider-module="javax.api"/>
+    <metadata-repository-module="javax.api"/>
+     -->
+    
+    <resultset-cache name="cache" infinispan-container="container" enable="false" max-staleness="90"/>
+    
+    <preparedplan-cache name="prepcache" infinispan-container="prep-container" enable="false"/>
+    
+    <distributed-cache jgroups-stack="stack"/>
+    
+    <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5" sessions-expiration-timelimit="2" type="GSS" trust-all-local="false"/>
+    
+    <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
+
+    <transport name="odbc" protocol="pg" socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
+        <pg max-lob-size-in-bytes="50"/>
+        <ssl mode="enabled" authentication-mode="2-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo"
+            enabled-cipher-suites="x,y" >
+            <keystore  key-alias="x" key-password="y" name="keystore name" password="keystore passs" type="keystore type"/>
+            <truststore name="truststore name" password="truststore pass" check-expired="true"/>
+        </ssl>
+    </transport>
+    
+    <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
+    <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
+</subsystem>

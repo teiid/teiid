@@ -1,0 +1,20 @@
+<vdb name="multi" version="1">
+<property name="cache-metadata" value="true" />
+<model name="ms">
+ 
+<!-- <property name="importer.useQualifiedName" value="false" /> -->
+<property name="multisource.columnName" value="target" />
+<property name="multisource.addColumn" value="true" />
+<property name="importer.useFullSchemaName" value="true" />
+ 
+<source name="teiid1" translator-name="teiid"
+connection-jndi-name="teiid1" />
+<source name="teiid2" translator-name="teiid"
+connection-jndi-name="teiid2" />
+ 
+<metadata type="NATIVE,DDL"><![CDATA[
+ CREATE FOREIGN PROCEDURE PROC (IN arg1 STRING NOT NULL, IN arg2 STRING, IN target STRING)
+]]>
+</metadata>
+</model>
+</vdb>

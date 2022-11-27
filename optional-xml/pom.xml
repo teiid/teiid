@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>teiid-parent</artifactId>
+		<groupId>org.teiid</groupId>
+        <version>17.0.0-SNAPSHOT</version>
+	</parent>
+	<licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>teiid-optional-xml</artifactId>
+	<name>Optional XML</name>
+	<description>Optional XML functionality for Teiid.</description>
+
+    <dependencies>
+    
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-client</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>net.sf.saxon</groupId>
+            <artifactId>Saxon-HE</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>saxon-xom</artifactId>
+        </dependency>
+        
+        <dependency>
+              <groupId>com.io7m.xom</groupId>
+              <artifactId>xom</artifactId>
+        </dependency>
+
+	</dependencies>
+
+</project>

@@ -22,15 +22,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
-
-import junit.framework.TestCase;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.net.TeiidURL;
+
+import junit.framework.TestCase;
 
 @SuppressWarnings("nls")
 public class TestTeiidDataSource extends TestCase {
@@ -101,14 +103,14 @@ public class TestTeiidDataSource extends TestCase {
             return TeiidDataSource.reasonWhyInvalidSocketsPerVM(value);
         } else if ( propertyName.equals("stickyConnections")) { //$NON-NLS-1$
             return TeiidDataSource.reasonWhyInvalidStickyConnections(value);
-        } 
+        }
 
         fail("Unknown property name \"" + propertyName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
         return null;
     }
 
     protected String getReasonWhyInvalid( final String propertyName, final int value ) {
-    	if ( propertyName.equals("PortNumber") ) { //$NON-NLS-1$
+        if ( propertyName.equals("PortNumber") ) { //$NON-NLS-1$
             return TeiidDataSource.reasonWhyInvalidPortNumber(value);
         }
         fail("Unknown property name \"" + propertyName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -142,11 +144,11 @@ public class TestTeiidDataSource extends TestCase {
                                      final int fetchSize, final boolean showPlan,
                                      final boolean secure, final String expectedURL) {
 
- 
-    		helpTestBuildingURL2(vdbName, vdbVersion, serverName, portNumber, alternateServers,
-    					txnAutoWrap, partialMode, fetchSize, showPlan, secure, true, expectedURL);
+
+            helpTestBuildingURL2(vdbName, vdbVersion, serverName, portNumber, alternateServers,
+                        txnAutoWrap, partialMode, fetchSize, showPlan, secure, true, expectedURL);
     }
-    
+
     public void helpTestBuildingURL2( final String vdbName, final String vdbVersion,
             final String serverName, final int portNumber,
             final String alternateServers,
@@ -154,7 +156,7 @@ public class TestTeiidDataSource extends TestCase {
             final int fetchSize, final boolean showPlan,
             final boolean secure, final boolean useJDBC4Semantics,
             final String expectedURL ) {
-    	
+
         final TeiidDataSource ds = new TeiidDataSource();
         ds.setServerName(serverName);
         ds.setDatabaseVersion(vdbVersion);
@@ -171,23 +173,36 @@ public class TestTeiidDataSource extends TestCase {
         ds.setUseJDBC4ColumnNameAndLabelSemantics(useJDBC4Semantics);
 
         String url;
-		try {
-			url = ds.buildURL().getJDBCURL();
-		} catch (TeiidSQLException e) {
-			throw new RuntimeException(e);
-		}
-        assertEquals(expectedURL, url);
+        try {
+            url = ds.buildURL().getJDBCURL();
+        } catch (TeiidSQLException e) {
+            throw new RuntimeException(e);
+        }
+        compareUrls(expectedURL, url);
+    }
+
+    /**
+     * Compare urls without regard to property ordering
+     * @param expectedURL
+     * @param url
+     */
+    private void compareUrls(final String expectedURL, String url) {
+        String parts[] = url.split(";", 2);
+        String expectedParts[] = expectedURL.split(";", 2);
+
+        assertEquals(parts[0], expectedParts[0]);
+        assertEquals(new HashSet<String>(Arrays.asList(parts[1].split(";"))), new HashSet<String>(Arrays.asList(expectedParts[1].split(";"))));
     }
 
     public Connection helpTestConnection( final String vdbName, final String vdbVersion,
-                                    final String serverName, final int portNumber, final String alternateServers, 
+                                    final String serverName, final int portNumber, final String alternateServers,
                                     final String user, final String password,
                                     final String dataSourceName,
                                     final String txnAutoWrap, final String partialMode,
                                     final String configFile )
                                     throws SQLException {
 
-    	TeiidDataSource ds = new TeiidDataSource();
+        TeiidDataSource ds = new TeiidDataSource();
 
         ds.setServerName(serverName);
         ds.setDatabaseVersion(vdbVersion);
@@ -232,13 +247,13 @@ public class TestTeiidDataSource extends TestCase {
         final String result = dataSource.getApplicationName();
         assertEquals(result,BaseDataSource.DEFAULT_APP_NAME);
     }
-    
+
     public void testGetApplicationName() {
-    	dataSource.setApplicationName("ClientApp"); //$NON-NLS-1$
+        dataSource.setApplicationName("ClientApp"); //$NON-NLS-1$
         final String result = dataSource.getApplicationName();
         assertEquals(result,"ClientApp"); //$NON-NLS-1$
     }
-    
+
     public void testGetPortNumber() {
         final int result = dataSource.getPortNumber();
         assertEquals(result,STD_PORT_NUMBER);
@@ -277,22 +292,22 @@ public class TestTeiidDataSource extends TestCase {
         assertEquals(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP), STD_TXN_WRAP);
         assertEquals(result,STD_TXN_WRAP);
     }
-    
+
     public void testGetSecure() {
         assertTrue(dataSource.isSecure());
         dataSource.setSecure(false);
-        assertFalse(dataSource.isSecure());        
+        assertFalse(dataSource.isSecure());
     }
 
     public void testGetAlternateServers() {
-    	String result = dataSource.getAlternateServers();
-    	assertEquals(result,STD_ALTERNATE_SERVERS);
-    	dataSource.setAlternateServers(null);
-    	result = dataSource.getAlternateServers();
-    	assertNull(result);
-    	dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
-    	result = dataSource.getAlternateServers();
-    	assertEquals(result,STD_ALTERNATE_SERVERS);
+        String result = dataSource.getAlternateServers();
+        assertEquals(result,STD_ALTERNATE_SERVERS);
+        dataSource.setAlternateServers(null);
+        result = dataSource.getAlternateServers();
+        assertNull(result);
+        dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
+        result = dataSource.getAlternateServers();
+        assertEquals(result,STD_ALTERNATE_SERVERS);
     }
 
     // ----------------------------------------------------------------
@@ -401,7 +416,7 @@ public class TestTeiidDataSource extends TestCase {
     public void testreasonWhyInvalidPartialResultsMode2() {
         helpTestReasonWhyInvalid("partialResultsMode", "true", VALID); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public void testReasonWhyInvalidSocketsPerVM1() {
         helpTestReasonWhyInvalid("socketsPerVM", null, VALID); //$NON-NLS-1$
     }
@@ -414,7 +429,7 @@ public class TestTeiidDataSource extends TestCase {
     public void testReasonWhyInvalidSocketsPerVM4() {
         helpTestReasonWhyInvalid("socketsPerVM", "5.6", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public void testReasonWhyInvalidStickyConnections1() {
         helpTestReasonWhyInvalid("stickyConnections", null, VALID); //$NON-NLS-1$
     }
@@ -424,82 +439,82 @@ public class TestTeiidDataSource extends TestCase {
     public void testReasonWhyInvalidStickyConnections3() {
         helpTestReasonWhyInvalid("stickyConnections", "YES", INVALID); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public void helpTestAlternateServer(String altServers, boolean valid) {
-    	this.dataSource.setAlternateServers(altServers);
-    	try {
-			this.dataSource.buildURL();
-			if (!valid) {
-				fail("expected exception");
-			}
-		} catch (TeiidSQLException e) {
-			if (valid) {
-				throw new RuntimeException(e);
-			}
-		}
+        this.dataSource.setAlternateServers(altServers);
+        try {
+            this.dataSource.buildURL();
+            if (!valid) {
+                fail("expected exception");
+            }
+        } catch (TeiidSQLException e) {
+            if (valid) {
+                throw new RuntimeException(e);
+            }
+        }
     }
-    
+
     public void testReasonWhyInvalidAlternateServers1() {
-    	helpTestAlternateServer(null, VALID); 
+        helpTestAlternateServer(null, VALID);
     }
     public void testReasonWhyInvalidAlternateServers2() {
-    	helpTestAlternateServer("", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers3() {
-    	helpTestAlternateServer("server", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers4() {
-    	helpTestAlternateServer("server:100", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server:100", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers5() {
-    	helpTestAlternateServer("server:port", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server:port", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers6() {
-    	helpTestAlternateServer("server:100:1", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server:100:1", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers7() {
-    	helpTestAlternateServer("server:100:abc", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server:100:abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers8() {
-    	helpTestAlternateServer("server:abc:100", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server:abc:100", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers9() {
-    	helpTestAlternateServer(":100", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer(":100", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers10() {
-    	helpTestAlternateServer(":abc", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer(":abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers11() {
-    	helpTestAlternateServer("server1:100,server2", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1:100,server2", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers12() {
-    	helpTestAlternateServer("server1:100,server2:101", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1:100,server2:101", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers13() {
-    	helpTestAlternateServer("server1:100,", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1:100,", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers14() {
-    	helpTestAlternateServer("server1:100,server2:abc", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1:100,server2:abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers15() {
-    	helpTestAlternateServer("server1:100,server2:101:abc", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1:100,server2:101:abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers16() {
-    	helpTestAlternateServer("server1,server2:100", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1,server2:100", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers17() {
-    	helpTestAlternateServer("server1,server2", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1,server2", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers18() {
-    	helpTestAlternateServer(",server2:100", INVALID); //$NON-NLS-1$ 
+        helpTestAlternateServer(",server2:100", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers19() {
-    	helpTestAlternateServer("server1,server2,server3,server4:500", VALID); //$NON-NLS-1$ 
+        helpTestAlternateServer("server1,server2,server3,server4:500", VALID); //$NON-NLS-1$
     }
-    
 
-    
-    
+
+
+
     // ----------------------------------------------------------------
     //                       Test building URLs
     // ----------------------------------------------------------------
@@ -526,7 +541,7 @@ public class TestTeiidDataSource extends TestCase {
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure,
                             "jdbc:teiid:vdbName@mm://[3ffe:ffff:0100:f101::1]:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
-    }    
+    }
 
     public void testBuildingIPv6WithBrackets() {
         final String serverName = "[3ffe:ffff:0100:f101::1]"; //$NON-NLS-1$
@@ -538,8 +553,8 @@ public class TestTeiidDataSource extends TestCase {
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure,
                             "jdbc:teiid:vdbName@mm://[3ffe:ffff:0100:f101::1]:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
-    }    
-    
+    }
+
     public void testBuildingIPv6Alternate() {
         final String serverName = "3ffe:ffff:0100:f101::1"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -551,8 +566,8 @@ public class TestTeiidDataSource extends TestCase {
         final String alternates = "[::1],127.0.0.1:1234"; //$NON-NLS-1$
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternates,transactionAutoWrap, partialMode, 500, false, secure,
                             "jdbc:teiid:vdbName@mm://[3ffe:ffff:0100:f101::1]:7001,[::1]:7001,127.0.0.1:1234;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
-    }     
-    
+    }
+
     public void testBuildingURL2() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -561,10 +576,10 @@ public class TestTeiidDataSource extends TestCase {
         final String transactionAutoWrap = TeiidDataSource.TXN_WRAP_AUTO;
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
-        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, false, secure, 
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+        helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, false, secure,
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
-    
+
     public void testBuildURL3() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -574,7 +589,7 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostname:7001;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
     // Test secure protocol
@@ -587,14 +602,14 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostname:7001;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
     /*
      * Test alternate servers list
-     * 
+     *
      * Server list uses server:port pairs
-     */ 
+     */
     public void testBuildURL5() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -605,14 +620,14 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
     /*
      * Test alternate servers list
-     * 
+     *
      * Server list uses server:port pairs and we set secure to true
-     */ 
+     */
     public void testBuildURL6() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -623,15 +638,15 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
     /*
      * Test alternate servers list
-     * 
+     *
      * Server list uses server:port pairs and server with no port
      * In this case, the server with no port should default to ds.portNumber.
-     */ 
+     */
     public void testBuildURL7() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -642,9 +657,9 @@ public class TestTeiidDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:teiid:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;SHOWPLAN=ON;partialResultsMode=false;autoCommitTxn=DETECT;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
-    
+
     /**
      * Test turning off using JDBC4 semantics
      */
@@ -659,22 +674,22 @@ public class TestTeiidDataSource extends TestCase {
         helpTestBuildingURL2(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure, false,
                             "jdbc:teiid:vdbName@mm://hostname:7001;fetchSize=500;ApplicationName=JDBC;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;useJDBC4ColumnNameAndLabelSemantics=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
-    
+
     public void testBuildURL_AdditionalProperties() throws TeiidSQLException {
-    	final TeiidDataSource ds = new TeiidDataSource();
-    	ds.setAdditionalProperties("foo=bar;a=b"); //$NON-NLS-1$
-    	ds.setServerName("hostName"); //$NON-NLS-1$
-    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
-    	ds.setPortNumber(1);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;fetchSize=2048;ApplicationName=JDBC;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+        final TeiidDataSource ds = new TeiidDataSource();
+        ds.setAdditionalProperties("foo=bar;a=b"); //$NON-NLS-1$
+        ds.setServerName("hostName"); //$NON-NLS-1$
+        ds.setDatabaseName("vdbName"); //$NON-NLS-1$
+        ds.setPortNumber(1);
+        assertEquals("jdbc:teiid:vdbName@mm://hostname:1;ApplicationName=JDBC;VirtualDatabaseName=vdbName;a=b;fetchSize=2048;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
-    
+
     public void testBuildURLEncryptRequests() throws TeiidSQLException {
-    	final TeiidDataSource ds = new TeiidDataSource();
-    	ds.setServerName("hostName"); //$NON-NLS-1$
-    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
-    	ds.setEncryptRequests(true);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+        final TeiidDataSource ds = new TeiidDataSource();
+        ds.setServerName("hostName"); //$NON-NLS-1$
+        ds.setDatabaseName("vdbName"); //$NON-NLS-1$
+        ds.setEncryptRequests(true);
+        compareUrls("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {
@@ -693,12 +708,12 @@ public class TestTeiidDataSource extends TestCase {
             // this is expected!
         }
     }
-    
+
     /*
      * Test invalid alternateServer list
-     * 
+     *
      * Server list uses a non numeric value for port.
-     */ 
+     */
     public void testInvalidDataSource2() {
         final String serverName = "hostName"; //$NON-NLS-1$
         final String vdbName = "vdbName"; //$NON-NLS-1$
@@ -709,65 +724,65 @@ public class TestTeiidDataSource extends TestCase {
         final String transactionAutoWrap = null;
         final String configFile = UnitTestUtil.getTestDataPath() + "/config.txt"; //$NON-NLS-1$
         try {
-            helpTestConnection(vdbName, vdbVersion, serverName, portNumber, 
-            		alternateServers, null, null, dataSourceName, transactionAutoWrap, "false", configFile);     //$NON-NLS-1$  // TRUE TO OVERRIDE USERNAME & PASSWORD
+            helpTestConnection(vdbName, vdbVersion, serverName, portNumber,
+                    alternateServers, null, null, dataSourceName, transactionAutoWrap, "false", configFile);     //$NON-NLS-1$  // TRUE TO OVERRIDE USERNAME & PASSWORD
             fail("Unexpectedly able to connect"); //$NON-NLS-1$
         } catch ( SQLException e) {
             // this is expected!
         }
     }
-    
+
     public void testUrlEncodedProperties() throws SQLException {
-    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
-    	TeiidDataSource tds = new TeiidDataSource(td);
-    	tds.setDatabaseName("y");
-    	tds.setUser("%25user");
-    	tds.setServerName("x");
-    	tds.getConnection();
-    	
+        TeiidDriver td = Mockito.mock(TeiidDriver.class);
+        TeiidDataSource tds = new TeiidDataSource(td);
+        tds.setDatabaseName("y");
+        tds.setUser("%25user");
+        tds.setServerName("x");
+        tds.getConnection();
+
         ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
-    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
-    	Properties p = argument.getValue();
-    	assertEquals("%25user", p.getProperty(BaseDataSource.USER_NAME));
+        Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+        Properties p = argument.getValue();
+        assertEquals("%25user", p.getProperty(BaseDataSource.USER_NAME));
     }
-    
+
     public void testLoginTimeout() throws SQLException {
-    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
-    	TeiidDataSource tds = new TeiidDataSource(td);
-    	tds.setDatabaseName("y");
-    	tds.setServerName("x");
-    	tds.setLoginTimeout(2);
-    	tds.getConnection();
-    	
+        TeiidDriver td = Mockito.mock(TeiidDriver.class);
+        TeiidDataSource tds = new TeiidDataSource(td);
+        tds.setDatabaseName("y");
+        tds.setServerName("x");
+        tds.setLoginTimeout(2);
+        tds.getConnection();
+
         ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
-    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
-    	Properties p = argument.getValue();
-    	assertEquals("2", p.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT));
+        Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+        Properties p = argument.getValue();
+        assertEquals("2", p.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT));
     }
-    
+
     public void testGetConnectionWithUser() throws SQLException {
-    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
-    	TeiidDataSource tds = new TeiidDataSource(td);
-    	tds.setDatabaseName("y");
-    	tds.setUser("%25user");
-    	tds.setServerName("x");
-    	tds.getConnection("user", "password");
-    	
+        TeiidDriver td = Mockito.mock(TeiidDriver.class);
+        TeiidDataSource tds = new TeiidDataSource(td);
+        tds.setDatabaseName("y");
+        tds.setUser("%25user");
+        tds.setServerName("x");
+        tds.getConnection("user", "password");
+
         ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
-    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
-    	Properties p = argument.getValue();
-    	assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
+        Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+        Properties p = argument.getValue();
+        assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
     }
-    
+
     public void testKerberos() throws SQLException {
-    	TeiidDataSource tds = new TeiidDataSource();
-    	tds.setDatabaseName("y");
-    	tds.setUser("%25user");
-    	tds.setJaasName("x");
-    	tds.setKerberosServicePrincipleName("z");
-    	tds.setServerName("t");
-    	assertEquals("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
-    	
+        TeiidDataSource tds = new TeiidDataSource();
+        tds.setDatabaseName("y");
+        tds.setUser("%25user");
+        tds.setJaasName("x");
+        tds.setKerberosServicePrincipleName("z");
+        tds.setServerName("t");
+        compareUrls("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
+
     }
-    
+
 }

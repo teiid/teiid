@@ -28,12 +28,12 @@ import org.teiid.translator.TypeFacility;
 
 public class TestTypeFacilityImpl {
 
-	@Test public void testNullClob() {
-		assertNull(new TypeFacility().convertToRuntimeType((Clob)null));
-	}
-	
-	@Test public void testArrayType() {
-		assertEquals(TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.getDataTypeNameFromSQLType(Types.ARRAY));
-	}
-	
+    @Test public void testNullClob() {
+        assertNull(new TypeFacility().convertToRuntimeType((Clob)null));
+    }
+
+    @Test public void testArrayType() {
+        assertEquals(TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.getDataTypeNameFromSQLType(Types.ARRAY));
+    }
+
 }

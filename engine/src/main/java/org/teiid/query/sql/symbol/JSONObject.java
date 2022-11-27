@@ -28,51 +28,51 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class JSONObject implements Expression {
 
-	private List<DerivedColumn> args;
-	
-	public JSONObject(List<DerivedColumn> args) {
-		this.args = args;
-	}
-	
-	public List<DerivedColumn> getArgs() {
-		return args;
-	}
+    private List<DerivedColumn> args;
 
-	@Override
-	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.CLOB;
-	}
+    public JSONObject(List<DerivedColumn> args) {
+        this.args = args;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-		
-	@Override
-	public JSONObject clone() {
-		JSONObject clone = new JSONObject(LanguageObject.Util.deepClone(args, DerivedColumn.class));
-		return clone;
-	}
-	
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(args.hashCode());
-	}
-	
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof JSONObject)) {
-			return false;
-		}
-		JSONObject other = (JSONObject)obj;
-		return args.equals(other.args);
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
+    public List<DerivedColumn> getArgs() {
+        return args;
+    }
+
+    @Override
+    public Class<?> getType() {
+        return DataTypeManager.DefaultDataClasses.JSON;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public JSONObject clone() {
+        JSONObject clone = new JSONObject(LanguageObject.Util.deepClone(args, DerivedColumn.class));
+        return clone;
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(args.hashCode());
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof JSONObject)) {
+            return false;
+        }
+        JSONObject other = (JSONObject)obj;
+        return args.equals(other.args);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
 }

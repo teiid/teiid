@@ -38,78 +38,78 @@ import org.teiid.query.util.CommandContext;
 public class AtomicRequestMessage {
     static final long serialVersionUID = -4060941593023225562L;
 
-	/**
-	 * static counter to keep track of the Execution count.
-	 */
-	private static AtomicInteger EXECUTION_COUNT = new AtomicInteger(0);
+    /**
+     * static counter to keep track of the Execution count.
+     */
+    private static AtomicInteger EXECUTION_COUNT = new AtomicInteger(0);
 
-	// atomic request id (request-id + node-id + execution-count)
-	private AtomicRequestID atomicRequestId;
+    // atomic request id (request-id + node-id + execution-count)
+    private AtomicRequestID atomicRequestId;
 
-	/**
-	 * The connectorBindingID that identifies the connector needed for this
-	 * query.
-	 */
-	private String connectorName;
+    /**
+     * The connectorBindingID that identifies the connector needed for this
+     * query.
+     */
+    private String connectorName;
 
-	/**
-	 * Name of model where the connector is bound to
-	 */
-	private String modelName;
+    /**
+     * Name of model where the connector is bound to
+     */
+    private String modelName;
 
-	// Transaction context for the current request
-	private TransactionContext txnContext;
+    // Transaction context for the current request
+    private TransactionContext txnContext;
 
-	// command to execute
-	private Command command;
+    // command to execute
+    private Command command;
 
-	// results fetch size
-	private int fetchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+    // results fetch size
+    private int fetchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 
-	// The time when command begins processing on the server.
-	private long processingTimestamp = System.currentTimeMillis();
+    // The time when command begins processing on the server.
+    private long processingTimestamp = System.currentTimeMillis();
 
     private boolean partialResultsFlag;
-    
+
     private RequestID requestID;
-    
+
     private boolean exceptionOnMaxRows;
     private int maxRows;
-    
+
     private boolean serial;
-    
+
     private boolean copyStreamingLobs;
-    
+
     private DQPWorkContext workContext;
     private CommandContext commandContext;
     private BufferManager bufferManager;
-    
+
     public AtomicRequestMessage(RequestMessage requestMessage, DQPWorkContext parent, int nodeId){
-    	this.workContext = parent;
-    	this.requestID = new RequestID(parent.getSessionId(), requestMessage.getExecutionId());
+        this.workContext = parent;
+        this.requestID = new RequestID(parent.getSessionId(), requestMessage.getExecutionId());
         this.atomicRequestId = new AtomicRequestID(this.requestID, nodeId, EXECUTION_COUNT.getAndIncrement());
     }
-    
+
     public int getMaxResultRows() {
-		return maxRows;
-	}
-    
+        return maxRows;
+    }
+
     public void setMaxResultRows(int maxRows) {
-		this.maxRows = maxRows;
-	}
-    
+        this.maxRows = maxRows;
+    }
+
     public boolean isExceptionOnMaxRows() {
-		return exceptionOnMaxRows;
-	}
-    
+        return exceptionOnMaxRows;
+    }
+
     public void setExceptionOnMaxRows(boolean exceptionOnMaxRows) {
-		this.exceptionOnMaxRows = exceptionOnMaxRows;
-	}
+        this.exceptionOnMaxRows = exceptionOnMaxRows;
+    }
 
     public AtomicRequestID getAtomicRequestID() {
         return this.atomicRequestId;
     }
-          
+
     public String getConnectorName() {
         return connectorName;
     }
@@ -125,7 +125,7 @@ public class AtomicRequestMessage {
     public void setModelName(String modelName) {
         this.modelName = modelName;
     }
-    
+
     public TransactionContext getTransactionContext() {
         return txnContext;
     }
@@ -133,37 +133,37 @@ public class AtomicRequestMessage {
     public void setTransactionContext(TransactionContext context) {
         txnContext = context;
     }
-    
+
     public boolean isSerial() {
-    	return serial;
+        return serial;
     }
-    
+
     public void setSerial(boolean serial) {
-		this.serial = serial;
-	}
+        this.serial = serial;
+    }
 
     public boolean isTransactional(){
         return this.txnContext != null && this.txnContext.getTransactionType() != Scope.NONE;
-    }    
-	
-	public Command getCommand() {
-		return command;
-	}
+    }
 
-	public void setCommand(Command command) {
-		this.command = command;
-	}
+    public Command getCommand() {
+        return command;
+    }
 
-	public int getFetchSize() {
-		return fetchSize;
-	}
+    public void setCommand(Command command) {
+        this.command = command;
+    }
 
-	public void setFetchSize(int fetchSize) {
-		if (fetchSize < 1) {
-			throw new IllegalArgumentException("fetch size must be positive"); //$NON-NLS-1$
-		}
-		this.fetchSize = fetchSize;
-	}   
+    public int getFetchSize() {
+        return fetchSize;
+    }
+
+    public void setFetchSize(int fetchSize) {
+        if (fetchSize < 1) {
+            throw new IllegalArgumentException("fetch size must be positive"); //$NON-NLS-1$
+        }
+        this.fetchSize = fetchSize;
+    }
 
     /**
      * Get time that the request was assigned a unique ID by the server.
@@ -185,42 +185,42 @@ public class AtomicRequestMessage {
         return atomicRequestId.toString();
     }
 
-	public void setRequestID(RequestID requestID) {
-		this.requestID = requestID;
-	}
+    public void setRequestID(RequestID requestID) {
+        this.requestID = requestID;
+    }
 
-	public RequestID getRequestID() {
-		return requestID;
-	}
+    public RequestID getRequestID() {
+        return requestID;
+    }
 
-	public void setWorkContext(DQPWorkContext workContext) {
-		this.workContext = workContext;
-	}
+    public void setWorkContext(DQPWorkContext workContext) {
+        this.workContext = workContext;
+    }
 
-	public DQPWorkContext getWorkContext() {
-		return workContext;
-	}
-	
-	public CommandContext getCommandContext() {
-		return commandContext;
-	}
-	
-	public void setCommandContext(CommandContext commandContext) {
-		this.commandContext = commandContext;
-	}
-	
-	public BufferManager getBufferManager() {
-		return bufferManager;
-	}
-	
-	public void setBufferManager(BufferManager bufferManager) {
-		this.bufferManager = bufferManager;
-	}
+    public DQPWorkContext getWorkContext() {
+        return workContext;
+    }
+
+    public CommandContext getCommandContext() {
+        return commandContext;
+    }
+
+    public void setCommandContext(CommandContext commandContext) {
+        this.commandContext = commandContext;
+    }
+
+    public BufferManager getBufferManager() {
+        return bufferManager;
+    }
+
+    public void setBufferManager(BufferManager bufferManager) {
+        this.bufferManager = bufferManager;
+    }
 
     public boolean isCopyStreamingLobs() {
         return copyStreamingLobs;
     }
-    
+
     public void setCopyStreamingLobs(boolean copyStreamingLobs) {
         this.copyStreamingLobs = copyStreamingLobs;
     }

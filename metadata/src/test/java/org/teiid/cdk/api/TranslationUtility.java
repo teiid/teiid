@@ -34,56 +34,56 @@ import org.teiid.query.metadata.SystemMetadata;
 
 
 /**
- * <p>This translation utility can be used to translate sql strings into 
+ * <p>This translation utility can be used to translate sql strings into
  * Connector API language interfaces for testing purposes.  The utility
- * requires a metadata .vdb file in order to resolve references in 
- * the SQL.</p>  
- * 
+ * requires a metadata .vdb file in order to resolve references in
+ * the SQL.
+ *
  * <p>This utility class can also be used to obtain a RuntimeMetadata
- * implementation based on the VDB file, which is sometimes handy when writing 
- * unit tests.</p>
+ * implementation based on the VDB file, which is sometimes handy when writing
+ * unit tests.
  */
 public class TranslationUtility {
-    
+
     private QueryMetadataInterface metadata;
     private FunctionLibrary functionLibrary;
 
     /**
-     * Construct a utility instance with a given vdb file.  
+     * Construct a utility instance with a given vdb file.
      * @param vdbFile The .vdb file name representing metadata for the connector
      */
     public TranslationUtility(String vdbFile) {
         initWrapper(VDBMetadataFactory.getVDBMetadata(vdbFile));
     }
 
-	private void initWrapper(QueryMetadataInterface acutalMetadata) {
-		functionLibrary = acutalMetadata.getFunctionLibrary();
-		this.functions.addAll(Arrays.asList(this.functionLibrary.getUserFunctions()));
-		metadata = new BasicQueryMetadataWrapper(acutalMetadata) {
-        	@Override
-        	public FunctionLibrary getFunctionLibrary() {
-        		return functionLibrary;
-        	}
+    private void initWrapper(QueryMetadataInterface acutalMetadata) {
+        functionLibrary = acutalMetadata.getFunctionLibrary();
+        this.functions.addAll(Arrays.asList(this.functionLibrary.getUserFunctions()));
+        metadata = new BasicQueryMetadataWrapper(acutalMetadata) {
+            @Override
+            public FunctionLibrary getFunctionLibrary() {
+                return functionLibrary;
+            }
         };
-	}
-    
+    }
+
     public TranslationUtility(String vdbName, URL url) {
         try {
-    		initWrapper(VDBMetadataFactory.getVDBMetadata(vdbName, url));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}     
+            initWrapper(VDBMetadataFactory.getVDBMetadata(vdbName, url));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
-    
+
     public TranslationUtility(QueryMetadataInterface metadata) {
-    	initWrapper(metadata);
+        initWrapper(metadata);
     }
-    
+
     public Command parseCommand(String sql, boolean generateAliases, boolean supportsGroupAliases) {
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         return commandBuilder.getCommand(sql, generateAliases, supportsGroupAliases);
     }
-    
+
     /**
      * Parse a SQL command and return an ICommand object.
      * @param sql
@@ -93,7 +93,7 @@ public class TranslationUtility {
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         return commandBuilder.getCommand(sql);
     }
-    
+
     /**
      * Create a RuntimeMetadata that can be used for testing a connector.
      * This RuntimeMetadata instance will be backed by the metadata from the vdbFile
@@ -103,16 +103,16 @@ public class TranslationUtility {
     public RuntimeMetadata createRuntimeMetadata() {
         return new RuntimeMetadataImpl(metadata);
     }
-    
+
     private List<FunctionTree> functions = new ArrayList<FunctionTree>();
-    
+
     public void addUDF(String schema, Collection<FunctionMethod> methods) {
-    	if (methods == null || methods.isEmpty()) {
-    		return;
-    	}
-    	this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
-		SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
-		functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));
+        if (methods == null || methods.isEmpty()) {
+            return;
+        }
+        this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
+        SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
+        functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));
     }
 
 }

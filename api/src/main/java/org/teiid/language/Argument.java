@@ -23,24 +23,24 @@ import org.teiid.metadata.ProcedureParameter;
 
 public class Argument extends BaseLanguageObject implements MetadataReference<ProcedureParameter> {
 
-	public enum Direction {
-		IN,
-		OUT,
-		INOUT,
-	}
-	
+    public enum Direction {
+        IN,
+        OUT,
+        INOUT,
+    }
+
     private Direction direction;
     private Expression argumentValue;
     private ProcedureParameter metadataObject;
     private Class<?> type;
-    
+
     public Argument(Direction direction, Expression value, Class<?> type, ProcedureParameter metadataObject) {
         this.direction = direction;
         this.argumentValue = value;
-    	this.metadataObject = metadataObject;
-    	this.type = type;
+        this.metadataObject = metadataObject;
+        this.type = type;
     }
-    
+
     /**
      * Typical constructor for an out/return parameter
      * @param direction
@@ -49,25 +49,25 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
      */
     public Argument(Direction direction, Class<?> type, ProcedureParameter metadataObject) {
         this.direction = direction;
-    	this.metadataObject = metadataObject;
-    	this.type = type;
+        this.metadataObject = metadataObject;
+        this.type = type;
     }
-    
+
     /**
      * Typical constructor for an in/in out parameter
      * @param direction
-     * @param type
+     * @param value
      * @param metadataObject
      */
     public Argument(Direction direction, Literal value, ProcedureParameter metadataObject) {
         this.direction = direction;
         this.argumentValue = value;
-    	this.metadataObject = metadataObject;
-    	if (value != null) {
-    		this.type = value.getType();
-    	}
+        this.metadataObject = metadataObject;
+        if (value != null) {
+            this.type = value.getType();
+        }
     }
-    
+
     public Direction getDirection() {
         return this.direction;
     }
@@ -80,14 +80,14 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
     public Literal getArgumentValue() {
         return (Literal)this.argumentValue;
     }
-    
+
     public Class<?> getType() {
-		return type;
-	}
-    
+        return type;
+    }
+
     public void setType(Class<?> type) {
-		this.type = type;
-	}
+        this.type = type;
+    }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
@@ -103,19 +103,19 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
 
     @Override
     public ProcedureParameter getMetadataObject() {
-    	return this.metadataObject;
+        return this.metadataObject;
     }
 
     public void setMetadataObject(ProcedureParameter metadataObject) {
-		this.metadataObject = metadataObject;
-	}
-    
+        this.metadataObject = metadataObject;
+    }
+
     public Expression getExpression() {
-    	return this.argumentValue;
+        return this.argumentValue;
     }
-    
+
     public void setExpression(Expression ex) {
-    	this.argumentValue = ex;
+        this.argumentValue = ex;
     }
-    
+
 }

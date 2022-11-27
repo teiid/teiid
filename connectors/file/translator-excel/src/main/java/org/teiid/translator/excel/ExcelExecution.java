@@ -24,61 +24,60 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
 
 public class ExcelExecution extends BaseExcelExecution implements ResultSetExecution {
-    
+
     private Class<?>[] expectedColumnTypes;
 
-	public ExcelExecution(Select query, ExecutionContext executionContext,
-			RuntimeMetadata metadata, FileConnection connection)
-			throws TranslatorException {
-	    super(executionContext, metadata, connection);
+    public ExcelExecution(Select query, ExecutionContext executionContext,
+            RuntimeMetadata metadata, VirtualFileConnection connection, boolean immutable)
+            throws TranslatorException {
+        super(executionContext, metadata, connection, immutable);
         this.expectedColumnTypes = query.getColumnTypes();
-	    visit(query);
+        visit(query);
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         Row row = nextRow();
         if (row == null) {
             return null;
         }
-    	return projectRow(row);
+        return projectRow(row);
     }
-    
+
     /**
      * @param row
-     * @param neededColumns
      */
     List<Object> projectRow(Row row) throws TranslatorException {
         ArrayList<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
-        
+
         int id = row.getRowNum()+1;
-        
+
         int i = -1;
         for (int index:this.visitor.getProjectedColumns()) {
-        	
-        	i++;
-        	// check if the row is ROW_ID
-        	if (index == -1) {
-        		output.add(id);
-        		continue;
-        	}
-        	
-        	Cell cell = row.getCell(index-1, Row.RETURN_BLANK_AS_NULL);
-        	if (cell == null) {
-        		output.add(null);
-        		continue;
-        	}
-        	switch (this.evaluator.evaluateInCell(cell).getCellType()) {
+
+            i++;
+            // check if the row is ROW_ID
+            if (index == -1) {
+                output.add(id);
+                continue;
+            }
+
+            Cell cell = row.getCell(index-1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            if (cell == null) {
+                output.add(null);
+                continue;
+            }
+            switch (this.evaluator.evaluateInCell(cell).getCellType()) {
                 case Cell.CELL_TYPE_NUMERIC:
                     output.add(convertFromExcelType(cell.getNumericCellValue(), cell, this.expectedColumnTypes[i]));
                     break;
@@ -89,12 +88,12 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
                     output.add(convertFromExcelType(cell.getBooleanCellValue(), this.expectedColumnTypes[i]));
                     break;
                 default:
-                	output.add(null);
+                    output.add(null);
                     break;
-            }   
+            }
         }
-        
-        return output;    
+
+        return output;
     }
 
 }

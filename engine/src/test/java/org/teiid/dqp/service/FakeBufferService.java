@@ -18,40 +18,40 @@
 
 package org.teiid.dqp.service;
 
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBufferCache;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 
 public class FakeBufferService implements BufferService {
 
-    private BufferManager bufferMgr;
+    private BufferManagerImpl bufferMgr;
     private TupleBufferCache tupleBufferCache;
-    
+
     public FakeBufferService() {
-    	this(true);
-    }
-    
-    public FakeBufferService(boolean shared) {
-    	if (shared) {
-    		bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-    	} else {
-    		bufferMgr = BufferManagerFactory.createBufferManager();
-    	}
-    	this.tupleBufferCache = bufferMgr;
-    }
-    
-    public FakeBufferService(BufferManager buffManager, TupleBufferCache tupleBufferCache) {
-    	this.bufferMgr = buffManager;
-    	this.tupleBufferCache = tupleBufferCache;
+        this(true);
     }
 
-    public BufferManager getBufferManager() {
+    public FakeBufferService(boolean shared) {
+        if (shared) {
+            bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
+        } else {
+            bufferMgr = BufferManagerFactory.createBufferManager();
+        }
+        this.tupleBufferCache = bufferMgr;
+    }
+
+    public FakeBufferService(BufferManagerImpl buffManager, TupleBufferCache tupleBufferCache) {
+        this.bufferMgr = buffManager;
+        this.tupleBufferCache = tupleBufferCache;
+    }
+
+    public BufferManagerImpl getBufferManager() {
         return bufferMgr;
     }
-    
+
     @Override
     public TupleBufferCache getTupleBufferCache() {
-    	return tupleBufferCache;
+        return tupleBufferCache;
     }
 
 }

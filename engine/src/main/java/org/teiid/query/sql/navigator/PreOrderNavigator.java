@@ -22,7 +22,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 
 
-/** 
+/**
  * @since 4.2
  */
 public class PreOrderNavigator extends PreOrPostOrderNavigator {

@@ -1,0 +1,59 @@
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.resource-adapter.webservice">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+        
+    <main-class name="org.teiid.oauth.OAuthUtil"/>
+    
+    <resources>
+        <artifact name="${org.teiid.connectors:ws-cxf}"/>
+        <artifact name="${org.teiid.wildfly.connectors:connector-ws}"/>
+        <resource-root path="." />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="sun.jdk" />        
+        <module name="javax.api" />
+        <module name="javax.resource.api" />
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.teiid.translator.ws" />
+        <module name="javax.jws.api" />
+        <module name="org.apache.cxf" />
+        <module name="org.apache.cxf.impl" />
+        <module name="javax.wsdl4j.api" />
+        <module name="javax.xml.ws.api" />
+        <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>
+        <module name="org.apache.cxf.impl" export="true">
+            <imports>
+                <include path="META-INF" />
+                <include path="META-INF/cxf" />
+            </imports>
+            <exports>
+                <include path="META-INF" />
+                <include path="META-INF/cxf" />
+            </exports>
+        </module>
+        <module name="org.apache.cxf" export="true" services="export">
+            <imports>
+                <include path="META-INF" />
+                <include path="META-INF/cxf" />
+            </imports>
+            <exports>
+                <include path="META-INF" />
+                <include path="META-INF/cxf" />
+            </exports>
+        </module>
+        <module name="org.springframework.spring" optional="true" export="true">
+            <imports>
+                <include path="META-INF" />
+            </imports>
+            <exports>
+                <include path="META-INF" />
+            </exports>
+        </module>
+        <module name="org.apache.ws.security"/>  
+        <module name="javax.xml.bind.api"/>
+    </dependencies>
+</module>

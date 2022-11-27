@@ -22,24 +22,20 @@ import org.teiid.language.Delete;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 /**
  * Translates SQL DELETE commands
- * 
+ *
  * @author felias
  *
  */
 public class SpreadsheetDeleteVisitor extends SpreadsheetCriteriaVisitor {
 
-	
-	public SpreadsheetDeleteVisitor(SpreadsheetInfo info) {
-		super(info);
-	}
 
-	public void visit(Delete obj) {
-		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
-			worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
-		}else{
-			worksheetTitle = obj.getTable().getName();	
-		}
-		translateWhere(obj.getWhere());
-	}
+    public SpreadsheetDeleteVisitor(SpreadsheetInfo info) {
+        super(info);
+    }
+
+    public void visit(Delete obj) {
+        setWorksheetByName(obj.getTable().getMetadataObject().getSourceName());
+        translateWhere(obj.getWhere());
+    }
 
 }

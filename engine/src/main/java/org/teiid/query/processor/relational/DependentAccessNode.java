@@ -51,9 +51,9 @@ public class DependentAccessNode extends AccessNode {
      * Cached rewritten command to be used as the base for all dependent queries.
      */
     private Command rewrittenCommand;
-	private boolean useBindings;
-	private boolean complexQuery;
-    
+    private boolean useBindings;
+    private boolean complexQuery;
+
     public DependentAccessNode(int nodeID) {
         super(nodeID);
     }
@@ -76,28 +76,28 @@ public class DependentAccessNode extends AccessNode {
         sort = true;
         rewrittenCommand = null;
     }
-    
+
     @Override
     protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
-    	if (rewrittenCommand == null) {
-    		Command atomicCommand = super.nextCommand();
-    		try {
-    		    rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
-    		} catch (BlockedException e) {
-    		    //we must decline already as the parent will assume open, and it will
-    		    //be too late
-    		    if (sort && ((Query)atomicCommand).getOrderBy() != null) {
-    		        declineSort();
-    		    }
-    		    throw e;
-    		}
-	        rewrittenCommand = atomicCommand;
-	        nextCommand = null;
-    	}
-    	if (nextCommand == null && rewrittenCommand != null) {
-			nextCommand = (Command)rewrittenCommand.clone();
-    	}
-    	return super.nextCommand();
+        if (rewrittenCommand == null) {
+            Command atomicCommand = super.nextCommand();
+            try {
+                rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
+            } catch (BlockedException e) {
+                //we must decline already as the parent will assume open, and it will
+                //be too late
+                if (sort && ((Query)atomicCommand).getOrderBy() != null) {
+                    declineSort();
+                }
+                throw e;
+            }
+            rewrittenCommand = atomicCommand;
+            nextCommand = null;
+        }
+        if (nextCommand == null && rewrittenCommand != null) {
+            nextCommand = (Command)rewrittenCommand.clone();
+        }
+        return super.nextCommand();
     }
 
     public Object clone() {
@@ -117,14 +117,14 @@ public class DependentAccessNode extends AccessNode {
     public int getMaxSetSize() {
         return this.maxSetSize;
     }
-    
+
     public int getMaxPredicates() {
-		return maxPredicates;
-	}
-    
+        return maxPredicates;
+    }
+
     public void setMaxPredicates(int maxPredicates) {
-		this.maxPredicates = maxPredicates;
-	}
+        this.maxPredicates = maxPredicates;
+    }
 
     /**
      * @param maxSize
@@ -133,7 +133,7 @@ public class DependentAccessNode extends AccessNode {
     public void setMaxSetSize(int maxSize) {
         this.maxSetSize = maxSize;
     }
-    
+
     /**
      * @see org.teiid.query.processor.relational.AccessNode#prepareNextCommand(org.teiid.query.sql.lang.Command)
      */
@@ -142,7 +142,7 @@ public class DependentAccessNode extends AccessNode {
         Assertion.assertTrue(atomicCommand instanceof Query);
 
         Query query = (Query)atomicCommand;
-        
+
         try {
             if (this.criteriaProcessor == null) {
                 this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
@@ -150,17 +150,17 @@ public class DependentAccessNode extends AccessNode {
                 this.criteriaProcessor.setUseBindings(useBindings);
                 this.criteriaProcessor.setComplexQuery(complexQuery);
             }
-            
+
             if (this.dependentCrit == null) {
                 dependentCrit = criteriaProcessor.prepareCriteria();
             }
-            
+
             query.setCriteria(dependentCrit);
         } catch (BlockedException be) {
             throw new AssertionError("Should not block prior to declining the sort"); //$NON-NLS-1$
             //TODO: the logic could proactively decline the sort rather than throwing an exception
         }
-        
+
         //walk up the tree and notify the parent join it is responsible for the sort
         if (sort && query.getOrderBy() != null && criteriaProcessor.hasNextCommand()) {
             declineSort();
@@ -168,13 +168,13 @@ public class DependentAccessNode extends AccessNode {
         if (!sort) {
             query.setOrderBy(null);
         }
-                
+
         boolean result = RelationalNodeUtil.shouldExecute(atomicCommand, true);
-        
+
         dependentCrit = null;
-        
+
         criteriaProcessor.consumedCriteria();
-        
+
         return result;
     }
 
@@ -182,10 +182,10 @@ public class DependentAccessNode extends AccessNode {
         RelationalNode parent = this.getParent();
         RelationalNode child = this;
         while (parent != null && !(parent instanceof JoinNode)) {
-        	child = parent;
-        	if (parent instanceof SortNode) {
-        	    return;
-        	}
+            child = parent;
+            if (parent instanceof SortNode) {
+                return;
+            }
             parent = parent.getParent();
         }
         if (parent != null) {
@@ -193,9 +193,9 @@ public class DependentAccessNode extends AccessNode {
             if (joinNode.getJoinStrategy() instanceof MergeJoinStrategy) {
                 MergeJoinStrategy mjs = (MergeJoinStrategy)joinNode.getJoinStrategy();
                 if (joinNode.getChildren()[0] == child) {
-                	mjs.setProcessingSortLeft(true);
+                    mjs.setProcessingSortLeft(true);
                 } else {
-                	mjs.setProcessingSortRight(true);
+                    mjs.setProcessingSortRight(true);
                 }
             }
         }
@@ -209,32 +209,32 @@ public class DependentAccessNode extends AccessNode {
         return criteriaProcessor.hasNextCommand();
     }
 
-	public void setPushdown(boolean pushdown) {
-		this.pushdown = pushdown;
-	}
-	
-	@Override
-	public Boolean requiresTransaction(boolean transactionalReads) {
-		Boolean required = super.requiresTransaction(transactionalReads);
-		if (required != null) {
-			return required;
-		}
-		if (transactionalReads || !(this.getCommand() instanceof QueryCommand)) {
-			return true;
-		}
-		return null;
-	}
-	
-	public boolean isUseBindings() {
-		return useBindings;
-	}
-	
-	public void setUseBindings(boolean useBindings) {
-		this.useBindings = useBindings;
-	}
-	
-	public void setComplexQuery(boolean complexQuery) {
-		this.complexQuery = complexQuery;
-	}
+    public void setPushdown(boolean pushdown) {
+        this.pushdown = pushdown;
+    }
+
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        Boolean required = super.requiresTransaction(transactionalReads);
+        if (required != null) {
+            return required;
+        }
+        if (transactionalReads || !(this.getCommand() instanceof QueryCommand)) {
+            return true;
+        }
+        return null;
+    }
+
+    public boolean isUseBindings() {
+        return useBindings;
+    }
+
+    public void setUseBindings(boolean useBindings) {
+        this.useBindings = useBindings;
+    }
+
+    public void setComplexQuery(boolean complexQuery) {
+        this.complexQuery = complexQuery;
+    }
 
 }

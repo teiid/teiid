@@ -22,32 +22,32 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class SearchedWhenClause extends BaseLanguageObject {
 
-	private Condition condition;
-	private Expression result;
-	
-	public SearchedWhenClause(Condition condition, Expression result) {
-		this.condition = condition;
-		this.result = result;
-	}
+    private Condition condition;
+    private Expression result;
 
-	public Condition getCondition() {
-		return condition;
-	}
+    public SearchedWhenClause(Condition condition, Expression result) {
+        this.condition = condition;
+        this.result = result;
+    }
 
-	public Expression getResult() {
-		return result;
-	}
+    public Condition getCondition() {
+        return condition;
+    }
 
-	public void setCondition(Condition symbol) {
-		this.condition = symbol;
-	}
+    public Expression getResult() {
+        return result;
+    }
 
-	public void setResult(Expression value) {
-		this.result = value;
-	}
+    public void setCondition(Condition symbol) {
+        this.condition = symbol;
+    }
 
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    public void setResult(Expression value) {
+        this.result = value;
+    }
+
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
 
 }

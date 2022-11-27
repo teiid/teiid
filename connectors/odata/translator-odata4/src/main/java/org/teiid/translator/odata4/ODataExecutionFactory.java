@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.client.core.serialization.ClientODataDeserializerImpl;
@@ -48,6 +48,7 @@ import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
+import org.teiid.translator.ws.WSConnection;
 
 /**
  * TODO:
@@ -76,23 +77,23 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         setSupportsOuterJoins(true);
         setSupportsFullOuterJoins(true);
         setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-        
+
         setSupportsOdataCount(true);
         setSupportsOdataFilter(true);
         setSupportsOdataOrderBy(true);
-        setSupportsOdataSkip(false); // based on document based on cursoring, this will not be correct 
+        setSupportsOdataSkip(false); // based on document based on cursoring, this will not be correct
         setSupportsOdataTop(false);
         setTransactionSupport(TransactionSupport.NONE);
         registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
-            
+
             @Override
             public List<?> translate(Function function) {
-                function.setName(SourceSystemFunctions.ADD_OP); 
-                
+                function.setName(SourceSystemFunctions.ADD_OP);
+
                 Expression param1 = function.getParameters().get(0);
                 Expression param2 = function.getParameters().get(1);
-                
+
                 Function indexOf = new Function("indexof", Arrays.asList(param2, param1), TypeFacility.RUNTIME_TYPES.INTEGER); //$NON-NLS-1$
                 indexOf.setMetadataObject(function.getMetadataObject());
                 function.getParameters().set(0, indexOf);
@@ -101,15 +102,15 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
             }
         });
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new FunctionModifier() {
-            
+
             @Override
             public List<?> translate(Function function) {
                 if (function.getParameters().size() != 3) {
                     return null;
                 }
                 Expression param2 = function.getParameters().get(1);
-                
-                param2 = new Function(SourceSystemFunctions.ADD_OP, Arrays.asList(param2, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)), TypeFacility.RUNTIME_TYPES.INTEGER); 
+
+                param2 = new Function(SourceSystemFunctions.ADD_OP, Arrays.asList(param2, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)), TypeFacility.RUNTIME_TYPES.INTEGER);
                 function.getParameters().set(1, param2);
                 return null;
             }
@@ -117,14 +118,15 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("toupper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        
+
         registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new AliasModifier("geo.distance")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("geo.intersects")); //$NON-NLS-1$
-        
+        registerFunctionModifier(SourceSystemFunctions.ST_LENGTH, new AliasModifier("geo.length")); //$NON-NLS-1$
+
         addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, //$NON-NLS-1$ //$NON-NLS-2$
-                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); 
+                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING);
         addPushDownFunction("odata", "contains", TypeFacility.RUNTIME_NAMES.BOOLEAN, //$NON-NLS-1$ //$NON-NLS-2$
-                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); 
+                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING);
     }
 
     @Override
@@ -154,9 +156,9 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
                 if (call.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
                     throw execution.buildError(call);
                 }
-    
+
                 Blob out = (Blob)call.getOutputParameterValues().get(0);
-                ClientODataDeserializerImpl deserializer = 
+                ClientODataDeserializerImpl deserializer =
                         new ClientODataDeserializerImpl(false, ContentType.APPLICATION_XML);
                 this.serviceMatadata = deserializer.toMetadata(out.getBinaryStream());
                 return this.serviceMatadata;
@@ -168,7 +170,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         }
         return this.serviceMatadata;
     }
-    
+
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -207,11 +209,11 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         // String functions
         supportedFunctions.add(SourceSystemFunctions.ENDSWITH);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
-        supportedFunctions.add(SourceSystemFunctions.LOCATE); //indexof 
+        supportedFunctions.add(SourceSystemFunctions.LOCATE); //indexof
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.LCASE); //tolower
-        supportedFunctions.add(SourceSystemFunctions.UCASE); //toupper        
-        supportedFunctions.add(SourceSystemFunctions.TRIM);        
+        supportedFunctions.add(SourceSystemFunctions.UCASE); //toupper
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
 
@@ -223,16 +225,17 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
-        
+
         // arithmetic functions
         supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.MOD);
-        
+
         // geospatial functions
         supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+        supportedFunctions.add(SourceSystemFunctions.ST_LENGTH);
 
         return supportedFunctions;
     }
@@ -263,58 +266,58 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean supportsOdataFilter() {
         return supportsOdataFilter;
     }
-    
+
     public void setSupportsOdataFilter(boolean supports) {
         this.supportsOdataFilter = supports;
-    }    
-    
+    }
+
     @TranslatorProperty(display="Supports $OrderBy", description="True, $orderby is supported", advanced=true)
     public boolean supportsOdataOrderBy() {
         return supportsOdataOrderBy;
     }
-    
+
     public void setSupportsOdataOrderBy(boolean supports) {
         this.supportsOdataOrderBy = supports;
     }
-    
+
     @TranslatorProperty(display="Supports $count", description="True, $count is supported", advanced=true)
     public boolean supportsOdataCount() {
         return supportsOdataCount;
     }
-    
+
     public void setSupportsOdataCount(boolean supports) {
         this.supportsOdataCount = supports;
-    }    
-    
+    }
+
     @TranslatorProperty(display="Supports $skip", description="True, $skip is supported", advanced=true)
     public boolean supportsOdataSkip() {
         return supportsOdataSkip;
     }
-    
+
     public void setSupportsOdataSkip(boolean supports) {
         this.supportsOdataSkip = supports;
     }
-    
+
     @TranslatorProperty(display="Supports $top", description="True, $top is supported", advanced=true)
     public boolean supportsOdataTop() {
         return supportsOdataTop;
     }
-    
+
     public void setSupportsOdataTop(boolean supports) {
         this.supportsOdataTop = supports;
-    }   
-    
-    @TranslatorProperty(display="Supports Updates", 
-            description="True, if(PUT,PATCH,DELETE) operations supported", 
+    }
+
+    @TranslatorProperty(display="Supports Updates",
+            description="True, if(PUT,PATCH,DELETE) operations supported",
             advanced=true)
     public boolean supportsUpdates() {
         return supportsUpdates;
     }
-    
+
     public void setSupportsUpdates(boolean supports) {
         this.supportsUpdates = supports;
-    }     
-    
+    }
+
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return this.supportsOdataFilter;
@@ -339,7 +342,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean supportsNotCriteria() {
         return supportsOdataFilter;
     }
-    
+
     @Override
     public boolean supportsInCriteria() {
         return false; // not directly supported, the engine will compensate
@@ -356,12 +359,12 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     }
 
     @Override
-    @TranslatorProperty(display="Supports ORDER BY", 
+    @TranslatorProperty(display="Supports ORDER BY",
         description="True, if this connector supports ORDER BY", advanced=true)
     public boolean supportsOrderBy() {
         return supportsOdataOrderBy;
     }
-    
+
     @Override
     public boolean supportsOrderByUnrelated() {
         return this.supportsOdataOrderBy;
@@ -396,12 +399,17 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean useAnsiJoin() {
         return true;
     }
-    
+
     public boolean supportsArrayType() {
         return true;
     }
 
     protected String escapeString(String str, String quote) {
         return StringUtil.replaceAll(str, quote, quote + quote);
+    }
+
+    @Override
+    public boolean supportsGeographyType() {
+        return true;
     }
 }

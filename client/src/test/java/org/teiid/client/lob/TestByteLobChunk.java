@@ -31,15 +31,15 @@ public class TestByteLobChunk extends TestCase {
 
     public void testGetBytes() {
         String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
-        LobChunk chunk = new LobChunk(testString.getBytes(), false);        
+        LobChunk chunk = new LobChunk(testString.getBytes(), false);
         assertEquals(testString, new String(chunk.getBytes()));
         assertFalse(chunk.isLast());
     }
-    
+
     public void testSerialization() throws Exception {
-    	String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
-        LobChunk chunk = new LobChunk(testString.getBytes(), true);        
-        
+        String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
+        LobChunk chunk = new LobChunk(testString.getBytes(), true);
+
         LobChunk result = UnitTestUtil.helpSerialize(chunk);
         assertTrue(Arrays.equals(chunk.getBytes(), result.getBytes()));
         assertTrue(result.isLast());

@@ -41,7 +41,7 @@ public class SimpleDBUpdateVisitor extends HierarchyVisitor{
     public SimpleDBUpdateVisitor(Update update) {
         visitNode(update);
     }
-    
+
     public void checkExceptions() throws TranslatorException {
         if (!this.exceptions.isEmpty()) {
             throw this.exceptions.get(0);
@@ -53,7 +53,7 @@ public class SimpleDBUpdateVisitor extends HierarchyVisitor{
         if (obj.getParameterValues() != null) {
             this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24006, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24006)));
         }
-        
+
         this.table = obj.getTable().getMetadataObject();
         for(SetClause setClause : obj.getChanges()){
             visitNode(setClause);
@@ -78,13 +78,13 @@ public class SimpleDBUpdateVisitor extends HierarchyVisitor{
             try {
                 Array array  = (Array)obj.getValue();
                 String[] result = SimpleDBInsertVisitor.getValuesArray(array);
-                this.attributes.put(SimpleDBMetadataProcessor.getName(column), result);                
+                this.attributes.put(SimpleDBMetadataProcessor.getName(column), result);
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
-            }            
+            }
         }
         else {
-            this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001)));             
+            this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001)));
         }
     }
 
@@ -95,8 +95,8 @@ public class SimpleDBUpdateVisitor extends HierarchyVisitor{
     public Map<String, Object> getAttributes() {
         return attributes;
     }
-    
+
     public String getCriteria() {
         return this.criteria;
-    }    
+    }
 }

@@ -28,7 +28,7 @@ import org.teiid.vdb.runtime.VDBKey;
 
 @SuppressWarnings("nls")
 public class TestVDBRepository {
-    
+
     @Test public void testVDBRespositoryGetActive() throws Exception {
         VDBRepository repo = new VDBRepository();
         CompositeVDB mock1 = Mockito.mock(CompositeVDB.class);
@@ -45,10 +45,10 @@ public class TestVDBRepository {
         vdb2.setConnectionType(ConnectionType.NONE);
         Mockito.stub(mock2.getVDB()).toReturn(vdb2);
         repo.getVdbRepo().put(new VDBKey("name", 2), mock2);
-        
+
         VDBMetaData live = repo.getLiveVDB("name");
         assertEquals("2", live.getVersion());
-    } 
+    }
 
 
 }

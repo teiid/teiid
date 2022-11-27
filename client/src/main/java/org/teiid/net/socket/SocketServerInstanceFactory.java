@@ -23,8 +23,8 @@ import java.io.IOException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.HostInfo;
 
-public interface SocketServerInstanceFactory {
-	
-	SocketServerInstance getServerInstance(HostInfo info) throws CommunicationException, IOException;
-	
+public interface SocketServerInstanceFactory extends HostnameResolver {
+
+    SocketServerInstance getServerInstance(HostInfo info) throws CommunicationException, IOException;
+
 }

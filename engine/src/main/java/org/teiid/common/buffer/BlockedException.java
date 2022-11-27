@@ -27,13 +27,13 @@ import org.teiid.logging.MessageLevel;
 
 /**
  * This exception is thrown if the buffer manager blocks waiting on input during
- * processing.  This is an indication that more data will be available, but is 
+ * processing.  This is an indication that more data will be available, but is
  * not currently available.
  */
 public class BlockedException extends TeiidComponentException {
 
     public static final BlockedException INSTANCE = new BlockedException();
-    
+
     public static final BlockedException BLOCKED_ON_MEMORY_EXCEPTION = new BlockedException();
 
     /**
@@ -42,23 +42,23 @@ public class BlockedException extends TeiidComponentException {
     public BlockedException() {
         super();
     }
-    
+
     public static BlockedException block(Object... msg) {
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, msg); 
-    	}
-    	return INSTANCE;
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, msg);
+        }
+        return INSTANCE;
     }
 
-	public static BlockedException blockWithTrace(Object... msg) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-    		BlockedException be = new BlockedException();
-    		if (be.getStackTrace().length > 0) {
-    			be.setStackTrace(Arrays.copyOfRange(be.getStackTrace(), 1, Math.max(0, Math.min(8, be.getStackTrace().length))));
-    		}    		
-    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, be, msg); 
-    	}
-    	return INSTANCE;
-	}
-    
+    public static BlockedException blockWithTrace(Object... msg) {
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            BlockedException be = new BlockedException();
+            if (be.getStackTrace().length > 0) {
+                be.setStackTrace(Arrays.copyOfRange(be.getStackTrace(), 1, Math.max(0, Math.min(8, be.getStackTrace().length))));
+            }
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, be, msg);
+        }
+        return INSTANCE;
+    }
+
 }

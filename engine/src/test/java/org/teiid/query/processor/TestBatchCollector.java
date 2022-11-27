@@ -33,17 +33,17 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings("nls")
 public class TestBatchCollector {
 
-	@Test public void testCollect() throws Exception {
-		FakeRelationalNode sourceNode = new FakeRelationalNode(1, new List[] {
-				Arrays.asList(1),
-				Arrays.asList(1),
-				Arrays.asList(1)
-			}, 1);
-		sourceNode.setElements(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)));
-		BatchCollector bc = new BatchCollector(sourceNode, BufferManagerFactory.getStandaloneBufferManager(), new CommandContext(), false);
-		bc.collectTuples(true);
-		assertEquals(1, bc.getTupleBuffer().getManagedRowCount());
-		assertEquals(3, bc.collectTuples().getRowCount());
-	}
-	
+    @Test public void testCollect() throws Exception {
+        FakeRelationalNode sourceNode = new FakeRelationalNode(1, new List[] {
+                Arrays.asList(1),
+                Arrays.asList(1),
+                Arrays.asList(1)
+            }, 1);
+        sourceNode.setElements(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)));
+        BatchCollector bc = new BatchCollector(sourceNode, BufferManagerFactory.getStandaloneBufferManager(), new CommandContext(), false);
+        bc.collectTuples(true);
+        assertEquals(1, bc.getTupleBuffer().getManagedRowCount());
+        assertEquals(3, bc.collectTuples().getRowCount());
+    }
+
 }

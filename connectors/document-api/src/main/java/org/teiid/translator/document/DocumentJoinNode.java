@@ -22,7 +22,7 @@ class DocumentJoinNode extends DocumentNode {
              Document parentDocument) {
         List<Map<String, Object>> joinedRows = new ArrayList<Map<String,Object>>();
         List<? extends Document> rightDocuments = parentDocument
-                .getChildDocuments(this.right.getName());        
+                .getChildDocuments(this.right.getName());
         if (rightDocuments == null) {
             if (this.type.equals(JoinType.LEFT_OUTER_JOIN)) {
                 for (Map<String, Object> leftRow:leftRows) {
@@ -44,19 +44,19 @@ class DocumentJoinNode extends DocumentNode {
                     if (this.type.equals(JoinType.INNER_JOIN)) {
                         if (rightRow != null && !rightRow.isEmpty()) {
                             row.putAll(leftRow);
-                            row.putAll(rightRow);                    
+                            row.putAll(rightRow);
                         }
                     } else if (this.type.equals(JoinType.LEFT_OUTER_JOIN)) {
                         row.putAll(leftRow);
                         if (rightRow != null && !rightRow.isEmpty()) {
-                            row.putAll(rightRow);                
+                            row.putAll(rightRow);
                         }
                     }
                     joinedRows.add(row);
                 }
 
                 if (this.joinNode != null) {
-                    // do further joins, only span up to sibiling or child                
+                    // do further joins, only span up to sibiling or child
                     for (Document rightDocument : rightDocuments) {
                         joinedRows = this.joinNode.mergeTuples(joinedRows, rightDocument);
                     }
@@ -65,7 +65,7 @@ class DocumentJoinNode extends DocumentNode {
         }
         return joinedRows;
     }
-    
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.left);

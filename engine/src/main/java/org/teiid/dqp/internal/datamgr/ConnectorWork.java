@@ -30,21 +30,21 @@ import org.teiid.translator.TranslatorException;
  */
 public interface ConnectorWork {
 
-	void cancel(boolean abnormal);
+    void cancel(boolean abnormal);
 
-	AtomicResultsMessage more() throws TranslatorException, BlockedException;
+    AtomicResultsMessage more() throws TranslatorException, BlockedException;
 
-	void close();
+    void close();
 
-	void execute() throws TranslatorException, BlockedException;
-	
-	boolean isDataAvailable();
-	
-	CacheDirective getCacheDirective() throws TranslatorException;
+    void execute() throws TranslatorException, BlockedException;
 
-	boolean isForkable();
+    boolean isDataAvailable();
 
-	boolean isThreadBound();
+    CacheDirective getCacheDirective() throws TranslatorException;
 
-	AtomicRequestID getId();
+    boolean isForkable();
+
+    boolean isThreadBound();
+
+    AtomicRequestID getId();
 }

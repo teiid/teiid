@@ -27,26 +27,26 @@ import java.util.List;
  * Represents a set of indexed tuples.  The {@link #getBeginRow beginning row}
  * is the first row contained in this batch; if it equals "1" then it is the
  * first row of the tuple source, otherwise this is a batch of intermediate
- * tuples.  The {@link #getEndRow ending row} is the last row contained in 
- * this tuple batch; it is equal to the beginning row plus the 
+ * tuples.  The {@link #getEndRow ending row} is the last row contained in
+ * this tuple batch; it is equal to the beginning row plus the
  * {@link #getRowCount number of rows} contained in this batch, minus one.
  */
 public class TupleBatch {
-	
-	public static final byte NOT_TERMINATED = 0;
-	public static final byte TERMINATED = 1;
-	public static final byte ITERATION_TERMINATED = 2;
-	
-	private long rowOffset;    
+
+    public static final byte NOT_TERMINATED = 0;
+    public static final byte TERMINATED = 1;
+    public static final byte ITERATION_TERMINATED = 2;
+
+    private long rowOffset;
     protected List<List<?>> tuples;
-    
+
     // Optional state
     private byte terminationFlag = NOT_TERMINATED;
-    
+
     /** Required to honor Externalizable contract */
     public TupleBatch() {
     }
-    
+
     /**
      * Constructor
      * @param beginRow indicates the row of the tuple source which is the
@@ -79,16 +79,16 @@ public class TupleBatch {
     public long getBeginRow() {
         return rowOffset;
     }
-    
+
     /**
-     * Return number of the last row of the tuple source that is contained in 
+     * Return number of the last row of the tuple source that is contained in
      * this batch (one-based).
      * @return the last row contained in this tuple batch
      */
     public long getEndRow() {
         return rowOffset + tuples.size() - 1;
     }
-    
+
     /**
      * Return the number of rows contained in this tuple batch
      * @return the number of rows contained in this tuple batch
@@ -96,30 +96,30 @@ public class TupleBatch {
     public int getRowCount() {
         return tuples.size();
     }
-        
+
     /**
      * Return the tuple at the given index (one-based).
      * @return the tuple at the given index
      */
     public List<?> getTuple(long rowIndex) {
-    	long base = rowIndex - rowOffset;
-    	int intVal = (int)base;
-    	if (base != intVal) {
-    		throw new AssertionError("rowIndex overflow " + rowIndex); //$NON-NLS-1$
-    	}
+        long base = rowIndex - rowOffset;
+        int intVal = (int)base;
+        if (base != intVal) {
+            throw new AssertionError("rowIndex overflow " + rowIndex); //$NON-NLS-1$
+        }
         return tuples.get(intVal);
     }
-    
+
     public List<List<?>> getTuples() {
-		return tuples;
-	}
-    
+        return tuples;
+    }
+
     /**
-     * Get all tuples 
+     * Get all tuples
      * @return All tuples
      */
-    public List<?>[] getAllTuples() { 
-    	return tuples.toArray(new List[tuples.size()]);    
+    public List<?>[] getAllTuples() {
+        return tuples.toArray(new List[tuples.size()]);
     }
 
     /**
@@ -127,32 +127,31 @@ public class TupleBatch {
      * @return True if this batch is last
      */
     public boolean getTerminationFlag() {
-        return this.terminationFlag == TERMINATED;    
+        return this.terminationFlag == TERMINATED;
     }
-    
+
     /**
      * Set whether this batch is the last in a series of batches.
      * @param terminationFlag True if last
      */
     public void setTerminationFlag(boolean terminationFlag) {
-        this.terminationFlag = terminationFlag?TERMINATED:NOT_TERMINATED;    
+        this.terminationFlag = terminationFlag?TERMINATED:NOT_TERMINATED;
     }
-    
+
     public void setTermination(byte val) {
-    	this.terminationFlag = val;
+        this.terminationFlag = val;
     }
-    
+
     public byte getTermination() {
-    	return this.terminationFlag;
+        return this.terminationFlag;
     }
-    
+
     public boolean containsRow(long row) {
-    	return rowOffset <= row && getEndRow() >= row;
+        return rowOffset <= row && getEndRow() >= row;
     }
-    
+
     /**
      * Return a String describing this object
-     * @param String representation of this TupleBatch
      */
     public String toString() {
         StringBuffer s = new StringBuffer();
@@ -166,7 +165,7 @@ public class TupleBatch {
     }
 
     public void setRowOffset(long rowOffset) {
-		this.rowOffset = rowOffset;
-	}
+        this.rowOffset = rowOffset;
+    }
 }
 

@@ -33,64 +33,64 @@ public class TestXMLValue {
 
     @Test public void testXMLValue() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
-        SQLXMLImpl xml = new SQLXMLImpl(testString); 
-        
+        SQLXMLImpl xml = new SQLXMLImpl(testString);
+
         XMLType xv = new XMLType(xml);
         assertEquals(testString, xv.getString());
     }
 
-    
+
     @Test public void testXMLValuePersistence() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
-        SQLXMLImpl xml = new SQLXMLImpl(testString); 
-        
+        SQLXMLImpl xml = new SQLXMLImpl(testString);
+
         XMLType xv = new XMLType(xml);
         String key = xv.getReferenceStreamId();
-        
+
         // now force to serialize
         XMLType read = UnitTestUtil.helpSerialize(xv);
-                
+
         // make sure we have kept the reference stream id
         assertEquals(key, read.getReferenceStreamId());
-        
+
         // and lost the original object
         assertNull(read.getReference());
     }
-    
+
     @Test public void testReferencePersistence() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
-        SQLXMLImpl xml = new SQLXMLImpl(testString); 
-        
+        SQLXMLImpl xml = new SQLXMLImpl(testString);
+
         XMLType xv = new XMLType(xml);
         xv.setReferenceStreamId(null);
-        
+
         // now force to serialize
         XMLType read = UnitTestUtil.helpSerialize(xv);
-                
+
         assertEquals(testString, read.getString());
     }
-    
-    
+
+
     @Test public void testLength() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
-        SQLXMLImpl xml = new SQLXMLImpl(testString); 
-        
+        SQLXMLImpl xml = new SQLXMLImpl(testString);
+
         XMLType xv = new XMLType(xml);
         assertEquals(36, xv.length());
-        
+
         xml = new SQLXMLImpl(new InputStreamFactory() {
-        	@Override
-        	public InputStream getInputStream() throws IOException {
-        		return new ByteArrayInputStream("<bar/>".getBytes(Streamable.CHARSET));
-        	}
-        }); 
-        
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream("<bar/>".getBytes(Streamable.CHARSET));
+            }
+        });
+
         xv = new XMLType(xml);
         try {
-        	xv.length();        
-        	fail();
+            xv.length();
+            fail();
         } catch (SQLException e) {
-        	
+
         }
     }
 }

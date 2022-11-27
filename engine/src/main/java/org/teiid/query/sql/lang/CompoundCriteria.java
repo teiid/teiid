@@ -80,7 +80,7 @@ public class CompoundCriteria extends LogicalCriteria {
      * @see #set(int,Criteria,Criteria)
      */
     public CompoundCriteria( int operator, Criteria left, Criteria right ) {
-		this();
+        this();
         set(operator,left,right);
     }
 
@@ -94,7 +94,7 @@ public class CompoundCriteria extends LogicalCriteria {
      * @param criteria The list of {@link Criteria}
      */
     public CompoundCriteria( int operator, List criteria ) {
-		this();
+        this();
         set(operator,criteria);
     }
 
@@ -107,11 +107,11 @@ public class CompoundCriteria extends LogicalCriteria {
         return this.operator;
     }
 
-	/**
-	 * Return true if the specified operator is a valid operator
-	 * @param operator Operator to check
-	 * @return True if valid
-	 */
+    /**
+     * Return true if the specified operator is a valid operator
+     * @param operator Operator to check
+     * @return True if valid
+     */
     private boolean isValidOperator(int operator) {
         return (operator == OR || operator == AND);
     }
@@ -231,56 +231,56 @@ public class CompoundCriteria extends LogicalCriteria {
         visitor.visit(this);
     }
 
-	/**
-	 * Get hash code.  WARNING: The hash code is based on data in the criteria.
-	 * If data values are changed, the hash code will change - don't hash this
-	 * object and change values.
-	 */
-	public int hashCode() {
-		int hc = 0;
-		hc = HashCodeUtil.hashCode(hc, getOperator());
-		hc = HashCodeUtil.hashCode(hc, getCriteria());
-		return hc;
-	}
+    /**
+     * Get hash code.  WARNING: The hash code is based on data in the criteria.
+     * If data values are changed, the hash code will change - don't hash this
+     * object and change values.
+     */
+    public int hashCode() {
+        int hc = 0;
+        hc = HashCodeUtil.hashCode(hc, getOperator());
+        hc = HashCodeUtil.hashCode(hc, getCriteria());
+        return hc;
+    }
 
     /**
      * Override equals() method.
      */
     public boolean equals(Object obj) {
-		if(obj == this) {
-			return true;
-		}
+        if(obj == this) {
+            return true;
+        }
 
-		if(!(obj instanceof CompoundCriteria)) {
-			return false;
-		}
+        if(!(obj instanceof CompoundCriteria)) {
+            return false;
+        }
 
         CompoundCriteria cc = (CompoundCriteria)obj;
 
-		return 	cc.getOperator() == getOperator() &&
-				EquivalenceUtil.areEqual(cc.getCriteria(), getCriteria());
-	}
+        return     cc.getOperator() == getOperator() &&
+                EquivalenceUtil.areEqual(cc.getCriteria(), getCriteria());
+    }
 
-	/**
-	 * Deep clone.  It returns a new LogicalCriteria with a new list of clones
-	 * of the criteria objects.
-	 */
-	public Object clone() {
-		CompoundCriteria copy = new CompoundCriteria();
-		copy.setOperator(getOperator());
+    /**
+     * Deep clone.  It returns a new LogicalCriteria with a new list of clones
+     * of the criteria objects.
+     */
+    public Object clone() {
+        CompoundCriteria copy = new CompoundCriteria();
+        copy.setOperator(getOperator());
 
-		// Clone each sub-criteria
-		List crits = getCriteria();
-		for(int i=0; i<crits.size(); i++) {
-			Criteria crit = (Criteria) crits.get(i);
+        // Clone each sub-criteria
+        List crits = getCriteria();
+        for(int i=0; i<crits.size(); i++) {
+            Criteria crit = (Criteria) crits.get(i);
             if(crit == null) {
                 copy.addCriteria(null);
             } else {
                 copy.addCriteria( (Criteria) crit.clone() );
             }
-		}
+        }
 
-		return copy;
-	}
+        return copy;
+    }
 
 }  // END CLASS

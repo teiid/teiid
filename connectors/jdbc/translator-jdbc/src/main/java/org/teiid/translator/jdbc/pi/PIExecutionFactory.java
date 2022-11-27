@@ -54,12 +54,12 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 public class PIExecutionFactory extends JDBCExecutionFactory {
     public static String PI = "pi"; //$NON-NLS-1$
     protected ConvertModifier convert = new ConvertModifier();
-    
+
     public PIExecutionFactory() {
         setUseBindVariables(false);
         setSupportsFullOuterJoins(false);
     }
-    
+
     @Override
     public void start() throws TranslatorException {
         super.start();
@@ -77,11 +77,11 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("Variant", FunctionModifier.OBJECT); //$NON-NLS-1$
 
         convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("cast(format(",function.getParameters().get(0), ", 'hh:mm:ss.fff') as Time)"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(format(",function.getParameters().get(0), ", 'hh:mm:ss.fff') as Time)"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
         convert.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.FLOAT, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
@@ -94,16 +94,16 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
                 return Arrays.asList("cast(cast(",function.getParameters().get(0), " as int8) as double)"); //$NON-NLS-1$ //$NON-NLS-2$
             }
         });
-    	
+
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
         registerFunctionModifier(SourceSystemFunctions.MOD, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("cast(", function.getParameters().get(0), " as int64)", "%", //$NON-NLS-1$ //$NON-NLS-2$
-						"cast(",function.getParameters().get(1), " as int64)");
-			}
-		}); //$NON-NLS-1$
-        
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " as int64)", "%", //$NON-NLS-1$ //$NON-NLS-2$
+                        "cast(",function.getParameters().get(1), " as int64)");
+            }
+        }); //$NON-NLS-1$
+
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("DAY")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
             @Override
@@ -111,15 +111,15 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
                 if (function.getParameters().size() <= 2) {
                     return Arrays.asList("INSTR(",function.getParameters().get(1), ",", function.getParameters().get(0), ")");
                 }
-				return Arrays.asList("INSTR(", function.getParameters().get(1), ",", function.getParameters().get(0),
-						",", function.getParameters().get(2), ")");
+                return Arrays.asList("INSTR(", function.getParameters().get(1), ",", function.getParameters().get(0),
+                        ",", function.getParameters().get(2), ")");
             }
-        });        
+        });
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("SUBSTR")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("LEN")); //$NON-NLS-1$
-        
+
         addPushDownFunction(PI, "COSH", FLOAT, FLOAT); //$NON-NLS-1$
         addPushDownFunction(PI, "TANH", FLOAT, FLOAT); //$NON-NLS-1$
         addPushDownFunction(PI, "SINH", FLOAT, FLOAT); //$NON-NLS-1$
@@ -127,11 +127,11 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PI, "FORMAT", STRING, INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "ParentName", STRING, STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "List", STRING, STRING) //$NON-NLS-1$
-            .setVarArgs(true); 
+            .setVarArgs(true);
         addPushDownFunction(PI, "DIGCODE", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "DIGSTRING", STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "PE", STRING, OBJECT); //$NON-NLS-1$
-        
+
         addPushDownFunction(PI, "ParentName", STRING, STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "VarType", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMID", STRING, STRING); //$NON-NLS-1$
@@ -148,46 +148,46 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSelectWithoutFrom() {
         return true;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowLimit() {
         return true;
     }
-    
+
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsInsertWithQueryExpression() {
         return false;
-    }    
-    
+    }
+
     @Override
     public boolean supportsBatchedUpdates() {
         return false;
     }
-    
+
     @Override
     public boolean supportsBulkUpdate() {
         return false;
     }
-    
+
     @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
         return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean useSelectLimit() {
         return true;
-    }    
+    }
 
     @Override
     public List<String> getSupportedFunctions() {
@@ -202,7 +202,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
-        supportedFunctions.add(SourceSystemFunctions.COS);        
+        supportedFunctions.add(SourceSystemFunctions.COS);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.EXP);
@@ -232,42 +232,42 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.TAN);
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
-        supportedFunctions.add(SourceSystemFunctions.YEAR);        
+        supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
     }
-    
+
     @Override
     public String translateLiteralDate(Date dateValue) {
-    	return "'" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "'" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTime(Time timeValue) {
-    	return "'" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "'" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-    	return "'" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "'" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
         if (metadataFactory.getModelProperties().get("importer.ImportKeys") == null) {
             metadataFactory.getModelProperties().put("importer.ImportKeys", "false");
         }
-        super.getMetadata(metadataFactory, conn);       
-    }    
-    
+        super.getMetadata(metadataFactory, conn);
+    }
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
         return new PIMetadataProcessor();
     }
-    
+
     public boolean useAsInGroupAlias(){
         return true;
     }
-    
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
         if (obj instanceof DerivedColumn) {
@@ -285,64 +285,64 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         }
         return super.translate(obj, context);
     }
-    
+
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
         return new PISQLConversionVisitor(this);
-    } 
-    
+    }
+
     /**
-     * 
+     *
      * @return true if the source supports lateral join
      */
     public boolean supportsLateralJoin() {
         return true;
     }
-    
+
     /**
-     * 
+     *
      * @return true if the source supports lateral join conditions
      */
     public boolean supportsLateralJoinCondition() {
         return false;
     }
-    
+
     @Override
     public boolean supportsOnlyLateralJoinProcedure() {
         return true;
     }
-    
+
     /**
-     * 
+     *
      * @return
      */
     public boolean supportsProcedureTable() {
         return true;
     }
-    
+
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
-    	return results.getObject(columnIndex);
+        return results.getObject(columnIndex);
     }
 
     @Override
-	public Object retrieveValue(CallableStatement results, int parameterIndex, Class<?> expectedType)
-			throws SQLException {
-    	Object result = results.getObject(parameterIndex);
-    	if (result == null) {
-    		return null;
-    	}
-    	return super.retrieveValue(results, parameterIndex, expectedType);
+    public Object retrieveValue(CallableStatement results, int parameterIndex, Class<?> expectedType)
+            throws SQLException {
+        Object result = results.getObject(parameterIndex);
+        if (result == null) {
+            return null;
+        }
+        return super.retrieveValue(results, parameterIndex, expectedType);
     }
-    
+
     @Override
     public boolean supportsConvert(int fromType, int toType) {
-    	if (!super.supportsConvert(fromType, toType)) {
-    		return false;
-    	}
-    	if (convert.hasTypeMapping(toType)) {
-    		return true;
-    	}
-    	return false;
-    }    
+        if (fromType != TypeFacility.RUNTIME_CODES.OBJECT && !super.supportsConvert(fromType, toType)) {
+            return false;
+        }
+        if (convert.hasTypeMapping(toType)) {
+            return true;
+        }
+        return false;
+    }
 }

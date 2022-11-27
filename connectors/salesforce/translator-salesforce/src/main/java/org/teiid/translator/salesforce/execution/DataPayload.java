@@ -21,48 +21,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 
+ *
  * A bucket to pass data to the Salesforce connection.
  *
  */
 public class DataPayload {
 
-	public static class Field {
-		public String name;
-		public Object value;
-		
-		public Field(String name, Object value) {
-			this.name = name;
-			this.value = value;
-		}
-	}
-	
-	private String type;
-	private List<Field> messageElements = new ArrayList<DataPayload.Field>();
-	private String id;
-	
-	public void setType(String typeName) {
-		type = typeName;
-	}
+    public static class Field {
+        public String name;
+        public Object value;
 
-	public String getType() {
-		return type;
-	}
+        public Field(String name, Object value) {
+            this.name = name;
+            this.value = value;
+        }
+    }
 
-	public void setID(String id) {
-		this.id = id;
-	}
-	
-	public String getID() {
-		return id;
-	}
-	
-	public List<Field> getMessageElements() {
-		return messageElements;
-	}
-	
-	public void addField(String name, Object value) {
-		this.messageElements.add(new Field(name, value));
-	}
-	
+    private String type;
+    private List<Field> messageElements = new ArrayList<DataPayload.Field>();
+    private String id;
+
+    public void setType(String typeName) {
+        type = typeName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setID(String id) {
+        this.id = id;
+    }
+
+    public String getID() {
+        return id;
+    }
+
+    public List<Field> getMessageElements() {
+        return messageElements;
+    }
+
+    public void addField(String name, Object value) {
+        this.messageElements.add(new Field(name, value));
+    }
+
 }

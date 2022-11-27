@@ -39,112 +39,112 @@ import org.teiid.net.HostInfo;
 
 @SuppressWarnings("nls")
 public class TestSocketServerInstanceImpl {
-	
-	private static class FakeObjectChannel implements ObjectChannel, ObjectChannelFactory {
-		List<Object> msgs = new ArrayList<Object>();
-		List<? extends Object> readMsgs;
-		int readCount;
-		
-		public FakeObjectChannel(List<? extends Object> readMsgs) {
-			this.readMsgs = readMsgs;
-		}
 
-		@Override
-		public void close() {
-			
-		}
+    private static class FakeObjectChannel implements ObjectChannel, ObjectChannelFactory {
+        List<Object> msgs = new ArrayList<Object>();
+        List<? extends Object> readMsgs;
+        int readCount;
 
-		@Override
-		public boolean isOpen() {
-			return true;
-		}
+        public FakeObjectChannel(List<? extends Object> readMsgs) {
+            this.readMsgs = readMsgs;
+        }
 
-		@Override
-		public Future<?> write(Object msg) {
-			msgs.add(msg);
-			ResultsFuture<?> result = new ResultsFuture<Void>();
-			result.getResultsReceiver().receiveResults(null);
-			return result;
-		}
-		
-		@Override
-		public Object read() throws IOException,
-				ClassNotFoundException {
-		    if (readCount >= readMsgs.size()) {
-			return "";
-		    }
+        @Override
+        public void close() {
 
-			Object msg = readMsgs.get(readCount++);
-			if (msg instanceof IOException) {
-				if (msg instanceof SocketTimeoutException) {
-					try {
-						Thread.sleep(5);
-					} catch (InterruptedException e) {
-					}
-				}
-				throw (IOException)msg;
-			}
-			return msg;
-		}
-		
-		@Override
-		public SocketAddress getRemoteAddress() {
-			return null;
-		}
-		
-		@Override
-		public ObjectChannel createObjectChannel(HostInfo info)
-				throws CommunicationException, IOException {
-			return this;
-		}
-		
-		@Override
-		public int getSoTimeout() {
-			return 1;
-		}
+        }
 
-		@Override
-		public InetAddress getLocalAddress() {
-			return null;
-		}
-		
-	}
+        @Override
+        public boolean isOpen() {
+            return true;
+        }
 
-	@Test public void testHandshakeTimeout() throws Exception {
-		SocketTimeoutException[] exs = new SocketTimeoutException[1];
-		Arrays.fill(exs, new SocketTimeoutException());
-		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(exs));
-		
-		try {
-			createInstance(channel);
-			fail("Exception expected"); //$NON-NLS-1$
-		} catch (IOException e) {
-			
-		}
-	}
+        @Override
+        public Future<?> write(Object msg) {
+            msgs.add(msg);
+            ResultsFuture<?> result = new ResultsFuture<Void>();
+            result.getResultsReceiver().receiveResults(null);
+            return result;
+        }
 
-	private SocketServerInstanceImpl createInstance(ObjectChannelFactory channelFactory)
-			throws CommunicationException, IOException {
-		HostInfo info = new HostInfo("0.0.0.0", 1);
-		info.getInetAddress();
-		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, 1, 1);
-		ssii.connect(channelFactory);
-		return ssii;
-	}
-	
-	@Test public void testSuccessfulHandshake() throws Exception {
-		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(new Handshake(), new SocketTimeoutException()));
-		
-		SocketServerInstanceImpl instance = createInstance(channel);
-		
-		//no remote server is hooked up, so this will timeout
-		ILogon logon = instance.getService(ILogon.class);
-		try {
-			logon.logon(new Properties());
-			fail("Exception expected"); //$NON-NLS-1$
-		} catch (SingleInstanceCommunicationException e) {
-			assertTrue(e.getCause() instanceof TimeoutException);
-		}
-	}
-	
+        @Override
+        public Object read() throws IOException,
+                ClassNotFoundException {
+            if (readCount >= readMsgs.size()) {
+            return "";
+            }
+
+            Object msg = readMsgs.get(readCount++);
+            if (msg instanceof IOException) {
+                if (msg instanceof SocketTimeoutException) {
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                    }
+                }
+                throw (IOException)msg;
+            }
+            return msg;
+        }
+
+        @Override
+        public SocketAddress getRemoteAddress() {
+            return null;
+        }
+
+        @Override
+        public ObjectChannel createObjectChannel(HostInfo info)
+                throws CommunicationException, IOException {
+            return this;
+        }
+
+        @Override
+        public int getSoTimeout() {
+            return 1;
+        }
+
+        @Override
+        public InetAddress getLocalAddress() {
+            return null;
+        }
+
+    }
+
+    @Test public void testHandshakeTimeout() throws Exception {
+        SocketTimeoutException[] exs = new SocketTimeoutException[1];
+        Arrays.fill(exs, new SocketTimeoutException());
+        final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(exs));
+
+        try {
+            createInstance(channel);
+            fail("Exception expected"); //$NON-NLS-1$
+        } catch (IOException e) {
+
+        }
+    }
+
+    private SocketServerInstanceImpl createInstance(ObjectChannelFactory channelFactory)
+            throws CommunicationException, IOException {
+        HostInfo info = new HostInfo("0.0.0.0", 1);
+        info.getInetAddress();
+        SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, 1, 1);
+        ssii.connect(channelFactory);
+        return ssii;
+    }
+
+    @Test public void testSuccessfulHandshake() throws Exception {
+        final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(new Handshake(), new SocketTimeoutException()));
+
+        SocketServerInstanceImpl instance = createInstance(channel);
+
+        //no remote server is hooked up, so this will timeout
+        ILogon logon = instance.getService(ILogon.class);
+        try {
+            logon.logon(new Properties());
+            fail("Exception expected"); //$NON-NLS-1$
+        } catch (SingleInstanceCommunicationException e) {
+            assertTrue(e.getCause() instanceof TimeoutException);
+        }
+    }
+
 }

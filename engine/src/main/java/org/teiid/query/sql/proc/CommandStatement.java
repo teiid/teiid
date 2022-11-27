@@ -27,68 +27,68 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 /**
  * <p> This class represents a variable assignment statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
- * a command that should be executed as part of the procedure.</p>
+ * a command that should be executed as part of the procedure.
  */
 public class CommandStatement extends Statement implements SubqueryContainer {
 
-	// the command this statement represents
-	Command command;
-	private boolean returnable = true;
+    // the command this statement represents
+    Command command;
+    private boolean returnable = true;
 
-	/**
-	 * Constructor for CommandStatement.
-	 */
-	public CommandStatement() {
-		super();
-	}
+    /**
+     * Constructor for CommandStatement.
+     */
+    public CommandStatement() {
+        super();
+    }
 
-	/**
-	 * Constructor for CommandStatement.
-	 * @param value The <code>Command</code> on this statement
-	 */
-	public CommandStatement(Command value) {
-		this.command = value;
-	}
+    /**
+     * Constructor for CommandStatement.
+     * @param value The <code>Command</code> on this statement
+     */
+    public CommandStatement(Command value) {
+        this.command = value;
+    }
 
-	/**
-	 * Get the command on this statement.
-	 * @return The <code>Command</code> on this statement
-	 */
-	public Command getCommand() {
-		return command;	
-	}
+    /**
+     * Get the command on this statement.
+     * @return The <code>Command</code> on this statement
+     */
+    public Command getCommand() {
+        return command;
+    }
 
     public void setCommand(Command command){
         this.command = command;
     }
-	
-	/**
-	 * Return the type for this statement, this is one of the types
-	 * defined on the statement object.
-	 * @return The type of this statement
-	 */
-	public int getType() {
-		return Statement.TYPE_COMMAND;
-	}	
+
+    /**
+     * Return the type for this statement, this is one of the types
+     * defined on the statement object.
+     * @return The type of this statement
+     */
+    public int getType() {
+        return Statement.TYPE_COMMAND;
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
-	 */
-	public Object clone() {		
-		CommandStatement cs = new CommandStatement((Command)this.command.clone());
-		cs.returnable = this.returnable;
-		return cs;
-	}
-	
+
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public Object clone() {
+        CommandStatement cs = new CommandStatement((Command)this.command.clone());
+        cs.returnable = this.returnable;
+        return cs;
+    }
+
     /**
      * Compare two CommandStatements for equality.  They will only evaluate to equal if
      * they are IDENTICAL: the command objects are equal.
@@ -96,18 +96,18 @@ public class CommandStatement extends Statement implements SubqueryContainer {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests		
-    	if(!(obj instanceof CommandStatement)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof CommandStatement)) {
+            return false;
+        }
 
         return EquivalenceUtil.areEqual(getCommand(), ((CommandStatement)obj).getCommand());
-    } 
+    }
 
     /**
      * Get hashcode for CommandStatement.  WARNING: This hash code relies on the
@@ -115,16 +115,16 @@ public class CommandStatement extends Statement implements SubqueryContainer {
      * @return Hash code
      */
     public int hashCode() {
-    	// This hash code relies on the commands hash code
-    	return this.getCommand().hashCode();
-	}
-    
+        // This hash code relies on the commands hash code
+        return this.getCommand().hashCode();
+    }
+
     public boolean isReturnable() {
-		return returnable;
-	}
-    
+        return returnable;
+    }
+
     public void setReturnable(boolean returnable) {
-		this.returnable = returnable;
-	}
-      
+        this.returnable = returnable;
+    }
+
 } // END CLASS

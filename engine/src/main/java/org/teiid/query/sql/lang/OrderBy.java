@@ -39,14 +39,17 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class OrderBy implements LanguageObject {
 
-	/** Constant for the ascending value */
+    /** Constant for the ascending value */
     public static final boolean ASC = true;
 
-	/** Constant for the descending value */
+    /** Constant for the descending value */
     public static final boolean DESC = false;
 
     private List<OrderByItem> orderByItems = new ArrayList<OrderByItem>();
-    
+
+    /** if the ordering can affect user results */
+    private boolean userOrdering = true;
+
     /**
      * Constructs a default instance of this class.
      */
@@ -58,21 +61,21 @@ public class OrderBy implements LanguageObject {
      * @param parameters The ordered list of SingleElementSymbol
      */
     public OrderBy( List<? extends Expression> parameters ) {
-    	for (Expression singleElementSymbol : parameters) {
-			orderByItems.add(new OrderByItem(singleElementSymbol, ASC));
-		}
+        for (Expression singleElementSymbol : parameters) {
+            orderByItems.add(new OrderByItem(singleElementSymbol, ASC));
+        }
     }
-    
+
     /**
      * Constructs an instance of this class from an ordered set of elements.
      * @param parameters The ordered list of SingleElementSymbol
      * @param types The list of directions by which the results are ordered (Boolean, true=ascending)
      */
     public OrderBy( List<? extends Expression> parameters, List<Boolean> types ) {
-    	Iterator<Boolean> typeIter = types.iterator();
-    	for (Expression singleElementSymbol : parameters) {
-			orderByItems.add(new OrderByItem(singleElementSymbol, typeIter.next()));
-		}
+        Iterator<Boolean> typeIter = types.iterator();
+        for (Expression singleElementSymbol : parameters) {
+            orderByItems.add(new OrderByItem(singleElementSymbol, typeIter.next()));
+        }
     }
 
     // =========================================================================
@@ -85,9 +88,9 @@ public class OrderBy implements LanguageObject {
     public int getVariableCount() {
         return orderByItems.size();
     }
-    
+
     public List<OrderByItem> getOrderByItems() {
-    	return this.orderByItems;
+        return this.orderByItems;
     }
 
     /**
@@ -112,8 +115,8 @@ public class OrderBy implements LanguageObject {
      * Adds a new variable to the list of order by elements.
      * @param element Element to add
      */
-    public void addVariable( Expression element ) {
-    	addVariable(element, ASC);
+    public OrderByItem addVariable( Expression element ) {
+        return addVariable(element, ASC);
     }
 
     /**
@@ -122,12 +125,15 @@ public class OrderBy implements LanguageObject {
      * @param element Element to add
      * @param type True for ascending, false for descending
      */
-    public void addVariable( Expression element, boolean type ) {
-    	if(element != null) {
-            orderByItems.add(new OrderByItem(element, type));
+    public OrderByItem addVariable( Expression element, boolean type ) {
+        if(element != null) {
+            OrderByItem result = new OrderByItem(element, type);
+            orderByItems.add(result);
+            return result;
         }
+        return null;
     }
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -136,88 +142,97 @@ public class OrderBy implements LanguageObject {
      * Return deep copy of this ORDER BY clause.
      */
     public OrderBy clone() {
-    	OrderBy clone = new OrderBy();
-    	clone.orderByItems = LanguageObject.Util.deepClone(this.orderByItems, OrderByItem.class);
+        OrderBy clone = new OrderBy();
+        clone.orderByItems = LanguageObject.Util.deepClone(this.orderByItems, OrderByItem.class);
+        clone.userOrdering = userOrdering;
         return clone;
-	}
+    }
 
-	/**
-	 * Compare two OrderBys for equality.  Order is important in the order by, so
-	 * that is considered in the comparison.  Also, the sort orders are considered.
-	 * @param obj Other object
-	 * @return True if equal
-	 */
-	public boolean equals(Object obj) {
-		if(obj == this) {
-			return true;
-		}
+    /**
+     * Compare two OrderBys for equality.  Order is important in the order by, so
+     * that is considered in the comparison.  Also, the sort orders are considered.
+     * @param obj Other object
+     * @return True if equal
+     */
+    public boolean equals(Object obj) {
+        if(obj == this) {
+            return true;
+        }
 
-		if(!(obj instanceof OrderBy)) {
-			return false;
-		}
+        if(!(obj instanceof OrderBy)) {
+            return false;
+        }
 
-		OrderBy other = (OrderBy) obj;
+        OrderBy other = (OrderBy) obj;
         return EquivalenceUtil.areEqual(orderByItems, other.orderByItems);
-	}
+    }
 
-	/**
-	 * Get hashcode for OrderBy.  WARNING: The hash code relies on the variables
-	 * in the select, so changing the variables will change the hash code, causing
-	 * a select to be lost in a hash structure.  Do not hash a OrderBy if you plan
-	 * to change it.
-	 * @return Hash code
-	 */
-	public int hashCode() {
+    /**
+     * Get hashcode for OrderBy.  WARNING: The hash code relies on the variables
+     * in the select, so changing the variables will change the hash code, causing
+     * a select to be lost in a hash structure.  Do not hash a OrderBy if you plan
+     * to change it.
+     * @return Hash code
+     */
+    public int hashCode() {
         return HashCodeUtil.hashCode(0, orderByItems);
-	}
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 
     public void setExpressionPosition(int orderIndex, int selectIndex) {
-    	this.orderByItems.get(orderIndex).setExpressionPosition(selectIndex);
+        this.orderByItems.get(orderIndex).setExpressionPosition(selectIndex);
     }
-    
+
     public int getExpressionPosition(int orderIndex) {
-    	return this.orderByItems.get(orderIndex).getExpressionPosition();
-	}
-    
+        return this.orderByItems.get(orderIndex).getExpressionPosition();
+    }
+
     public void removeOrderByItem(int index) {
         this.orderByItems.remove(index);
     }
-    
+
     public boolean hasUnrelated() {
-    	for (OrderByItem item : orderByItems) {
-			if (item.isUnrelated()) {
-				return true;
-			}
-		}
-    	return false;
+        for (OrderByItem item : orderByItems) {
+            if (item.isUnrelated()) {
+                return true;
+            }
+        }
+        return false;
     }
-    
+
     /**
      * Get the list or sort key symbols.  Modifications to this list will not add or remove {@link OrderByItem}s.
      * @return
      */
     public List<Expression> getSortKeys() {
-    	ArrayList<Expression> result = new ArrayList<Expression>(orderByItems.size());
-    	for (OrderByItem item : orderByItems) {
-			result.add(item.getSymbol());
-		}
-    	return result;
+        ArrayList<Expression> result = new ArrayList<Expression>(orderByItems.size());
+        for (OrderByItem item : orderByItems) {
+            result.add(item.getSymbol());
+        }
+        return result;
     }
-    
+
     public List<Boolean> getTypes() {
-    	ArrayList<Boolean> result = new ArrayList<Boolean>(orderByItems.size());
-    	for (OrderByItem item : orderByItems) {
-			result.add(item.isAscending());
-		}
-    	return result;
+        ArrayList<Boolean> result = new ArrayList<Boolean>(orderByItems.size());
+        for (OrderByItem item : orderByItems) {
+            result.add(item.isAscending());
+        }
+        return result;
     }
-    
+
+    public void setUserOrdering(boolean userOrdering) {
+        this.userOrdering = userOrdering;;
+    }
+
+    public boolean isUserOrdering() {
+        return userOrdering;
+    }
+
 }

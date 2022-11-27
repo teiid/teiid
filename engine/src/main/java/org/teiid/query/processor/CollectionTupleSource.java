@@ -29,53 +29,53 @@ import org.teiid.core.TeiidProcessingException;
 
 
 public class CollectionTupleSource implements TupleSource {
-	
-	public static final List<Integer> UPDATE_ROW = Arrays.asList(1);
-	private Iterator<? extends List<?>> tuples;
 
-	public static CollectionTupleSource createUpdateCountTupleSource(int count) {
-		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator());
-	}
-	
-	public static TupleSource createUpdateCountArrayTupleSource(final long count) {
-		return new TupleSource() {
-			long index = 0;
-			
-			@Override
-			public List<?> nextTuple() throws TeiidComponentException,
-					TeiidProcessingException {
-				if (index++ < count) {
-					return UPDATE_ROW;
-				}
-				return null;
-			}
-			
-			@Override
-			public void closeSource() {
-				
-			}
-		};
-	}
-	
-	public static CollectionTupleSource createNullTupleSource() {
-		return new CollectionTupleSource(new ArrayList<List<Object>>(0).iterator());
-	}
-	
-	public CollectionTupleSource(Iterator<? extends List<?>> tuples) {
-		this.tuples = tuples;
-	}
+    public static final List<Integer> UPDATE_ROW = Arrays.asList(1);
+    private Iterator<? extends List<?>> tuples;
 
-	@Override
-	public List<?> nextTuple() {
-		if (tuples.hasNext()) {
-			return tuples.next();
-		}
-		return null;
-	}
-	
-	@Override
-	public void closeSource() {
-		
-	}
-	
+    public static CollectionTupleSource createUpdateCountTupleSource(int count) {
+        return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator());
+    }
+
+    public static TupleSource createUpdateCountArrayTupleSource(final long count) {
+        return new TupleSource() {
+            long index = 0;
+
+            @Override
+            public List<?> nextTuple() throws TeiidComponentException,
+                    TeiidProcessingException {
+                if (index++ < count) {
+                    return UPDATE_ROW;
+                }
+                return null;
+            }
+
+            @Override
+            public void closeSource() {
+
+            }
+        };
+    }
+
+    public static CollectionTupleSource createNullTupleSource() {
+        return new CollectionTupleSource(new ArrayList<List<Object>>(0).iterator());
+    }
+
+    public CollectionTupleSource(Iterator<? extends List<?>> tuples) {
+        this.tuples = tuples;
+    }
+
+    @Override
+    public List<?> nextTuple() {
+        if (tuples.hasNext()) {
+            return tuples.next();
+        }
+        return null;
+    }
+
+    @Override
+    public void closeSource() {
+
+    }
+
 }

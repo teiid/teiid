@@ -25,22 +25,22 @@ package org.teiid.translator.google.api;
  */
 public class SpreadsheetAuthException extends RuntimeException {
 
-	private static final long serialVersionUID = 5098286312672469818L;
+    private static final long serialVersionUID = 5098286312672469818L;
 
-	public SpreadsheetAuthException() {
-		super();
-	}
+    public SpreadsheetAuthException() {
+        super();
+    }
 
-	public SpreadsheetAuthException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public SpreadsheetAuthException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public SpreadsheetAuthException(String message) {
-		super(message);
-	}
+    public SpreadsheetAuthException(String message) {
+        super(message);
+    }
 
-	public SpreadsheetAuthException(Throwable cause) {
-		super(cause);
-	}
-	
+    public SpreadsheetAuthException(Throwable cause) {
+        super(cause);
+    }
+
 }

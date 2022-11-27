@@ -23,36 +23,36 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
 public class NumberToBooleanTransform extends Transform {
-	
-	private Comparable falseVal;
-	private Class<?> sourceType;
-	
-	public NumberToBooleanTransform(Comparable falseVal) {
-		this.falseVal = falseVal;
-		this.sourceType = falseVal.getClass();
-	}
 
-	@Override
-	public Class<?> getSourceType() {
-		return sourceType;
-	}
-	
-	@Override
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.BOOLEAN;
-	}
-	
-	@Override
-	public Object transformDirect(Object value) throws TransformationException {
-		if (falseVal.compareTo(value) == 0) {
-			return Boolean.FALSE;
-		}
-		return Boolean.TRUE;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
+    private Comparable falseVal;
+    private Class<?> sourceType;
+
+    public NumberToBooleanTransform(Comparable falseVal) {
+        this.falseVal = falseVal;
+        this.sourceType = falseVal.getClass();
+    }
+
+    @Override
+    public Class<?> getSourceType() {
+        return sourceType;
+    }
+
+    @Override
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.BOOLEAN;
+    }
+
+    @Override
+    public Object transformDirect(Object value) throws TransformationException {
+        if (falseVal.compareTo(value) == 0) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
 
 }

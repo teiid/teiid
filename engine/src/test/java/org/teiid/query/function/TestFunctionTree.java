@@ -42,160 +42,160 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class TestFunctionTree {
 
-    /** 
-     * Walk through all functions by metadata and verify that we can look 
+    /**
+     * Walk through all functions by metadata and verify that we can look
      * each one up by signature
      */
     @Test public void testWalkTree() {
         SystemSource source = new SystemSource();
         FunctionTree ft = new FunctionTree("foo", source);
-        
+
         Collection<String> categories = ft.getCategories();
         for (String category : categories) {
             assertTrue(ft.getFunctionsInCategory(category).size() > 0);
-        }        
+        }
     }
-    
-    public String z() {
-    	return null;
-    }
-    
-    protected static String x() {
-    	return null;
-    }
-    
-    public static String y() {
-    	return null;
-    }
-    
-    public static String toString(byte[] bytes) {
-    	return new String(bytes);
-    }
-    
-    @Test public void testLoadErrors() {
-    	FunctionMethod method = new FunctionMethod(
-    			"dummy", null, null, PushDown.CAN_PUSHDOWN, null, "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-	 	    	new ArrayList<FunctionParameter>(0), 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
-    	
-    	//allowed, since we're not validating the class
-    	new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method))));
-    	
-    	//should fail, no class
-    	try {
-    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    		fail();
-    	} catch (TeiidRuntimeException e) {
-    		assertEquals("TEIID31123 Could not load non-FOREIGN UDF \"dummy\", since both invocation class and invocation method are required.", e.getMessage());
-    	}
-    	
-    	method.setInvocationClass("nonexistantClass");
-    	
-    	//should fail, no class
-    	try {
-    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    		fail();
-    	} catch (TeiidRuntimeException e) {
-    		
-    	}
-    	
-    	method.setInvocationClass(TestFunctionTree.class.getName());
-    	
-    	//should fail, no method
-    	try {
-    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    		fail();
-    	} catch (TeiidRuntimeException e) {
-    		
-    	}
-    	
-    	method.setInvocationMethod("testLoadErrors");
-    	
-    	//should fail, not void
-    	try {
-    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    		fail();
-    	} catch (TeiidRuntimeException e) {
-    		
-    	}    	
-    	
-    	method.setInvocationMethod("x");
-    	
-    	//should fail, not public
-    	try {
-    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    		fail();
-    	} catch (TeiidRuntimeException e) {
-    		
-    	}    
-    	
-    	method.setInvocationMethod("z");
-    	
-    	//should fail, not static
-    	try {
-    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    		fail();
-    	} catch (TeiidRuntimeException e) {
-    		
-    	} 
 
-    	method.setInvocationMethod("y");
-    	
-    	//valid!
-    	new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    public String z() {
+        return null;
     }
-    
+
+    protected static String x() {
+        return null;
+    }
+
+    public static String y() {
+        return null;
+    }
+
+    public static String toString(byte[] bytes) {
+        return new String(bytes);
+    }
+
+    @Test public void testLoadErrors() {
+        FunctionMethod method = new FunctionMethod(
+                "dummy", null, null, PushDown.CAN_PUSHDOWN, null, "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                 new ArrayList<FunctionParameter>(0),
+                 new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
+
+        //allowed, since we're not validating the class
+        new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method))));
+
+        //should fail, no class
+        try {
+            new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+            fail();
+        } catch (TeiidRuntimeException e) {
+            assertEquals("TEIID31123 Could not load non-FOREIGN UDF \"dummy\", since both invocation class and invocation method are required.", e.getMessage());
+        }
+
+        method.setInvocationClass("nonexistantClass");
+
+        //should fail, no class
+        try {
+            new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+            fail();
+        } catch (TeiidRuntimeException e) {
+
+        }
+
+        method.setInvocationClass(TestFunctionTree.class.getName());
+
+        //should fail, no method
+        try {
+            new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+            fail();
+        } catch (TeiidRuntimeException e) {
+
+        }
+
+        method.setInvocationMethod("testLoadErrors");
+
+        //should fail, not void
+        try {
+            new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+            fail();
+        } catch (TeiidRuntimeException e) {
+
+        }
+
+        method.setInvocationMethod("x");
+
+        //should fail, not public
+        try {
+            new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+            fail();
+        } catch (TeiidRuntimeException e) {
+
+        }
+
+        method.setInvocationMethod("z");
+
+        //should fail, not static
+        try {
+            new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+            fail();
+        } catch (TeiidRuntimeException e) {
+
+        }
+
+        method.setInvocationMethod("y");
+
+        //valid!
+        new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    }
+
     @Test public void testNullCategory() {
-    	FunctionMethod method = new FunctionMethod(
-    			"dummy", null, null, PushDown.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-    			new ArrayList<FunctionParameter>(0), 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
-	 	    	false, Determinism.DETERMINISTIC);
-    	
-    	Collection<org.teiid.metadata.FunctionMethod> list = Arrays.asList(method);
-    	FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
-    	Mockito.stub(fms.getFunctionMethods()).toReturn(list);
-    	FunctionTree ft = new FunctionTree("foo", fms);
-    	assertEquals(1, ft.getFunctionsInCategory(FunctionCategoryConstants.MISCELLANEOUS).size());
+        FunctionMethod method = new FunctionMethod(
+                "dummy", null, null, PushDown.MUST_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                new ArrayList<FunctionParameter>(0),
+                 new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+                 false, Determinism.DETERMINISTIC);
+
+        Collection<org.teiid.metadata.FunctionMethod> list = Arrays.asList(method);
+        FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
+        Mockito.stub(fms.getFunctionMethods()).toReturn(list);
+        FunctionTree ft = new FunctionTree("foo", fms);
+        assertEquals(1, ft.getFunctionsInCategory(FunctionCategoryConstants.MISCELLANEOUS).size());
     }
-    
+
     @Test public void testVarbinary() throws Exception {
-    	FunctionMethod method = new FunctionMethod(
-    			"dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$ 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
-	 	    	true, Determinism.DETERMINISTIC);
-    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
-    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    	FunctionDescriptor fd = fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY});
-    	String hello = "hello";
-    	assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}, null, null));
+        FunctionMethod method = new FunctionMethod(
+                "dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                 Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$
+                 new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+                 true, Determinism.DETERMINISTIC);
+        FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+        FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+        FunctionDescriptor fd = fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY});
+        String hello = "hello";
+        assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}, null, null));
     }
-    
+
     @Test public void testMultiPartName() throws Exception {
-    	FunctionMethod method = new FunctionMethod(
-    			"x.y.dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$ 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
-	 	    	true, Determinism.DETERMINISTIC);
-    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
-    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    	assertNotNull(fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
-    	assertNotNull(fl.findFunction("y.dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
+        FunctionMethod method = new FunctionMethod(
+                "x.y.dummy", null, null, PushDown.CANNOT_PUSHDOWN, TestFunctionTree.class.getName(), "toString",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                 Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.VARBINARY)), //$NON-NLS-1$
+                 new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+                 true, Determinism.DETERMINISTIC);
+        FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+        FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+        assertNotNull(fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
+        assertNotNull(fl.findFunction("y.dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY}));
     }
-    
+
     @Test public void testMultiPartNameSystemConflict() throws Exception {
-    	FunctionMethod method = new FunctionMethod(
-    			"x.concat", null, null, PushDown.MUST_PUSHDOWN, null, null, 
-	 	    	Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.STRING), new FunctionParameter("in", DataTypeManager.DefaultDataTypes.STRING)), //$NON-NLS-1$ 
-	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
-	 	    	true, Determinism.DETERMINISTIC);
-    	FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
-    	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
-    	fl.determineNecessaryConversions("concat", DataTypeManager.DefaultDataClasses.STRING, 
-    			new Expression[] {new Constant(1),  new Constant(2)}, new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER},false);
+        FunctionMethod method = new FunctionMethod(
+                "x.concat", null, null, PushDown.MUST_PUSHDOWN, null, null,
+                 Arrays.asList(new FunctionParameter("in", DataTypeManager.DefaultDataTypes.STRING), new FunctionParameter("in", DataTypeManager.DefaultDataTypes.STRING)), //$NON-NLS-1$
+                 new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), //$NON-NLS-1$
+                 true, Determinism.DETERMINISTIC);
+        FunctionTree sys = RealMetadataFactory.SFM.getSystemFunctions();
+        FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+        fl.determineNecessaryConversions("concat", DataTypeManager.DefaultDataClasses.STRING,
+                new Expression[] {new Constant(1),  new Constant(2)}, new Class[] {DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER},false);
     }
-	
+
 /*
 
 //DEBUGGING CODE - this will print out the tree root in readable form

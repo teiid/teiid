@@ -24,45 +24,45 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 
-/** 
- * A Lob Chunk object which carries information packets in byte streams. This 
+/**
+ * A Lob Chunk object which carries information packets in byte streams. This
  * class used as value object to transfer blob object's data chunk back and forth
- * between the client and server. 
+ * between the client and server.
  */
 public class LobChunk implements Externalizable {
     static final long serialVersionUID = -5634014429424520672L;
-    
+
     private byte[] data;
     private boolean last = false;
-    
+
     public LobChunk() {
-    	
+
     }
-    
+
     public LobChunk(byte[] data, boolean last){
         this.last = last;
         this.data = data;
     }
-           
+
     public byte[] getBytes() {
         return this.data;
-    } 
-    
+    }
+
     public boolean isLast() {
         return this.last;
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException,
-    		ClassNotFoundException {
-    	data = (byte[])in.readObject();
-    	last = in.readBoolean();
+            ClassNotFoundException {
+        data = (byte[])in.readObject();
+        last = in.readBoolean();
     }
-    
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-    	out.writeObject(data);
-    	out.writeBoolean(last);
+        out.writeObject(data);
+        out.writeBoolean(last);
     }
 
 }

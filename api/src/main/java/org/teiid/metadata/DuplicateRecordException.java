@@ -22,10 +22,10 @@ import org.teiid.core.BundleUtil.Event;
 
 public class DuplicateRecordException extends MetadataException {
 
-	private static final long serialVersionUID = -1319489333975416115L;
+    private static final long serialVersionUID = -1319489333975416115L;
 
-	public DuplicateRecordException(Event e, String msg) {
-		super(e, msg);
-	}
-	
+    public DuplicateRecordException(Event e, String msg) {
+        super(e, msg);
+    }
+
 }

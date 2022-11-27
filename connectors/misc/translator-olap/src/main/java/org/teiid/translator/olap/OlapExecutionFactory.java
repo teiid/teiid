@@ -40,59 +40,59 @@ import org.teiid.translator.TranslatorException;
 
 @Translator(name="olap", description="A translator for OLAP Cubes")
 public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connection> {
-	private static final String INVOKE_MDX = "invokeMdx"; //$NON-NLS-1$
-	
-	public OlapExecutionFactory() {
-		setSourceRequiredForMetadata(false);
-		setSupportsDirectQueryProcedure(true);
-		setDirectQueryProcedureName(INVOKE_MDX);
-	}
-	
-    @Override
-   	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
-    	return new OlapQueryExecution(arguments.subList(1, arguments.size()), command, unwrap(connection), executionContext, this, (String) arguments.get(0).getArgumentValue().getValue(), true);
-	}    
-    
-    @Override
-    public ProcedureExecution createProcedureExecution(Call command,
-    		ExecutionContext executionContext, RuntimeMetadata metadata,
-    		Connection connection) throws TranslatorException {
-    	String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
-    	if (nativeQuery != null) {
-    		return new OlapQueryExecution(command.getArguments(), command, unwrap(connection), executionContext, this, nativeQuery, false);
-    	}
-    	throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
+    private static final String INVOKE_MDX = "invokeMdx"; //$NON-NLS-1$
+
+    public OlapExecutionFactory() {
+        setSourceRequiredForMetadata(false);
+        setSupportsDirectQueryProcedure(true);
+        setDirectQueryProcedureName(INVOKE_MDX);
     }
 
-	private OlapConnection unwrap(Connection conn) throws TranslatorException {
-    	try {
-    		OlapWrapper wrapper = conn.unwrap(OlapWrapper.class);
-    		OlapConnection olapConn = wrapper.unwrap(OlapConnection.class);
-    		return olapConn;
-    	} catch(SQLException e) {
-    		throw new TranslatorException(e);
-    	}		
-	}
-	
+    @Override
+       public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
+        return new OlapQueryExecution(arguments.subList(1, arguments.size()), command, unwrap(connection), executionContext, this, (String) arguments.get(0).getArgumentValue().getValue(), true);
+    }
+
+    @Override
+    public ProcedureExecution createProcedureExecution(Call command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            Connection connection) throws TranslatorException {
+        String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+        if (nativeQuery != null) {
+            return new OlapQueryExecution(command.getArguments(), command, unwrap(connection), executionContext, this, nativeQuery, false);
+        }
+        throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
+    }
+
+    private OlapConnection unwrap(Connection conn) throws TranslatorException {
+        try {
+            OlapWrapper wrapper = conn.unwrap(OlapWrapper.class);
+            OlapConnection olapConn = wrapper.unwrap(OlapConnection.class);
+            return olapConn;
+        } catch(SQLException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
     @Override
     public Connection getConnection(DataSource ds)
-    		throws TranslatorException {
-		try {
-	    	return ds.getConnection();
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		}
+            throws TranslatorException {
+        try {
+            return ds.getConnection();
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
     }
-    
+
     @Override
     public void closeConnection(Connection connection, DataSource factory) {
-    	if (connection == null) {
-    		return;
-    	}
-    	try {
-			connection.close();
-		} catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
-		}
+        if (connection == null) {
+            return;
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
+        }
     }
 }

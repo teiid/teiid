@@ -40,51 +40,51 @@ import org.teiid.core.util.ReaderInputStream;
 
 public class TestObjectDecoderInputStream {
 
-	@Test public void testTimeoutException() throws Exception {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectEncoderOutputStream oeos = new ObjectEncoderOutputStream(new DataOutputStream(baos), 512);
-		List<Integer> obj = Arrays.asList(1, 2, 3);
-		oeos.writeObject(obj);
-		oeos.close();
-		final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		InputStream is = new InputStream() {
-			int count;
-			@Override
-			public int read() throws IOException {
-				if (count++%2==0) { 
-					throw new SocketTimeoutException();
-				}
-				return bais.read();
-			}
-		};
-		ObjectDecoderInputStream odis = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(is, 1024), Thread.currentThread().getContextClassLoader(), 1024);
-		Object result = null;
-		do {
-			try {
-				result = odis.readObject();
-			} catch (IOException e) {
-				
-			}
-		} while (result == null);
-		assertEquals(obj, result);
-	}
-	
-	@Test public void testReplaceObject() throws Exception {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectEncoderOutputStream out = new ObjectEncoderOutputStream(new DataOutputStream(baos), 512);
-		
-		ClobImpl clob = new ClobImpl(new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ReaderInputStream(new StringReader("Clob contents"),  Charset.forName(Streamable.ENCODING)); //$NON-NLS-1$
-			}
-			
-		}, -1);
-		
-		out.writeObject(clob);
-		
-		ObjectDecoderInputStream in = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(new ByteArrayInputStream(baos.toByteArray()), 1024), Thread.currentThread().getContextClassLoader(), 1024);
-		Object result = in.readObject();
-		assertTrue(result instanceof ClobImpl);
-	}	
+    @Test public void testTimeoutException() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectEncoderOutputStream oeos = new ObjectEncoderOutputStream(new DataOutputStream(baos), 512);
+        List<Integer> obj = Arrays.asList(1, 2, 3);
+        oeos.writeObject(obj);
+        oeos.close();
+        final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        InputStream is = new InputStream() {
+            int count;
+            @Override
+            public int read() throws IOException {
+                if (count++%2==0) {
+                    throw new SocketTimeoutException();
+                }
+                return bais.read();
+            }
+        };
+        ObjectDecoderInputStream odis = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(is, 1024), Thread.currentThread().getContextClassLoader(), 1024);
+        Object result = null;
+        do {
+            try {
+                result = odis.readObject();
+            } catch (IOException e) {
+
+            }
+        } while (result == null);
+        assertEquals(obj, result);
+    }
+
+    @Test public void testReplaceObject() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectEncoderOutputStream out = new ObjectEncoderOutputStream(new DataOutputStream(baos), 512);
+
+        ClobImpl clob = new ClobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ReaderInputStream(new StringReader("Clob contents"),  Charset.forName(Streamable.ENCODING)); //$NON-NLS-1$
+            }
+
+        }, -1);
+
+        out.writeObject(clob);
+
+        ObjectDecoderInputStream in = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(new ByteArrayInputStream(baos.toByteArray()), 1024), Thread.currentThread().getContextClassLoader(), 1024);
+        Object result = in.readObject();
+        assertTrue(result instanceof ClobImpl);
+    }
 }

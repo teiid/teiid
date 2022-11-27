@@ -29,7 +29,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * This class represents a SQL Delete statement of the form:
- * "DELETE FROM <group> [WHERE <criteria>]".
+ * "DELETE FROM &lt;group&gt; [WHERE &lt;criteria&gt;]".
  * Implements Command interface.
  */
 public class Delete extends ProcedureContainer implements FilteredCommand {
@@ -46,13 +46,13 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
     public Delete() {
     }
 
-	/**
-	 * Return type of command.
-	 * @return {@link Command#TYPE_DELETE}
-	 */
-	public int getType() {
-		return Command.TYPE_DELETE;
-	}
+    /**
+     * Return type of command.
+     * @return {@link Command#TYPE_DELETE}
+     */
+    public int getType() {
+        return Command.TYPE_DELETE;
+    }
 
     /**
      * Constructs an instance of this class given the group.
@@ -111,7 +111,7 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
+
     /**
      * Get hashcode for command.  WARNING: This hash code relies on the hash codes of the
      * Group and Criteria clause.  If the command changes, it's hash code will change and
@@ -119,13 +119,13 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
      * completely constructed.
      */
     public int hashCode() {
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.group);
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.group);
         if (this.criteria != null) {
-    		myHash = HashCodeUtil.hashCode(myHash, this.criteria);
+            myHash = HashCodeUtil.hashCode(myHash, this.criteria);
         }
-		return myHash;
-	}
+        return myHash;
+    }
 
     /**
      * Returns a string representation of an instance of this class.
@@ -141,58 +141,58 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
      * the same exact structure.
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof Delete)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof Delete)) {
+            return false;
+        }
 
-		Delete other = (Delete) obj;
-        
+        Delete other = (Delete) obj;
+
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
-        	   sameOptionAndHint(other) &&
+               sameOptionAndHint(other) &&
                EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
-    
-	/**
-	 * Return a copy of this Delete.
-	 */
-	public Object clone() {
-	    GroupSymbol copyGroup = null;
-	    if(group != null) { 
-	    	copyGroup = group.clone();    
-	    }
-	    
-		Criteria copyCrit = null;
-		if(criteria != null) { 
-			copyCrit = (Criteria) criteria.clone();
-		}
+
+    /**
+     * Return a copy of this Delete.
+     */
+    public Object clone() {
+        GroupSymbol copyGroup = null;
+        if(group != null) {
+            copyGroup = group.clone();
+        }
+
+        Criteria copyCrit = null;
+        if(criteria != null) {
+            copyCrit = (Criteria) criteria.clone();
+        }
 
         Delete copy = new Delete(copyGroup, copyCrit);
         copyMetadataState(copy);
-		return copy;
-	}
+        return copy;
+    }
 
-	/**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public List getProjectedSymbols(){
+    /**
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public List getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
-	}
+    }
 
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable() {
-		return false;
-	}
-    
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable() {
+        return false;
+    }
+
 }
 

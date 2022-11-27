@@ -48,7 +48,7 @@ public class CryptoException extends TeiidException {
      * @param e An exception to chain to this exception
      */
     public CryptoException( Throwable e ) {
-		super( e );
+        super( e );
     }
 
     /**
@@ -64,7 +64,7 @@ public class CryptoException extends TeiidException {
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param code A code denoting the exception
+     * @param message A code denoting the exception
      * @param e An exception to nest within this one
      */
     public CryptoException( Throwable e, String message ) {
@@ -82,9 +82,9 @@ public class CryptoException extends TeiidException {
     public CryptoException(BundleUtil.Event code, Throwable e, String message ) {
         super(code, e, message);
     }
-    
+
     public CryptoException(BundleUtil.Event code, Throwable e) {
         super(code, e);
-    }    
+    }
 
 } // END CLASS

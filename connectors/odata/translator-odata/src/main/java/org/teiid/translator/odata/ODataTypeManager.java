@@ -32,48 +32,48 @@ import org.teiid.core.types.DataTypeManager;
 
 public class ODataTypeManager {
 
-	private static HashMap<String, EdmSimpleType> teiidkeyed = new HashMap<String, EdmSimpleType>();
-	private static HashMap<String, String> odatakeyed = new HashMap<String, String>();
-	
-	static {
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmSimpleType.STRING);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN, EdmSimpleType.BOOLEAN);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE, EdmSimpleType.SBYTE);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.SHORT, EdmSimpleType.INT16);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.CHAR, EdmSimpleType.STRING);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.INTEGER, EdmSimpleType.INT32);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.LONG, EdmSimpleType.INT64);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, EdmSimpleType.INT64);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.FLOAT, EdmSimpleType.SINGLE);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.DOUBLE, EdmSimpleType.DOUBLE);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, EdmSimpleType.DECIMAL);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.DATE, EdmSimpleType.DATETIME);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIME,  EdmSimpleType.TIME);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,  EdmSimpleType.DATETIME);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT,  EdmSimpleType.BINARY); //currently problematic
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BLOB, EdmSimpleType.BINARY);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB, EdmSimpleType.STRING);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmSimpleType.STRING);
-		teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY, EdmSimpleType.BINARY);
-		
-		odatakeyed.put(EdmSimpleType.STRING.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
-		odatakeyed.put(EdmSimpleType.BOOLEAN.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BOOLEAN);
-		odatakeyed.put(EdmSimpleType.BYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
-		odatakeyed.put(EdmSimpleType.SBYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BYTE);
-		odatakeyed.put(EdmSimpleType.INT16.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
-		odatakeyed.put(EdmSimpleType.INT32.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.INTEGER);
-		odatakeyed.put(EdmSimpleType.INT64.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.LONG);
-		odatakeyed.put(EdmSimpleType.SINGLE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.FLOAT);
-		odatakeyed.put(EdmSimpleType.DOUBLE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.DOUBLE);
-		odatakeyed.put(EdmSimpleType.DECIMAL.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
-		odatakeyed.put(EdmSimpleType.TIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIME);
-		odatakeyed.put(EdmSimpleType.DATETIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
-		odatakeyed.put(EdmSimpleType.DATETIMEOFFSET.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
-		odatakeyed.put(EdmSimpleType.BINARY.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.VARBINARY);
-		odatakeyed.put(EdmSimpleType.GUID.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
-	}
-	
-	public static String teiidType(String odataType) {
+    private static HashMap<String, EdmSimpleType> teiidkeyed = new HashMap<String, EdmSimpleType>();
+    private static HashMap<String, String> odatakeyed = new HashMap<String, String>();
+
+    static {
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmSimpleType.STRING);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN, EdmSimpleType.BOOLEAN);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BYTE, EdmSimpleType.SBYTE);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.SHORT, EdmSimpleType.INT16);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CHAR, EdmSimpleType.STRING);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.INTEGER, EdmSimpleType.INT32);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.LONG, EdmSimpleType.INT64);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, EdmSimpleType.INT64);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.FLOAT, EdmSimpleType.SINGLE);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DOUBLE, EdmSimpleType.DOUBLE);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, EdmSimpleType.DECIMAL);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.DATE, EdmSimpleType.DATETIME);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIME,  EdmSimpleType.TIME);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,  EdmSimpleType.DATETIME);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.OBJECT,  EdmSimpleType.BINARY); //currently problematic
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.BLOB, EdmSimpleType.BINARY);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB, EdmSimpleType.STRING);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmSimpleType.STRING);
+        teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY, EdmSimpleType.BINARY);
+
+        odatakeyed.put(EdmSimpleType.STRING.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
+        odatakeyed.put(EdmSimpleType.BOOLEAN.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BOOLEAN);
+        odatakeyed.put(EdmSimpleType.BYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
+        odatakeyed.put(EdmSimpleType.SBYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BYTE);
+        odatakeyed.put(EdmSimpleType.INT16.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
+        odatakeyed.put(EdmSimpleType.INT32.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.INTEGER);
+        odatakeyed.put(EdmSimpleType.INT64.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.LONG);
+        odatakeyed.put(EdmSimpleType.SINGLE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.FLOAT);
+        odatakeyed.put(EdmSimpleType.DOUBLE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.DOUBLE);
+        odatakeyed.put(EdmSimpleType.DECIMAL.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
+        odatakeyed.put(EdmSimpleType.TIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIME);
+        odatakeyed.put(EdmSimpleType.DATETIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
+        odatakeyed.put(EdmSimpleType.DATETIMEOFFSET.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
+        odatakeyed.put(EdmSimpleType.BINARY.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.VARBINARY);
+        odatakeyed.put(EdmSimpleType.GUID.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
+    }
+
+    public static String teiidType(String odataType) {
         if (odataType.startsWith(CollectionKind.Bag.name() + "(")
                 && odataType.endsWith(")")) {
             odataType = odataType.substring(4, odataType.length() - 1);
@@ -86,31 +86,31 @@ public class ODataTypeManager {
                 && odataType.endsWith(")")) {
             odataType = odataType.substring(11, odataType.length() - 1);
             return odatakeyed.get(odataType)+"[]";
-        }	    
-		return odatakeyed.get(odataType);
-	}
-	
-	public static EdmType odataType(String teiidType) {
-		if (DataTypeManager.isArrayType(teiidType)) {
-			return new EdmCollectionType(CollectionKind.Collection, odataType(DataTypeManager.getComponentType(teiidType)));
-		}
-		return teiidkeyed.get(teiidType);
-	}
-	
-	public static Object convertToTeiidRuntimeType(Object value) {
-		if (value == null) {
-			return null;
-		}
-		if (DataTypeManager.getAllDataTypeClasses().contains(value.getClass())) {
-			return value;
-		}
-		if (value instanceof LocalDateTime) {
-			return new Timestamp(((LocalDateTime)value).toDateTime().getMillis());
-		} else if (value instanceof Guid) {
-			return value.toString();
-		} else if (value instanceof LocalTime) {
-			return new Time(((LocalTime)value).toDateTimeToday().getMillis());
-		}
-		return value;
-	}
+        }
+        return odatakeyed.get(odataType);
+    }
+
+    public static EdmType odataType(String teiidType) {
+        if (DataTypeManager.isArrayType(teiidType)) {
+            return new EdmCollectionType(CollectionKind.Collection, odataType(DataTypeManager.getComponentType(teiidType)));
+        }
+        return teiidkeyed.get(teiidType);
+    }
+
+    public static Object convertToTeiidRuntimeType(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (DataTypeManager.getAllDataTypeClasses().contains(value.getClass())) {
+            return value;
+        }
+        if (value instanceof LocalDateTime) {
+            return new Timestamp(((LocalDateTime)value).toDateTime().getMillis());
+        } else if (value instanceof Guid) {
+            return value.toString();
+        } else if (value instanceof LocalTime) {
+            return new Time(((LocalTime)value).toDateTimeToday().getMillis());
+        }
+        return value;
+    }
 }

@@ -25,19 +25,19 @@ import com.mongodb.BasicDBObject;
 
 public class ProjectionNode extends ProcessingNode {
     private BasicDBObject projection;
-    
+
     public ProjectionNode (MongoDocument document, BasicDBObject projection) {
         super(document);
         this.projection = projection;
     }
-    
+
     public void append(String alias, ProjectionNode node) {
         this.projection.append(alias, node.projection.get(alias));
     }
-    
+
     @Override
     public BasicDBObject getInstruction() throws TranslatorException {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\"$project\": {"+this.projection.toString()+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
-        return new BasicDBObject("$project", this.projection); //$NON-NLS-1$ 
+        return new BasicDBObject("$project", this.projection); //$NON-NLS-1$
     }
 }

@@ -26,18 +26,18 @@ import java.sql.SQLException;
  */
 public class FilteredResultsMetadata extends WrapperImpl implements ResultSetMetaData {
 
-    private ResultSetMetaData delegate; 
+    private ResultSetMetaData delegate;
     private int actualColumnCount;
-    
+
     FilteredResultsMetadata(ResultSetMetaData rsmd, int actualColumnCount) {
         this.delegate = rsmd;
         this.actualColumnCount = actualColumnCount;
     }
-    
+
     public int getColumnCount() throws SQLException {
         return actualColumnCount;
     }
-    
+
     private void verifyColumnIndex(int index) throws SQLException {
         if(index > actualColumnCount) {
             throw new SQLException(JDBCPlugin.Util.getString("StaticMetadataProvider.Invalid_column", index)); //$NON-NLS-1$

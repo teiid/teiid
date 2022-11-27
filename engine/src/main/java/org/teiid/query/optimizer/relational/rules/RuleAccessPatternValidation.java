@@ -43,38 +43,36 @@ import org.teiid.query.util.CommandContext;
  * Validates that the access pattern(s) of a source are satisfied.  This means that,
  * during planning, exactly the required criteria specified by only one (if any)
  * access pattern has been pushed down to the source (in the atomic query).
- * Currently this rule just checks for a node property that was set elsewhere,
- * in the {@link RuleChooseAccessPattern} rule.
  */
 public final class RuleAccessPatternValidation implements OptimizerRule {
 
-	/**
+    /**
      * @throws QueryPlannerException if an access pattern has not been satisfied
-	 */
-	public PlanNode execute(
-		PlanNode plan,
-		QueryMetadataInterface metadata,
+     */
+    public PlanNode execute(
+        PlanNode plan,
+        QueryMetadataInterface metadata,
         CapabilitiesFinder capFinder,
-		RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws
-			QueryPlannerException {
-        
+        RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws
+            QueryPlannerException {
+
         validateAccessPatterns(plan, metadata, capFinder);
 
-		return plan;
-	}
+        return plan;
+    }
 
     void validateAccessPatterns(PlanNode node, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryPlannerException {
-     
+
         validateAccessPatterns(node);
-        
+
         for (PlanNode child : node.getChildren()) {
             validateAccessPatterns(child, metadata, capFinder);
-		}
+        }
     }
 
-    /** 
+    /**
      * @param node
      * @throws QueryPlannerException
      */
@@ -94,25 +92,25 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
                 criteria = ((Update)req).getCriteria();
             }
         }
-        
+
         List accessPatterns = (List)node.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
-        
+
         if (criteria != null) {
             for(Criteria crit : Criteria.separateCriteriaByAnd(criteria)) {
                 Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(crit, true);
-                
+
                 if (RulePushSelectCriteria.satisfyAccessPatterns(accessPatterns, elements)) {
                     return;
                 }
             }
         }
-        
+
         Object groups = node.getGroups();
          throw new QueryPlannerException(QueryPlugin.Event.TEIID30278, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30278, new Object[] {groups, accessPatterns}));
     }
-    
-	public String toString() {
-		return "AccessPatternValidation"; //$NON-NLS-1$
-	}
+
+    public String toString() {
+        return "AccessPatternValidation"; //$NON-NLS-1$
+    }
 
 }

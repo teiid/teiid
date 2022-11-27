@@ -18,6 +18,8 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.teiid.cache.Cachable;
@@ -32,95 +34,107 @@ import org.teiid.query.util.CommandContext;
 
 
 public class PreparedPlan implements Cachable {
-	private ProcessorPlan plan;
-	private Command command;
-	private List<Reference> refs;
-	private AnalysisRecord analysisRecord;
-	
-	private AccessInfo accessInfo = new AccessInfo();
-	
-	/**
-	 * Return the ProcessorPlan.
-	 */
-	public ProcessorPlan getPlan(){
-		return plan;
-	}
-	
-	/**
-	 * Return the plan description.
-	 */
-	public AnalysisRecord getAnalysisRecord(){
-		return this.analysisRecord;
-	}
-	
-	/**
-	 * Return the Command .
-	 */
-	public Command getCommand(){
-		return command;
-	}
-	
-	/**
-	 * Return the list of Reference.
-	 */
-	public List<Reference> getReferences(){
-		return refs;
-	}
-	
-	/**
-	 * Set the ProcessorPlan.
-	 * @param context 
-	 */
-	public void setPlan(ProcessorPlan planValue, CommandContext context){
-		plan = planValue;
-		this.accessInfo.populate(context, false);
-		//TODO: expand this logic
-		if (planValue instanceof RelationalPlan) {
-			RelationalPlan rp = (RelationalPlan)planValue;
-			if (rp.getRootNode() instanceof AccessNode) {
-				this.accessInfo.setSensitiveToMetadataChanges(false);
-			}
-		}
-	}
-	
-	/**
-	 * Set the plan description.
-	 */
-	public void setAnalysisRecord(AnalysisRecord analysisRecord){
+    private ProcessorPlan plan;
+    private Command command;
+    private List<Reference> refs;
+    private AnalysisRecord analysisRecord;
+
+    private AccessInfo accessInfo = new AccessInfo();
+
+    /**
+     * Return the ProcessorPlan.
+     */
+    public ProcessorPlan getPlan(){
+        return plan;
+    }
+
+    /**
+     * Return the plan description.
+     */
+    public AnalysisRecord getAnalysisRecord(){
+        return this.analysisRecord;
+    }
+
+    /**
+     * Return the Command .
+     */
+    public Command getCommand(){
+        return command;
+    }
+
+    /**
+     * Return the list of Reference.
+     */
+    public List<Reference> getReferences(){
+        return refs;
+    }
+
+    /**
+     * Set the ProcessorPlan.
+     * @param context
+     */
+    public void setPlan(ProcessorPlan planValue, CommandContext context){
+        plan = planValue;
+        this.accessInfo.populate(context, false);
+        //TODO: expand this logic
+        if (planValue instanceof RelationalPlan) {
+            RelationalPlan rp = (RelationalPlan)planValue;
+            if (rp.getRootNode() instanceof AccessNode) {
+                this.accessInfo.setSensitiveToMetadataChanges(false);
+            }
+        }
+    }
+
+    /**
+     * Set the plan description.
+     */
+    public void setAnalysisRecord(AnalysisRecord analysisRecord){
         this.analysisRecord = analysisRecord;
-	}
-	
-	/**
-	 * Set the Command.
-	 */
-	public void setCommand(Command commandValue){
-		command = commandValue;
-	}
-	
-	/**
-	 * Set the list of Reference.
-	 */
-	public void setReferences(List<Reference> refsValue){
-		refs = refsValue;
-	}
-	
-	@Override
-	public AccessInfo getAccessInfo() {
-		return accessInfo;
-	}
-	
-	@Override
-	public boolean prepare(TupleBufferCache bufferManager) {
-		return true; //no remotable actions
-	}
-	
-	@Override
-	public boolean restore(TupleBufferCache bufferManager) {
-		return true; //no remotable actions
-	}
-	
-	public boolean validate() {
-		return this.accessInfo.validate(false, 0);
-	}
-		
+    }
+
+    /**
+     * Set the Command.
+     */
+    public void setCommand(Command commandValue){
+        command = commandValue;
+    }
+
+    /**
+     * Set the list of Reference.
+     */
+    public void setReferences(List<Reference> refsValue){
+        if (refsValue != null) {
+            // the object order is not necessarily the same as the parsing order
+            // make sure they align
+            Collections.sort(refsValue, new Comparator<Reference>() {
+
+                @Override
+                public int compare(Reference o1, Reference o2) {
+                    return Integer.compare(o1.getIndex(), o2.getIndex());
+                }
+
+            });
+        }
+        refs = refsValue;
+    }
+
+    @Override
+    public AccessInfo getAccessInfo() {
+        return accessInfo;
+    }
+
+    @Override
+    public boolean prepare(TupleBufferCache bufferManager) {
+        return true; //no remotable actions
+    }
+
+    @Override
+    public boolean restore(TupleBufferCache bufferManager) {
+        return true; //no remotable actions
+    }
+
+    public boolean validate() {
+        return this.accessInfo.validate(false, 0);
+    }
+
 }

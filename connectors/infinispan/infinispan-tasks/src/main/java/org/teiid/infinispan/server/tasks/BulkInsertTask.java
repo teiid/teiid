@@ -26,61 +26,61 @@ import org.infinispan.tasks.TaskExecutionMode;
 
 public class BulkInsertTask implements ServerTask<Long> {
 
-	private TaskContext ctx;
+    private TaskContext ctx;
 
-	@Override
-	public void setTaskContext(TaskContext ctx) {
-		this.ctx = ctx;
-	}
+    @Override
+    public void setTaskContext(TaskContext ctx) {
+        this.ctx = ctx;
+    }
 
-	@Override
-	public String getName() {
-		return "teiid-bulk-insert";
-	}
+    @Override
+    public String getName() {
+        return "teiid-bulk-insert";
+    }
 
-	@Override
-	public Long call() throws Exception {
-		Cache<Object, Object> cache = getCache();
+    @Override
+    public Long call() throws Exception {
+        Cache<Object, Object> cache = getCache();
 
-		Map<String, ?> params = null;
-		if (ctx.getParameters().isPresent()) {
-			params = ctx.getParameters().get();
-		}
+        Map<String, ?> params = null;
+        if (ctx.getParameters().isPresent()) {
+            params = ctx.getParameters().get();
+        }
 
-		if (params == null) {
-			return -1L;
-		}
+        if (params == null) {
+            return -1L;
+        }
 
-		boolean upsert = Boolean.parseBoolean((String) params.get("upsert"));
-		int rowCount = (Integer)params.get("row-count");
-		
-		long updateCount = 0;
-		for (int i = 0; i < rowCount; i++) {
-			Object key = params.get("row-key-" + i);
-			Object value = params.get("row-" + i);
-			Object previous = cache.get(key);
-			if (previous == null) {
-				cache.put(key, value);
-			} else {
-				if (upsert) {
-					// TODO:merge
-					throw new Exception("not currently supported");
-				} else {
-					throw new Exception("row already exists");
-				}
-			}
-			updateCount++;
-		}
-		return updateCount;
-	}
+        boolean upsert = Boolean.parseBoolean((String) params.get("upsert"));
+        int rowCount = (Integer)params.get("row-count");
 
-	@Override
-	public TaskExecutionMode getExecutionMode() {
-		return TaskExecutionMode.ONE_NODE;
-	}
+        long updateCount = 0;
+        for (int i = 0; i < rowCount; i++) {
+            Object key = params.get("row-key-" + i);
+            Object value = params.get("row-" + i);
+            Object previous = cache.get(key);
+            if (previous == null) {
+                cache.put(key, value);
+            } else {
+                if (upsert) {
+                    // TODO:merge
+                    throw new Exception("not currently supported");
+                } else {
+                    throw new Exception("row already exists");
+                }
+            }
+            updateCount++;
+        }
+        return updateCount;
+    }
 
-	@SuppressWarnings("unchecked")
-	private <K, V> Cache<K, V> getCache() {
-		return (Cache<K, V>) ctx.getCache().get();
-	}
+    @Override
+    public TaskExecutionMode getExecutionMode() {
+        return TaskExecutionMode.ONE_NODE;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <K, V> Cache<K, V> getCache() {
+        return (Cache<K, V>) ctx.getCache().get();
+    }
 }

@@ -46,61 +46,61 @@ import org.teiid.query.util.CommandContext;
  */
 public final class RuleValidateWhereAll implements OptimizerRule {
 
-	/**
+    /**
      * Verifies that a model with "supports where all" is being passed an atomic
      * query with a criteria.
      * @throws QueryPlannerException if property is not satisfied
-	 */
-	public PlanNode execute(
-		PlanNode plan,
-		QueryMetadataInterface metadata,
+     */
+    public PlanNode execute(
+        PlanNode plan,
+        QueryMetadataInterface metadata,
         CapabilitiesFinder capFinder,
         RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws
-			QueryPlannerException,
-			QueryMetadataException,
-			TeiidComponentException {
+        throws
+            QueryPlannerException,
+            QueryMetadataException,
+            TeiidComponentException {
 
-		for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
+        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
             Object modelID = RuleRaiseAccess.getModelIDFromAccess(node, metadata);
 
-            if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder) 
-            		&& hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
+            if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder)
+                    && hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
                 String modelName = metadata.getFullName(modelID);
                  throw new QueryPlannerException(QueryPlugin.Event.TEIID30268, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30268, modelName));
             }
-		}
+        }
 
-		return plan;
-	}
+        return plan;
+    }
 
-	/**
+    /**
      * Determine whether a command is a query without a criteria
      * @param command
      * @return
      */
     static boolean hasNoCriteria(Command command) {
-    	if(command instanceof Query) {
+        if(command instanceof Query) {
             Query query = (Query) command;
             return query.getCriteria() == null;
         }
         if (command instanceof Delete) {
-        	Delete query = (Delete) command;
+            Delete query = (Delete) command;
             return query.getCriteria() == null;
         }
         if (command instanceof Update) {
-        	Update query = (Update) command;
+            Update query = (Update) command;
             return query.getCriteria() == null;
         }
         if (command instanceof SetQuery) {
-        	SetQuery query = (SetQuery)command;
-        	return hasNoCriteria(query.getLeftQuery()) || hasNoCriteria(query.getRightQuery());
+            SetQuery query = (SetQuery)command;
+            return hasNoCriteria(query.getLeftQuery()) || hasNoCriteria(query.getRightQuery());
         }
         return false;
     }
 
     public String toString() {
-		return "ValidateWhereAll"; //$NON-NLS-1$
-	}
+        return "ValidateWhereAll"; //$NON-NLS-1$
+    }
 
 }

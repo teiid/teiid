@@ -25,32 +25,32 @@ import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 public class PIMetadataProcessor extends JDBCMetadataProcessor {
     static Pattern guidPattern = Pattern.compile(Pattern.quote("guid"), Pattern.CASE_INSENSITIVE);
-    
-    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, 
-            datatype=String.class, display="Is Table Value Function", 
+
+    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class},
+            datatype=String.class, display="Is Table Value Function",
             description="Marks the table as Table Value Function")
-    public static final String TVF = MetadataFactory.PI_URI+"TVF"; //$NON-NLS-1$
-    
+    public static final String TVF = MetadataFactory.PI_PREFIX+"TVF"; //$NON-NLS-1$
+
     public PIMetadataProcessor() {
         setStartQuoteString("[");
         setEndQuoteString("]");
     }
-    
+
     protected String getRuntimeType(int type, String typeName, int precision, int scale) {
-        String rtType = super.getRuntimeType(type, typeName, precision);
         if (typeName != null && guidPattern.matcher(typeName).find()) {
-            rtType = TypeFacility.RUNTIME_NAMES.STRING;
+            return TypeFacility.RUNTIME_NAMES.STRING;
         }
-        return rtType;
-    } 
-    
+        return super.getRuntimeType(type, typeName, precision, scale);
+    }
+
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-            throws SQLException {
+            throws SQLException, TranslatorException {
         super.getConnectorMetadata(conn, metadataFactory);
         for (String name:metadataFactory.getSchema().getTables().keySet()) {
             if (name.startsWith("ft_")) {
@@ -61,6 +61,6 @@ public class PIMetadataProcessor extends JDBCMetadataProcessor {
         for (String name:metadataFactory.getSchema().getProcedures().keySet()) {
             Procedure proc = metadataFactory.getSchema().getProcedure(name);
             proc.setProperty(TVF, "true");
-        }         
+        }
     }
 }

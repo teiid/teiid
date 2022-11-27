@@ -29,63 +29,63 @@ import org.teiid.core.TeiidComponentException;
  * <p>Factory for BufferManager instances.  One method will get
  * a server buffer manager, as it should be instantiated in a running
  * MetaMatrix server.  That BufferManager is configured mostly by the
- * passed in properties.</p>
+ * passed in properties.
  *
  * <p>The other method returns a stand-alone, in-memory buffer manager.  This
  * is typically used for either in-memory testing or any time the
  * query processor component is not expected to run out of memory, such as
- * within the modeler.</p>
+ * within the modeler.
  */
 public class BufferManagerFactory {
-	
-	private static BufferManager INSTANCE;
-	
+
+    private static BufferManagerImpl INSTANCE;
+
     /**
      * Helper to get a buffer manager all set up for unmanaged standalone use.  This is
      * typically used for testing or when memory is not an issue.
      * @return BufferManager ready for use
      */
-    public static BufferManager getStandaloneBufferManager() {
-    	if (INSTANCE == null) {
-	        BufferManagerImpl bufferMgr = createBufferManager();
-	        INSTANCE = bufferMgr;
-    	}
+    public static BufferManagerImpl getStandaloneBufferManager() {
+        if (INSTANCE == null) {
+            BufferManagerImpl bufferMgr = createBufferManager();
+            INSTANCE = bufferMgr;
+        }
 
         return INSTANCE;
     }
 
-	public static BufferManagerImpl createBufferManager() {
-		return initBufferManager(new BufferManagerImpl());
-	}
+    public static BufferManagerImpl createBufferManager() {
+        return initBufferManager(new BufferManagerImpl());
+    }
 
-	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize) {
-		BufferManagerImpl bufferManager = new BufferManagerImpl();
-		bufferManager.setProcessorBatchSize(procBatchSize);
-		bufferManager.setMaxProcessingKB((int) (bytesAvailable/1024));
-		bufferManager.setMaxReserveKB((int) (bytesAvailable/1024));
-		return initBufferManager(bufferManager);
-	}
+    public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize) {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setProcessorBatchSize(procBatchSize);
+        bufferManager.setMaxProcessingKB((int) (bytesAvailable/1024));
+        bufferManager.setMaxReserveKB((int) (bytesAvailable/1024));
+        return initBufferManager(bufferManager);
+    }
 
-	public static BufferManagerImpl initBufferManager(BufferManagerImpl bufferManager) {
-	    try {
-			bufferManager.initialize();
-			bufferManager.setUseWeakReferences(false);
-			MemoryStorageManager storageManager = new MemoryStorageManager();
-			SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
-			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
-			BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
-			fsc.setBufferManager(bufferManager);
-			//use conservative allocations
-			fsc.setDirect(false); //allow the space to be GCed easily
-			fsc.setMaxStorageObjectSize(1<<20);
-			fsc.setMemoryBufferSpace(1<<21);
-			fsc.setStorageManager(ssm);
-			fsc.initialize();
-		    bufferManager.setCache(fsc);
-		    return bufferManager;
-	    } catch (TeiidComponentException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    public static BufferManagerImpl initBufferManager(BufferManagerImpl bufferManager) {
+        try {
+            bufferManager.initialize();
+            bufferManager.setUseWeakReferences(false);
+            MemoryStorageManager storageManager = new MemoryStorageManager();
+            SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
+            ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
+            BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+            fsc.setBufferManager(bufferManager);
+            //use conservative allocations
+            fsc.setDirect(false); //allow the space to be GCed easily
+            fsc.setMaxStorageObjectSize(1<<20);
+            fsc.setMemoryBufferSpace(1<<21);
+            fsc.setStorageManager(ssm);
+            fsc.initialize();
+            bufferManager.setCache(fsc);
+            return bufferManager;
+        } catch (TeiidComponentException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

@@ -33,7 +33,7 @@ import org.teiid.translator.ExecutionFactory;
 
 
 /**
- * Utility to convert a ConnectorCapabilities class into a Map of 
+ * Utility to convert a ConnectorCapabilities class into a Map of
  * capabilities information that can be passed through the system.
  */
 public class CapabilitiesConverter {
@@ -44,7 +44,7 @@ public class CapabilitiesConverter {
     public static SourceCapabilities convertCapabilities(ExecutionFactory srcCaps) {
         return convertCapabilities(srcCaps, null);
     }
-    
+
     public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, Object connectorID) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         tgtCaps.setTranslator(srcCaps);
@@ -75,6 +75,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, srcCaps.supportsAggregatesMin());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, srcCaps.supportsAggregatesMax());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, srcCaps.supportsAggregatesCount());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_BIG, srcCaps.supportsAggregatesCountBig());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, srcCaps.supportsAggregatesCountStar());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, srcCaps.supportsAggregatesDistinct());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, srcCaps.supportsScalarSubqueries());
@@ -102,6 +103,11 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, srcCaps.supportsCommonTableExpressions());
         setSupports(connectorID, tgtCaps, Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsRecursiveCommonTableExpressions(), Capability.COMMON_TABLE_EXPRESSIONS);
         tgtCaps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, srcCaps.supportsElementaryOlapOperations());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTILE, srcCaps.supportsWindowFunctionNtile());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_PERCENT_RANK, srcCaps.supportsWindowFunctionPercentRank());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_CUME_DIST, srcCaps.supportsWindowFunctionCumeDist());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_WINDOW_FUNCTION_NTH_VALUE, srcCaps.supportsWindowFunctionNthValue());
+        tgtCaps.setCapabilitySupport(Capability.WINDOW_FUNCTION_FRAME_CLAUSE, srcCaps.supportsWindowFrameClause());
         setSupports(connectorID, tgtCaps, Capability.ADVANCED_OLAP, srcCaps.supportsAdvancedOlapOperations(), Capability.ELEMENTARY_OLAP);
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, srcCaps.supportsWindowOrderByWithAggregates(), Capability.ELEMENTARY_OLAP);
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_ARRAY, srcCaps.supportsArrayAgg());
@@ -117,6 +123,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION_ARRAY_TYPE, srcCaps.supportsSelectExpressionArrayType());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, srcCaps.supportsOnlyCorrelatedSubqueries());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, srcCaps.supportsStringAgg());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_LIST, srcCaps.supportsListAgg());
         tgtCaps.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, srcCaps.supportsSelectWithoutFrom());
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, srcCaps.supportsGroupByRollup());
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, srcCaps.supportsOrderByWithExtendedGrouping());
@@ -132,20 +139,23 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.UPSERT, srcCaps.supportsUpsert());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, srcCaps.supportsSetQueryLimitOffset());
         tgtCaps.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, srcCaps.supportsOnlyTimestampAddLiteral());
+        tgtCaps.setCapabilitySupport(Capability.GEOGRAPHY_TYPE, srcCaps.supportsGeographyType());
+        tgtCaps.setCapabilitySupport(Capability.PROCEDURE_PARAMETER_EXPRESSION, srcCaps.supportsProcedureParameterExpression());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_ONLY_FROM_RELATIONSHIP_JOIN, srcCaps.supportsOnlyRelationshipStyleJoins());
         if (srcCaps.supportsPartialFiltering()) {
-        	//disable supports that could end up being not filterable
-        	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
-        	Assertion.assertTrue(!srcCaps.supportsOuterJoins());
-        	Assertion.assertTrue(!srcCaps.supportsFullOuterJoins());
-        	Assertion.assertTrue(!srcCaps.supportsInlineViews());
-        	Assertion.assertTrue(!srcCaps.supportsIntersect());
-        	Assertion.assertTrue(!srcCaps.supportsExcept());
-        	Assertion.assertTrue(!srcCaps.supportsSelectExpression());
-        	Assertion.assertTrue(!srcCaps.supportsUnions());
-        	Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
-        	Assertion.assertTrue(!srcCaps.supportsGroupBy());
+            //disable supports that could end up being not filterable
+            tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
+            Assertion.assertTrue(!srcCaps.supportsOuterJoins());
+            Assertion.assertTrue(!srcCaps.supportsFullOuterJoins());
+            Assertion.assertTrue(!srcCaps.supportsInlineViews());
+            Assertion.assertTrue(!srcCaps.supportsIntersect());
+            Assertion.assertTrue(!srcCaps.supportsExcept());
+            Assertion.assertTrue(!srcCaps.supportsSelectExpression());
+            Assertion.assertTrue(!srcCaps.supportsUnions());
+            Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
+            Assertion.assertTrue(!srcCaps.supportsGroupBy());
         }
-        
+
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
             Iterator<String> iter = functions.iterator();
@@ -154,18 +164,19 @@ public class CapabilitiesConverter {
                 tgtCaps.setFunctionSupport(func, true);
             }
         }
-        
+
         List<FunctionMethod> pushDowns = srcCaps.getPushDownFunctions();
         if(pushDowns != null && pushDowns.size() > 0) {
             for(FunctionMethod func:pushDowns) {
                 tgtCaps.setFunctionSupport(func.getName(), true);
             }
         }
-        
+
         tgtCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(srcCaps.getMaxInCriteriaSize()));
         tgtCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, new Integer(srcCaps.getMaxDependentInPredicates()));
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
+        tgtCaps.setSourceProperty(Capability.MAX_QUERY_PROJECTED_COLUMNS, srcCaps.getMaxProjectedColumns());
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         tgtCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, srcCaps.getDefaultNullOrder());
         tgtCaps.setSourceProperty(Capability.COLLATION_LOCALE, srcCaps.getCollationLocale());
@@ -175,17 +186,17 @@ public class CapabilitiesConverter {
         return tgtCaps;
     }
 
-	private static void setSupports(Object connectorID, BasicSourceCapabilities tgtCaps, Capability cap, boolean supports, Capability... required) {
-		if (!supports) {
-			return;
-		}
-		for (Capability capability : required) {
-			if (!tgtCaps.supportsCapability(capability)) {
-				LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30003, cap, capability, connectorID));
-				supports = false;
-			}
-		}
-		tgtCaps.setCapabilitySupport(cap, supports);
-	}
+    private static void setSupports(Object connectorID, BasicSourceCapabilities tgtCaps, Capability cap, boolean supports, Capability... required) {
+        if (!supports) {
+            return;
+        }
+        for (Capability capability : required) {
+            if (!tgtCaps.supportsCapability(capability)) {
+                LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30003, cap, capability, connectorID));
+                supports = false;
+            }
+        }
+        tgtCaps.setCapabilitySupport(cap, supports);
+    }
 
 }

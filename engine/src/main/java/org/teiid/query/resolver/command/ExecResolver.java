@@ -57,31 +57,27 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 /**
  */
 public class ExecResolver extends ProcedureContainerResolver {
-	
-    /**
-     * @see org.teiid.query.resolver.CommandResolver#findCommandMetadata(org.teiid.query.sql.lang.Command,
-     * org.teiid.query.metadata.QueryMetadataInterface)
-     */
+
     private void findCommandMetadata(Command command, TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         StoredProcedure storedProcedureCommand = (StoredProcedure) command;
-        
+
         StoredProcedureInfo storedProcedureInfo = null;
         try {
-        	storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(storedProcedureCommand.getProcedureName());
+            storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(storedProcedureCommand.getProcedureName());
         } catch (QueryMetadataException e) {
-        	String[] parts = storedProcedureCommand.getProcedureName().split("\\.", 2); //$NON-NLS-1$
-	    	if (parts.length > 1 && parts[0].equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
-	            try {
-	            	storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(parts[1]);
-	            	storedProcedureCommand.setProcedureName(parts[1]);
-	            } catch(QueryMetadataException e1) {
-	            } 
-	        }
-	    	if (storedProcedureInfo == null) {
-	    		throw e;
-	    	}
+            String[] parts = storedProcedureCommand.getProcedureName().split("\\.", 2); //$NON-NLS-1$
+            if (parts.length > 1 && parts[0].equalsIgnoreCase(metadata.getVirtualDatabaseName())) {
+                try {
+                    storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(parts[1]);
+                    storedProcedureCommand.setProcedureName(parts[1]);
+                } catch(QueryMetadataException e1) {
+                }
+            }
+            if (storedProcedureInfo == null) {
+                throw e;
+            }
         }
 
         storedProcedureCommand.setUpdateCount(storedProcedureInfo.getUpdateCount());
@@ -94,16 +90,16 @@ public class ExecResolver extends ProcedureContainerResolver {
         Collection<SPParameter> oldParams = storedProcedureCommand.getParameters();
 
         boolean namedParameters = storedProcedureCommand.displayNamedParameters();
-        
+
         // If parameter count is zero, then for the purposes of this method treat that
         // as if named parameters were used.  Even though the StoredProcedure was not
         // parsed that way, the user may have entered no parameters with the intention
         // of relying on all default values of all optional parameters.
         if (oldParams.size() == 0 || (oldParams.size() == 1 && storedProcedureCommand.isCalledWithReturn())) {
-        	storedProcedureCommand.setDisplayNamedParameters(true);
+            storedProcedureCommand.setDisplayNamedParameters(true);
             namedParameters = true;
         }
-        
+
         // Cache original input parameter expressions.  Depending on whether
         // the procedure was parsed with named or unnamed parameters, the keys
         // for this map will either be the String names of the parameters or
@@ -113,14 +109,14 @@ public class ExecResolver extends ProcedureContainerResolver {
         int adjustIndex = 0;
         for (SPParameter param : oldParams) {
             if(param.getExpression() == null) {
-            	if (param.getParameterType() == SPParameter.RESULT_SET) {
-            		adjustIndex--;  //If this was already resolved, just pretend the result set param doesn't exist
-        		}
-            	continue;
+                if (param.getParameterType() == SPParameter.RESULT_SET) {
+                    adjustIndex--;  //If this was already resolved, just pretend the result set param doesn't exist
+                }
+                continue;
             }
             if (namedParameters && param.getParameterType() != SPParameter.RETURN_VALUE) {
                 if (namedExpressions.put(param.getParameterSymbol().getShortName(), param.getExpression()) != null) {
-                	 throw new QueryResolverException(QueryPlugin.Event.TEIID30138, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30138, param.getName()));
+                     throw new QueryResolverException(QueryPlugin.Event.TEIID30138, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30138, param.getName()));
                 }
             } else {
                 positionalExpressions.put(param.getIndex() + adjustIndex, param.getExpression());
@@ -144,136 +140,136 @@ public class ExecResolver extends ProcedureContainerResolver {
         boolean optional = false;
         boolean varargs = false;
         for (int i = 0; i < metadataParams.size(); i++) {
-        	SPParameter metadataParameter = metadataParams.get(i);
+            SPParameter metadataParameter = metadataParams.get(i);
             if( (metadataParameter.getParameterType()==ParameterInfo.IN) ||
                 (metadataParameter.getParameterType()==ParameterInfo.INOUT)){
-            	if (ResolverUtil.hasDefault(metadataParameter.getMetadataID(), metadata) || metadataParameter.isVarArg()) {
-                	optional = true;
-                	optionalParams++;
-            	} else {
+                if (ResolverUtil.hasDefault(metadataParameter.getMetadataID(), metadata) || metadataParameter.isVarArg()) {
+                    optional = true;
+                    optionalParams++;
+                } else {
                     inputParams++;
-                	if (optional) {
-                		optional = false;
-                		inputParams += optionalParams;
-                		optionalParams = 0;
-                	}
-            	}
-            	if (metadataParameter.isVarArg()) {
-            		varargs = true;
-            	}
+                    if (optional) {
+                        optional = false;
+                        inputParams += optionalParams;
+                        optionalParams = 0;
+                    }
+                }
+                if (metadataParameter.isVarArg()) {
+                    varargs = true;
+                }
             } else if (metadataParameter.getParameterType() == ParameterInfo.OUT) {
-            	outParams++;
-            	/*
-            	 * TODO: it would consistent to do the following, but it is a breaking change for procedures that have intermixed out params with in.
-            	 * we may need to revisit this later
-            	 */
-        		//optional = true;
-        		//optionalParams++;
+                outParams++;
+                /*
+                 * TODO: it would consistent to do the following, but it is a breaking change for procedures that have intermixed out params with in.
+                 * we may need to revisit this later
+                 */
+                //optional = true;
+                //optionalParams++;
             } else if (metadataParameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
-            	hasReturnValue = true;
+                hasReturnValue = true;
             }
             SPParameter clonedParam = (SPParameter)metadataParameter.clone();
             clonedMetadataParams.add(clonedParam);
             storedProcedureCommand.setParameter(clonedParam);
         }
-        
+
         if (storedProcedureCommand.isCalledWithReturn() && !hasReturnValue) {
-        	 throw new QueryResolverException(QueryPlugin.Event.TEIID30139, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30139, storedProcedureCommand.getGroup()));
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30139, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30139, storedProcedureCommand.getGroup()));
         }
 
         if(!namedParameters && (inputParams > positionalExpressions.size()) ) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30140, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30140, inputParams, inputParams + optionalParams + (varargs?"+":""), origInputs, storedProcedureCommand.getGroup())); //$NON-NLS-1$ //$NON-NLS-2$
         }
-        
+
         // Walk through the resolved parameters and set the expressions from the
         // input parameters
         int exprIndex = 1;
         HashSet<String> expected = new HashSet<String>();
         if (storedProcedureCommand.isCalledWithReturn() && hasReturnValue) {
-	        for (SPParameter param : clonedMetadataParams) {
-	        	if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-	        		Expression expr = positionalExpressions.remove(exprIndex++);
-	                param.setExpression(expr);
-	                break;
-	        	}
-	        }
+            for (SPParameter param : clonedMetadataParams) {
+                if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+                    Expression expr = positionalExpressions.remove(exprIndex++);
+                    param.setExpression(expr);
+                    break;
+                }
+            }
         }
         for (SPParameter param : clonedMetadataParams) {
             if(param.getParameterType() == SPParameter.RESULT_SET || param.getParameterType() == SPParameter.RETURN_VALUE) {
-            	continue;
+                continue;
             }
             if (namedParameters) {
                 String nameKey = param.getParameterSymbol().getShortName();
                 Expression expr = namedExpressions.remove(nameKey);
                 // With named parameters, have to check on optional params and default values
                 if (expr == null) {
-                	if (param.getParameterType() != ParameterInfo.OUT) {
-                		param.setUsingDefault(true);
-	                	expected.add(nameKey);
-                		if (!param.isVarArg()) {
-                			expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
-                		} else {
-                			//zero length array
-                        	List<Expression> exprs = new ArrayList<Expression>(0);
-                        	Array array = new Array(exprs);
-                        	array.setImplicit(true);
-                        	array.setType(param.getClassType());
+                    if (param.getParameterType() != ParameterInfo.OUT) {
+                        param.setUsingDefault(true);
+                        expected.add(nameKey);
+                        if (!param.isVarArg()) {
+                            expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
+                        } else {
+                            //zero length array
+                            List<Expression> exprs = new ArrayList<Expression>(0);
+                            Array array = new Array(exprs);
+                            array.setImplicit(true);
+                            array.setType(param.getClassType());
                             expr = array;
-                		}
-                	}
-                } 
-                param.setExpression(expr);                    
+                        }
+                    }
+                }
+                param.setExpression(expr);
             } else {
                 Expression expr = positionalExpressions.remove(exprIndex++);
                 if(param.getParameterType() == SPParameter.OUT) {
-                	if (expr != null) {
-	                	boolean isRef = expr instanceof Reference;
-						if (!isRef || exprIndex <= inputParams + 1) {
-							//for backwards compatibility, this should be treated instead as an input
-	                		exprIndex--;
-	                		positionalExpressions.put(exprIndex, expr);
-	                	} else if (isRef) {
-	                		//mimics the hack that was in PreparedStatementRequest.
-	                		Reference ref = (Reference)expr;
-	                		ref.setOptional(true); //may be an out
-	                		/*
-	                		 * Note that there is a corner case here with out parameters intermixed with optional parameters
-	                		 * there's not a good way around this.
-	                		 */
-	                	}
-                	}
-            		continue;
-            	}
+                    if (expr != null) {
+                        boolean isRef = expr instanceof Reference;
+                        if (!isRef || exprIndex <= inputParams + 1) {
+                            //for backwards compatibility, this should be treated instead as an input
+                            exprIndex--;
+                            positionalExpressions.put(exprIndex, expr);
+                        } else if (isRef) {
+                            //mimics the hack that was in PreparedStatementRequest.
+                            Reference ref = (Reference)expr;
+                            ref.setOptional(true); //may be an out
+                            /*
+                             * Note that there is a corner case here with out parameters intermixed with optional parameters
+                             * there's not a good way around this.
+                             */
+                        }
+                    }
+                    continue;
+                }
                 if (expr == null) {
-                	if (!param.isVarArg()) {
-                		expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
-                	}
-                	param.setUsingDefault(true);
-                } 
+                    if (!param.isVarArg()) {
+                        expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
+                    }
+                    param.setUsingDefault(true);
+                }
                 if (param.isVarArg()) {
-                	List<Expression> exprs = new ArrayList<Expression>(positionalExpressions.size() + 1);
-                	if (expr != null) {
-                		exprs.add(expr);
-                	}
-                	exprs.addAll(positionalExpressions.values());
-                	positionalExpressions.clear();
-                	Array array = new Array(exprs);
-                	array.setImplicit(true);
-                	array.setType(param.getClassType());
+                    List<Expression> exprs = new ArrayList<Expression>(positionalExpressions.size() + 1);
+                    if (expr != null) {
+                        exprs.add(expr);
+                    }
+                    exprs.addAll(positionalExpressions.values());
+                    positionalExpressions.clear();
+                    Array array = new Array(exprs);
+                    array.setImplicit(true);
+                    array.setType(param.getClassType());
                     expr = array;
                 }
                 param.setExpression(expr);
             }
         }
-        
+
         // Check for leftovers, i.e. params entered by user w/ wrong/unknown names
         if (!namedExpressions.isEmpty()) {
-    		 throw new QueryResolverException(QueryPlugin.Event.TEIID30141, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30141, namedExpressions.keySet(), expected));
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30141, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30141, namedExpressions.keySet(), expected));
         }
         if (!positionalExpressions.isEmpty()) {
-        	 throw new QueryResolverException(QueryPlugin.Event.TEIID31113, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31113, positionalExpressions.size(), origInputs, storedProcedureCommand.getGroup().toString()));
+             throw new QueryResolverException(QueryPlugin.Event.TEIID31113, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31113, positionalExpressions.size(), origInputs, storedProcedureCommand.getGroup().toString()));
         }
-        
+
         // Create temporary metadata that defines a group based on either the stored proc
         // name or the stored query name - this will be used later during planning
         String procName = storedProcedureCommand.getProcedureName();
@@ -289,40 +285,40 @@ public class ExecResolver extends ProcedureContainerResolver {
         procGroup.setMetadataID(tid);
         storedProcedureCommand.setGroup(procGroup);
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         findCommandMetadata(command, metadata.getMetadataStore(), metadata);
-        
+
         //Resolve expressions on input parameters
         StoredProcedure storedProcedureCommand = (StoredProcedure) command;
         GroupContext externalGroups = storedProcedureCommand.getExternalGroupContexts();
         for (SPParameter param : storedProcedureCommand.getParameters()) {
             Expression expr = param.getExpression();
             if(expr == null) {
-            	continue;
+                continue;
             }
             for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
                 QueryResolver.setChildMetadata(container.getCommand(), command);
-                
+
                 QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata());
             }
             try {
-            	ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
+                ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
             } catch (QueryResolverException e) {
-            	if (!checkForArray(param, expr)) {
-            		throw e;
-            	}
-            	continue;
+                if (!checkForArray(param, expr)) {
+                    throw e;
+                }
+                continue;
             }
             Class<?> paramType = param.getClassType();
 
             ResolverUtil.setDesiredType(expr, paramType, storedProcedureCommand);
-            
+
             // Compare type of parameter expression against parameter type
             // and add implicit conversion if necessary
             Class<?> exprType = expr.getType();
@@ -332,64 +328,64 @@ public class ExecResolver extends ProcedureContainerResolver {
             String tgtType = DataTypeManager.getDataTypeName(paramType);
             String srcType = DataTypeManager.getDataTypeName(exprType);
             Expression result = null;
-                            
+
             if (param.getParameterType() == SPParameter.RETURN_VALUE || param.getParameterType() == SPParameter.OUT) {
-            	if (!ResolverUtil.canImplicitlyConvert(tgtType, srcType)) {
-            		 throw new QueryResolverException(QueryPlugin.Event.TEIID30144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30144, param.getParameterSymbol(), tgtType, srcType));
-            	}
+                if (!ResolverUtil.canImplicitlyConvert(tgtType, srcType)) {
+                     throw new QueryResolverException(QueryPlugin.Event.TEIID30144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30144, param.getParameterSymbol(), tgtType, srcType));
+                }
             } else {
                 try {
                     result = ResolverUtil.convertExpression(expr, tgtType, metadata);
                 } catch (QueryResolverException e) {
                      throw new QueryResolverException(QueryPlugin.Event.TEIID30145, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30145, new Object[] { param.getParameterSymbol(), srcType, tgtType}));
-                }                                                       
+                }
                 param.setExpression(result);
             }
         }
     }
 
     /**
-     * The param resolving always constructs an array, which is 
+     * The param resolving always constructs an array, which is
      * not appropriate if passing an array directly
-     * @return 
+     * @return
      */
-	private boolean checkForArray(SPParameter param, Expression expr) {
-		if (!param.isVarArg() || !(expr instanceof Array)) {
-			return false;
-		}
-		Array array = (Array)expr;
-		if (array.getExpressions().size() == 1) {
-			Expression first = array.getExpressions().get(0);
-			if (first.getType() != null && first.getType() == array.getType()) {
-				param.setExpression(first);
-				return true;
-			} 
-		}
-		return false;
-	}
-    
+    private boolean checkForArray(SPParameter param, Expression expr) {
+        if (!param.isVarArg() || !(expr instanceof Array)) {
+            return false;
+        }
+        Array array = (Array)expr;
+        if (array.getExpressions().size() == 1) {
+            Expression first = array.getExpressions().get(0);
+            if (first.getType() != null && first.getType() == array.getType()) {
+                param.setExpression(first);
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected void resolveGroup(TempMetadataAdapter metadata,
                                 ProcedureContainer procCommand) throws TeiidComponentException,
                                                               QueryResolverException {
         //Do nothing
     }
 
-    /** 
-     * @throws QueryResolverException 
+    /**
+     * @throws QueryResolverException
      * @see org.teiid.query.resolver.ProcedureContainerResolver#getPlan(org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.sql.symbol.GroupSymbol)
      */
     protected String getPlan(QueryMetadataInterface metadata,
                              GroupSymbol group) throws TeiidComponentException,
                                                QueryMetadataException, QueryResolverException {
         StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(group.getName());
-        
+
         //if there is a query plan associated with the procedure, get it.
         QueryNode plan = storedProcedureInfo.getQueryPlan();
-        
+
         if (plan.getQuery() == null) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30146, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30146, group));
         }
-        
+
         return plan.getQuery();
     }
 }

@@ -20,7 +20,6 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
-import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
@@ -30,16 +29,16 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.Transaction;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
-import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.dqp.service.TransactionContext;
+import org.teiid.resource.api.XAImporter;
 
 public class TestTransactionServer {
 
     private TransactionServerImpl server;
-    private XATerminator xaTerminator;
+    private XAImporter xaImporter;
     private TransactionManager tm;
-	private javax.transaction.Transaction txn;
-    
+    private javax.transaction.Transaction txn;
+
     private static final String THREAD1 = "abc1"; //$NON-NLS-1$
     private static final String THREAD2 = "abc2"; //$NON-NLS-1$
 
@@ -50,16 +49,18 @@ public class TestTransactionServer {
         2
     }, new byte[0]);
 
+    static int TIMEOUT = 100;
+
     @Before public void setUp() throws Exception {
         server = new TransactionServerImpl();
-        xaTerminator = Mockito.mock(XATerminator.class);
         tm = Mockito.mock(TransactionManager.class);
         txn = Mockito.mock(javax.transaction.Transaction.class);
         Mockito.stub(tm.getTransaction()).toReturn(txn);
         Mockito.stub(tm.suspend()).toReturn(txn);
-        server.setXaTerminator(xaTerminator);
+        xaImporter = Mockito.mock(XAImporter.class);
+        Mockito.stub(xaImporter.importTransaction(Mockito.any(), Mockito.any(), Mockito.eq(TIMEOUT))).toReturn(txn);
+        server.setXaImporter(xaImporter);
         server.setTransactionManager(tm);
-        server.setWorkManager(new FakeWorkManager());
     }
 
     /**
@@ -135,7 +136,7 @@ public class TestTransactionServer {
                          ex.getMessage());
         }
     }
-    
+
     /**
      * global cannot be nested
      */
@@ -156,7 +157,7 @@ public class TestTransactionServer {
     @Test public void testLocalCommit() throws Exception {
         server.begin(THREAD1);
         server.commit(THREAD1);
-        
+
         Mockito.verify(tm).commit();
 
         try {
@@ -167,18 +168,18 @@ public class TestTransactionServer {
     }
 
     @Test public void testTwoPhaseCommit() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
-    	server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
         server.commit(THREAD1, XID1, false, false);
-        
-        Mockito.verify(xaTerminator).commit(XID1, false);
-    }     
-    
+
+        Mockito.verify(xaImporter).commit(XID1, false);
+    }
+
     @Test public void testLocalRollback() throws Exception {
         server.begin(THREAD1);
         server.rollback(THREAD1);
         Mockito.verify(tm).rollback();
-        
+
         try {
             server.rollback(THREAD1);
         } catch (XATransactionException e) {
@@ -209,7 +210,7 @@ public class TestTransactionServer {
             assertEquals("TEIID30524 Client is not currently enlisted in transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
-    
+
     @Test public void testSuspendResume() throws Exception {
         server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
         server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
@@ -241,7 +242,7 @@ public class TestTransactionServer {
             assertEquals("TEIID30521 No global transaction found for Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
-    
+
     @Test public void testPrepareWithSuspended() throws Exception {
         server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
         server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
@@ -253,144 +254,144 @@ public class TestTransactionServer {
             assertEquals("TEIID30505 Suspended work still exists on transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
-    
+
     @Test public void testGetTransactionContext() throws Exception {
         assertSame(server.getOrCreateTransactionContext(THREAD1), server.getOrCreateTransactionContext(THREAD1));
     }
-    
+
     @Test public void testGetTransactions() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
         server.begin(THREAD2);
-        
+
         assertEquals(2, server.getTransactions().size());
-        
+
         server.commit(THREAD2);
         assertEquals(1, server.getTransactions().size());
-        
+
         Transaction t = server.getTransactions().iterator().next();
         assertEquals(THREAD1, t.getAssociatedSession());
         assertNotNull(t.getId());
     }
-    
+
     @Test public void testGlobalPrepare() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
         TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
         server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
-        
-    	server.prepare(THREAD1, XID1, false);
-    	
-    	Mockito.verify(xaTerminator).prepare(tc.getXid());
-    	
-    	server.commit(THREAD1, XID1, true, false);
+
+        server.prepare(THREAD1, XID1, false);
+
+        Mockito.verify(xaImporter).prepare(tc.getXid());
+
+        server.commit(THREAD1, XID1, true, false);
     }
-    
+
     @Test public void testGlobalPrepareFail() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, TIMEOUT,false);
         server.end(THREAD1, XID1, XAResource.TMFAIL, false);
         Mockito.verify(txn).setRollbackOnly();
-    }    
-    
-    @Test public void testGlobalOnePhaseCommit() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	
-        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
-        
-        server.prepare(THREAD1, XID1, false);
-
-		
-		server.commit(THREAD1, XID1, true, false);
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
-    }  
-    
-    @Test public void testGlobalOnePhaseCommit_force_prepare_through() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	
-        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
-        
-		
-		server.commit(THREAD1, XID1, true, false);
-		
-		Mockito.verify(xaTerminator).prepare(tc.getXid());
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
-    }  
-    
-    @Test public void testGlobalOnePhaseCommit_force_prepare() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	
-        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
-        
-		
-		server.commit(THREAD1, XID1, true, false);
-		
-		// since there are two sources the commit is not single phase
-		Mockito.verify(xaTerminator).prepare(tc.getXid());
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
-    }  
-    
-    
-    @Test public void testGlobalOnePhase_teiid_multiple() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	
-        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
-        
-        server.prepare(THREAD1, XID1, false);
-
-		
-		server.commit(THREAD1, XID1, true, false);
-		
-		// since there are two sources the commit is not single phase
-		Mockito.verify(xaTerminator).commit(tc.getXid(), false);
-    }    
-    
-    @Test public void testGlobalOnePhaseRoolback() throws Exception {
-    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	
-        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
-        
-        server.prepare(THREAD1, XID1, false);
-
-		
-		server.rollback(THREAD1, XID1, false);
-		
-		// since there are two sources the commit is not single phase
-		Mockito.verify(xaTerminator).rollback(tc.getXid());
-    }     
-    
-    @Test public void testRequestCommit() throws Exception{
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	server.begin(tc);
-    	server.commit(tc);
-    	assertEquals(TransactionContext.Scope.NONE, tc.getTransactionType());
-    	Mockito.verify(tm).commit();
     }
-    
+
+    @Test public void testGlobalOnePhaseCommit() throws Exception {
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+
+        server.prepare(THREAD1, XID1, false);
+
+
+        server.commit(THREAD1, XID1, true, false);
+        Mockito.verify(xaImporter).commit(tc.getXid(), false);
+    }
+
+    @Test public void testGlobalOnePhaseCommit_force_prepare_through() throws Exception {
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+
+
+        server.commit(THREAD1, XID1, true, false);
+
+        Mockito.verify(xaImporter).prepare(tc.getXid());
+        Mockito.verify(xaImporter).commit(tc.getXid(), false);
+    }
+
+    @Test public void testGlobalOnePhaseCommit_force_prepare() throws Exception {
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+
+
+        server.commit(THREAD1, XID1, true, false);
+
+        // since there are two sources the commit is not single phase
+        Mockito.verify(xaImporter).prepare(tc.getXid());
+        Mockito.verify(xaImporter).commit(tc.getXid(), false);
+    }
+
+
+    @Test public void testGlobalOnePhase_teiid_multiple() throws Exception {
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+
+        server.prepare(THREAD1, XID1, false);
+
+
+        server.commit(THREAD1, XID1, true, false);
+
+        // since there are two sources the commit is not single phase
+        Mockito.verify(xaImporter).commit(tc.getXid(), false);
+    }
+
+    @Test public void testGlobalOnePhaseRoolback() throws Exception {
+        server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100,false);
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+
+        server.end(THREAD1, XID1, XAResource.TMSUCCESS, false);
+
+        server.prepare(THREAD1, XID1, false);
+
+
+        server.rollback(THREAD1, XID1, false);
+
+        // since there are two sources the commit is not single phase
+        Mockito.verify(xaImporter).rollback(tc.getXid());
+    }
+
+    @Test public void testRequestCommit() throws Exception{
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+        server.begin(tc);
+        server.commit(tc);
+        assertEquals(TransactionContext.Scope.NONE, tc.getTransactionType());
+        Mockito.verify(tm).commit();
+    }
+
     @Test public void testRequestRollback() throws Exception{
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	server.begin(tc);
-    	
-    	server.rollback(tc);
-    	assertEquals(TransactionContext.Scope.NONE, tc.getTransactionType());
-    	Mockito.verify(tm).rollback();
-    }     
-    
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+        server.begin(tc);
+
+        server.rollback(tc);
+        assertEquals(TransactionContext.Scope.NONE, tc.getTransactionType());
+        Mockito.verify(tm).rollback();
+    }
+
     @Test public void testLocalCancel() throws Exception {
         server.begin(THREAD1);
-        
+
         server.cancelTransactions(THREAD1, false);
-        
+
         Mockito.verify(txn).setRollbackOnly();
-    }  
-    
+    }
+
     @Test public void testRequestCancel() throws Exception{
-    	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
-    	server.begin(tc);
-    	
-    	server.cancelTransactions(THREAD1, true);
-    	Mockito.verify(txn).setRollbackOnly();
-    }      
+        TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
+        server.begin(tc);
+
+        server.cancelTransactions(THREAD1, true);
+        Mockito.verify(txn).setRollbackOnly();
+    }
 }

@@ -1,0 +1,10 @@
+string                                                             clob                                                             
+Name                                                               Body                                                             
+loadMatView                                                        Clob[15108]                                                      
+matViewStatus                                                      Clob[3093]                                                       
+updateMatView                                                      Clob[8798]                                                       
+updateStaleCount                                                   Clob[3488]                                                       
+Row Count : 4
+getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName      getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
+Name           12             PartsSupplier   java.lang.String    Name            string             SYSADMIN       StoredProcedures  255                   255           0         false            true             false       false                 0           true        true          false     false       
+Body           2005           PartsSupplier   java.sql.Clob       Body            clob               SYSADMIN       StoredProcedures  2097152               2097152       0         false            true             false       false                 0           true        true          false     false       

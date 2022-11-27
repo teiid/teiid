@@ -30,40 +30,40 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 
 /**
- * Convert left(string, count) --> substr(string, 1, count)
- * or right(string, count) --> substr(string, -1 * count) - we lack a way to express a unary negation
+ * Convert left(string, count) --&gt; substr(string, 1, count)
+ * or right(string, count) --&gt; substr(string, -1 * count) - we lack a way to express a unary negation
  */
 public class LeftOrRightFunctionModifier extends FunctionModifier {
     private LanguageFactory langFactory;
-    
+
     public LeftOrRightFunctionModifier(LanguageFactory langFactory) {
         this.langFactory = langFactory;
     }
-    
+
     @Override
     public List<?> translate(Function function) {
         List<Expression> args = function.getParameters();
         Function func = null;
-        
+
         if (function.getName().equalsIgnoreCase("left")) { //$NON-NLS-1$
-            func = langFactory.createFunction(SourceSystemFunctions.SUBSTRING,  
+            func = langFactory.createFunction(SourceSystemFunctions.SUBSTRING,
                 Arrays.asList(
-                    args.get(0), 
+                    args.get(0),
                     langFactory.createLiteral(Integer.valueOf(1), TypeFacility.RUNTIME_TYPES.INTEGER),
                     args.get(1)),
-                    String.class);   
+                    String.class);
         } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
             Function negIndex = langFactory.createFunction("*",  //$NON-NLS-1$
                 Arrays.asList(langFactory.createLiteral(Integer.valueOf(-1), TypeFacility.RUNTIME_TYPES.INTEGER), args.get(1)),
                 Integer.class);
-                            
-            func = langFactory.createFunction(SourceSystemFunctions.SUBSTRING,  
+
+            func = langFactory.createFunction(SourceSystemFunctions.SUBSTRING,
                 Arrays.asList(
-                    args.get(0), 
+                    args.get(0),
                     negIndex),
-                    String.class);      
+                    String.class);
         }
 
-        return Arrays.asList(func);    
+        return Arrays.asList(func);
     }
 }

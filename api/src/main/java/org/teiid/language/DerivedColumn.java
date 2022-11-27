@@ -25,12 +25,12 @@ public class DerivedColumn extends BaseLanguageObject {
     private String alias;
     private Expression expression;
     private boolean projected;
-    
+
     public DerivedColumn(String name, Expression expression) {
         this.alias = name;
         this.expression = expression;
     }
-    
+
     public String getAlias() {
         return alias;
     }
@@ -46,21 +46,21 @@ public class DerivedColumn extends BaseLanguageObject {
     public void setAlias(String name) {
         this.alias = name;
     }
-    
+
     public void setExpression(Expression expression) {
         this.expression = expression;
     }
-    
+
     /**
      * If this column is projected for use by Teiid
      * @return
      */
     public boolean isProjected() {
-		return projected;
-	}
-    
+        return projected;
+    }
+
     public void setProjected(boolean projected) {
-		this.projected = projected;
-	}
+        this.projected = projected;
+    }
 
 }

@@ -40,31 +40,31 @@ import org.teiid.translator.ProcedureExecution;
 @SuppressWarnings("nls")
 public class TestOlapTranslator {
 
-	@Test public void testCannedProcedure() throws Exception {
-		String ddl = "create foreign procedure proc(arg integer, arg1 date) returns table (x string) options (\"teiid_rel:native-query\" '$2 $1 something')";
-		String query = "exec proc(2, {d'1970-01-01'})";
-		
-		TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "phy");
-		
-		CommandBuilder commandBuilder = new CommandBuilder(tm);
+    @Test public void testCannedProcedure() throws Exception {
+        String ddl = "create foreign procedure proc(arg integer, arg1 date) returns table (x string) options (\"teiid_rel:native-query\" '$2 $1 something')";
+        String query = "exec proc(2, {d'1970-01-01'})";
+
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+
+        CommandBuilder commandBuilder = new CommandBuilder(tm);
         Command obj = commandBuilder.getCommand(query);
-	        
-		OlapExecutionFactory oef = new OlapExecutionFactory();
-		Connection mock = Mockito.mock(java.sql.Connection.class);
-		OlapWrapper mock2 = Mockito.mock(OlapWrapper.class);
-		OlapConnection mock3 = Mockito.mock(OlapConnection.class);
-		OlapStatement mock4 = Mockito.mock(OlapStatement.class);
-		Mockito.stub(mock4.executeOlapQuery(Mockito.anyString())).toThrow(new TeiidRuntimeException());
-		Mockito.stub(mock3.createStatement()).toReturn(mock4);
-		Mockito.stub(mock2.unwrap(OlapConnection.class)).toReturn(mock3);
-		Mockito.stub(mock.unwrap(OlapWrapper.class)).toReturn(mock2);
-		ProcedureExecution pe = oef.createProcedureExecution((Call)obj, Mockito.mock(ExecutionContext.class), new RuntimeMetadataImpl(tm), mock);
-		try {
-			pe.execute();
-			fail();
-		} catch (TeiidRuntimeException e) {
-			Mockito.verify(mock4).executeOlapQuery("'1970-01-01' 2 something");
-		}
-	}
-	
+
+        OlapExecutionFactory oef = new OlapExecutionFactory();
+        Connection mock = Mockito.mock(java.sql.Connection.class);
+        OlapWrapper mock2 = Mockito.mock(OlapWrapper.class);
+        OlapConnection mock3 = Mockito.mock(OlapConnection.class);
+        OlapStatement mock4 = Mockito.mock(OlapStatement.class);
+        Mockito.stub(mock4.executeOlapQuery(Mockito.anyString())).toThrow(new TeiidRuntimeException());
+        Mockito.stub(mock3.createStatement()).toReturn(mock4);
+        Mockito.stub(mock2.unwrap(OlapConnection.class)).toReturn(mock3);
+        Mockito.stub(mock.unwrap(OlapWrapper.class)).toReturn(mock2);
+        ProcedureExecution pe = oef.createProcedureExecution((Call)obj, Mockito.mock(ExecutionContext.class), new RuntimeMetadataImpl(tm), mock);
+        try {
+            pe.execute();
+            fail();
+        } catch (TeiidRuntimeException e) {
+            Mockito.verify(mock4).executeOlapQuery("'1970-01-01' 2 something");
+        }
+    }
+
 }

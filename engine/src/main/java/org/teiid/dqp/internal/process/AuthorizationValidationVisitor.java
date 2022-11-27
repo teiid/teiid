@@ -52,7 +52,7 @@ import org.teiid.query.validator.AbstractValidationVisitor;
 
 
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
-    
+
     private CommandContext commandContext;
     private PolicyDecider decider;
 
@@ -62,114 +62,131 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     }
 
     // ############### Visitor methods for language objects ##################
-    
+
     @Override
     public void visit(Create obj) {
-    	validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.CREATE);
+        //eventually may need to check scheam level permissions proactively
+        validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), obj.getTable(), Context.CREATE);
     }
-    
+
     @Override
     public void visit(DynamicCommand obj) {
-    	if (obj.getIntoGroup() != null) {
-    		validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), false, obj.getIntoGroup(), Context.CREATE);
-    	}
+        if (obj.getIntoGroup() != null && obj.getIntoGroup().isTempTable() && obj.getIntoGroup().isImplicitTempGroupSymbol()) {
+            validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), obj.getIntoGroup(), Context.CREATE);
+        } //else if not a temp table, then this will be checked by the dynamic sql instruction
     }
-    
+
     @Override
     public void visit(AlterProcedure obj) {
-    	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
+        validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
-    
+
     @Override
     public void visit(AlterTrigger obj) {
-    	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, obj.isCreate()?Context.CREATE:Context.ALTER);
+        validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, obj.isCreate()?Context.CREATE:Context.ALTER);
     }
-    
+
     @Override
     public void visit(AlterView obj) {
-    	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
+        validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
-    
+
     @Override
     public void visit(ObjectTable objectTable) {
-    	String language = ObjectTable.DEFAULT_LANGUAGE;
-    	if (objectTable.getScriptingLanguage() != null) {
-    		language = objectTable.getScriptingLanguage();
-    	}
-    	Map<String, LanguageObject> map = new HashMap<String, LanguageObject>();
-    	map.put(language, objectTable);
-    	validateEntitlements(PermissionType.LANGUAGE, Context.QUERY, map);
+        String language = ObjectTable.DEFAULT_LANGUAGE;
+        if (objectTable.getScriptingLanguage() != null) {
+            language = objectTable.getScriptingLanguage();
+        }
+
+        String[] resources = new String[] {language};
+
+        logRequest(resources, Context.QUERY);
+
+        boolean result = decider.isLanguageAllowed(language, commandContext);
+
+        logResult(resources, Context.QUERY, result);
+
+        if (!result) {
+            handleValidationError(
+                    QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "LANGUAGE"), //$NON-NLS-1$  //$NON-NLS-2$
+                    Arrays.asList(objectTable));
+        }
     }
 
-	private void validateTemp(DataPolicy.PermissionType action, String resource, boolean schema, LanguageObject object, Context context) {
-		Set<String> resources = Collections.singleton(resource);
-		logRequest(resources, context);
-        
-    	boolean allowed = decider.isTempAccessible(action, schema?resource:null, context, commandContext);
-    	
-    	logResult(resources, context, allowed);
-    	if (!allowed) {
-		    handleValidationError(
-			        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
-			        Arrays.asList(object));
-    	}
-	}
+    private void validateTemp(DataPolicy.PermissionType action, String resource, LanguageObject object, Context context) {
+        String[] resources = new String[] {resource};
+        logRequest(resources, context);
 
-	private void logRequest(Set<String> resources, Context context) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
-	        // Audit - request
-	    	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-request", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
-	    	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+        boolean allowed = decider.isTempAccessible(action, null, context, commandContext);
+
+        logResult(resources, context, allowed);
+        if (!allowed) {
+            handleValidationError(
+                    QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
+                    Arrays.asList(object));
         }
-	}
-    
+    }
+
+    private void logRequest(Set<AbstractMetadataRecord> resources, Context context) {
+        logRequest(resources.stream().map(r -> r.getFullName()).toArray(String[]::new), context);
+    }
+
+    private void logRequest(String[] resources, Context context) {
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+            // Audit - request
+            AuditMessage msg = new AuditMessage(context.name(),
+                    "getInaccessibleResources-request", resources, commandContext); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+        }
+    }
+
     @Override
     public void visit(Drop obj) {
-    	validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.DROP);
+        validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), obj.getTable(), Context.DROP);
     }
-    
+
     public void visit(Delete obj) {
-    	validateEntitlements(obj);
+        validateEntitlements(obj);
     }
 
     public void visit(Insert obj) {
-    	validateEntitlements(obj);
+        validateEntitlements(obj);
     }
 
     public void visit(Query obj) {
-    	validateEntitlements(obj);
+        validateEntitlements(obj);
     }
 
     public void visit(Update obj) {
-    	validateEntitlements(obj);
+        validateEntitlements(obj);
     }
 
     public void visit(StoredProcedure obj) {
-    	validateEntitlements(obj);
+        validateEntitlements(obj);
     }
-    
+
     public void visit(Function obj) {
-    	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
-    		try {
-				ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(obj, this.getMetadata());
-    			List<Symbol> symbols = new LinkedList<Symbol>();
-				symbols.add(lookup.getGroup());
-				symbols.add(lookup.getKeyElement());
-				symbols.add(lookup.getReturnElement());
-	    		validateEntitlements(symbols, DataPolicy.PermissionType.READ, Context.QUERY);
-			} catch (TeiidComponentException e) {
-				handleException(e, obj);
-			} catch (TeiidProcessingException e) {
-				handleException(e, obj);
-			}
-    	} else {
-    		String schema = obj.getFunctionDescriptor().getSchema();
-    		if (schema != null && !isSystemSchema(schema)) {
-    			Map<String, Function> map = new HashMap<String, Function>();
-    			map.put(obj.getFunctionDescriptor().getFullName(), obj);
-    			validateEntitlements(PermissionType.EXECUTE, Context.FUNCTION, map);
-    		}
-    	}
+        if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
+            try {
+                ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(obj, this.getMetadata());
+                List<Symbol> symbols = new LinkedList<Symbol>();
+                symbols.add(lookup.getGroup());
+                symbols.add(lookup.getKeyElement());
+                symbols.add(lookup.getReturnElement());
+                validateEntitlements(symbols, DataPolicy.PermissionType.READ, Context.QUERY);
+            } catch (TeiidComponentException e) {
+                handleException(e, obj);
+            } catch (TeiidProcessingException e) {
+                handleException(e, obj);
+            }
+        } else {
+            String schema = obj.getFunctionDescriptor().getSchema();
+            if (schema != null && !isSystemSchema(schema)) {
+                Map<AbstractMetadataRecord, Function> map = new HashMap<AbstractMetadataRecord, Function>();
+                map.put(obj.getFunctionDescriptor().getMethod(), obj);
+                validateEntitlements(PermissionType.EXECUTE, Context.FUNCTION, map);
+            }
+        }
     }
 
     // ######################### Validation methods #########################
@@ -178,16 +195,16 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      * Validate insert/merge entitlements
      */
     protected void validateEntitlements(Insert obj) {
-    	List<LanguageObject> insert = new LinkedList<LanguageObject>();
-    	insert.add(obj.getGroup());
-    	insert.addAll(obj.getVariables());
+        List<LanguageObject> insert = new LinkedList<LanguageObject>();
+        insert.add(obj.getGroup());
+        insert.addAll(obj.getVariables());
         validateEntitlements(
-        		insert,
+                insert,
             DataPolicy.PermissionType.CREATE,
             Context.INSERT);
         if (obj.isUpsert()) {
-        	validateEntitlements(
-            		insert,
+            validateEntitlements(
+                    insert,
                 DataPolicy.PermissionType.UPDATE,
                 Context.MERGE);
         }
@@ -198,13 +215,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      */
     protected void validateEntitlements(Update obj) {
         // Check that all elements used in criteria have read permission
-    	HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>(); 
-    	ElementCollectorVisitor.getElements(obj.getChangeList().getClauseMap().values(), elements);
+        HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>();
+        ElementCollectorVisitor.getElements(obj.getChangeList().getClauseMap().values(), elements);
         if (obj.getCriteria() != null) {
             ElementCollectorVisitor.getElements(obj.getCriteria(), elements);
         }
         validateEntitlements(
-        		elements,
+                elements,
                 DataPolicy.PermissionType.READ,
                 Context.UPDATE);
 
@@ -261,7 +278,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         if(entitledObjects.size() == 0) {
             return;
         }
-        
+
         validateEntitlements(entitledObjects, DataPolicy.PermissionType.READ, Context.QUERY);
     }
 
@@ -277,14 +294,14 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      *
      * @param symbols The collection of <code>Symbol</code>s affected by these actions.
      * @param actionCode The actions to validate for
-     * @param auditContext The {@link AuthorizationService} to use when resource auditing is done.
+     * @param auditContext The {@link Context} to use when resource auditing is done.
      */
     protected void validateEntitlements(Collection<? extends LanguageObject> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
-        Map<String, LanguageObject> nameToSymbolMap = new LinkedHashMap<String, LanguageObject>();
+        Map<AbstractMetadataRecord, LanguageObject> recordToSymbolMap = new LinkedHashMap<AbstractMetadataRecord, LanguageObject>();
         for (LanguageObject symbol : symbols) {
             try {
                 Object metadataID = null;
-                if(symbol instanceof ElementSymbol) {                    
+                if(symbol instanceof ElementSymbol) {
                     metadataID = ((ElementSymbol)symbol).getMetadataID();
                     if (metadataID instanceof MultiSourceElement || metadataID instanceof TempMetadataID) {
                         continue;
@@ -293,17 +310,17 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     GroupSymbol group = (GroupSymbol)symbol;
                     metadataID = group.getMetadataID();
                     if (metadataID instanceof TempMetadataID) {
-                    	if (group.isProcedure()) {
-                    		Map<String, LanguageObject> procMap = new LinkedHashMap<String, LanguageObject>();
-                    		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap, getMetadata());
-                    		validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
-                    	} else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
-                    		validateTemp(actionCode, group.getNonCorrelationName(), false, group, auditContext);
-                    	}
+                        if (group.isProcedure()) {
+                            Map<AbstractMetadataRecord, LanguageObject> procMap = new LinkedHashMap<AbstractMetadataRecord, LanguageObject>();
+                            addToMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap, getMetadata());
+                            validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
+                        } else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
+                            validateTemp(actionCode, group.getNonCorrelationName(), group, auditContext);
+                        }
                         continue;
                     }
                 }
-                addToNameMap(metadataID, symbol, nameToSymbolMap, getMetadata());
+                addToMap(metadataID, symbol, recordToSymbolMap, getMetadata());
             } catch(QueryMetadataException e) {
                 handleException(e);
             } catch(TeiidComponentException e) {
@@ -311,78 +328,85 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
             }
         }
 
-        validateEntitlements(actionCode, auditContext, nameToSymbolMap);
-	}
-    
-    static void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
-    	String fullName = metadata.getFullName(metadataID);
+        validateEntitlements(actionCode, auditContext, recordToSymbolMap);
+    }
+
+    static void addToMap(Object metadataID, LanguageObject symbol, Map<AbstractMetadataRecord, LanguageObject> recordToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         Object modelId = metadata.getModelID(metadataID);
         String modelName = metadata.getFullName(modelId);
         if (!isSystemSchema(modelName)) {
-        	//foreign temp table full names are not schema qualified by default
-        	if (!metadata.isVirtualModel(modelId)) {
-        		GroupSymbol group = null;
-        		if (symbol instanceof ElementSymbol) {
-        			group = ((ElementSymbol)symbol).getGroupSymbol();
-        		} else if (symbol instanceof GroupSymbol) {
-        			group = (GroupSymbol)symbol; 
-        		}
-        		if (group != null && group.isTempGroupSymbol() && !group.isGlobalTable()) {
-            		fullName = modelName + AbstractMetadataRecord.NAME_DELIM_CHAR + modelId;
-        		}
-        	}
-        	nameToSymbolMap.put(fullName, symbol);
+            //foreign temp table full names are not schema qualified by default
+            if (!metadata.isVirtualModel(modelId)) {
+                GroupSymbol group = null;
+                if (symbol instanceof ElementSymbol) {
+                    group = ((ElementSymbol)symbol).getGroupSymbol();
+                } else if (symbol instanceof GroupSymbol) {
+                    group = (GroupSymbol)symbol;
+                }
+                if (group != null && group.isTempGroupSymbol() && !group.isGlobalTable()) {
+                    //use the interface to get the non-temp version of the table
+                    metadataID = metadata.getGroupIDForElementID(metadataID);
+                }
+            }
+            if (metadataID instanceof AbstractMetadataRecord) {
+                recordToSymbolMap.put((AbstractMetadataRecord)metadataID, symbol);
+            }
         }
     }
 
-	static private boolean isSystemSchema(String modelName) {
-		return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
-	}
+    static private boolean isSystemSchema(String modelName) {
+        return CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(modelName)
+        || CoreConstants.ODBC_MODEL.equalsIgnoreCase(modelName);
+    }
 
-	private void validateEntitlements(DataPolicy.PermissionType actionCode,
-			Context auditContext, Map<String, ? extends LanguageObject> nameToSymbolMap) {
-		if (nameToSymbolMap.isEmpty()) {
-			return;
-		}
-		Collection<String> inaccessibleResources = getInaccessibleResources(actionCode, nameToSymbolMap.keySet(), auditContext);
-		if(inaccessibleResources.isEmpty()) {
-			return;
-		}
-		List<LanguageObject> inaccessibleSymbols = new ArrayList<LanguageObject>(inaccessibleResources.size());
-		for (String name : inaccessibleResources) {
-	        inaccessibleSymbols.add(nameToSymbolMap.get(name));
-	    }
-	    
-	    // CASE 2362 - do not include the names of the elements for which the user
-	    // is not authorized in the exception message
-	    
-	    handleValidationError(
-	        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), actionCode), //$NON-NLS-1$                    
-	        inaccessibleSymbols);
-	}
+    private void validateEntitlements(DataPolicy.PermissionType actionCode,
+            Context auditContext, Map<AbstractMetadataRecord, ? extends LanguageObject> recordToSymbolMap) {
+        if (recordToSymbolMap.isEmpty()) {
+            return;
+        }
+        Collection<AbstractMetadataRecord> inaccessibleResources = getInaccessibleResources(actionCode, recordToSymbolMap, auditContext);
+        if(inaccessibleResources.isEmpty()) {
+            return;
+        }
+        List<LanguageObject> inaccessibleSymbols = new ArrayList<LanguageObject>(inaccessibleResources.size());
+        for (AbstractMetadataRecord record : inaccessibleResources) {
+            inaccessibleSymbols.add(recordToSymbolMap.get(record));
+        }
+
+        // CASE 2362 - do not include the names of the elements for which the user
+        // is not authorized in the exception message
+
+        handleValidationError(
+            QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), actionCode), //$NON-NLS-1$
+            inaccessibleSymbols);
+    }
 
     /**
      * Out of the resources specified, return the subset for which the specified not have authorization to access.
      */
-    public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
-        logRequest(resources, context);
-        
-		Set<String> results = decider.getInaccessibleResources(action, resources, context, commandContext);
+    public Set<AbstractMetadataRecord> getInaccessibleResources(DataPolicy.PermissionType action, Map<AbstractMetadataRecord, ? extends LanguageObject> resources, Context context) {
+        logRequest(resources.keySet(), context);
 
-		logResult(resources, context, results.isEmpty());
+        Set<AbstractMetadataRecord> results = decider.getInaccessibleResources(action, resources.keySet(), context, commandContext);
+
+        logResult(resources.keySet(), context, results.isEmpty());
         return results;
     }
 
-	private void logResult(Set<String> resources, Context context,
-			boolean granted) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
-	        if (granted) {
-	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
-	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
-	        } else {
-	        	AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", resources.toArray(new String[resources.size()]), commandContext); //$NON-NLS-1$
-	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
-	        }
-		}
-	}    
+    private void logResult(Set<AbstractMetadataRecord> resources, Context context, boolean granted) {
+        logResult(resources.stream().map(r -> r.getFullName()).toArray(String[]::new), context, granted);
+    }
+
+    private void logResult(String[] resources, Context context,
+            boolean granted) {
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
+            if (granted) {
+                AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-granted all", resources, commandContext); //$NON-NLS-1$
+                LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+            } else {
+                AuditMessage msg = new AuditMessage(context.name(), "getInaccessibleResources-denied", resources, commandContext); //$NON-NLS-1$
+                LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+            }
+        }
+    }
 }

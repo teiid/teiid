@@ -41,14 +41,14 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
     public Set<String> getTickers() {
         return this.tickers;
     }
-    
+
     public TranslatorException getException() {
         return this.exception;
     }
 
     public void visit(Comparison obj) {
         Expression expr = obj.getRightExpression();
-        addTickerFromExpression(expr);        
+        addTickerFromExpression(expr);
     }
 
     public void visit(In obj) {
@@ -57,27 +57,27 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
             addTickerFromExpression(expr);
         }
     }
-    
+
     private void addTickerFromExpression(Expression expr) {
         if(expr instanceof Literal) {
             Literal literal = (Literal) expr;
             if(literal.getType() == String.class) {
                 String ticker = (String) literal.getValue();
-                this.tickers.add(ticker.toUpperCase());                
+                this.tickers.add(ticker.toUpperCase());
             } else {
                 this.exception = new TranslatorException(YahooPlugin.Util.getString("TickerCollectorVisitor.Unexpected_type", literal.getType().getName())); //$NON-NLS-1$
             }
         } else {
             this.exception = new TranslatorException(YahooPlugin.Util.getString("TickerCollectorVisitor.Unexpected_expression", expr)); //$NON-NLS-1$
         }
-         
+
     }
-    
+
     public static Set<String> getTickers(Condition crit) throws TranslatorException {
         TickerCollectorVisitor visitor = new TickerCollectorVisitor();
         crit.acceptVisitor(visitor);
-        
-        if(visitor.getException() != null) { 
+
+        if(visitor.getException() != null) {
             throw visitor.getException();
         }
         return visitor.getTickers();

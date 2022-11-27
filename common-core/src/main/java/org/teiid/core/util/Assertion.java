@@ -23,84 +23,84 @@ import org.teiid.core.CorePlugin;
 
 /**
  * <p>
- * This class contains a set of static utility methods for assertion checking. 
+ * This class contains a set of static utility methods for assertion checking.
  * Assertions are used to document the assumptions a programmer is making about the
- * code they are writing.  Assertions should not be used in cases where the user of 
- * a class can affect whether the assertion is true or false, such as argument 
+ * code they are writing.  Assertions should not be used in cases where the user of
+ * a class can affect whether the assertion is true or false, such as argument
  * checking.  Rather, assertions should be considered a much stronger statement by
- * the programmer that such a condition is NEVER true.  In fact, this statement is 
+ * the programmer that such a condition is NEVER true.  In fact, this statement is
  * so strong that assertions should be considered optional as they should never occur.
  * However, these assertions may be violated during development and that is primarily
  * where these assertions are useful.
- * </p><p>
+ * <p>
  * In JDK 1.4, Sun introduces the "assert" keyword and builds assertion support directly
  * into the language.  When MetaMatrix begins using JDK 1.4 across the board, this
- * class should no longer be needed and all usage of assertions should be replaced with 
+ * class should no longer be needed and all usage of assertions should be replaced with
  * use of the built-in JDK assertion facility.
- * </p>
+ *
  */
 public final class Assertion {
     //============================================================================================================================
-	// Constructors
-    
-	// Can't construct - just utility methods
-	private Assertion() {
-	}
+    // Constructors
+
+    // Can't construct - just utility methods
+    private Assertion() {
+    }
 
     //============================================================================================================================
-	// Methods
-	
-	// ########################## BASIC METHODS ###################################
+    // Methods
+
+    // ########################## BASIC METHODS ###################################
 
     public static final void assertTrue(boolean condition) {
         assertTrue(condition,null);
     }
-    
+
     public static final void assertTrue(boolean condition, String msgKey) {
         if(! condition) {
             final String msg = msgKey != null ?
                                msgKey :
-                               CorePlugin.Util.getString("Assertion.Assertion_failed"); //$NON-NLS-1$ 
+                               CorePlugin.Util.getString("Assertion.Assertion_failed"); //$NON-NLS-1$
             failed(msg);
-        }   
+        }
     }
-		
-	public static final void failed(String msg) {
-		throw new AssertionError(msg);
-	}
 
-	// ########################## OBJECT METHODS ###################################
-	
-	public static final void isNull(Object value) {
+    public static final void failed(String msg) {
+        throw new AssertionError(msg);
+    }
+
+    // ########################## OBJECT METHODS ###################################
+
+    public static final void isNull(Object value) {
         isNull(value,null);
-	}
+    }
 
-	public static final void isNull(Object value, String message) {
+    public static final void isNull(Object value, String message) {
         if ( value != null ) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("Assertion.isNull"); //$NON-NLS-1$
             failed(msg);
         }
-	}
+    }
 
-	public static final void isNotNull(Object value) {
+    public static final void isNotNull(Object value) {
         isNotNull(value,null);
-	}
+    }
 
-	public static final void isNotNull(Object value, String message) {
+    public static final void isNotNull(Object value, String message) {
         if ( value == null ) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("Assertion.isNotNull"); //$NON-NLS-1$
             failed(msg);
         }
-	}
+    }
 
     /**
      * Verifies that the specified value is an instance of the specified class.
-     * @param value            The value to verify
-     * @param exprectedClass   The class of which the value must be an instance
+     * @param object            The value to verify
+     * @param expectedClass   The class of which the value must be an instance
      * @param name             The text identifying the name or type of value
      * @throws ClassCastException If the value is not an instance of the specified class.
      * @since 2.1

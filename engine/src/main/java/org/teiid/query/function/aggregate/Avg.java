@@ -28,22 +28,21 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 
 /**
- * Accumulates (per tuple) and calculates the average of the values 
+ * Accumulates (per tuple) and calculates the average of the values
  * of a column.  The type of the result varies depending on the type
- * of the input {@see AggregateSymbol} - the type will not be an
+ * of the input {@link AggregateSymbol} - the type will not be an
  * integral type but will always be some kind of decimal type.
  */
 public class Avg extends Sum {
 
     private long count = 0;
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
-     */
+    @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
         if (dataType.equals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL)) {
             this.accumulatorType = BIG_DECIMAL;
@@ -57,9 +56,7 @@ public class Avg extends Sum {
         count = 0;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
@@ -93,26 +90,26 @@ public class Avg extends Sum {
 
         }
     }
-    
+
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	ArrayList<Class<?>> result = new ArrayList<Class<?>>();
-    	result.addAll(super.getStateTypes());
-    	result.add(Long.class);
-    	return result;
+        ArrayList<Class<?>> result = new ArrayList<Class<?>>();
+        result.addAll(super.getStateTypes());
+        result.add(Long.class);
+        return result;
     }
-    
+
     @Override
     public void getState(List<Object> state) {
-    	super.getState(state);
-    	state.add(count);
+        super.getState(state);
+        state.add(count);
     }
-    
+
     @Override
     public int setState(List<?> state, int index) {
-    	index = super.setState(state, index);
-    	count = (Long) state.get(index);
-    	return index++;
+        index = super.setState(state, index);
+        count = (Long) state.get(index);
+        return index++;
     }
 
 }

@@ -23,45 +23,45 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 public class TestUCanAccessTranslator {
-	
-	private static UCanAccessExecutionFactory TRANSLATOR;
-	
-	@BeforeClass
-	public static void setup() throws TranslatorException {
-		TRANSLATOR = new UCanAccessExecutionFactory();
-		TRANSLATOR.start();
-	}
-	
-	@Test
-	public void testPushDownFuctions() throws TranslatorException {
-		
-		String input = "SELECT ucanaccess.DCount('*','T20','id > 100') FROM BQT1.MediumA"; //$NON-NLS-1$
-		String output = "SELECT DCount('*', 'T20', 'id > 100') FROM MediumA"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-		
-		input = "SELECT ucanaccess.DSum('id','T20','id > 100')"; //$NON-NLS-1$
-		output = "VALUES(DSum('id', 'T20', 'id > 100'))"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-		
-		input = "SELECT ucanaccess.DMax('id', 'T20')"; //$NON-NLS-1$
-		output = "VALUES(DMax('id', 'T20'))"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-		
-		input = "SELECT ucanaccess.DMin('id', 'T20')"; //$NON-NLS-1$
-		output = "VALUES(DMin('id', 'T20'))"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-		
-		input = "SELECT ucanaccess.DAvg('id', 'T20')"; //$NON-NLS-1$
-		output = "VALUES(DAvg('id', 'T20'))"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-		
-		input = "SELECT ucanaccess.DFirst('descr', 'T20')"; //$NON-NLS-1$
-		output = "VALUES(DFirst('descr', 'T20'))"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-		
-		input = "SELECT ucanaccess.DLast('descr', 'T20')"; //$NON-NLS-1$
-		output = "VALUES(DLast('descr', 'T20'))"; //$NON-NLS-1$
-		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-	}
+
+    private static UCanAccessExecutionFactory TRANSLATOR;
+
+    @BeforeClass
+    public static void setup() throws TranslatorException {
+        TRANSLATOR = new UCanAccessExecutionFactory();
+        TRANSLATOR.start();
+    }
+
+    @Test
+    public void testPushDownFuctions() throws TranslatorException {
+
+        String input = "SELECT ucanaccess.DCount('*','T20','id > 100') FROM BQT1.MediumA"; //$NON-NLS-1$
+        String output = "SELECT DCount('*', 'T20', 'id > 100') FROM MediumA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+
+        input = "SELECT ucanaccess.DSum('id','T20','id > 100')"; //$NON-NLS-1$
+        output = "VALUES(DSum('id', 'T20', 'id > 100'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+
+        input = "SELECT ucanaccess.DMax('id', 'T20')"; //$NON-NLS-1$
+        output = "VALUES(DMax('id', 'T20'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+
+        input = "SELECT ucanaccess.DMin('id', 'T20')"; //$NON-NLS-1$
+        output = "VALUES(DMin('id', 'T20'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+
+        input = "SELECT ucanaccess.DAvg('id', 'T20')"; //$NON-NLS-1$
+        output = "VALUES(DAvg('id', 'T20'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+
+        input = "SELECT ucanaccess.DFirst('descr', 'T20')"; //$NON-NLS-1$
+        output = "VALUES(DFirst('descr', 'T20'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+
+        input = "SELECT ucanaccess.DLast('descr', 'T20')"; //$NON-NLS-1$
+        output = "VALUES(DLast('descr', 'T20'))"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 
 }

@@ -32,15 +32,15 @@ public class GroupsUsedByElementsVisitor {
     /**
      * Helper to quickly get the groups from obj in the elements collection
      * @param obj Language object
-     * @param elements Collection to collect groups in
+     * @param groups Collection to collect groups in
      */
     public static final void getGroups(LanguageObject obj, Collection<GroupSymbol> groups) {
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(obj, true);
 
         for (ElementSymbol elementSymbol : elements) {
-        	if (elementSymbol.getGroupSymbol() != null) {
-        		groups.add(elementSymbol.getGroupSymbol());  
-        	}
+            if (elementSymbol.getGroupSymbol() != null) {
+                groups.add(elementSymbol.getGroupSymbol());
+            }
         }
     }
 
@@ -55,7 +55,7 @@ public class GroupsUsedByElementsVisitor {
         getGroups(obj, groups);
         return groups;
     }
-    
+
     public static Set<GroupSymbol> getGroups(Collection<? extends LanguageObject> objects) {
         Set<GroupSymbol> groups = new LinkedHashSet<GroupSymbol>();
         getGroups(objects, groups);
@@ -63,7 +63,7 @@ public class GroupsUsedByElementsVisitor {
     }
 
     public static void getGroups(Collection<? extends LanguageObject> objects, Set<GroupSymbol> groups) {
-        // Get groups from elements     
+        // Get groups from elements
         for (LanguageObject languageObject : objects) {
             if (languageObject instanceof ElementSymbol) {
                 ElementSymbol elem = (ElementSymbol) languageObject;

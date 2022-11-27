@@ -23,12 +23,12 @@ package org.teiid.core.id;
  * IDGenerator
  */
 public class IDGenerator {
-    
-	private int id;
-	
-	public int nextInt() {
-		return id++;
-	}
-    
+
+    private int id;
+
+    public int nextInt() {
+        return id++;
+    }
+
 }
 

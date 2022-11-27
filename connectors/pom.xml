@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.teiid</groupId>
-    <version>11.1.0-SNAPSHOT</version>
+    <version>17.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connectors</artifactId>
@@ -28,29 +28,19 @@
     <dependency>
       <groupId>org.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
-      <artifactId>teiid-client</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.teiid</groupId>
-      <artifactId>teiid-admin</artifactId>
-      <scope>test</scope>
-    </dependency>    
-    <dependency>
-      <groupId>org.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <scope>test</scope>
     </dependency>    
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-optional-geo</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
@@ -63,38 +53,41 @@
       <scope>test</scope>
     </dependency>        
 
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>test</scope>
-    </dependency> 
-    <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging</artifactId>
-        <scope>test</scope>        
-    </dependency>          
-    
   </dependencies>
+
+    <profiles>
+        <profile>
+           <id>core-release</id>
+        </profile>
+        <profile>
+            <id>all-translators</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>sandbox</module>
+            </modules>
+        </profile>
+    </profiles>
   
   <modules>
-    <module>document-api</module>      
-    
-    <module>accumulo</module>
-    <module>cassandra</module>
-    <module>file</module> 
-    <module>google</module>
-    <module>ldap</module>
-    <module>jdbc</module>
-    <module>mongodb</module>
-    <module>couchbase</module>
-    <module>amazon</module>
-    <module>webservice</module>
-    <module>salesforce</module>
-    <module>solr</module>
-    <module>odata</module>
-    <module>swagger</module>
-    <module>infinispan</module>
-    <module>misc</module>
-    <module>sandbox</module>
+    <module>document-api</module>
+     
+     <module>file</module>
+     <module>google</module>
+     <module>jdbc</module>
+     <module>mongodb</module>
+     <module>webservice</module>
+     <module>salesforce</module>
+     <module>odata</module>
+     <module>openapi</module>
+     <module>accumulo</module>
+     <module>cassandra</module>
+     <module>couchbase</module>
+     <module>amazon</module>
+     <module>solr</module>
+     <module>ldap</module>
+     <module>infinispan</module>
+     <module>misc</module>
   </modules>
 </project>

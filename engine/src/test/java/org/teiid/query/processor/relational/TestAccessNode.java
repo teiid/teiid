@@ -43,7 +43,7 @@ import org.teiid.query.util.CommandContext;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class TestAccessNode {
@@ -54,7 +54,7 @@ public class TestAccessNode {
         node.setCommand(command);
         CommandContext context = new CommandContext();
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        FakeDataManager dataManager = new FakeDataManager(); 
+        FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
         node.setElements(command.getProjectedSymbols());
         node.initialize(context, bm, dataManager);
@@ -62,36 +62,36 @@ public class TestAccessNode {
         // Call open()
         node.open();
         if (shouldRegisterRequest) {
-        	assertEquals(Arrays.asList(expectedCommand), dataManager.getQueries());
+            assertEquals(Arrays.asList(expectedCommand), dataManager.getQueries());
         } else {
-        	assertEquals(0, dataManager.getQueries().size());
+            assertEquals(0, dataManager.getQueries().size());
         }
     }
-    
+
     @Test public void testOpen_Defect16059() throws Exception {
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
-        
+
         helpTestOpen(query, "SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", true); //$NON-NLS-1$
     }
-    
+
     @Test public void testOpen_Defect16059_2() throws Exception {
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
-        
+
         helpTestOpen(query, null, false);
     }
-    
+
     @Test public void testExecCount()throws Exception{
         // Setup
         AccessNode node = new AccessNode(1);
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         node.setCommand(query);
         CommandContext context = new CommandContext();
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        FakeDataManager dataManager = new FakeDataManager(); 
+        FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);
         node.setElements(query.getProjectedSymbols());
         node.initialize(context, bm, dataManager);
@@ -99,32 +99,32 @@ public class TestAccessNode {
         node.open();
         assertEquals(Arrays.asList("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5"), dataManager.getQueries()); //$NON-NLS-1$
     }
-	
+
     @Test public void testShouldExecuteUpdate() throws Exception {
         Update update = new Update();
-        
+
         update.setGroup(new GroupSymbol("test")); //$NON-NLS-1$
-        
+
         update.addChange(new ElementSymbol("e1"), new Constant("1")); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         assertTrue(RelationalNodeUtil.shouldExecute(update, false));
-        
+
         update.setChangeList(new SetClauseList());
-        
+
         assertFalse(RelationalNodeUtil.shouldExecute(update, false));
     }
-    
+
     @Test public void testShouldExecuteLimitZero() throws Exception {
         Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT e1, e2 FROM pm1.g1 LIMIT 0"); //$NON-NLS-1$
         assertFalse(RelationalNodeUtil.shouldExecute(query, false));
     }
-    
+
     @Test public void testShouldExecuteAgg() throws Exception {
         Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT count(*) FROM pm1.g1 where false"); //$NON-NLS-1$
         assertTrue(RelationalNodeUtil.shouldExecute(query, false));
     }
-    
+
     @Test public void testUninitailizedClose() throws Exception {
-    	new AccessNode().close();
+        new AccessNode().close();
     }
 }

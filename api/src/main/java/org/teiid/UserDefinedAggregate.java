@@ -23,16 +23,16 @@ package org.teiid;
  * @param <T>
  */
 public interface UserDefinedAggregate<T> {
-	/**
-	 * Called when state from the current partition can be forgotten
-	 */
-	void reset();
-	/**
-	 * Called to get the current value.  May be called multiple times in the same 
-	 * partition for windowed aggregates.
-	 * @param commandContext
-	 * @return
-	 */
-	T getResult(CommandContext commandContext);
+    /**
+     * Called when state from the current partition can be forgotten
+     */
+    void reset();
+    /**
+     * Called to get the current value.  May be called multiple times in the same
+     * partition for windowed aggregates.
+     * @param commandContext
+     * @return
+     */
+    T getResult(CommandContext commandContext);
 
 }

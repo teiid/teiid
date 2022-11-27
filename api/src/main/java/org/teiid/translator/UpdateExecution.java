@@ -25,19 +25,19 @@ import org.teiid.language.Update;
 
 
 /**
- * The update execution represents the case where a connector can 
+ * The update execution represents the case where a connector can
  * execute an {@link Insert}, {@link Update}, {@link Delete}, or {@link BatchedUpdates} command.
  */
 public interface UpdateExecution extends Execution {
 
-	/**
-	 * Returns the update counts for the execution.
-	 * <br>A single positive integer value is expected for non bulk/batch commands.
-	 * <br>bulk/batch should return an integer for each value/command.  0 or greater for successful update count, -2 for no info, -3 failure 
-	 * @return the update counts corresponding to the command executed
-	 * @throws DataNotAvailableException
-	 * @throws TranslatorException
-	 */
+    /**
+     * Returns the update counts for the execution.
+     * <br>A single positive integer value is expected for non bulk/batch commands.
+     * <br>bulk/batch should return an integer for each value/command.  0 or greater for successful update count, -2 for no info, -3 failure
+     * @return the update counts corresponding to the command executed
+     * @throws DataNotAvailableException
+     * @throws TranslatorException
+     */
     int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException;
-    
+
 }

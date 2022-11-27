@@ -23,46 +23,47 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.resource.spi.work.ExecutionContext;
 import javax.transaction.Transaction;
+import javax.transaction.xa.Xid;
 
 import org.teiid.core.TeiidRuntimeException;
 
-public class TransactionContext extends ExecutionContext implements Serializable, Cloneable{
+public class TransactionContext implements Serializable, Cloneable{
 
-	private static final long serialVersionUID = -8689401273499649058L;
+    private static final long serialVersionUID = -8689401273499649058L;
 
-	public enum Scope {
-		GLOBAL,
-		LOCAL,
-		NONE,
-		REQUEST,
-		INHERITED
-	}
-	
+    public enum Scope {
+        GLOBAL,
+        LOCAL,
+        NONE,
+        REQUEST,
+        INHERITED
+    }
+
     private String threadId;
     private Scope transactionType = Scope.NONE;
     private long creationTime;
     private Transaction transaction;
     private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     private int isolationLevel;
+    private Xid xid;
 
     public int getIsolationLevel() {
-		return isolationLevel;
-	}
-    
+        return isolationLevel;
+    }
+
     public void setIsolationLevel(int isolationLevel) {
-		this.isolationLevel = isolationLevel;
-	}
-    
+        this.isolationLevel = isolationLevel;
+    }
+
     public long getCreationTime() {
-		return creationTime;
-	}
-    
+        return creationTime;
+    }
+
     public void setCreationTime(long time) {
-		this.creationTime = time;
-	}    
-    
+        this.creationTime = time;
+    }
+
     public void setTransactionType(Scope transactionType) {
         this.transactionType = transactionType;
     }
@@ -78,32 +79,32 @@ public class TransactionContext extends ExecutionContext implements Serializable
     public String getThreadId() {
         return threadId;
     }
-    
+
     public Transaction getTransaction() {
-		return transaction;
-	}
-    
+        return transaction;
+    }
+
     public void setTransaction(Transaction transaction) {
-		this.transaction = transaction;
-	}
+        this.transaction = transaction;
+    }
 
     public String toString() {
-    	return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$ 
+        return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public String getTransactionId() {
-    	if (this.transaction != null) {
-    		return this.transaction.toString();
-    	} else if (this.getXid() != null) {
-    		return this.getXid().toString();
-    	}
-    	return "NONE"; //$NON-NLS-1$
+        if (this.transaction != null) {
+            return this.transaction.toString();
+        } else if (this.getXid() != null) {
+            return this.getXid().toString();
+        }
+        return "NONE"; //$NON-NLS-1$
     }
 
     public Set<String> getSuspendedBy() {
         return this.suspendedBy;
     }
-    
+
     @Override
     public TransactionContext clone() {
         try {
@@ -112,5 +113,24 @@ public class TransactionContext extends ExecutionContext implements Serializable
             throw new TeiidRuntimeException(e);
         }
     }
-    
+
+    /**
+     * set a transaction context.
+     *
+     * @param xid transaction context.
+     */
+    public void setXid(Xid xid)
+    {
+       this.xid = xid;
+    }
+
+    /**
+     * @return an Xid object carrying a transaction context,
+     * if any.
+     */
+    public Xid getXid()
+    {
+       return this.xid;
+    }
+
 }

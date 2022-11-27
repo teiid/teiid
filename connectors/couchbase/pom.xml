@@ -4,7 +4,7 @@
   <parent>
       <groupId>org.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>11.1.0-SNAPSHOT</version>
+      <version>17.0.0-SNAPSHOT</version>
   </parent>
   <groupId>org.teiid.connectors</groupId>
   <artifactId>couchbase</artifactId>
@@ -15,8 +15,6 @@
   <modules>
     <module>couchbase-api</module>
     <module>translator-couchbase</module>
-    <module>connector-couchbase</module>
-    <module>feature-pack-couchbase</module>
   </modules>
 
 </project>

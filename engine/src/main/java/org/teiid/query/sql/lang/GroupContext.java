@@ -30,28 +30,28 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  *  resolving order.
  */
 public class GroupContext implements Cloneable {
-    
+
     private Collection<GroupSymbol> groups;
-    
+
     private GroupContext parent;
-    
+
     public GroupContext() {
         this(null, null);
     }
-    
+
     public GroupContext(GroupContext parent, Collection<GroupSymbol> groups) {
         this.parent = parent;
         if (groups == null) {
             this.groups = new LinkedList<GroupSymbol>();
         } else {
-            this.groups = groups;    
+            this.groups = groups;
         }
     }
 
     public Collection<GroupSymbol> getGroups() {
         return this.groups;
     }
-    
+
     public void addGroup(GroupSymbol symbol) {
         this.groups.add(symbol);
     }
@@ -59,15 +59,15 @@ public class GroupContext implements Cloneable {
     public GroupContext getParent() {
         return this.parent;
     }
-    
+
     /**
      * Flattens all contexts to a single list
-     *  
+     *
      * @return
      */
     public List<GroupSymbol> getAllGroups() {
         LinkedList<GroupSymbol> result = new LinkedList<GroupSymbol>();
-        
+
         GroupContext root = this;
         while (root != null) {
             result.addAll(root.getGroups());
@@ -76,22 +76,22 @@ public class GroupContext implements Cloneable {
 
         return result;
     }
-    
+
     public GroupContext clone() {
-    	return new GroupContext(parent, new LinkedList<GroupSymbol>(groups));
+        return new GroupContext(parent, new LinkedList<GroupSymbol>(groups));
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        String result = groups.toString(); 
-        
+        String result = groups.toString();
+
         if (parent != null) {
             result += "\n" + parent.toString(); //$NON-NLS-1$
         }
-        
+
         return result;
     }
-    
+
 }

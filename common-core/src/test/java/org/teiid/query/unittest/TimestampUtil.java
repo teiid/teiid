@@ -32,15 +32,15 @@ import java.util.TimeZone;
  * TimestampUtil
  *
  * <p>Allows creation of <code>java.sql.Timestamp</code>, <code>java.sql.Date</code>, <code>java.sql.Time</code>
- * by specifying year, month, day, etc. without deprecation errors.</p>
+ * by specifying year, month, day, etc. without deprecation errors.
  */
 public class TimestampUtil {
 
     private static ThreadLocal<Calendar> CAL = new ThreadLocal<Calendar>() {
-    	@Override
-    	protected Calendar initialValue() {
-    		return Calendar.getInstance();
-    	}
+        @Override
+        protected Calendar initialValue() {
+            return Calendar.getInstance();
+        }
     };
 
     /**

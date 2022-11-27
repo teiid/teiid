@@ -37,11 +37,11 @@ import org.teiid.query.sql.symbol.MultipleElementSymbol;
  * <p>This visitor class will traverse a language object tree and collect all element
  * symbol references it finds.  It uses a collection to collect the elements in so
  * different collections will give you different collection properties - for instance,
- * using a Set will remove duplicates.</p>
+ * using a Set will remove duplicates.
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor (and possibly the collection), run the visitor, and return the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class ElementCollectorVisitor extends LanguageVisitor {
 
@@ -54,7 +54,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to use for elements
      * @throws IllegalArgumentException If elements is null
      */
-	public ElementCollectorVisitor(Collection<? super ElementSymbol> elements) {
+    public ElementCollectorVisitor(Collection<? super ElementSymbol> elements) {
         if(elements == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0021")); //$NON-NLS-1$
         }
@@ -67,9 +67,9 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(ElementSymbol obj) {
-    	if (!aggsOnly || obj.isAggregate()) {
+        if (!aggsOnly || obj.isAggregate()) {
             this.elements.add(obj);
-    	}
+        }
     }
 
     /**
@@ -79,10 +79,10 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      */
     public void visit(MultipleElementSymbol obj) {
         List<ElementSymbol> elementSymbols = obj.getElementSymbols();
-		if(elementSymbols != null) {
-        	for (int i = 0; i < elementSymbols.size(); i++) {
-				visit(elementSymbols.get(i));
-			}
+        if(elementSymbols != null) {
+            for (int i = 0; i < elementSymbols.size(); i++) {
+                visit(elementSymbols.get(i));
+            }
         }
     }
 
@@ -92,21 +92,21 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to collect elements in
      */
     public static final void getElements(LanguageObject obj, Collection<? super ElementSymbol> elements) {
-    	if(obj == null) {
-    		return;
-    	}
+        if(obj == null) {
+            return;
+        }
         ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
         PreOrderNavigator.doVisit(obj, visitor);
     }
-    
+
     public static final void getElements(Collection<? extends LanguageObject> objs, Collection<ElementSymbol> elements) {
-    	if(objs == null) {
-    		return;
-    	}
+        if(objs == null) {
+            return;
+        }
         ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
         for (LanguageObject object : objs) {
             PreOrderNavigator.doVisit(object, visitor);
-		}
+        }
     }
 
     /**
@@ -128,13 +128,13 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param removeDuplicates True to remove duplicates
      * @param useDeepIteration indicates whether or not to iterate into nested
-     * subqueries of the query 
+     * subqueries of the query
      * @return Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}
      */
     public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration) {
-    	return getElements(obj, removeDuplicates, useDeepIteration, false);
+        return getElements(obj, removeDuplicates, useDeepIteration, false);
     }
-    
+
     public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration, boolean aggsOnly) {
         if(obj == null) {
             return Collections.emptyList();
@@ -152,12 +152,12 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         } else {
             PreOrderNavigator.doVisit(obj, visitor);
         }
-        
+
         return elements;
     }
-    
+
     public static final Collection<ElementSymbol> getAggregates(LanguageObject obj, boolean removeDuplicates) {
-    	return getElements(obj, removeDuplicates, false, true);
+        return getElements(obj, removeDuplicates, false, true);
     }
 
 

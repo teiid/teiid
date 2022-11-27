@@ -27,80 +27,80 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class TriggerAction extends Command {
-	
-	private GroupSymbol view;
-	private Block block;
-	
-	public TriggerAction(Block b) {
-		this.setBlock(b);
-	}
-	
-	public Block getBlock() {
-		return block;
-	}
-	
-	public void setBlock(Block block) {
-		block.setAtomic(true);
-		this.block = block;
-	}
-	
-	public GroupSymbol getView() {
-		return view;
-	}
-	
-	public void setView(GroupSymbol view) {
-		this.view = view;
-	}
-		
-	@Override
-	public int hashCode() {
-		return block.hashCode();
-	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof TriggerAction)) {
-			return false;
-		}
-		TriggerAction other = (TriggerAction) obj;
-		return block.equals(other.block);
-	}
+    private GroupSymbol view;
+    private Block block;
 
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public TriggerAction clone() {
-		TriggerAction clone = new TriggerAction(this.block.clone());
-		if (this.view != null) {
-			clone.setView(view.clone());
-		}
-		return clone;
-	}
+    public TriggerAction(Block b) {
+        this.setBlock(b);
+    }
 
-	@Override
-	public boolean areResultsCachable() {
-		return false;
-	}
+    public Block getBlock() {
+        return block;
+    }
 
-	@Override
-	public List<Expression> getProjectedSymbols() {
-		return Command.getUpdateCommandSymbol();
-	}
+    public void setBlock(Block block) {
+        block.setAtomic(true);
+        this.block = block;
+    }
 
-	@Override
-	public int getType() {
-		return Command.TYPE_TRIGGER_ACTION;
-	}
+    public GroupSymbol getView() {
+        return view;
+    }
+
+    public void setView(GroupSymbol view) {
+        this.view = view;
+    }
+
+    @Override
+    public int hashCode() {
+        return block.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof TriggerAction)) {
+            return false;
+        }
+        TriggerAction other = (TriggerAction) obj;
+        return block.equals(other.block);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public TriggerAction clone() {
+        TriggerAction clone = new TriggerAction(this.block.clone());
+        if (this.view != null) {
+            clone.setView(view.clone());
+        }
+        return clone;
+    }
+
+    @Override
+    public boolean areResultsCachable() {
+        return false;
+    }
+
+    @Override
+    public List<Expression> getProjectedSymbols() {
+        return Command.getUpdateCommandSymbol();
+    }
+
+    @Override
+    public int getType() {
+        return Command.TYPE_TRIGGER_ACTION;
+    }
 
 }

@@ -20,7 +20,7 @@ package org.teiid.translator.cassandra;
 
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Argument;
@@ -45,104 +45,104 @@ import com.datastax.driver.core.VersionNumber;
 
 @Translator(name = "cassandra", description = "A translator for Cassandra NoSql database")
 public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactory, CassandraConnection> {
-	private static final VersionNumber DEFAULT_VERSION = VersionNumber.parse("1.2.0"); //$NON-NLS-1$
+    private static final VersionNumber DEFAULT_VERSION = VersionNumber.parse("1.2.0"); //$NON-NLS-1$
     private static final VersionNumber V2 = VersionNumber.parse("2.0.0"); //$NON-NLS-1$
-	private static final VersionNumber V2_2 = VersionNumber.parse("2.2.0"); //$NON-NLS-1$
+    private static final VersionNumber V2_2 = VersionNumber.parse("2.2.0"); //$NON-NLS-1$
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraExecutionFactory.class);
 
-	public static enum Event implements BundleUtil.Event {
-		TEIID22000
-	}
+    public static enum Event implements BundleUtil.Event {
+        TEIID22000
+    }
 
-	private VersionNumber version;
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		setTransactionSupport(TransactionSupport.NONE);
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Cassandra ExecutionFactory Started"); //$NON-NLS-1$
-	}
+    private VersionNumber version;
 
-	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			CassandraConnection connection) throws TranslatorException {
-		return new CassandraQueryExecution(command, connection, executionContext);
-	}
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        setTransactionSupport(TransactionSupport.NONE);
+        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Cassandra ExecutionFactory Started"); //$NON-NLS-1$
+    }
 
-	@Override
-	public UpdateExecution createUpdateExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			CassandraConnection connection) throws TranslatorException {
-		return new CassandraUpdateExecution(command, executionContext, metadata, connection);
-	} 
-	
-	@Override
-	public ProcedureExecution createProcedureExecution(Call command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			CassandraConnection connection) throws TranslatorException {
-		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
-		if (nativeQuery != null) {
-			return new CassandraDirectQueryExecution(nativeQuery, command.getArguments(), command, connection, executionContext, false);
-		}
-		throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
-	}
-	
-	@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments,
-			Command command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, CassandraConnection connection)
-			throws TranslatorException {
-		return new CassandraDirectQueryExecution((String) arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), command, connection, executionContext, true);
-	}
-	
-	@Override
+    @Override
+    public ResultSetExecution createResultSetExecution(QueryExpression command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            CassandraConnection connection) throws TranslatorException {
+        return new CassandraQueryExecution(command, connection, executionContext);
+    }
+
+    @Override
+    public UpdateExecution createUpdateExecution(Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            CassandraConnection connection) throws TranslatorException {
+        return new CassandraUpdateExecution(command, executionContext, metadata, connection);
+    }
+
+    @Override
+    public ProcedureExecution createProcedureExecution(Call command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            CassandraConnection connection) throws TranslatorException {
+        String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+        if (nativeQuery != null) {
+            return new CassandraDirectQueryExecution(nativeQuery, command.getArguments(), command, connection, executionContext, false);
+        }
+        throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
+    }
+
+    @Override
+    public ProcedureExecution createDirectExecution(List<Argument> arguments,
+            Command command, ExecutionContext executionContext,
+            RuntimeMetadata metadata, CassandraConnection connection)
+            throws TranslatorException {
+        return new CassandraDirectQueryExecution((String) arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), command, connection, executionContext, true);
+    }
+
+    @Override
     public MetadataProcessor<CassandraConnection> getMetadataProcessor(){
-	    return new CassandraMetadataProcessor();
-	}
+        return new CassandraMetadataProcessor();
+    }
 
-	@Override
-	public boolean supportsOrderBy() {
-		// Order by is allowed in very restrictive case when this is used as 
-		// compound primary key's second column where it is defined partioned key
-		return false;
-	}
+    @Override
+    public boolean supportsOrderBy() {
+        // Order by is allowed in very restrictive case when this is used as
+        // compound primary key's second column where it is defined partioned key
+        return false;
+    }
 
-	@Override
-	public boolean supportsAggregatesCountStar() {
-		return true;
-	}
+    @Override
+    public boolean supportsAggregatesCountStar() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsCompareCriteriaEquals() {
-		return true;
-	}
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return true;
-	}
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsInCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsInCriteria() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsRowLimit() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsBulkUpdate() {
-		return version.compareTo(V2) >= 0;
-	}
-	
-	@Override
-	public boolean supportsBatchedUpdates() {
-	    return version.compareTo(V2) >= 0;
-	}
-      
+    @Override
+    public boolean supportsRowLimit() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsBulkUpdate() {
+        return version.compareTo(V2) >= 0;
+    }
+
+    @Override
+    public boolean supportsBatchedUpdates() {
+        return version.compareTo(V2) >= 0;
+    }
+
     @Override
     public boolean supportsAggregatesSum() {
         return version.compareTo(V2_2) >= 0;
@@ -163,26 +163,26 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
         return version.compareTo(V2_2) >= 0;
     }
 
-	@Override
-	public boolean returnsSingleUpdateCount() {
-		return true;
-	}
-	
-	@Override
-	public void initCapabilities(CassandraConnection connection)
-			throws TranslatorException {
-		if (connection == null) {
-			return;
-		}
-		this.version = connection.getVersion();
-		if (this.version == null) {
-		     this.version = DEFAULT_VERSION;  
-		}
-	}
-	
-	@Override
-	public boolean isSourceRequiredForCapabilities() {
-		return true;
-	}
-	
+    @Override
+    public boolean returnsSingleUpdateCount() {
+        return true;
+    }
+
+    @Override
+    public void initCapabilities(CassandraConnection connection)
+            throws TranslatorException {
+        if (connection == null) {
+            return;
+        }
+        this.version = connection.getVersion();
+        if (this.version == null) {
+             this.version = DEFAULT_VERSION;
+        }
+    }
+
+    @Override
+    public boolean isSourceRequiredForCapabilities() {
+        return true;
+    }
+
 }

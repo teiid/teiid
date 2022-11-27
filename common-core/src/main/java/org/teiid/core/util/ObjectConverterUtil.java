@@ -29,7 +29,7 @@ import org.teiid.core.TeiidException;
 
 
 public class ObjectConverterUtil {
-    
+
     private static final int DEFAULT_READING_SIZE = 8192;
 
      protected static byte[] convertBlobToByteArray(final java.sql.Blob data) throws TeiidException {
@@ -54,84 +54,84 @@ public class ObjectConverterUtil {
         } else if (data instanceof java.sql.Blob)  {
             return convertBlobToByteArray((java.sql.Blob) data);
         } else if (data instanceof File) {
-        	return convertFileToByteArray((File)data);
+            return convertFileToByteArray((File)data);
         }
         final Object[] params = new Object[]{data.getClass().getName()};
           throw new TeiidException(CorePlugin.Event.TEIID10032, CorePlugin.Util.gs(CorePlugin.Event.TEIID10032,params));
     }
 
     public static byte[] convertToByteArray(final InputStream is) throws IOException {
-    	return convertToByteArray(is, -1);
+        return convertToByteArray(is, -1);
     }
-    	
+
     /**
      * Returns the given input stream's contents as a byte array.
      * If a length is specified (ie. if length != -1), only length bytes
      * are returned. Otherwise all bytes in the stream are returned.
-     * Note this does close the stream, even if not all bytes are written, 
+     * Note this does close the stream, even if not all bytes are written,
      * because the buffering does not guarantee the end position.
      * @throws IOException if a problem occurred reading the stream.
      */
     public static byte[] convertToByteArray(final InputStream is, int length) throws IOException {
-    	return convertToByteArray(is, length, true);
+        return convertToByteArray(is, length, true);
     }
-    
+
     public static byte[] convertToByteArray(final InputStream is, int length, boolean close) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         write(out, is, length, close);
         out.close();
-        return out.toByteArray();    	
+        return out.toByteArray();
     }
 
     public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length) throws IOException {
         return write(out, is, l_buffer, length, true, true);
     }
-    
+
     public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length, boolean closeBoth) throws IOException {
         return write(out, is, l_buffer, length, closeBoth, closeBoth);
     }
-    
+
     public static int write(final OutputStream out, final InputStream is, byte[] l_buffer, int length, boolean closeOutput, boolean closeInput) throws IOException {
         if (is == null) {
             return 0;
         }
-    	int writen = 0;
+        int writen = 0;
         try {
-	        int l_nbytes = 0;  
-	        int count = 0;
-	        int readLength = length;
-	        if (length == -1) {
-	        	readLength = l_buffer.length;
-	        }
-	        else {
-	        	readLength = Math.min(length, l_buffer.length);
-	        }
-	        while (readLength > 0 && (l_nbytes = is.read(l_buffer, count, readLength)) != -1) {
-	        	if (l_nbytes == 0) {
-	        		continue;
-	        	}
-	        	count += l_nbytes;
-	        	if (count >= l_buffer.length || (length > -1 && count + writen >= length)) {
-	        		out.write(l_buffer, 0, count);
-	        		writen += count;
-	        		count = 0;
-	        	}
-	        	if (length != -1) {
-	        		readLength = Math.min(length - writen, l_buffer.length - count);
-	        	} else {
-	        		readLength = l_buffer.length - count;
-	        	}
-	        }
-	        if (count > 0) {
-        		out.write(l_buffer, 0, count);
-        		writen += count;
-        	}
-	        return writen;
+            int l_nbytes = 0;
+            int count = 0;
+            int readLength = length;
+            if (length == -1) {
+                readLength = l_buffer.length;
+            }
+            else {
+                readLength = Math.min(length, l_buffer.length);
+            }
+            while (readLength > 0 && (l_nbytes = is.read(l_buffer, count, readLength)) != -1) {
+                if (l_nbytes == 0) {
+                    continue;
+                }
+                count += l_nbytes;
+                if (count >= l_buffer.length || (length > -1 && count + writen >= length)) {
+                    out.write(l_buffer, 0, count);
+                    writen += count;
+                    count = 0;
+                }
+                if (length != -1) {
+                    readLength = Math.min(length - writen, l_buffer.length - count);
+                } else {
+                    readLength = l_buffer.length - count;
+                }
+            }
+            if (count > 0) {
+                out.write(l_buffer, 0, count);
+                writen += count;
+            }
+            return writen;
         } finally {
             try {
-            	if (closeInput) {
-           			is.close();
-            	}
+                if (closeInput) {
+                       is.close();
+                }
             } finally {
                 if (closeOutput) {
                     out.close();
@@ -141,106 +141,82 @@ public class ObjectConverterUtil {
     }
 
     public static int write(final OutputStream out, final InputStream is, int length) throws IOException {
-       return write(out, is, length, true);    	
-    }    
-    
-    public static int write(final OutputStream out, final InputStream is, int length, boolean close) throws IOException {
-    	return write(out, is, new byte[DEFAULT_READING_SIZE], length, close, close); // buffer holding bytes to be transferred
+       return write(out, is, length, true);
     }
-    
+
+    public static int write(final OutputStream out, final InputStream is, int length, boolean close) throws IOException {
+        return write(out, is, new byte[DEFAULT_READING_SIZE], length, close, close); // buffer holding bytes to be transferred
+    }
+
     public static int write(final OutputStream out, final InputStream is, int length, boolean closeOutput, boolean closeInput) throws IOException {
         return write(out, is, new byte[DEFAULT_READING_SIZE], length, closeOutput, closeInput); // buffer holding bytes to be transferred
     }
-    
+
     public static int write(final Writer out, final Reader is, int length, boolean close) throws IOException {
-    	int writen = 0;
+        int writen = 0;
         try {
-	        char[] l_buffer = new char[DEFAULT_READING_SIZE]; // buffer holding bytes to be transferred
-	        int l_nbytes = 0;  
-	        int count = 0;
-	        int readLength = length;
-	        if (length == -1) {
-	        	readLength = l_buffer.length;
-	        }
-	        else {
-	        	readLength = Math.min(length, l_buffer.length);
-	        }
-	        while (readLength > 0 && (l_nbytes = is.read(l_buffer, count, readLength)) != -1) {
-	        	if (l_nbytes == 0) {
-	        		continue;
-	        	}
-	        	count += l_nbytes;
-	        	if (count >= l_buffer.length || (length > -1 && count + writen >= length)) {
-	        		out.write(l_buffer, 0, count);
-	        		writen += count;
-	        		count = 0;
-	        	}
-	        	if (length != -1) {
-	        		readLength = Math.min(length - writen, l_buffer.length - count);
-	        	} else {
-	        		readLength = l_buffer.length - count;
-	        	}
-	        }
-	        if (count > 0) {
-        		out.write(l_buffer, 0, count);
-        		writen += count;
-        	}
-	        return writen;
+            char[] l_buffer = new char[DEFAULT_READING_SIZE]; // buffer holding bytes to be transferred
+            int l_nbytes = 0;
+            int count = 0;
+            int readLength = length;
+            if (length == -1) {
+                readLength = l_buffer.length;
+            }
+            else {
+                readLength = Math.min(length, l_buffer.length);
+            }
+            while (readLength > 0 && (l_nbytes = is.read(l_buffer, count, readLength)) != -1) {
+                if (l_nbytes == 0) {
+                    continue;
+                }
+                count += l_nbytes;
+                if (count >= l_buffer.length || (length > -1 && count + writen >= length)) {
+                    out.write(l_buffer, 0, count);
+                    writen += count;
+                    count = 0;
+                }
+                if (length != -1) {
+                    readLength = Math.min(length - writen, l_buffer.length - count);
+                } else {
+                    readLength = l_buffer.length - count;
+                }
+            }
+            if (count > 0) {
+                out.write(l_buffer, 0, count);
+                writen += count;
+            }
+            return writen;
         } finally {
-        	if (close) {
-	        	try {
-	        		is.close();
-	        	} finally {
-	        		out.close();
-	        	}
-        	}
+            if (close) {
+                try {
+                    is.close();
+                } finally {
+                    out.close();
+                }
+            }
         }
     }
 
     public static InputStream convertToInputStream(byte[] data) {
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        InputStream isContent = new BufferedInputStream(bais);
-        return isContent;
-    }
-
-    public static InputStream convertToInputStream(final String data) {
-        return convertToInputStream(data.getBytes());
-    }
-    
-    public static InputStream convertToInputStream(final char[] data) {
-        return convertToInputStream(new String(data));
+        return bais;
     }
 
     public static void write(final InputStream is, final String fileName) throws IOException {
         File f = new File(fileName);
         write(is, f);
     }
-    
-    public static void write(final Reader reader, final String fileName) throws IOException {
-        File f = new File(fileName);
-        write(reader, f);
-    }    
-    
-    public static void write(final Reader reader, final File f) throws IOException {
-    	f.getParentFile().mkdirs();
-    	OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(f), "UTF-8");        
-        write(fw, reader, -1, true);   
-    }
 
     public static void write(final InputStream is, final File f) throws IOException {
-    	f.getParentFile().mkdirs();
+        if (!f.getParentFile().exists()) {
+            Assertion.assertTrue(f.getParentFile().mkdirs());
+        }
         FileOutputStream fio = new FileOutputStream(f);
         BufferedOutputStream bos = new BufferedOutputStream(fio);
-    	write(bos, is, -1);
+        write(bos, is, -1);
     }
-    
+
     public static void write(byte[] data, final String fileName) throws Exception {
-        InputStream is = ObjectConverterUtil.convertToInputStream(data);
-        ObjectConverterUtil.write(is, fileName);
-        is.close();
-    }
-    
-    public static void write(char[] data, final String fileName) throws Exception {
         InputStream is = ObjectConverterUtil.convertToInputStream(data);
         ObjectConverterUtil.write(is, fileName);
         is.close();
@@ -263,32 +239,23 @@ public class ObjectConverterUtil {
     }
 
     /**
-     * Returns the contents of the given file as a char array.
-     * When encoding is null, then the platform default one is used
-     * @throws IOException if a problem occurred reading the file.
-     */
-    public static char[] convertFileToCharArray(File file, String encoding) throws IOException {
-        InputStream stream = new FileInputStream(file);
-        return convertToCharArray(stream, (int) file.length(), encoding);
-    }
-    
-    /**
      * Returns the contents of the given file as a string.
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertFileToString(final File file) throws IOException {
-        return new String(convertFileToCharArray(file,"UTF-8")); 
+        InputStream stream = new FileInputStream(file);
+        return convertToString(stream);
     }
 
-    
+
     /**
      * Returns the contents of the given InputStream as a string.
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertToString(final InputStream stream) throws IOException {
-        return new String(convertToCharArray(stream, -1, "UTF-8")); //$NON-NLS-1$
+        return convertToString(new InputStreamReader(stream, "UTF-8"), -1); //$NON-NLS-1$
     }
-    
+
     /**
      * Returns the given input stream's contents as a character array.
      * If a length is specified (ie. if length != -1), only length chars
@@ -298,15 +265,15 @@ public class ObjectConverterUtil {
      */
     public static char[] convertToCharArray(InputStream stream, int length, String encoding)
         throws IOException {
-    	Reader r = null;
-    	if (encoding == null) {
-    		r = new InputStreamReader(stream);
-    	} else {
-    		r = new InputStreamReader(stream, encoding);
-    	}
-        return convertToCharArray(r, length);
+        Reader r = null;
+        if (encoding == null) {
+            r = new InputStreamReader(stream);
+        } else {
+            r = new InputStreamReader(stream, encoding);
+        }
+        return convertToString(r, length).toCharArray();
     }
-    
+
     /**
      * Returns the contents of the given zip entry as a byte array.
      * @throws IOException if a problem occurred reading the zip entry.
@@ -315,15 +282,15 @@ public class ObjectConverterUtil {
         throws IOException {
         return convertToByteArray(zip.getInputStream(ze), (int) ze.getSize());
     }
-    
+
     public static String convertToString(Reader reader) throws IOException {
-    	return new String(convertToCharArray(reader, Integer.MAX_VALUE));
+        return convertToString(reader, -1);
     }
 
-    public static char[] convertToCharArray(Reader reader, int length) throws IOException {
-        StringWriter sb = new StringWriter();     
+    public static String convertToString(Reader reader, int length) throws IOException {
+        StringWriter sb = new StringWriter();
         write(sb, reader, length, true);
-        return sb.toString().toCharArray();
+        return sb.toString();
     }
 
-} 
+}

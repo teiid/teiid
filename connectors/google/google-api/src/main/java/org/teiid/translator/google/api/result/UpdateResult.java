@@ -21,40 +21,40 @@ package org.teiid.translator.google.api.result;
 
 /**
  * This class represents number of updated rows
- * 
+ *
  * @author felias
- * 
+ *
  */
 public class UpdateResult {
 
-	private int expectedNumberOfRows = -1;
-	private int actualNumberOfRows = -1;
+    private int expectedNumberOfRows = -1;
+    private int actualNumberOfRows = -1;
 
-	/**
-	 * 
-	 * @param expectedNumberOfRows
-	 *            number of rows that should have been updated
-	 * @param actualNumberOfRows
-	 *            actual number of updated rows
-	 */
-	public UpdateResult(int expectedNumberOfRows, int actualNumberOfRows) {
-		this.expectedNumberOfRows = expectedNumberOfRows;
-		this.actualNumberOfRows = actualNumberOfRows;
-	}
+    /**
+     *
+     * @param expectedNumberOfRows
+     *            number of rows that should have been updated
+     * @param actualNumberOfRows
+     *            actual number of updated rows
+     */
+    public UpdateResult(int expectedNumberOfRows, int actualNumberOfRows) {
+        this.expectedNumberOfRows = expectedNumberOfRows;
+        this.actualNumberOfRows = actualNumberOfRows;
+    }
 
-	/*
-	 * Returns number of rows that should have been updated
-	 */
-	public int getExpectedNumberOfRows() {
-		return expectedNumberOfRows;
-	}
+    /*
+     * Returns number of rows that should have been updated
+     */
+    public int getExpectedNumberOfRows() {
+        return expectedNumberOfRows;
+    }
 
-	/**
-	 * Returns actual number of updated rows
-	 * 
-	 */
-	public int getActualNumberOfRows() {
-		return actualNumberOfRows;
-	}
+    /**
+     * Returns actual number of updated rows
+     *
+     */
+    public int getActualNumberOfRows() {
+        return actualNumberOfRows;
+    }
 
 }

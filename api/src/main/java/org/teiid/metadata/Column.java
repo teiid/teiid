@@ -25,31 +25,31 @@ import org.teiid.core.types.DataTypeManager;
  */
 public class Column extends BaseColumn implements Comparable<Column> {
 
-	private static final long serialVersionUID = -1310120788764453726L;
+    private static final long serialVersionUID = -1310120788764453726L;
 
-	public enum SearchType {
-		Unsearchable,
-		Like_Only {
-			@Override
-			public String toString() {
-				return "Like Only"; //$NON-NLS-1$ 
-			}
-		},
-		All_Except_Like {
-			@Override
-			public String toString() {
-				return "All Except Like"; //$NON-NLS-1$
-			}
-		},
-		Searchable,
-		Equality_Only {
-			@Override
-			public String toString() {
-				return "Equality Only"; //$NON-NLS-1$
-			}
-		}
-	}
-	
+    public enum SearchType {
+        Unsearchable,
+        Like_Only {
+            @Override
+            public String toString() {
+                return "Like Only"; //$NON-NLS-1$
+            }
+        },
+        All_Except_Like {
+            @Override
+            public String toString() {
+                return "All Except Like"; //$NON-NLS-1$
+            }
+        },
+        Searchable,
+        Equality_Only {
+            @Override
+            public String toString() {
+                return "Equality Only"; //$NON-NLS-1$
+            }
+        }
+    }
+
     private boolean selectable = true;
     private boolean updatable;
     private boolean autoIncremented;
@@ -67,36 +67,36 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private volatile int distinctValues = -1;
     private volatile int nullValues = -1;
     private ColumnSet<?> parent;
-    
+
     @Override
     public void setDatatype(Datatype datatype, boolean copyAttributes, int arrayDimensions) {
-    	super.setDatatype(datatype, copyAttributes, arrayDimensions);
-    	if (datatype != null && copyAttributes) {
-    		//if (DefaultDataTypes.STRING.equals(datatype.getRuntimeTypeName())) { 
-    		    //TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
-    			//this.charOctetLength = datatype.getLength();
-    		//}
-    		this.signed = datatype.isSigned();
-    		this.autoIncremented = datatype.isAutoIncrement();
-    		this.caseSensitive = datatype.isCaseSensitive();
-    		this.signed = datatype.isSigned();
-    	}
+        super.setDatatype(datatype, copyAttributes, arrayDimensions);
+        if (datatype != null && copyAttributes) {
+            //if (DefaultDataTypes.STRING.equals(datatype.getRuntimeTypeName())) {
+                //TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
+                //this.charOctetLength = datatype.getLength();
+            //}
+            this.signed = datatype.isSigned();
+            this.autoIncremented = datatype.isAutoIncrement();
+            this.caseSensitive = datatype.isCaseSensitive();
+            this.signed = datatype.isSigned();
+        }
     }
-    
+
     public void setParent(ColumnSet<?> parent) {
-		this.parent = parent;
-	}
-    
+        this.parent = parent;
+    }
+
     @Override
     public ColumnSet<?> getParent() {
-    	return parent;
+        return parent;
     }
 
     @Override
     public int compareTo(Column record) {
-    	return this.getPosition() - record.getPosition();
+        return this.getPosition() - record.getPosition();
     }
-    
+
     public int getCharOctetLength() {
         return charOctetLength;
     }
@@ -110,14 +110,14 @@ public class Column extends BaseColumn implements Comparable<Column> {
     }
 
     public SearchType getSearchType() {
-    	if (searchType == null) {
-    		return this.getDatatype().getSearchType();
-    	}
+        if (searchType == null) {
+            return this.getDatatype().getSearchType();
+        }
         return searchType;
     }
-    
+
     public boolean isSearchTypeSet() {
-    	return searchType != null;
+        return searchType != null;
     }
 
     public String getFormat() {
@@ -157,32 +157,32 @@ public class Column extends BaseColumn implements Comparable<Column> {
     }
 
     public int getNullValues() {
-    	if (nullValues >= -1) {
-    		return nullValues;
-    	}
-    	return Integer.MAX_VALUE;
+        if (nullValues >= -1) {
+            return nullValues;
+        }
+        return Integer.MAX_VALUE;
     }
-    
+
     public float getNullValuesAsFloat() {
-    	return Table.asFloat(nullValues);
+        return Table.asFloat(nullValues);
     }
-    
+
     public int getDistinctValues() {
-    	if (distinctValues >= -1) {
-    		return distinctValues;
-    	}
-    	return Integer.MAX_VALUE;
+        if (distinctValues >= -1) {
+            return distinctValues;
+        }
+        return Integer.MAX_VALUE;
     }
-    
+
     public float getDistinctValuesAsFloat() {
-    	return Table.asFloat(distinctValues);
+        return Table.asFloat(distinctValues);
     }
 
     /**
      * @param b
      */
     public void setAutoIncremented(boolean b) {
-    	autoIncremented = b;
+        autoIncremented = b;
     }
 
     /**
@@ -269,9 +269,9 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setDistinctValues(int distinctValues) {
         this.distinctValues = Table.asInt(distinctValues);
     }
-    
+
     public void setDistinctValues(long distinctValues) {
-    	this.distinctValues = Table.asInt(distinctValues);
+        this.distinctValues = Table.asInt(distinctValues);
     }
 
     /**
@@ -281,9 +281,9 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setNullValues(int nullValues) {
         this.nullValues = Table.asInt(nullValues);
     }
-    
+
     public void setNullValues(long nullValues) {
-    	this.nullValues = Table.asInt(nullValues);
+        this.nullValues = Table.asInt(nullValues);
     }
 
     /**
@@ -293,20 +293,20 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setNativeType(String nativeType) {
         this.nativeType = DataTypeManager.getCanonicalString(nativeType);
     }
-    
+
     public void setColumnStats(ColumnStats stats) {
-    	if (stats.getDistinctValues() != null) {
-			setDistinctValues(stats.getDistinctValues().longValue());
-		}
-		if (stats.getNullValues() != null) {
-			setNullValues(stats.getNullValues().longValue());
-		}
-		if (stats.getMaximumValue() != null) {
-			setMaximumValue(stats.getMaximumValue());
-		}
-		if (stats.getMinimumValue() != null) {
-			setMinimumValue(stats.getMinimumValue());
-		}
+        if (stats.getDistinctValues() != null) {
+            setDistinctValues(stats.getDistinctValues().longValue());
+        }
+        if (stats.getNullValues() != null) {
+            setNullValues(stats.getNullValues().longValue());
+        }
+        if (stats.getMaximumValue() != null) {
+            setMaximumValue(stats.getMaximumValue());
+        }
+        if (stats.getMinimumValue() != null) {
+            setMinimumValue(stats.getMinimumValue());
+        }
     }
 
 }

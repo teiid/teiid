@@ -30,14 +30,14 @@ import java.util.regex.Pattern;
 public class SqlUtil {
     private static TreeSet<String> updateKeywords = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     static {
-    	updateKeywords.add("insert"); //$NON-NLS-1$
-    	updateKeywords.add("update"); //$NON-NLS-1$
-    	updateKeywords.add("delete"); //$NON-NLS-1$
-    	updateKeywords.add("drop"); //$NON-NLS-1$
-    	updateKeywords.add("create"); //$NON-NLS-1$
+        updateKeywords.add("insert"); //$NON-NLS-1$
+        updateKeywords.add("update"); //$NON-NLS-1$
+        updateKeywords.add("delete"); //$NON-NLS-1$
+        updateKeywords.add("drop"); //$NON-NLS-1$
+        updateKeywords.add("create"); //$NON-NLS-1$
     }
-	private static Pattern PATTERN = Pattern.compile("^(?:\\s|(?:/\\*.*\\*/))*(\\w*)\\s", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern INTO_PATTERN = Pattern.compile("(?:'[^']*')|(\\sinto\\s)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+    private static Pattern PATTERN = Pattern.compile("^(?:\\s|(?:/\\*.*\\*/))*(\\w*)\\s", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+    private static Pattern INTO_PATTERN = Pattern.compile("(?:'[^']*')|(\\sinto\\s)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 
     private SqlUtil() {
         super();
@@ -49,36 +49,36 @@ public class SqlUtil {
      * 0 length, etc.
      * @param sql Sql string
      * @return True if INSERT, UPDATE, or DELETE, and false otherwise
-     * @throws IllegalArgumentException If sql string is invalid and neither a 
+     * @throws IllegalArgumentException If sql string is invalid and neither a
      * query or an update
      */
     public static boolean isUpdateSql(String sql) throws IllegalArgumentException {
         String keyWord = getKeyword(sql);
         return updateKeywords.contains(keyWord);
     }
-    
+
     public static String getKeyword(String sql) {
-    	Matcher matcher = PATTERN.matcher(sql);
+        Matcher matcher = PATTERN.matcher(sql);
         if (!matcher.find()) {
-        	return sql; //shouldn't happen
+            return sql; //shouldn't happen
         }
         String keyword = matcher.group(1);
         if (keyword.equalsIgnoreCase("select")) { //$NON-NLS-1$
-        	int end = matcher.end();
-        	Matcher intoMatcher = INTO_PATTERN.matcher(sql);
-        	while (intoMatcher.find(end)) {
-        		if (intoMatcher.group(1) != null) {
-        			return "insert"; //$NON-NLS-1$
-        		}
-        		end = intoMatcher.end();
-        	}
+            int end = matcher.end();
+            Matcher intoMatcher = INTO_PATTERN.matcher(sql);
+            while (intoMatcher.find(end)) {
+                if (intoMatcher.group(1) != null) {
+                    return "insert"; //$NON-NLS-1$
+                }
+                end = intoMatcher.end();
+            }
         }
         return keyword;
     }
-    
+
     public static SQLException createFeatureNotSupportedException() {
-    	StackTraceElement ste = new Exception().getStackTrace()[1];
-    	String methodName = ste.getMethodName();
-    	return new SQLFeatureNotSupportedException(methodName + " is not supported"); //$NON-NLS-1$
-    }    
+        StackTraceElement ste = new Exception().getStackTrace()[1];
+        String methodName = ste.getMethodName();
+        return new SQLFeatureNotSupportedException(methodName + " is not supported"); //$NON-NLS-1$
+    }
 }

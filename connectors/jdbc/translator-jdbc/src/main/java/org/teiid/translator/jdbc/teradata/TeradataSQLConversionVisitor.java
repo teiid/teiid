@@ -33,51 +33,51 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class TeradataSQLConversionVisitor extends SQLConversionVisitor {
 
-	public TeradataSQLConversionVisitor(TeradataExecutionFactory ef) {
-		super(ef);
-	}
+    public TeradataSQLConversionVisitor(TeradataExecutionFactory ef) {
+        super(ef);
+    }
 
     @Override
     public void visit(In obj) {
-    	List<Expression> exprs = obj.getRightExpressions();
-    	
-    	boolean decompose = false;
-    	for (Expression expr:exprs) {
-    		if (!(expr instanceof Literal)) {
-    			decompose = true;
-    			break;
-    		}
-    	}
-    	
-    	if (decompose) {
-    		List<Expression> literals = new ArrayList<Expression>();
-    		Comparison.Operator opCode = obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ;
-	    	if (exprs.size() > 1) {
-	    		Condition left = null;
-	    		for (Expression expr : obj.getRightExpressions()) {
-	    			if (expr instanceof Literal) {
-	    				literals.add(expr);
-	    			} else {
-	    				if (left == null) {
-	    					left = LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), expr);
-	    				} else {
-	    		    		left = LanguageFactory.INSTANCE.createAndOr(obj.isNegated()?Operator.AND:Operator.OR, left, LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), expr));
-	    				}
-	    			}
-	    		}
-	    		if (!literals.isEmpty()) {
-	    			left = LanguageFactory.INSTANCE.createAndOr(obj.isNegated()?Operator.AND:Operator.OR, left, new In(obj.getLeftExpression(), literals, obj.isNegated()));
-	    		}
-		    	buffer.append(Tokens.LPAREN);
-		    	super.visit((AndOr)left);
-	    		buffer.append(Tokens.RPAREN);
-	    	}
-	    	else {
-	    		super.visit(LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), exprs.get(0)));
-	    	}
-    	}
-    	else {
-    		super.visit(obj);
-    	}
-    }	
+        List<Expression> exprs = obj.getRightExpressions();
+
+        boolean decompose = false;
+        for (Expression expr:exprs) {
+            if (!(expr instanceof Literal)) {
+                decompose = true;
+                break;
+            }
+        }
+
+        if (decompose) {
+            List<Expression> literals = new ArrayList<Expression>();
+            Comparison.Operator opCode = obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ;
+            if (exprs.size() > 1) {
+                Condition left = null;
+                for (Expression expr : obj.getRightExpressions()) {
+                    if (expr instanceof Literal) {
+                        literals.add(expr);
+                    } else {
+                        if (left == null) {
+                            left = LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), expr);
+                        } else {
+                            left = LanguageFactory.INSTANCE.createAndOr(obj.isNegated()?Operator.AND:Operator.OR, left, LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), expr));
+                        }
+                    }
+                }
+                if (!literals.isEmpty()) {
+                    left = LanguageFactory.INSTANCE.createAndOr(obj.isNegated()?Operator.AND:Operator.OR, left, new In(obj.getLeftExpression(), literals, obj.isNegated()));
+                }
+                buffer.append(Tokens.LPAREN);
+                super.visit((AndOr)left);
+                buffer.append(Tokens.RPAREN);
+            }
+            else {
+                super.visit(LanguageFactory.INSTANCE.createCompareCriteria(opCode, obj.getLeftExpression(), exprs.get(0)));
+            }
+        }
+        else {
+            super.visit(obj);
+        }
+    }
 }

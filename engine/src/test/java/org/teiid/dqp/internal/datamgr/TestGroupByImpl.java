@@ -52,15 +52,15 @@ public class TestGroupByImpl extends TestCase {
 
     public static org.teiid.query.sql.lang.GroupBy helpExampleWithFunctions() {
         List<Expression> symbols = new ArrayList<Expression>();
-        
+
         ElementSymbol e1 = TestElementImpl.helpExample("vm1.g1", "e1");//$NON-NLS-1$ //$NON-NLS-2$
-        Function f = new Function("length", new Expression[] { e1 } );//$NON-NLS-1$ 
-        
-        symbols.add(e1); 
+        Function f = new Function("length", new Expression[] { e1 } );//$NON-NLS-1$
+
+        symbols.add(e1);
         symbols.add(f);
         return new org.teiid.query.sql.lang.GroupBy(symbols);
     }
-    
+
 
     public static GroupBy example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
@@ -74,7 +74,7 @@ public class TestGroupByImpl extends TestCase {
             assertTrue(i.next() instanceof ColumnReference);
         }
     }
-    
+
     public void testTranslateWithFunction() throws Exception {
         TstLanguageBridgeFactory.factory.translate(helpExampleWithFunctions());
     }

@@ -23,36 +23,36 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.symbol.Expression;
 
 public class ImmutableCompareCriteria extends CompareCriteria {
-    
+
     public ImmutableCompareCriteria(Expression leftExpression, int operator, Expression rightExpression) {
         super.setLeftExpression(leftExpression);
         super.setOperator(operator);
         super.setRightExpression(rightExpression);
     }
-    
+
     @Override
     public void setLeftExpression(Expression expression) {
         if (!EquivalenceUtil.areEqual(expression, getLeftExpression())) {
             throw new TeiidRuntimeException("Attempt to modify immutable object"); //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public void setRightExpression(Expression expression) {
         if (!EquivalenceUtil.areEqual(expression, getRightExpression())) {
             throw new TeiidRuntimeException("Attempt to modify immutable object"); //$NON-NLS-1$
         }
     }
-    
+
     public void setOperator(int operator) {
         if (!EquivalenceUtil.areEqual(operator, getOperator())) {
             throw new TeiidRuntimeException("Attempt to modify immutable object"); //$NON-NLS-1$
         }
     };
-    
+
     @Override
     public void setOptional(Boolean isOptional) {
-        
+
     }
 
 }

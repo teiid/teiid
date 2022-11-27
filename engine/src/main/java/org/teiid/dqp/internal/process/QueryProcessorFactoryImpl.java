@@ -46,70 +46,70 @@ import org.teiid.query.validator.ValidationVisitor;
 
 public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactory {
 
-	private QueryMetadataInterface defaultMetadata;
-	private CapabilitiesFinder finder;
-	private IDGenerator idGenerator;
-	private BufferManager bufferMgr;
-	private ProcessorDataManager dataMgr;
-	
-	public QueryProcessorFactoryImpl(BufferManager bufferMgr,
-			ProcessorDataManager dataMgr, CapabilitiesFinder finder,
-			IDGenerator idGenerator, QueryMetadataInterface metadata) {
-		this.bufferMgr = bufferMgr;
-		this.dataMgr = dataMgr;
-		this.finder = finder;
-		this.idGenerator = idGenerator;
-		this.defaultMetadata = metadata;
-	}
+    private QueryMetadataInterface defaultMetadata;
+    private CapabilitiesFinder finder;
+    private IDGenerator idGenerator;
+    private BufferManager bufferMgr;
+    private ProcessorDataManager dataMgr;
 
-	@Override
-	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException {
-		CommandContext copy = commandContext.clone();
-		copy.resetDeterminismLevel(true);
-		copy.setDataObjects(null);
+    public QueryProcessorFactoryImpl(BufferManager bufferMgr,
+            ProcessorDataManager dataMgr, CapabilitiesFinder finder,
+            IDGenerator idGenerator, QueryMetadataInterface metadata) {
+        this.bufferMgr = bufferMgr;
+        this.dataMgr = dataMgr;
+        this.finder = finder;
+        this.idGenerator = idGenerator;
+        this.defaultMetadata = metadata;
+    }
+
+    @Override
+    public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException {
+        CommandContext copy = commandContext.clone();
+        copy.resetDeterminismLevel(true);
+        copy.setDataObjects(null);
         QueryMetadataInterface metadata = commandContext.getMetadata();
         if (metadata == null) {
-        	metadata = defaultMetadata;
+            metadata = defaultMetadata;
         }
         PreparedPlan pp = getPreparedPlan(query, recursionGroup, copy, metadata);
-		copy.pushVariableContext(new VariableContext());
-		PreparedStatementRequest.resolveParameterValues(pp.getReferences(), Arrays.asList(params), copy, metadata);
+        copy.pushVariableContext(new VariableContext());
+        PreparedStatementRequest.resolveParameterValues(pp.getReferences(), Arrays.asList(params), copy, metadata);
         return new QueryProcessor(pp.getPlan().clone(), copy, bufferMgr, dataMgr);
-	}
+    }
 
-	@Override
-	public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-			CommandContext commandContext, QueryMetadataInterface metadata) throws 
-			TeiidComponentException, TeiidProcessingException {
-		if (recursionGroup != null) {
-			commandContext.pushCall(recursionGroup);
+    @Override
+    public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+            CommandContext commandContext, QueryMetadataInterface metadata) throws
+            TeiidComponentException, TeiidProcessingException {
+        if (recursionGroup != null) {
+            commandContext.pushCall(recursionGroup);
         }
         PreparedPlan pp = commandContext.getPlan(query);
-		if (pp == null) {
-			ParseInfo parseInfo = new ParseInfo();
-			Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
-	        QueryResolver.resolveCommand(newCommand, metadata);            
-	        
-	        List<Reference> references = ReferenceCollectorVisitor.getReferences(newCommand);
-	        
-	        AbstractValidationVisitor visitor = new ValidationVisitor();
-	        Request.validateWithVisitor(visitor, metadata, newCommand);
-	        newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
-	        AnalysisRecord record = new AnalysisRecord(false, false);
-	        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, commandContext);
-	        pp = new PreparedPlan();
-	        pp.setPlan(plan, commandContext);
-	        pp.setReferences(references);
-	        pp.setAnalysisRecord(record);
-	        pp.setCommand(newCommand);
-	        commandContext.putPlan(query, pp, commandContext.getDeterminismLevel());
-		}
-		return pp;
-	}
-	
-	@Override
-	public CapabilitiesFinder getCapabiltiesFinder() {
-		return finder;
-	}
-	
+        if (pp == null) {
+            ParseInfo parseInfo = new ParseInfo();
+            Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
+            QueryResolver.resolveCommand(newCommand, metadata);
+
+            List<Reference> references = ReferenceCollectorVisitor.getReferences(newCommand);
+
+            AbstractValidationVisitor visitor = new ValidationVisitor();
+            Request.validateWithVisitor(visitor, metadata, newCommand);
+            newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
+            AnalysisRecord record = new AnalysisRecord(false, false);
+            ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, commandContext);
+            pp = new PreparedPlan();
+            pp.setPlan(plan, commandContext);
+            pp.setReferences(references);
+            pp.setAnalysisRecord(record);
+            pp.setCommand(newCommand);
+            commandContext.putPlan(query, pp, commandContext.getDeterminismLevel());
+        }
+        return pp;
+    }
+
+    @Override
+    public CapabilitiesFinder getCapabiltiesFinder() {
+        return finder;
+    }
+
 }

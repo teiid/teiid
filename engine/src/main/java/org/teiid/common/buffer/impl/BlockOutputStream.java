@@ -22,48 +22,48 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 final class BlockOutputStream extends
-		ExtensibleBufferedOutputStream {
-	private final BlockManager blockManager;
-	int blockNum = -1;
-	private final int maxBlocks;
-	private final boolean allocate;
-	
-	static final IOException exceededMax = new IOException();  
+        ExtensibleBufferedOutputStream {
+    private final BlockManager blockManager;
+    int blockNum = -1;
+    private final int maxBlocks;
+    private final boolean allocate;
 
-	/**
-	 * @param blockManager
-	 * @param maxBlocks a max of -1 indicates use existing blocks
-	 */
-	BlockOutputStream(BlockManager blockManager, int maxBlocks) {
-		this.blockManager = blockManager;
-		this.allocate = maxBlocks != -1;
-		this.maxBlocks = maxBlocks - 2; //convert to an index
-	}
-	
-	@Override
-	protected ByteBuffer newBuffer() throws IOException {
-		if (!allocate) {
-			return blockManager.getBlock(++blockNum);
-		}
-		if (blockNum > maxBlocks) {
-			throw exceededMax;
-		}
-		return blockManager.allocateBlock(++blockNum);
-	}
-	
-	@Override
-	protected int flushDirect(int i) throws IOException {
-		return i;
-	}
+    static final IOException exceededMax = new IOException();
 
-	public void writeLong(long v) throws IOException {
-		write((byte)(v >>> 56));
-		write((byte)(v >>> 48));
-		write((byte)(v >>> 40));
-		write((byte)(v >>> 32));
-		write((byte)(v >>> 24));
-		write((byte)(v >>> 16));
-		write((byte)(v >>> 8));
-		write((byte)(v >>> 0));
-	}
+    /**
+     * @param blockManager
+     * @param maxBlocks a max of -1 indicates use existing blocks
+     */
+    BlockOutputStream(BlockManager blockManager, int maxBlocks) {
+        this.blockManager = blockManager;
+        this.allocate = maxBlocks != -1;
+        this.maxBlocks = maxBlocks - 2; //convert to an index
+    }
+
+    @Override
+    protected ByteBuffer newBuffer() throws IOException {
+        if (!allocate) {
+            return blockManager.getBlock(++blockNum);
+        }
+        if (blockNum > maxBlocks) {
+            throw exceededMax;
+        }
+        return blockManager.allocateBlock(++blockNum);
+    }
+
+    @Override
+    protected int flushDirect(int i) throws IOException {
+        return i;
+    }
+
+    public void writeLong(long v) throws IOException {
+        write((byte)(v >>> 56));
+        write((byte)(v >>> 48));
+        write((byte)(v >>> 40));
+        write((byte)(v >>> 32));
+        write((byte)(v >>> 24));
+        write((byte)(v >>> 16));
+        write((byte)(v >>> 8));
+        write((byte)(v >>> 0));
+    }
 }

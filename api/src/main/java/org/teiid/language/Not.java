@@ -23,7 +23,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 public class Not extends Condition {
 
     private Condition criteria;
-    
+
     public Not(Condition criteria) {
         this.criteria = criteria;
     }

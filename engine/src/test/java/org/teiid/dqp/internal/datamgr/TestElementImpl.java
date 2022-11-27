@@ -40,16 +40,16 @@ public class TestElementImpl extends TestCase {
         symbol.setType(String.class);
         symbol.setGroupSymbol(TestGroupImpl.helpExample(groupName));
         return symbol;
-        
+
     }
-    
+
     public static ElementSymbol helpIntExample(String groupName, String elementName) {
         ElementSymbol symbol = new ElementSymbol(elementName);
         symbol.setType(Integer.class);
         symbol.setGroupSymbol(TestGroupImpl.helpExample(groupName));
         return symbol;
     }
-    
+
     public static ElementSymbol helpExample(String groupName, String elementName, Object metadataID) {
         ElementSymbol symbol = new ElementSymbol(elementName);
         symbol.setGroupSymbol(TestGroupImpl.helpExample(groupName));
@@ -57,15 +57,15 @@ public class TestElementImpl extends TestCase {
         symbol.setMetadataID(metadataID);
         return symbol;
     }
-    
+
     public static ColumnReference example(String groupName, String elementName) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(groupName, elementName));
     }
-    
+
     public static ColumnReference example(String groupName, String elementName, Object metadataID) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(groupName, elementName, metadataID));
     }
-    
+
     public void testGetName() throws Exception {
         Object metadataID = TstLanguageBridgeFactory.metadata.getElementID("pm1.g1.e1"); //$NON-NLS-1$
         assertEquals("e1", example("pm1.g1", "e1", metadataID).getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -80,21 +80,21 @@ public class TestElementImpl extends TestCase {
         Object metadataID = TstLanguageBridgeFactory.metadata.getElementID("pm1.g1.e2"); //$NON-NLS-1$
         assertTrue(example("pm1.g1", "e2", metadataID).getType().equals(Integer.class)); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public void helpTestEquals(ColumnReference e1, ColumnReference e2, boolean equal) {
         boolean actual = e1.equals(e2);
         boolean actual2 = e2.equals(e1);
-        
+
         assertEquals("e1.equals(e2) != e2.equals(e1)", actual, actual2); //$NON-NLS-1$
         assertEquals("Did not get expected equal value", equal, actual); //$NON-NLS-1$
     }
-    
+
     public NamedTable createGroup(String context, String definition) {
         return new NamedTable(context, definition, null);
     }
-    
+
     public ColumnReference createElement(NamedTable group, String name) {
         return new ColumnReference(group, name, null, String.class);
     }
-   
+
 }

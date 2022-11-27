@@ -24,10 +24,10 @@ import org.teiid.internal.core.index.Index;
  * IndexUtil
  */
 public class SimpleIndexUtil {
-	
+
     //############################################################################################################################
     //# Constants                                                                                                                #
-    //############################################################################################################################    
+    //############################################################################################################################
 
     public static final boolean CASE_SENSITIVE_INDEX_FILE_NAMES = false;
 
@@ -39,25 +39,23 @@ public class SimpleIndexUtil {
      * Return all index file records that match the specified record prefix
      * or pattern. The pattern can be constructed from any combination of characters
      * including the multiple character wildcard '*' and single character
-     * wildcard '?'.  The prefix may be constructed from any combination of 
+     * wildcard '?'.  The prefix may be constructed from any combination of
      * characters excluding the wildcard characters.  The prefix specifies a fixed
      * number of characters that the index record must start with.
-     * @param monitor an optional ProgressMonitor
      * @param indexes the array of MtkIndex instances to query
      * @param pattern
      * @return results
-     * @throws MetamatrixCoreException
      */
     public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws TeiidException {
         final List<IEntryResult> queryResult = new ArrayList<IEntryResult>();
-        
+
         try {
             for (int i = 0; i < indexes.length; i++) {
-                
+
                 IEntryResult[] partialResults = null;
                 if(isPrefix) {
                     // Query based on prefix. This uses a fast binary search
-                    // based on matching the first n characters in the index record.  
+                    // based on matching the first n characters in the index record.
                     // The index files contain records that are sorted alphabetically
                     // by fullname such that the search algorithm can quickly determine
                     // which index block(s) contain the matching prefixes.
@@ -75,21 +73,21 @@ public class SimpleIndexUtil {
                 }
 
                 // Process these results against the specified pattern and return
-                // only the subset entries that match both criteria  
+                // only the subset entries that match both criteria
                 if (partialResults != null) {
                     for (int j = 0; j < partialResults.length; j++) {
-                    	// filter out any continuation records, they should already appended
-                    	// to index record thet is continued
-						IEntryResult result = partialResults[j];
-						if(result != null && result.getWord()[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
-	                        queryResult.add(partialResults[j]);
-						}
+                        // filter out any continuation records, they should already appended
+                        // to index record thet is continued
+                        IEntryResult result = partialResults[j];
+                        if(result != null && result.getWord()[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
+                            queryResult.add(partialResults[j]);
+                        }
                     }
                 }
 
                 if (returnFirstMatch && queryResult.size() > 0) {
-                    break; 
-                }                
+                    break;
+                }
             }
         } catch(IOException e) {
              throw new TeiidException(RuntimeMetadataPlugin.Event.TEIID80003, e);
@@ -97,11 +95,11 @@ public class SimpleIndexUtil {
 
         return queryResult.toArray(new IEntryResult[queryResult.size()]);
     }
-    
+
     private static IEntryResult[] addContinuationRecords(final Index index, final IEntryResult[] partialResults) throws IOException {
-                                                      
+
         final int blockSize = RecordFactory.INDEX_RECORD_BLOCK_SIZE;
-        
+
         IEntryResult[] results = partialResults;
         for (int i = 0; i < results.length; i++) {
             IEntryResult partialResult = results[i];
@@ -118,8 +116,8 @@ public class SimpleIndexUtil {
                               + word[0]
                               + IndexConstants.RECORD_STRING.RECORD_DELIMITER
                               + objectID
-                              + IndexConstants.RECORD_STRING.RECORD_DELIMITER;                    
-            
+                              + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
+
             // Query the index file for any continuation records
             IEntryResult[] continuationResults =  index.queryEntries(patternStr.toCharArray(), true);
             // If found the continued records then join to the original result and stop searching
@@ -129,5 +127,5 @@ public class SimpleIndexUtil {
         }
         return results;
     }
-    
+
 }

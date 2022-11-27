@@ -24,14 +24,14 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.Property;
 
 public class ODataDocument extends org.teiid.translator.document.Document {
-    
+
     ODataDocument(String name, ODataDocument parent) {
         super(name, false, parent);
-    }     
+    }
 
     public ODataDocument() {
-    }     
-    
+    }
+
     public static ODataDocument createDocument(Entity entity) {
         ODataDocument document = new ODataDocument();
         List<Property> properties = entity.getProperties();
@@ -40,7 +40,7 @@ public class ODataDocument extends org.teiid.translator.document.Document {
         }
         return document;
     }
-    
+
     public static ODataDocument createDocument(ComplexValue complex) {
         ODataDocument document = new ODataDocument();
         List<Property> properties = complex.getValue();
@@ -48,8 +48,8 @@ public class ODataDocument extends org.teiid.translator.document.Document {
             populateDocument(property, document);
         }
         return document;
-    }    
-    
+    }
+
     private static ODataDocument createDocument(String name,
             ComplexValue complex, ODataDocument parent) {
         ODataDocument document = new ODataDocument(name, parent);
@@ -59,7 +59,7 @@ public class ODataDocument extends org.teiid.translator.document.Document {
         }
         return document;
     }
-    
+
     @SuppressWarnings("unchecked")
     private static void populateDocument(Property property, ODataDocument document) {
         if (property.isCollection()) {
@@ -83,5 +83,5 @@ public class ODataDocument extends org.teiid.translator.document.Document {
                 throw new AssertionError(property.getType() + " not supported"); //$NON-NLS-1$
             }
         }
-    }    
+    }
 }

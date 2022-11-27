@@ -22,22 +22,22 @@ import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidComponentException;
 
 /**
- * This exception is thrown when an error occurs while retrieving metadata 
+ * This exception is thrown when an error occurs while retrieving metadata
  * from a query component metadata facade.
- * 
- * TODO: this isn't really a component exception all of the time.  missing entries in metadata are fine during resolving.  
+ *
+ * TODO: this isn't really a component exception all of the time.  missing entries in metadata are fine during resolving.
  */
 public class QueryMetadataException extends TeiidComponentException {
 
-	private static final long serialVersionUID = -2109331443434830452L;
+    private static final long serialVersionUID = -2109331443434830452L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryMetadataException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -56,14 +56,14 @@ public class QueryMetadataException extends TeiidComponentException {
     public QueryMetadataException( Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public QueryMetadataException(BundleUtil.Event event, Throwable e, String message ) {
         super( event, e, message );
     }
     public QueryMetadataException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
+    }
     public QueryMetadataException(BundleUtil.Event event, String message ) {
         super( event, message );
-    }    
+    }
 }

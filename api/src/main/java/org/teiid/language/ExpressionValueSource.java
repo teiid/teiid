@@ -24,18 +24,18 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class ExpressionValueSource extends BaseLanguageObject implements InsertValueSource {
 
-	private List<Expression> values;
-	
-	public ExpressionValueSource(List<Expression> values) {
-		this.values = values;
-	}
+    private List<Expression> values;
 
-	public List<Expression> getValues() {
-		return values;
-	}
+    public ExpressionValueSource(List<Expression> values) {
+        this.values = values;
+    }
 
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
-	
+    public List<Expression> getValues() {
+        return values;
+    }
+
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
+
 }

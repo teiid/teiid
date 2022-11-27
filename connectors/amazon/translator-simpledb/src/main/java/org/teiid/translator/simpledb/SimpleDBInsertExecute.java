@@ -45,7 +45,7 @@ public class SimpleDBInsertExecute implements UpdateExecution {
 
     @Override
     public void execute() throws TranslatorException {
-        this.updatedCount = this.connection.performInsert(visitor.getDomainName(), this.visitor.getColumns(), this.visitor.values());                        
+        this.updatedCount = this.connection.performInsert(visitor.getDomainName(), this.visitor.getColumns(), this.visitor.values());
     }
 
     @Override

@@ -39,132 +39,132 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.util.CommandContext;
 
 public class TupleSourceCache {
-	
-	final static class CachableVisitor extends LanguageVisitor {
-		boolean cacheable = true;
-		List<Object> parameters;
 
-		@Override
-		public void visit(Constant c) {
-			if (c.isMultiValued()) {
-				notCachable();
-			} else if (DataTypeManager.isLOB(c.getType())) {
-				if (parameters == null) {
-					parameters = new ArrayList<Object>();
-				}
-				parameters.add(c.getValue());
-			}
-		}
+    final static class CachableVisitor extends LanguageVisitor {
+        boolean cacheable = true;
+        List<Object> parameters;
 
-		private void notCachable() {
-			cacheable = false;
-			setAbort(true);
-		}
+        @Override
+        public void visit(Constant c) {
+            if (c.isMultiValued()) {
+                notCachable();
+            } else if (DataTypeManager.isLOB(c.getType())) {
+                if (parameters == null) {
+                    parameters = new ArrayList<Object>();
+                }
+                parameters.add(c.getValue());
+            }
+        }
 
-		@Override
-		public void visit(DependentSetCriteria obj) {
-			notCachable();
-		}
-	}
-	
+        private void notCachable() {
+            cacheable = false;
+            setAbort(true);
+        }
+
+        @Override
+        public void visit(DependentSetCriteria obj) {
+            notCachable();
+        }
+    }
+
     private static class SharedState {
-    	TupleBuffer tb;
-    	TupleSource ts;
-    	int id;
-    	int expectedReaders;
-    	
-    	private void remove() {
-    		ts.closeSource();
-			tb.remove();
-			tb = null;
-			ts = null;
-    	}
+        TupleBuffer tb;
+        TupleSource ts;
+        int id;
+        int expectedReaders;
+
+        private void remove() {
+            ts.closeSource();
+            tb.remove();
+            tb = null;
+            ts = null;
+        }
     }
-	
-	public abstract static class CopyOnReadTupleSource implements TupleSource {
-		int rowNumber = 1;
-		TupleBuffer tb;
-		TupleSource ts;
-		
-		protected CopyOnReadTupleSource(TupleBuffer tb, TupleSource ts) {
-			this.tb = tb;
-			this.ts = ts;
-		}
 
-		@Override
-		public List<?> nextTuple() throws TeiidComponentException,
-				TeiidProcessingException {
-			synchronized (tb) {
-				if (rowNumber <= tb.getRowCount()) {
-					return tb.getBatch(rowNumber).getTuple(rowNumber++);
-				}
-				if (tb.isFinal()) {
-					return null;
-				}
-				List<?> row = ts.nextTuple();
-				if (row == null) {
-					tb.setFinal(true);
-				} else {
-					tb.addTuple(row);
-					rowNumber++;
-				}
-				return row;
-			}
-		}
+    public abstract static class CopyOnReadTupleSource implements TupleSource {
+        int rowNumber = 1;
+        TupleBuffer tb;
+        TupleSource ts;
 
-	}
-	
-	private class SharedTupleSource extends CopyOnReadTupleSource {
-		private SharedState state;
-		private boolean closed = false;
-		
-		public SharedTupleSource(SharedState state) {
-			super(state.tb, state.ts);
-			this.state = state;
-		}
-		
-		@Override
-		public void closeSource() {
-			if (!closed && state.expectedReaders != -1 && --state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
-				state.remove();
-				sharedStates.remove(state.id);
-			}
-			closed = true;
-		}	
-		
-	}
-	
+        protected CopyOnReadTupleSource(TupleBuffer tb, TupleSource ts) {
+            this.tb = tb;
+            this.ts = ts;
+        }
+
+        @Override
+        public List<?> nextTuple() throws TeiidComponentException,
+                TeiidProcessingException {
+            synchronized (tb) {
+                if (rowNumber <= tb.getRowCount()) {
+                    return tb.getBatch(rowNumber).getTuple(rowNumber++);
+                }
+                if (tb.isFinal()) {
+                    return null;
+                }
+                List<?> row = ts.nextTuple();
+                if (row == null) {
+                    tb.setFinal(true);
+                } else {
+                    tb.addTuple(row);
+                    rowNumber++;
+                }
+                return row;
+            }
+        }
+
+    }
+
+    private class SharedTupleSource extends CopyOnReadTupleSource {
+        private SharedState state;
+        private boolean closed = false;
+
+        public SharedTupleSource(SharedState state) {
+            super(state.tb, state.ts);
+            this.state = state;
+        }
+
+        @Override
+        public void closeSource() {
+            if (!closed && state.expectedReaders != -1 && --state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
+                state.remove();
+                sharedStates.remove(state.id);
+            }
+            closed = true;
+        }
+
+    }
+
     private Map<Integer, SharedState> sharedStates;
-    
+
     public void close() {
-    	if (sharedStates != null) {
-    		for (SharedState ss : sharedStates.values()) {
-				ss.remove();
-			}
-    		sharedStates = null;
-    	}
+        if (sharedStates != null) {
+            for (SharedState ss : sharedStates.values()) {
+                ss.remove();
+            }
+            sharedStates = null;
+        }
     }
-    
+
     public TupleSource getSharedTupleSource(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject, BufferManager bufferMgr, ProcessorDataManager pdm) throws TeiidComponentException, TeiidProcessingException {
-		if (sharedStates == null) {
-			sharedStates = new HashMap<Integer, SharedState>();
-		}
-		SharedState state = sharedStates.get(parameterObject.info.id);
-		if (state == null) {
-			state = new SharedState();
-			state.expectedReaders = parameterObject.info.sharingCount;
-			RegisterRequestParameter param = new RegisterRequestParameter(parameterObject.connectorBindingId, parameterObject.nodeID, -1);
-			param.fetchSize = parameterObject.fetchSize;
-			param.copyStreamingLobs = true;
-			state.ts = pdm.registerRequest(context, command, modelName, param);
-			if (param.doNotCache) {
-				return state.ts;
-			}
-			state.tb = bufferMgr.createTupleBuffer(command.getProjectedSymbols(), context.getConnectionId(), TupleSourceType.PROCESSOR);
-			state.id = parameterObject.info.id;
-			sharedStates.put(parameterObject.info.id, state);
-		}
-		return new SharedTupleSource(state);
+        if (sharedStates == null) {
+            sharedStates = new HashMap<Integer, SharedState>();
+        }
+        SharedState state = sharedStates.get(parameterObject.info.id);
+        if (state == null) {
+            state = new SharedState();
+            state.expectedReaders = parameterObject.info.sharingCount;
+            RegisterRequestParameter param = new RegisterRequestParameter(parameterObject.connectorBindingId, parameterObject.nodeID, -1);
+            param.fetchSize = parameterObject.fetchSize;
+            param.copyStreamingLobs = true;
+            state.ts = pdm.registerRequest(context, command, modelName, param);
+            if (param.doNotCache) {
+                return state.ts;
+            }
+            state.tb = bufferMgr.createTupleBuffer(command.getProjectedSymbols(), context.getConnectionId(), TupleSourceType.PROCESSOR);
+            state.id = parameterObject.info.id;
+            sharedStates.put(parameterObject.info.id, state);
+        }
+        return new SharedTupleSource(state);
     }
 
 }

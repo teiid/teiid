@@ -20,7 +20,6 @@ package org.teiid.metadata;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -30,25 +29,26 @@ import org.teiid.metadata.BaseColumn.NullType;
 
 public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
-    public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE};
+    public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER,
+        DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE, POLICY};
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
-    protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);    
+    protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);
     private String version;
     private NamespaceContainer namespaceContainer = new NamespaceContainer();
-    
+
     public Database(String dbName) {
         super.setName(dbName);
         this.version = "1";
     }
-    
+
     public Database(String dbName, String version) {
         super.setName(dbName);
         this.version = version;
     }
-    
+
     public void addSchema(Schema schema) {
-        Schema s = this.store.getSchema(schema.getName()); 
+        Schema s = this.store.getSchema(schema.getName());
         if ( s != null) {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60021,
                     DataPlugin.Util.gs(DataPlugin.Event.TEIID60021, schema.getName()));
@@ -56,23 +56,23 @@ public class Database extends AbstractMetadataRecord {
             this.store.addSchema(schema);
         }
     }
-    
+
     public Schema getSchema(String schemaName) {
         return this.store.getSchema(schemaName);
     }
-    
+
     public List<Schema> getSchemas() {
         return new ArrayList<Schema>(this.store.getSchemaList());
     }
-    
+
     public Schema removeSchema(String schemaName) {
         Schema s = getSchema(schemaName);
         if (s == null) {
             throw new MetadataException(DataPlugin.Event.TEIID60024,
-                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60024, schemaName));            
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60024, schemaName));
         }
         return this.store.removeSchema(schemaName);
-    }    
+    }
 
     public MetadataStore getMetadataStore() {
         return this.store;
@@ -81,11 +81,11 @@ public class Database extends AbstractMetadataRecord {
     public String getVersion() {
         return this.version;
     }
-    
+
     public void setVersion(String version) {
         this.version = version;
     }
-    
+
     public void addDataWrapper(DataWrapper wrapper) {
         DataWrapper w = this.wrappers.get(wrapper.getName());
         if (w != null) {
@@ -95,53 +95,53 @@ public class Database extends AbstractMetadataRecord {
             this.wrappers.put(wrapper.getName(), wrapper);
         }
     }
-    
+
     public DataWrapper removeDataWrapper(String wrapperName) {
         DataWrapper wrapper = this.wrappers.get(wrapperName);
         if (wrapper == null) {
             throw new MetadataException(DataPlugin.Event.TEIID60023,
-                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60023, wrapperName));            
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60023, wrapperName));
         }
         return this.wrappers.remove(wrapperName);
     }
-    
+
     public DataWrapper getDataWrapper(String wrapperName) {
         return this.wrappers.get(wrapperName);
     }
-    
+
     public List<DataWrapper> getDataWrappers(){
         return new ArrayList<DataWrapper>(this.wrappers.values());
     }
-    
+
     public void addServer(Server server) {
         Server s = this.servers.get(server.getName());
         if (s != null) {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60026,
-                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60026, server.getName()));            
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60026, server.getName()));
         } else {
             this.servers.put(server.getName(), server);
         }
     }
-    
+
     public Server removeServer(String serverName) {
         Server server = this.servers.get(serverName);
         if (server == null) {
             throw new MetadataException(DataPlugin.Event.TEIID60027,
-                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60027, serverName));            
-        } 
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60027, serverName));
+        }
         return this.servers.remove(serverName);
     }
-    
+
     public Server getServer(String serverName) {
         return this.servers.get(serverName);
     }
-    
+
     public List<Server> getServers() {
         return new ArrayList<Server>(this.servers.values());
     }
-    
+
     public String resolveNamespaceInPropertyKey(String key) {
-        return NamespaceContainer.resolvePropertyKey(namespaceContainer, key);
+        return NamespaceContainer.resolvePropertyKey(key);
     }
 
     @Override
@@ -182,48 +182,55 @@ public class Database extends AbstractMetadataRecord {
     public Collection<Role> getRoles() {
         return store.getRoles();
     }
-    
+
     public void addRole(Role role) {
-        Role r  = this.store.getRole(role.getName()); 
+        Role r  = this.store.getRole(role.getName());
         if ( r != null) {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60028,
                     DataPlugin.Util.gs(DataPlugin.Event.TEIID60028, role.getName()));
-        } else {
-            this.store.addRole(role);
-        }        
+        }
+        this.store.addRole(role);
     }
 
     public void removeRole(String roleName) {
+        Role r = findRole(roleName);
+        // make sure it is not used in any grants
+        if (!r.getGrants().isEmpty() || !r.getPolicies().isEmpty()) {
+            throw new MetadataException(DataPlugin.Event.TEIID60030,
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60030, roleName));
+        }
+        this.store.removeRole(roleName);
+    }
+
+    public Role findRole(String roleName) {
         Role r = this.store.getRole(roleName);
         if (r == null) {
             throw new MetadataException(DataPlugin.Event.TEIID60029,
-                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60029, roleName));            
-        } else {
-            // make sure it is not used in any grants
-            for (Grant g:this.store.getGrants()) {
-                if (g.getRole().equalsIgnoreCase(roleName)) {
-                    throw new MetadataException(DataPlugin.Event.TEIID60030,
-                            DataPlugin.Util.gs(DataPlugin.Event.TEIID60030, roleName,
-                                    g.getPermissions().iterator().next().getResourceName(),
-                                    g.getPermissions().iterator().next().getResourceType().name()));
-                }
-            }
-            this.store.removeRole(roleName);
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60029, roleName));
         }
+        return r;
     }
 
     public void addGrant(Grant grant) {
-        this.store.addGrant(grant);
+        Role r = findRole(grant.getRole());
+        r.addGrant(grant.getPermission());
     }
 
     public void revokeGrant(Grant grant) {
-    	this.store.removeGrant(grant);
+        Role r = findRole(grant.getRole());
+        r.removeGrant(grant.getPermission());
     }
-    
-    public Collection<Grant> getGrants(){
-        return this.store.getGrants();
+
+    public void addPolicy(String roleName, Policy policy) {
+        Role r = findRole(roleName);
+        r.addPolicy(policy);
     }
-    
+
+    public void removePolicy(String roleName, Policy policy) {
+        Role r = findRole(roleName);
+        r.removePolicy(policy);
+    }
+
     /**
      * Add a domain with the given attributes.  The UID must still be set.
      * @param name
@@ -254,7 +261,7 @@ public class Database extends AbstractMetadataRecord {
         dataType.setBasetypeName(baseType);
         dataType.setType(Datatype.Type.Domain);
         dataType.setUUID(null);
-        
+
         if (precision != null) {
             if (!Number.class.isAssignableFrom(DataTypeManager.getDataTypeClass(base.getRuntimeTypeName()))) {
                 dataType.setLength(precision);
@@ -268,7 +275,7 @@ public class Database extends AbstractMetadataRecord {
         if (notNull) {
             dataType.setNullType(NullType.No_Nulls);
         }
-        
+
         store.addDatatype(name, dataType);
         return dataType;
     }
@@ -277,8 +284,8 @@ public class Database extends AbstractMetadataRecord {
         this.namespaceContainer.addNamespace(prefix, uri);
     }
 
-    public Map<String, String> getNamespaces() {
-        return this.namespaceContainer.getNamespaces();
+    public NamespaceContainer getNamespaceContainer() {
+        return namespaceContainer;
     }
-    
+
 }

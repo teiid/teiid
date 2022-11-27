@@ -86,8 +86,8 @@ public class GroupBy implements LanguageObject {
      * @param symbol Symbol to add to GROUP BY
      */
     public void addSymbol( Expression symbol ) {
-    	if(symbol != null) {
-	        symbols.add(symbol);
+        if(symbol != null) {
+            symbols.add(symbol);
         }
     }
 
@@ -99,60 +99,60 @@ public class GroupBy implements LanguageObject {
     //          O V E R R I D D E N     O B J E C T     M E T H O D S
     // =========================================================================
 
-	/**
-	 * Return a deep copy of this object
-	 * @return Deep copy of object
-	 */
-	public Object clone() {
-		GroupBy clone = new GroupBy(LanguageObject.Util.deepClone(this.symbols, Expression.class));
-		clone.rollup = this.rollup;
-		return clone;
-	}
+    /**
+     * Return a deep copy of this object
+     * @return Deep copy of object
+     */
+    public Object clone() {
+        GroupBy clone = new GroupBy(LanguageObject.Util.deepClone(this.symbols, Expression.class));
+        clone.rollup = this.rollup;
+        return clone;
+    }
 
-	/**
-	 * Compare two GroupBys for equality.  Order is important in the comparison.
-	 * @param obj Other object
-	 * @return True if equal
-	 */
-	public boolean equals(Object obj) {
-		if(obj == this) {
-			return true;
-		}
+    /**
+     * Compare two GroupBys for equality.  Order is important in the comparison.
+     * @param obj Other object
+     * @return True if equal
+     */
+    public boolean equals(Object obj) {
+        if(obj == this) {
+            return true;
+        }
 
-		if(!(obj instanceof GroupBy)) {
-			return false;
-		}
+        if(!(obj instanceof GroupBy)) {
+            return false;
+        }
 
         GroupBy other = (GroupBy)obj;
-		return EquivalenceUtil.areEqual(getSymbols(), other.getSymbols())
-        		&& this.rollup == other.rollup;
-	}
+        return EquivalenceUtil.areEqual(getSymbols(), other.getSymbols())
+                && this.rollup == other.rollup;
+    }
 
-	/**
-	 * Get hashcode for GroupBy.  WARNING: The hash code relies on the variables
-	 * in the group by, so changing the variables will change the hash code, causing
-	 * a group by to be lost in a hash structure.  Do not hash a GroupBy if you plan
-	 * to change it.
-	 * @return Hash code for object
-	 */
-	public int hashCode() {
-		return HashCodeUtil.hashCode(rollup?1:0, getSymbols());
-	}
+    /**
+     * Get hashcode for GroupBy.  WARNING: The hash code relies on the variables
+     * in the group by, so changing the variables will change the hash code, causing
+     * a group by to be lost in a hash structure.  Do not hash a GroupBy if you plan
+     * to change it.
+     * @return Hash code for object
+     */
+    public int hashCode() {
+        return HashCodeUtil.hashCode(rollup?1:0, getSymbols());
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public boolean isRollup() {
-		return rollup;
-	}
-    
+        return rollup;
+    }
+
     public void setRollup(boolean rollup) {
-		this.rollup = rollup;
-	}
+        this.rollup = rollup;
+    }
 
 }  // END CLASS

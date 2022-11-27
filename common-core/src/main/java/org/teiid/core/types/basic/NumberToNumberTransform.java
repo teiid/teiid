@@ -8,11 +8,11 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
 public abstract class NumberToNumberTransform extends Transform {
-    
+
     private Class<?> sourceType;
     private Comparable<?> min;
     private Comparable<?> max;
-    
+
     public NumberToNumberTransform(Number min, Number max, Class<?> sourceType) {
         this.sourceType = sourceType;
         if (sourceType == Short.class) {
@@ -51,12 +51,12 @@ public abstract class NumberToNumberTransform extends Transform {
             throw new AssertionError();
         }
     }
-    
+
     @Override
     public Class<?> getSourceType() {
         return sourceType;
     }
-    
+
     protected void checkValueRange(Object value)
             throws TransformationException {
         if (((Comparable)value).compareTo(min) < 0 || ((Comparable)value).compareTo(max) > 0) {

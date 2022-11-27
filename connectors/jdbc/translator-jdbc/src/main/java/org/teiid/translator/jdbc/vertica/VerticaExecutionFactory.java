@@ -36,9 +36,9 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 @Translator(name="vertica", description="A translator for read/write HP Vertica Analytic Database Server")
 public class VerticaExecutionFactory extends JDBCExecutionFactory{
-    
+
     public static final String VERTICA = "vertica"; //$NON-NLS-1$
-    
+
     public static final String BIT_LENGTH = "BIT_LENGTH"; //$NON-NLS-1$
     public static final String BITCOUNT = "BITCOUNT"; //$NON-NLS-1$
     public static final String BITSTRING_TO_BINARY = "BITSTRING_TO_BINARY"; //$NON-NLS-1$
@@ -56,13 +56,13 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
     public static final String SPACE = "SPACE"; //$NON-NLS-1$
     public static final String TO_HEX = "TO_HEX"; //$NON-NLS-1$
     public static final String UPPER = "UPPER"; //$NON-NLS-1$
-    
+
     public static final String CBRT = "CBRT"; //$NON-NLS-1$
     public static final String LN = "LN"; //$NON-NLS-1$
     public static final String PI = "PI"; //$NON-NLS-1$
     public static final String RANDOM = "RANDOM"; //$NON-NLS-1$
     public static final String TRUNC = "TRUNC"; //$NON-NLS-1$
-    
+
     public static final String ADD_MONTHS = "ADD_MONTHS"; //$NON-NLS-1$
     public static final String AGE_IN_MONTHS = "AGE_IN_MONTHS"; //$NON-NLS-1$
     public static final String AGE_IN_YEARS = "AGE_IN_YEARS"; //$NON-NLS-1$
@@ -84,15 +84,15 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
     @Override
     public void start() throws TranslatorException {
         super.start();
-        
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier(CHR)); 
+
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier(CHR));
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier(LOWER));
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier(UPPER)); 
-                
-        registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier(CURRENT_DATE)); 
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier(UPPER));
+
+        registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier(CURRENT_DATE));
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier(CURRENT_TIME));
         registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier(WEEK_ISO));
-        
+
         addPushDownFunction(VERTICA, BIT_LENGTH, INTEGER, STRING);
         addPushDownFunction(VERTICA, BITCOUNT, BYTE, BYTE);
         addPushDownFunction(VERTICA, BITSTRING_TO_BINARY, BYTE, STRING);
@@ -107,13 +107,13 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         addPushDownFunction(VERTICA, MD5, STRING, STRING);
         addPushDownFunction(VERTICA, SPACE, STRING, INTEGER);
         addPushDownFunction(VERTICA, TO_HEX, STRING, INTEGER);
-        
+
         addPushDownFunction(VERTICA, CBRT, DOUBLE, DOUBLE);
         addPushDownFunction(VERTICA, LN, DOUBLE, DOUBLE);
         addPushDownFunction(VERTICA, PI, DOUBLE);
         addPushDownFunction(VERTICA, RANDOM, FLOAT);
         addPushDownFunction(VERTICA, TRUNC, DOUBLE, DOUBLE);
-        
+
         addPushDownFunction(VERTICA, ADD_MONTHS, DATE, DATE, INTEGER);
         addPushDownFunction(VERTICA, AGE_IN_MONTHS, INTEGER, TIMESTAMP, TIMESTAMP);
         addPushDownFunction(VERTICA, AGE_IN_YEARS, INTEGER, TIMESTAMP, TIMESTAMP);
@@ -128,14 +128,14 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         addPushDownFunction(VERTICA, MONTHS_BETWEEN, INTEGER, DATE, DATE);
         addPushDownFunction(VERTICA, OVERLAPS, BOOLEAN, DATE, DATE);
         addPushDownFunction(VERTICA, TIMESTAMPDIFF, INTEGER, TIMESTAMP, TIMESTAMP);
-        
+
     }
 
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
-        
+
         supportedFunctions.add(SourceSystemFunctions.ASCII);
         supportedFunctions.add(SourceSystemFunctions.CHAR);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
@@ -150,13 +150,13 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.REPLACE);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
-        
+
         supportedFunctions.add(SourceSystemFunctions.ABS);
         supportedFunctions.add(SourceSystemFunctions.ACOS);
         supportedFunctions.add(SourceSystemFunctions.ASIN);
         supportedFunctions.add(SourceSystemFunctions.ATAN);
         supportedFunctions.add(SourceSystemFunctions.ATAN2);
-        supportedFunctions.add(SourceSystemFunctions.CEILING); 
+        supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.COS);
         supportedFunctions.add(SourceSystemFunctions.COT);
         supportedFunctions.add(SourceSystemFunctions.EXP);
@@ -165,18 +165,18 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.MOD);
         supportedFunctions.add(SourceSystemFunctions.POWER);
         supportedFunctions.add(SourceSystemFunctions.ROUND);
-        supportedFunctions.add(SourceSystemFunctions.SIGN); 
+        supportedFunctions.add(SourceSystemFunctions.SIGN);
         supportedFunctions.add(SourceSystemFunctions.SIN);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
         supportedFunctions.add(SourceSystemFunctions.TAN);
-        
-        supportedFunctions.add(SourceSystemFunctions.CURDATE); 
-        supportedFunctions.add(SourceSystemFunctions.CURTIME); 
+
+        supportedFunctions.add(SourceSystemFunctions.CURDATE);
+        supportedFunctions.add(SourceSystemFunctions.CURTIME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
-        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
+        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
-        supportedFunctions.add(SourceSystemFunctions.HOUR); 
-        supportedFunctions.add(SourceSystemFunctions.MINUTE); 
+        supportedFunctions.add(SourceSystemFunctions.HOUR);
+        supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
         supportedFunctions.add(SourceSystemFunctions.NOW);
@@ -184,10 +184,10 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.WEEK);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
-                
+
         return supportedFunctions;
     }
-    
+
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;
@@ -215,7 +215,7 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         }
         return super.translate(obj, context);
     }
-    
+
     @Override
     public NullOrder getDefaultNullOrder() {
         return NullOrder.UNKNOWN; //varies by type

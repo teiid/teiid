@@ -22,43 +22,43 @@ import java.io.Serializable;
 
 public class ColumnStats implements Serializable {
 
-	private static final long serialVersionUID = 7827734836519486538L;
-	
-	private Number distinctValues;
+    private static final long serialVersionUID = 7827734836519486538L;
+
+    private Number distinctValues;
     private Number nullValues;
     private String minimumValue;
     private String maximumValue;
-	
-	public String getMinimumValue() {
-		return minimumValue;
-	}
-	
-	public void setMinimumValue(String min) {
-		this.minimumValue = min;
-	}
-	
-	public String getMaximumValue() {
-		return maximumValue;
-	}
-	
-	public void setMaximumValue(String max) {
-		this.maximumValue = max;
-	}
 
-	public Number getDistinctValues() {
-		return distinctValues;
-	}
+    public String getMinimumValue() {
+        return minimumValue;
+    }
 
-	public void setDistinctValues(Number numDistinctValues) {
-		this.distinctValues = numDistinctValues;
-	}
+    public void setMinimumValue(String min) {
+        this.minimumValue = min;
+    }
 
-	public Number getNullValues() {
-		return nullValues;
-	}
+    public String getMaximumValue() {
+        return maximumValue;
+    }
 
-	public void setNullValues(Number numNullValues) {
-		this.nullValues = numNullValues;
-	}
-    
+    public void setMaximumValue(String max) {
+        this.maximumValue = max;
+    }
+
+    public Number getDistinctValues() {
+        return distinctValues;
+    }
+
+    public void setDistinctValues(Number numDistinctValues) {
+        this.distinctValues = numDistinctValues;
+    }
+
+    public Number getNullValues() {
+        return nullValues;
+    }
+
+    public void setNullValues(Number numNullValues) {
+        this.nullValues = numNullValues;
+    }
+
 }

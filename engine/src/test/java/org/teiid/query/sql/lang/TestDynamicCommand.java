@@ -47,74 +47,74 @@ public class TestDynamicCommand extends TestCase {
     }
 
     public void testClone1() {
-    	List symbols = new ArrayList();
+        List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
-        symbols.add(a1);  
-        
+        symbols.add(a1);
+
         DynamicCommand sqlCmd = new DynamicCommand();
         Expression sql = new Constant("SELECT a1 FROM g WHERE a2 = 5"); //$NON-NLS-1$
-        
+
         sqlCmd.setSql(sql);
         sqlCmd.setAsColumns(symbols);
         sqlCmd.setAsClauseSet(true);
-        
+
         sqlCmd.setIntoGroup(new GroupSymbol("#g")); //$NON-NLS-1$
-        
-        UnitTestUtil.helpTestEquivalence(0, sqlCmd, sqlCmd.clone());        
+
+        UnitTestUtil.helpTestEquivalence(0, sqlCmd, sqlCmd.clone());
     }
-    
+
     public void testClone2() {
-    	List symbols = new ArrayList();
+        List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
         symbols.add(a1);
         Expression sql = new Constant("SELECT * FROM g"); //$NON-NLS-1$
-        
+
         SetClauseList using = new SetClauseList();
-        using.addClause(a1, a1);        
-        
+        using.addClause(a1, a1);
+
         DynamicCommand sqlCmd = new DynamicCommand(sql, symbols, new GroupSymbol("#g"), using); //$NON-NLS-1$
-        
-        UnitTestUtil.helpTestEquivalence(0, sqlCmd, sqlCmd.clone());     
+
+        UnitTestUtil.helpTestEquivalence(0, sqlCmd, sqlCmd.clone());
     }
-    
-    public void testClone3() {  
-    	
-    	List symbols = new ArrayList();
+
+    public void testClone3() {
+
+        List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
-        symbols.add(a1);  
-        
+        symbols.add(a1);
+
         DynamicCommand sqlCmd = new DynamicCommand();
         Expression sql = new Constant("SELECT a1 FROM g WHERE a2 = 5"); //$NON-NLS-1$
-        
+
         sqlCmd.setSql(sql);
         sqlCmd.setAsColumns(symbols);
         sqlCmd.setAsClauseSet(true);
-        
+
         sqlCmd.setIntoGroup(new GroupSymbol("#g")); //$NON-NLS-1$
-        
+
         List projectedSymbols = sqlCmd.getProjectedSymbols();
-        
+
         UnitTestUtil.helpTestEquivalence(0, sqlCmd, sqlCmd.clone());
         assertEquals(projectedSymbols, ((DynamicCommand)sqlCmd.clone()).getProjectedSymbols());
     }
-    
+
     public void testUpdatingModelCount() {
         DynamicCommand sqlCmd = new DynamicCommand();
-        
+
         sqlCmd.setUpdatingModelCount(1);
         assertEquals(1, sqlCmd.getUpdatingModelCount());
-        
+
         sqlCmd.setUpdatingModelCount(3);
         assertEquals(2, sqlCmd.getUpdatingModelCount());
-        
+
         sqlCmd.setUpdatingModelCount(-1);
         assertEquals(0, sqlCmd.getUpdatingModelCount());
     }
-    
+
 }

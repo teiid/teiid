@@ -40,77 +40,77 @@ import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls"})
 public class TestCachedResults {
-	
-	@Test
-	public void testCaching() throws Exception {
-		FakeBufferService fbs = new FakeBufferService(true);
-		
-		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
-		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$ 
-		tb.setForwardOnly(false);
-		
-		tb.addTuple(Arrays.asList(1));	
-		tb.addTuple(Arrays.asList(2));
-		tb.addTuple(Arrays.asList(3));
-		tb.addTuple(Arrays.asList(4));
-		tb.addTuple(Arrays.asList(5));
-		tb.addTuple(Arrays.asList(6));
-		tb.addTuple(Arrays.asList(7));
-		tb.addTuple(Arrays.asList(8));
-		tb.addTuple(Arrays.asList(9));
-		tb.addTuple(Arrays.asList(10));
-		
-		tb.close();
-		
-		BufferManager bm = fbs.getBufferManager();
-		CachedResults results = new CachedResults();
-		ProcessorPlan plan = new FakeProcessorPlan(0);
-		CommandContext cc = new CommandContext();
-		Table t = RealMetadataFactory.exampleBQT().getGroupID("bqt1.smalla");
-		cc.accessedDataObject(t);
-		plan.setContext(cc);
-		results.setResults(tb, plan);
-		results.setCommand(new Query());
-		//Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
-		long ts = results.getAccessInfo().getCreationTime();
-		// simulate the jboss-cache remote transport, where the batches are remotely looked up
-		// in cache
-		for (int row=1; row<=tb.getRowCount();row+=4) {
-			//cache.put(results.getId()+","+row, tb.getBatch(row), null); //$NON-NLS-1$ 
-		}
-		
-		results.prepare(bm);
-		
-		//simulate distribute
-		TupleBuffer distributedTb = bm.getTupleBuffer(results.getId());
-				
-		CachedResults cachedResults = UnitTestUtil.helpSerialize(results);
-		
-		RealMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQT());
-		
-		BufferManager bm2 = fbs.getBufferManager();
-		bm2.distributeTupleBuffer(results.getId(), distributedTb);
-		
-		assertTrue(cachedResults.restore(bm2));
-		
-		// since restored, simulate a async cache flush
-		//cache.clear();
-		
-		TupleBuffer cachedTb = cachedResults.getResults();
-		
-		assertTrue(cachedTb.isFinal());
-		assertEquals(tb.getRowCount(), cachedTb.getRowCount());
-		assertEquals(tb.getBatchSize(), cachedTb.getBatchSize());
-		
-		assertArrayEquals(tb.getBatch(1).getAllTuples(), cachedTb.getBatch(1).getAllTuples());
-		assertArrayEquals(tb.getBatch(9).getAllTuples(), cachedTb.getBatch(9).getAllTuples());
-		assertTrue(ts - cachedResults.getAccessInfo().getCreationTime() <= 5000);
-		
-		//ensure that an incomplete load fails ( is this still valid use case?)
-//		bm2.getTupleBuffer(results.getId()).remove();
-//		cachedResults = UnitTestUtil.helpSerialize(results);
-//		assertFalse(cachedResults.restore(cache, bm2));
-	}	
+
+    @Test
+    public void testCaching() throws Exception {
+        FakeBufferService fbs = new FakeBufferService(true);
+
+        ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+        x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        List<ElementSymbol> schema = Arrays.asList(x);
+        TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tb.setForwardOnly(false);
+
+        tb.addTuple(Arrays.asList(1));
+        tb.addTuple(Arrays.asList(2));
+        tb.addTuple(Arrays.asList(3));
+        tb.addTuple(Arrays.asList(4));
+        tb.addTuple(Arrays.asList(5));
+        tb.addTuple(Arrays.asList(6));
+        tb.addTuple(Arrays.asList(7));
+        tb.addTuple(Arrays.asList(8));
+        tb.addTuple(Arrays.asList(9));
+        tb.addTuple(Arrays.asList(10));
+
+        tb.close();
+
+        BufferManager bm = fbs.getBufferManager();
+        CachedResults results = new CachedResults();
+        ProcessorPlan plan = new FakeProcessorPlan(0);
+        CommandContext cc = new CommandContext();
+        Table t = RealMetadataFactory.exampleBQT().getGroupID("bqt1.smalla");
+        cc.accessedDataObject(t);
+        plan.setContext(cc);
+        results.setResults(tb, plan);
+        results.setCommand(new Query());
+        //Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
+        long ts = results.getAccessInfo().getCreationTime();
+        // simulate the jboss-cache remote transport, where the batches are remotely looked up
+        // in cache
+        for (int row=1; row<=tb.getRowCount();row+=4) {
+            //cache.put(results.getId()+","+row, tb.getBatch(row), null); //$NON-NLS-1$
+        }
+
+        results.prepare(bm);
+
+        //simulate distribute
+        TupleBuffer distributedTb = bm.getTupleBuffer(results.getId());
+
+        CachedResults cachedResults = UnitTestUtil.helpSerialize(results);
+
+        RealMetadataFactory.buildWorkContext(RealMetadataFactory.exampleBQT());
+
+        BufferManager bm2 = fbs.getBufferManager();
+        bm2.distributeTupleBuffer(results.getId(), distributedTb);
+
+        assertTrue(cachedResults.restore(bm2));
+
+        // since restored, simulate a async cache flush
+        //cache.clear();
+
+        TupleBuffer cachedTb = cachedResults.getResults();
+
+        assertTrue(cachedTb.isFinal());
+        assertEquals(tb.getRowCount(), cachedTb.getRowCount());
+        assertEquals(tb.getBatchSize(), cachedTb.getBatchSize());
+
+        assertArrayEquals(tb.getBatch(1).getAllTuples(), cachedTb.getBatch(1).getAllTuples());
+        assertArrayEquals(tb.getBatch(9).getAllTuples(), cachedTb.getBatch(9).getAllTuples());
+        assertTrue(ts - cachedResults.getAccessInfo().getCreationTime() <= 5000);
+
+        //ensure that an incomplete load fails ( is this still valid use case?)
+//        bm2.getTupleBuffer(results.getId()).remove();
+//        cachedResults = UnitTestUtil.helpSerialize(results);
+//        assertFalse(cachedResults.restore(cache, bm2));
+    }
 }

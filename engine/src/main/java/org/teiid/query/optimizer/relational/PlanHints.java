@@ -19,34 +19,34 @@
 package org.teiid.query.optimizer.relational;
 
 
-public final class PlanHints { 
+public final class PlanHints {
 
     // This flag indicates that the plan has a criteria somewhere
     public boolean hasCriteria = false;
-    
+
     // This flag indicates that the plan has a join somewhere
     public boolean hasJoin = false;
-    
+
     // This flag indicates that the plan has a virtual group somewhere
     public boolean hasVirtualGroups = false;
-    
+
     // flag indicates that the plan has a union somewhere
     public boolean hasSetQuery = false;
-    
+
     // flag indicating that the plan has a grouping node somewhere
     public boolean hasAggregates = false;
-        
+
     public boolean hasLimit = false;
-    
+
     public boolean hasRelationalProc = false;
 
-	public boolean hasFunctionBasedColumns;
-	
-	public boolean hasRowBasedSecurity;
-    
-    public PlanHints() { }    
-    
+    public boolean hasFunctionBasedColumns;
+
+    public boolean hasRowBasedSecurity;
+
+    public PlanHints() { }
+
     public String toString(){
-    	return "PlanHints"; //$NON-NLS-1$
+        return "PlanHints"; //$NON-NLS-1$
     }
 }

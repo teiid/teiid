@@ -31,31 +31,31 @@ import org.teiid.core.TeiidProcessingException;
 
 
 public interface DQP {
-	
-	@Secure(optional=true)
-	ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws TeiidProcessingException, TeiidComponentException;
-	
-	ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int fetchSize) throws TeiidProcessingException;
 
-	ResultsFuture<?> closeRequest(long requestID) throws TeiidProcessingException, TeiidComponentException;
-	
-	boolean cancelRequest(long requestID) throws TeiidProcessingException, TeiidComponentException;
-	
-	ResultsFuture<?> closeLobChunkStream(int lobRequestId, long requestId, String streamId) throws TeiidProcessingException, TeiidComponentException;
-	
-	ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId, long requestId, String streamId) throws TeiidProcessingException, TeiidComponentException;
-		
-	MetadataResult getMetadata(long requestID) throws TeiidComponentException, TeiidProcessingException;
-	
-	MetadataResult getMetadata(long requestID, String preparedSql, boolean allowDoubleQuotedVariable) throws TeiidComponentException, TeiidProcessingException;
-	
+    @Secure(optional=true)
+    ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws TeiidProcessingException, TeiidComponentException;
+
+    ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int fetchSize) throws TeiidProcessingException;
+
+    ResultsFuture<?> closeRequest(long requestID) throws TeiidProcessingException, TeiidComponentException;
+
+    boolean cancelRequest(long requestID) throws TeiidProcessingException, TeiidComponentException;
+
+    ResultsFuture<?> closeLobChunkStream(int lobRequestId, long requestId, String streamId) throws TeiidProcessingException, TeiidComponentException;
+
+    ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId, long requestId, String streamId) throws TeiidProcessingException, TeiidComponentException;
+
+    MetadataResult getMetadata(long requestID) throws TeiidComponentException, TeiidProcessingException;
+
+    MetadataResult getMetadata(long requestID, String preparedSql, boolean allowDoubleQuotedVariable) throws TeiidComponentException, TeiidProcessingException;
+
     // local transaction
- 
-	ResultsFuture<?> begin() throws XATransactionException;
 
-    ResultsFuture<?> commit() throws XATransactionException; 
+    ResultsFuture<?> begin() throws XATransactionException;
 
-    ResultsFuture<?> rollback() throws XATransactionException; 
+    ResultsFuture<?> commit() throws XATransactionException;
+
+    ResultsFuture<?> rollback() throws XATransactionException;
 
     // XA
 
@@ -69,11 +69,11 @@ public interface DQP {
     ResultsFuture<Integer> prepare(XidImpl xid) throws XATransactionException;
 
     ResultsFuture<?> commit(XidImpl xid, boolean onePhase) throws XATransactionException;
-    
+
     ResultsFuture<?> rollback(XidImpl xid) throws XATransactionException;
 
     ResultsFuture<?> forget(XidImpl xid) throws XATransactionException;
 
-    ResultsFuture<Xid[]> recover(int flag) throws XATransactionException; 
-    
+    ResultsFuture<Xid[]> recover(int flag) throws XATransactionException;
+
 }

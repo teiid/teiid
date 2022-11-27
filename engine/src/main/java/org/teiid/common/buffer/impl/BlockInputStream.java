@@ -26,21 +26,21 @@ import org.teiid.common.buffer.ExtensibleBufferedInputStream;
  * TODO: support freeing of datablocks as we go
  */
 final class BlockInputStream extends ExtensibleBufferedInputStream {
-	private final BlockManager manager;
-	private final int maxBlock;
-	int blockIndex;
+    private final BlockManager manager;
+    private final int maxBlock;
+    int blockIndex;
 
-	BlockInputStream(BlockManager manager, int blockCount) {
-		this.manager = manager;
-		this.maxBlock = blockCount;
-	}
+    BlockInputStream(BlockManager manager, int blockCount) {
+        this.manager = manager;
+        this.maxBlock = blockCount;
+    }
 
-	@Override
-	protected ByteBuffer nextBuffer() {
-		if (maxBlock == blockIndex) {
-			return null;
-		}
-		return manager.getBlock(blockIndex++);
-	}
-	
+    @Override
+    protected ByteBuffer nextBuffer() {
+        if (maxBlock == blockIndex) {
+            return null;
+        }
+        return manager.getBlock(blockIndex++);
+    }
+
 }

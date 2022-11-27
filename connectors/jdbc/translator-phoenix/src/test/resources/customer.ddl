@@ -1,5 +1,3 @@
-SET NAMESPACE 'http://www.teiid.org/translator/hbase/2014' AS teiid_hbase;
-           
 CREATE FOREIGN TABLE Customer (
     PK string OPTIONS (nameinsource 'ROW_ID'),
     city string OPTIONS (nameinsource '"city"'),

@@ -33,78 +33,78 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.runtime.RuntimePlugin;
 
 public abstract class AbstractEventDistributorFactoryService implements InternalEventDistributorFactory {
-	
-	private EventDistributor replicatableEventDistributor;
-	private EventDistributor eventDistributorProxy;
-	
-	public InternalEventDistributorFactory getValue() throws IllegalStateException, IllegalArgumentException {
-		return this;
-	}
-	
-	protected abstract VDBRepository getVdbRepository();
-	protected abstract ObjectReplicator getObjectReplicator();
-	protected abstract DQPCore getDQPCore();
 
-	public void start() {
-		final EventDistributor ed = new EventDistributorImpl() {
-			@Override
-			public VDBRepository getVdbRepository() {
-				return AbstractEventDistributorFactoryService.this.getVdbRepository();
-			}
-			
-			@Override
-			public DQPCore getDQPCore() {
+    private EventDistributor replicatableEventDistributor;
+    private EventDistributor eventDistributorProxy;
+
+    public InternalEventDistributorFactory getValue() throws IllegalStateException, IllegalArgumentException {
+        return this;
+    }
+
+    protected abstract VDBRepository getVdbRepository();
+    protected abstract ObjectReplicator getObjectReplicator();
+    protected abstract DQPCore getDQPCore();
+
+    public void start() {
+        final EventDistributor ed = new EventDistributorImpl() {
+            @Override
+            public VDBRepository getVdbRepository() {
+                return AbstractEventDistributorFactoryService.this.getVdbRepository();
+            }
+
+            @Override
+            public DQPCore getDQPCore() {
                 return AbstractEventDistributorFactoryService.this.getDQPCore();
-			}
-		};
-		
-		ObjectReplicator objectReplicator = getObjectReplicator();
-		// this instance is by use of teiid internally; only invokes the remote instances
-		if (objectReplicator != null) {
-			try {
-				this.replicatableEventDistributor = objectReplicator.replicate("$TEIID_ED$", EventDistributor.class, ed, 0); //$NON-NLS-1$
-			} catch (Exception e) {
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40088, this));
-			}
-		}
-		
-		// for external client to call. invokes local instance and remote ones too.
-		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
-			
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			    Replicated annotation = method.getAnnotation(Replicated.class);
-			    Object result = null;
+            }
+        };
+
+        ObjectReplicator objectReplicator = getObjectReplicator();
+        // this instance is by use of teiid internally; only invokes the remote instances
+        if (objectReplicator != null) {
+            try {
+                this.replicatableEventDistributor = objectReplicator.replicate("$TEIID_ED$", EventDistributor.class, ed, 0); //$NON-NLS-1$
+            } catch (Exception e) {
+                LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40088, this));
+            }
+        }
+
+        // for external client to call. invokes local instance and remote ones too.
+        this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
+
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                Replicated annotation = method.getAnnotation(Replicated.class);
+                Object result = null;
                 try {
-			        if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
+                    if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
                         result = method.invoke(ed, args);
-                    } 
+                    }
                     if (replicatableEventDistributor != null) {
-    					result = method.invoke(replicatableEventDistributor, args);
-    				}
-			    } catch (InvocationTargetException e) {
-			        throw e.getTargetException();
-			    }
-				return result;
-			}
-		});		
-	}
+                        result = method.invoke(replicatableEventDistributor, args);
+                    }
+                } catch (InvocationTargetException e) {
+                    throw e.getTargetException();
+                }
+                return result;
+            }
+        });
+    }
 
-	public void stop() {
-		ObjectReplicator objectReplicator = getObjectReplicator();
-    	if (objectReplicator != null && this.replicatableEventDistributor != null) {
-    		objectReplicator.stop(this.replicatableEventDistributor);
-    		this.replicatableEventDistributor = null;
-    	}
-	}
+    public void stop() {
+        ObjectReplicator objectReplicator = getObjectReplicator();
+        if (objectReplicator != null && this.replicatableEventDistributor != null) {
+            objectReplicator.stop(this.replicatableEventDistributor);
+            this.replicatableEventDistributor = null;
+        }
+    }
 
-	@Override
-	public EventDistributor getReplicatedEventDistributor() {
-		return replicatableEventDistributor;
-	}
+    @Override
+    public EventDistributor getReplicatedEventDistributor() {
+        return replicatableEventDistributor;
+    }
 
-	@Override
-	public EventDistributor getEventDistributor() {
-		return eventDistributorProxy;
-	}
+    @Override
+    public EventDistributor getEventDistributor() {
+        return eventDistributorProxy;
+    }
 }

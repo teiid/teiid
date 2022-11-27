@@ -27,15 +27,15 @@ import org.teiid.core.util.ReflectionHelper;
  * Used to reflection load logic that is dependent upon the opentracing library, or provide a dummy implementation
  */
 public class TracingHelper {
-    
+
     public interface Injector {
         String getSpanContext();
     }
-    
+
     private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-    
+
     private static Injector INJECTOR;
-    
+
     public static String getSpanContext() {
         if (INJECTOR == null) {
             try {
@@ -45,7 +45,7 @@ public class TracingHelper {
             }
             if (INJECTOR == null) {
                 INJECTOR = new Injector() {
-                    
+
                     @Override
                     public String getSpanContext() {
                         return null;

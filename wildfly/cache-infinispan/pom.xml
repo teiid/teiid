@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+	    <artifactId>wildfly-parent</artifactId>
+	    <groupId>org.teiid.wildfly</groupId>
+	    <version>17.0.0-SNAPSHOT</version>
+	</parent>
+	<licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+    <modelVersion>4.0.0</modelVersion>
+    <name>cache-infinispan</name>
+    <groupId>org.teiid</groupId>
+    <artifactId>cache-infinispan</artifactId>
+    <description>Infinispan based cache</description>
+    
+    <properties>
+        <!--  duplicate features.xml in infinispan jars  -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-bom</artifactId>
+                <version>${version.wildfly.org.infinispan}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
+    <dependencies>
+	    <dependency>
+	        <groupId>org.infinispan</groupId>
+	        <artifactId>infinispan-core</artifactId>
+            <version>${version.wildfly.org.infinispan}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jboss.spec.javax.transaction</groupId>
+                    <artifactId>jboss-transaction-api_1.3_spec</artifactId>
+                </exclusion>
+            </exclusions>
+	    </dependency> 
+	    <dependency>
+	        <groupId>org.infinispan</groupId>
+	        <artifactId>infinispan-commons</artifactId>
+	        <version>${version.wildfly.org.infinispan}</version>
+	    </dependency>
+	    	    
+	    <dependency>
+	        <groupId>org.teiid</groupId>
+	        <artifactId>teiid-engine</artifactId>
+	    </dependency>
+	                 
+	    <dependency>
+	        <groupId>org.teiid</groupId>
+	        <artifactId>teiid-api</artifactId>
+	    </dependency>
+	    
+	    <dependency>
+	        <groupId>org.teiid</groupId>
+	        <artifactId>teiid-common-core</artifactId>
+	    </dependency>
+	    
+	    <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+	    </dependency>
+
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-core</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jgroups</groupId>
+			<artifactId>jgroups</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.reactivex.rxjava2</groupId>
+			<artifactId>rxjava</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+	</dependencies>
+
+</project>

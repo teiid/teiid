@@ -45,36 +45,36 @@ import org.teiid.query.util.CommandContext;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class TestBatchedUpdateNode {
-            
+
     private BatchedUpdateNode helpGetNode(String[] sql, QueryMetadataInterface md, ProcessorDataManager pdm) throws Exception {
-    	List<Command> commands = TestBatchedUpdatePlanner.helpGetCommands(sql, md);
-    	List<Boolean> shouldEvaluate = new ArrayList<Boolean>(commands.size());
-    	for (Command command : commands) {
-			shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(command));
-		}
+        List<Command> commands = TestBatchedUpdatePlanner.helpGetCommands(sql, md);
+        List<Boolean> shouldEvaluate = new ArrayList<Boolean>(commands.size());
+        for (Command command : commands) {
+            shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(command));
+        }
         BatchedUpdateNode node = new BatchedUpdateNode(1, commands, Collections.EMPTY_LIST, shouldEvaluate, "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();
         context.setMetadata(md);
-        node.initialize(context, Mockito.mock(BufferManager.class), pdm); 
+        node.initialize(context, Mockito.mock(BufferManager.class), pdm);
         return node;
     }
-    
+
     private BatchedUpdateNode helpOpen(String[] commands, ProcessorDataManager pdm) throws Exception {
         BatchedUpdateNode node = helpGetNode(commands, RealMetadataFactory.example1Cached(), pdm);
         node.open();
         return node;
     }
-    
+
     private void helpTestOpen(String[] commands, String[] expectedCommands) throws Exception {
         FakePDM pdm = new FakePDM(expectedCommands.length);
         helpOpen(commands, pdm);
         assertEquals(Arrays.asList(expectedCommands), pdm.commands);
     }
-    
+
     private FakePDM helpTestNextBatch(String[] commands, int[] expectedResults) throws Exception {
         int numExecutedCommands = 0;
         for (int i = 0; i < expectedResults.length; i++) {
@@ -84,9 +84,9 @@ public class TestBatchedUpdateNode {
         BatchedUpdateNode node = helpOpen(commands, fakePDM);
         TupleBatch batch = null;
         try {
-        	batch = node.nextBatch();
+            batch = node.nextBatch();
         } catch (BlockedException e) {
-        	batch = node.nextBatch();
+            batch = node.nextBatch();
         }
         assertNotNull(batch);
         assertTrue(batch.getTerminationFlag());
@@ -100,7 +100,7 @@ public class TestBatchedUpdateNode {
         }
         return fakePDM;
     }
-    
+
     @Test public void testOpen1() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)" //$NON-NLS-1$
@@ -108,7 +108,7 @@ public class TestBatchedUpdateNode {
         String[] expectedCommands = {"BatchedUpdate{I,I}"}; //$NON-NLS-1$
         helpTestOpen(sql, expectedCommands);
     }
-    
+
     @Test public void testOpen2() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
@@ -118,7 +118,7 @@ public class TestBatchedUpdateNode {
         String[] expectedCommands = {"BatchedUpdate{I,U,D,D}"}; //$NON-NLS-1$
         helpTestOpen(sql, expectedCommands);
     }
-    
+
     @Test public void testOpenAllCommandsExecuted() throws Exception {
         String[] sql = {"UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
                         "DELETE FROM pm1.g2 WHERE e2 = 50", //$NON-NLS-1$
@@ -127,16 +127,16 @@ public class TestBatchedUpdateNode {
         String[] expectedCommands = {"BatchedUpdate{U,D,U}"}; //$NON-NLS-1$
         helpTestOpen(sql, expectedCommands);
     }
-    
+
     @Test public void testOpenNoCommandsExecuted() throws Exception {
         String[] sql = {"UPDATE pm1.g1 SET e2 = 50 WHERE 1 = 0", //$NON-NLS-1$
                         "DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
                         "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE 1 = 0" //$NON-NLS-1$
         };
-        String[] expectedCommands = {}; 
+        String[] expectedCommands = {};
         helpTestOpen(sql, expectedCommands);
     }
-    
+
     @Test public void testOpenSomeCommandsExecuted() throws Exception {
         String[] sql = {"UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
                         "DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
@@ -145,7 +145,7 @@ public class TestBatchedUpdateNode {
         String[] expectedCommands = {"BatchedUpdate{U,U}"}; //$NON-NLS-1$
         helpTestOpen(sql, expectedCommands);
     }
-    
+
     @Test public void testNextBatch1() throws Exception {
         String[] commands = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                              "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)" //$NON-NLS-1$
@@ -153,7 +153,7 @@ public class TestBatchedUpdateNode {
         int[] expectedResults = {1,1};
         helpTestNextBatch(commands, expectedResults);
     }
-    
+
     @Test public void testNextBatch2() throws Exception {
         String[] commands = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                              "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
@@ -163,7 +163,7 @@ public class TestBatchedUpdateNode {
         int[] expectedResults = {1,1,1,1};
         helpTestNextBatch(commands, expectedResults);
     }
-    
+
     @Test public void testNextBatchAllcommandsExecuted() throws Exception {
         String[] commands = {"UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
                              "DELETE FROM pm1.g2 WHERE e2 = 50", //$NON-NLS-1$
@@ -172,7 +172,7 @@ public class TestBatchedUpdateNode {
         int[] expectedResults = {1,1,1};
         helpTestNextBatch(commands, expectedResults);
     }
-    
+
     @Test public void testNextBatchNoCommandsExecuted() throws Exception {
         String[] commands = {"UPDATE pm1.g1 SET e2 = 50 WHERE 1 = 0", //$NON-NLS-1$
                              "DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
@@ -181,17 +181,17 @@ public class TestBatchedUpdateNode {
         int[] expectedResults = {0,0,0};
         helpTestNextBatch(commands, expectedResults);
     }
-    
+
     @Test public void testNextBatchSomeCommandsExecuted() throws Exception {
         String[] commands = {"DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
-        					 "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
+                             "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
                              "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE e1 = 'myrow'", //$NON-NLS-1$
                              "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE 1 = 0" //$NON-NLS-1$
         };
         int[] expectedResults = {0,1,1,0};
         helpTestNextBatch(commands, expectedResults);
     }
-    
+
     @Test public void testNextBatchCommandNeedsEvaluated() throws Exception {
         String[] commands = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values (commandpayload(), 1, {b'true'}, 1.0)" //$NON-NLS-1$
         };
@@ -199,13 +199,13 @@ public class TestBatchedUpdateNode {
         FakePDM fpdm = helpTestNextBatch(commands, expectedResults);
         assertEquals("INSERT INTO pm1.g1 (e1, e2, e3, e4) VALUES (null, 1, TRUE, 1.0)", ((BatchedUpdateCommand)fpdm.actualCommands.get(0)).getUpdateCommands().get(0).toString()); //$NON-NLS-1$
     }
-    
+
     private static final class FakePDM implements ProcessorDataManager {
-    	private int numExecutedCommands;
+        private int numExecutedCommands;
         private List<String> commands = new ArrayList<String>();
         private List<Command> actualCommands = new ArrayList<Command>();
         private FakePDM(int numExecutedCommands) {
-        	this.numExecutedCommands = numExecutedCommands;
+            this.numExecutedCommands = numExecutedCommands;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
         public TupleSource registerRequest(CommandContext context,Command command,String modelName,RegisterRequestParameter parameterObject) throws TeiidComponentException {
@@ -215,11 +215,11 @@ public class TestBatchedUpdateNode {
             actualCommands.add(command);
             return new FakeTupleSource(numExecutedCommands);
         }
-		@Override
-		public EventDistributor getEventDistributor() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+        @Override
+        public EventDistributor getEventDistributor() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
     private static final class FakeTupleSource implements TupleSource {
         private int currentTuple = 0;
@@ -231,15 +231,15 @@ public class TestBatchedUpdateNode {
         public void closeSource() {}
         public List nextTuple() throws TeiidComponentException {
             if (first) {
-            	first = false;
-            	throw BlockedException.INSTANCE;
+                first = false;
+                throw BlockedException.INSTANCE;
             }
-        	if (currentTuple++ < numCommands) {
+            if (currentTuple++ < numCommands) {
                 return Arrays.asList(new Object[] {new Integer(1)});
             }
             return null;
         }
-        
+
     }
-    
+
 }

@@ -1,2 +1,0 @@
-/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
-

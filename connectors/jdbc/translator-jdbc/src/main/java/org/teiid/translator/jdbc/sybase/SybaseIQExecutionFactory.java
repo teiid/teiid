@@ -8,5 +8,5 @@ import org.teiid.translator.jdbc.sap.SAPIQExecutionFactory;
  */
 @Translator(name="sybaseiq", description="A translator for Sybase Database", deprecated="sap-iq")
 public class SybaseIQExecutionFactory extends SAPIQExecutionFactory {
-	
+
 }

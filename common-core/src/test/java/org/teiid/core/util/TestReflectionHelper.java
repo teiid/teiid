@@ -380,16 +380,16 @@ public class TestReflectionHelper {
         assertEquals("Wrong class", theMethod.getDeclaringClass().getName(), FakeSubInterface.class.getName()); //$NON-NLS-1$
         helpAssertSameMethodSignature("Found wrong method signature", signatureExpected, signatureFound); //$NON-NLS-1$
     }
-    
+
     @Test public void testCreate() throws Exception {
-    	ReflectionHelper.create(SomeClass.class.getName(), Arrays.asList(true), null);
+        ReflectionHelper.create(SomeClass.class.getName(), Arrays.asList(true), null);
     }
-    
+
     /**
      * Test base interface
      */
     public interface FakeInterface {
-    	
+
         void method(String arg);
         void method(Serializable arg);
         void method(Object arg);
@@ -420,9 +420,9 @@ public class TestReflectionHelper {
         void method(Serializable arg1, Number arg2);
         void method(Serializable arg1, Long arg2);
     }
-    
+
     public static class SomeClass {
-    	public SomeClass(boolean primArg) {
-		}
+        public SomeClass(boolean primArg) {
+        }
     }
 }

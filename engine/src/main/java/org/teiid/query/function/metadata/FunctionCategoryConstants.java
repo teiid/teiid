@@ -23,34 +23,34 @@ package org.teiid.query.function.metadata;
  */
 public interface FunctionCategoryConstants {
 
-    /** 
-     * "String" functions typically operate on or otherwise manipulate 
+    /**
+     * "String" functions typically operate on or otherwise manipulate
      *  strings, such as concat, substring, etc.
      */
     public static final String STRING = "String"; //$NON-NLS-1$
-    
-    /** 
-     * "Numeric" functions typically operate on or otherwise manipulate 
+
+    /**
+     * "Numeric" functions typically operate on or otherwise manipulate
      *  numbers, such as +, sqrt, etc.
-     */    
+     */
     public static final String NUMERIC = "Numeric"; //$NON-NLS-1$
-    
-    /** 
-     * "Datetime" functions typically operate on or otherwise manipulate 
+
+    /**
+     * "Datetime" functions typically operate on or otherwise manipulate
      *  dates, times, or timestamps.
-     */    
+     */
     public static final String DATETIME = "Datetime"; //$NON-NLS-1$
-    
-    /** 
+
+    /**
      * "Conversion" functions convert an object of one type to another type.
-     */    
+     */
     public static final String CONVERSION = "Conversion"; //$NON-NLS-1$
 
-	/**
-	 * "System" functions expose system information.
-	 */
-	public static final String SYSTEM = "System"; //$NON-NLS-1$
-    
+    /**
+     * "System" functions expose system information.
+     */
+    public static final String SYSTEM = "System"; //$NON-NLS-1$
+
     /**
      * "Miscellaneous" functions are for functions that don't fit in any obvious category.
      */
@@ -60,7 +60,7 @@ public interface FunctionCategoryConstants {
      * "XML" functions are for manipulating XML documents.
      */
     public static final String XML = "XML"; //$NON-NLS-1$
-    
+
     /**
      * "JSON" functions are for manipulating JSON documents.
      */
@@ -69,9 +69,11 @@ public interface FunctionCategoryConstants {
     /**
      * "Security" functions check authentication or authorization information
      */
-    public static final String SECURITY = "Security"; //$NON-NLS-1$ 
-    
+    public static final String SECURITY = "Security"; //$NON-NLS-1$
+
     public static final String AGGREGATE = "Aggregate"; //$NON-NLS-1$
-        
+
     public static final String GEOMETRY = "Geometry"; //$NON-NLS-1$
+
+    public static final String GEOGRAPHY = "Geography"; //$NON-NLS-1$
 }

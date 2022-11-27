@@ -28,26 +28,26 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="ingres93", description="A translator for Ingres 9.3 or later Database")
 public class Ingres93ExecutionFactory extends IngresExecutionFactory {
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		convert.addTypeMapping("ansidate", FunctionModifier.DATE); //$NON-NLS-1$
-		convert.addTypeMapping("timestamp(9) with time zone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public List<?> translateLimit(Limit limit, ExecutionContext context) {
-		if (limit.getRowOffset() > 0) {
-	        return Arrays.asList("OFFSET ", limit.getRowOffset(), " FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		}
-		return super.translateLimit(limit, context);
-	}
-	
-	@Override
-	public boolean supportsRowOffset() {
-		return true;
-	}
-	
+
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        convert.addTypeMapping("ansidate", FunctionModifier.DATE); //$NON-NLS-1$
+        convert.addTypeMapping("timestamp(9) with time zone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
+        if (limit.getRowOffset() > 0) {
+            return Arrays.asList("OFFSET ", limit.getRowOffset(), " FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+        return super.translateLimit(limit, context);
+    }
+
+    @Override
+    public boolean supportsRowOffset() {
+        return true;
+    }
+
 }

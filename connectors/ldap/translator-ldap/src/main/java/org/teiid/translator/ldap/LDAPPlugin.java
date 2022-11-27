@@ -25,7 +25,7 @@ import org.teiid.core.BundleUtil;
 /**
  * LDAPPlugin
  */
-public class LDAPPlugin { 
+public class LDAPPlugin {
 
     public static final String PLUGIN_ID = LDAPPlugin.class.getPackage().getName();
 
@@ -35,15 +35,15 @@ public class LDAPPlugin {
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 
     public static enum Event implements BundleUtil.Event {
-    	TEIID12002, // search failed
-    	TEIID12003, // close context
-    	TEIID12004, // attribute fetch error
-    	TEIID12008,
-    	TEIID12009,
-    	TEIID12010,
-    	TEIID12011,
-    	TEIID12012, 
-    	TEIID12013, 
-    	TEIID12014,
+        TEIID12002, // search failed
+        TEIID12003, // close context
+        TEIID12004, // attribute fetch error
+        TEIID12008,
+        TEIID12009,
+        TEIID12010,
+        TEIID12011,
+        TEIID12012,
+        TEIID12013,
+        TEIID12014,
     }
 }

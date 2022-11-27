@@ -25,15 +25,15 @@ import org.teiid.core.BundleUtil;
  */
 public class FunctionExecutionException extends ExpressionEvaluationException {
 
-	private static final long serialVersionUID = -4421419169341759699L;
+    private static final long serialVersionUID = -4421419169341759699L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public FunctionExecutionException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -46,7 +46,7 @@ public class FunctionExecutionException extends ExpressionEvaluationException {
     public FunctionExecutionException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -56,15 +56,15 @@ public class FunctionExecutionException extends ExpressionEvaluationException {
     public FunctionExecutionException( Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public FunctionExecutionException(BundleUtil.Event event, Throwable e, String message ) {
         super( event, e, message );
     }
-    
+
     public FunctionExecutionException(BundleUtil.Event event, String message ) {
         super( event, message );
-    }    
+    }
     public FunctionExecutionException(BundleUtil.Event event, Throwable e) {
         super(event,e);
-    }    
+    }
 }

@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.teiid.language.SQLConstants.Reserved.HAVING;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.infinispan.api.InfinispanPlugin;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Join.JoinType;
@@ -273,7 +276,11 @@ public class IckleConversionVisitor extends SQLStringVisitor {
                 this.exceptions.add(new TranslatorException(InfinispanPlugin.Util
                         .gs(InfinispanPlugin.Event.TEIID25001, column.getName())));
             }
-            column = normalizePseudoColumn(column);
+            try {
+                column = normalizePseudoColumn(column, this.metadata);
+            } catch (TranslatorException e1) {
+                this.exceptions.add(e1);
+            }
             if (!this.includePK || !isPartOfPrimaryKey(column.getName())) {
                 if (column.getParent().equals(this.parentTable.getMetadataObject())){
                     this.projectedExpressions.add(new ColumnReference(this.parentTable, column.getName(), column, column.getJavaType()));
@@ -288,9 +295,9 @@ public class IckleConversionVisitor extends SQLStringVisitor {
                 nested = true;
             }
             try {
-				this.projectedDocumentAttributes.put(
-						MarshallerBuilder.getDocumentAttributeName(column, nested, this.metadata),
-						column.getJavaType());
+                this.projectedDocumentAttributes.put(
+                        MarshallerBuilder.getDocumentAttributeName(column, nested, this.metadata),
+                        column.getJavaType());
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
             }
@@ -311,17 +318,13 @@ public class IckleConversionVisitor extends SQLStringVisitor {
         }
     }
 
-    Column normalizePseudoColumn(Column column) {
+    static Column normalizePseudoColumn(Column column, RuntimeMetadata metadata) throws TranslatorException {
         String pseudo = ProtobufMetadataProcessor.getPseudo(column);
         if (pseudo != null) {
-            try {
-                Table columnParent = (Table)column.getParent();
-                Table pseudoColumnParent = this.metadata.getTable(
-                        ProtobufMetadataProcessor.getMerge(columnParent));
-                return pseudoColumnParent.getColumnByName(getName(column));
-            } catch (TranslatorException e) {
-                this.exceptions.add(e);
-            }
+            Table columnParent = (Table)column.getParent();
+            Table pseudoColumnParent = metadata.getTable(
+                    ProtobufMetadataProcessor.getMerge(columnParent));
+            return pseudoColumnParent.getColumnByName(getRecordName(column));
         }
         return column;
     }

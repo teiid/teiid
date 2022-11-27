@@ -15,40 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.teiid.translator.salesforce.execution;
 
-import javax.resource.ResourceException;
-
 import org.teiid.language.Command;
-import org.teiid.language.Delete;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
-import org.teiid.translator.salesforce.execution.visitors.DeleteVisitor;
-import org.teiid.translator.salesforce.execution.visitors.IQueryProvidingVisitor;
 
+import com.sforce.async.OperationEnum;
 
-public class DeleteExecutionImpl extends AbstractUpdateExecution {
+public class DeleteExecutionImpl extends DeleteUpdateExecutionImpl {
 
+    public DeleteExecutionImpl(SalesForceExecutionFactory ef, Command command,
+            SalesforceConnection salesforceConnection,
+            RuntimeMetadata metadata, ExecutionContext context) {
+        super(ef, command, salesforceConnection, metadata, context);
+    }
 
-	public DeleteExecutionImpl(SalesForceExecutionFactory ef, Command command,
-			SalesforceConnection salesforceConnection,
-			RuntimeMetadata metadata, ExecutionContext context) {
-		super(ef, command, salesforceConnection, metadata, context);
-	}
+    @Override
+    protected OperationEnum getOperation() {
+        return (executionFactory.useHardDelete() || (context.getSourceHint() != null && context
+                .getSourceHint().contains("hardDelete"))) //$NON-NLS-1$
+                ? OperationEnum.hardDelete
+                : OperationEnum.delete;
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
-		dVisitor.visitNode(command);
-		execute(((Delete)command).getWhere(), dVisitor);
-	}
-	
-	@Override
-	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
-	        throws ResourceException {
-	    return getConnection().delete(ids);
-	}
+    @Override
+    protected int syncProcessIds(String[] ids) throws TranslatorException {
+        return connection.delete(ids);
+    }
+
 }

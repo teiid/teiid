@@ -21,25 +21,25 @@ package org.teiid.translator.google.api;
 import java.util.List;
 import java.util.Map;
 
-import javax.resource.cci.Connection;
-
+import org.teiid.resource.api.Connection;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.UpdateResult;
 
 
 /**
- * Connection to GoogleSpreadsheet API. 
- * 
+ * Connection to GoogleSpreadsheet API.
+ *
  */
 public interface GoogleSpreadsheetConnection extends Connection {
-	public RowsResult executeQuery(String worksheetTitle, String query, Integer offset, Integer limit, int batchSize);
-	public UpdateResult updateRows(String worksheetTitle, String criteria, List<UpdateSet> set);
-	public UpdateResult deleteRows(String worksheetTitle, String criteria);
-	public UpdateResult executeRowInsert(String worksheetTitle, Map<String,Object> pair);
-	/**
-	 * Returns information about existing Spreadsheets and worksheets.
-	 * @return
-	 */
-	public SpreadsheetInfo getSpreadsheetInfo();
+    public RowsResult executeQuery(Worksheet worksheet, String query, Integer offset, Integer limit, int batchSize);
+    public UpdateResult updateRows(Worksheet worksheet, String criteria, List<UpdateSet> set);
+    public UpdateResult deleteRows(Worksheet worksheet, String criteria);
+    public UpdateResult executeRowInsert(Worksheet worksheet, Map<String,Object> pair);
+    /**
+     * Returns information about existing Spreadsheets and worksheets.
+     * @return
+     */
+    public SpreadsheetInfo getSpreadsheetInfo();
 }

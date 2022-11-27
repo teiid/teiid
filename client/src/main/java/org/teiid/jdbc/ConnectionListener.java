@@ -21,17 +21,17 @@ package org.teiid.jdbc;
 import java.sql.Connection;
 
 /**
- * A JDBC Connection lifecycle listener 
+ * A JDBC Connection lifecycle listener
  */
 public interface ConnectionListener {
-        
+
     /**
-     * Called when a new connection is created.  
+     * Called when a new connection is created.
      */
     void connectionAdded(String id, Connection connection);
 
     /**
-     * Called when a connection is closed. 
+     * Called when a connection is closed.
      */
     void connectionRemoved(String id, Connection connection);
 }

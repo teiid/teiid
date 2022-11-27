@@ -26,11 +26,11 @@ import org.teiid.translator.salesforce.SalesforceConnection;
 
 public interface ProcedureExecutionParent {
 
-	public Call getCommand();
+    public Call getCommand();
 
-	public ExecutionContext getExecutionContext();
+    public ExecutionContext getExecutionContext();
 
-	public RuntimeMetadata getMetadata();
+    public RuntimeMetadata getMetadata();
 
-	public SalesforceConnection getConnection();
+    public SalesforceConnection getConnection();
 }

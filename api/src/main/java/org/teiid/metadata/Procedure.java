@@ -26,38 +26,38 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 
 /**
  * Represents Teiid and source procedures.  Can also represent a function with restrictions.
- * <br/>
+ * <br>
  * Parameter positions start with 1 for consistency with {@link BaseColumn}.
- * <br/>
+ * <br>
  * See also {@link FunctionMethod}
  */
 public class Procedure extends AbstractMetadataRecord implements Modifiable {
-    
-	private static final long serialVersionUID = 7714869437683360834L;
 
-	public enum Type {
-		Function,
-		UDF,
-		StoredProc,
-		StoredQuery
-	}
-	
-	public static final int AUTO_UPDATECOUNT = -1;
-	
+    private static final long serialVersionUID = 7714869437683360834L;
+
+    public enum Type {
+        Function,
+        UDF,
+        StoredProc,
+        StoredQuery
+    }
+
+    public static final int AUTO_UPDATECOUNT = -1;
+
     private boolean isFunction;
     private boolean isVirtual;
     private int updateCount = AUTO_UPDATECOUNT;
     private List<ProcedureParameter> parameters = new ArrayList<ProcedureParameter>(2);
     private ColumnSet<Procedure> resultSet;
     private volatile String queryPlan;
-    
+
     private Schema parent;
     private volatile transient long lastModified;
-    
+
     public void setParent(Schema parent) {
-		this.parent = parent;
-	}
-    
+        this.parent = parent;
+    }
+
     public boolean isFunction() {
         return isFunction;
     }
@@ -67,26 +67,26 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     }
 
     public Type getType() {
-    	if (isFunction()) {
-        	if (isVirtual()) {
-        		return Type.UDF;
-        	}
-        	return Type.Function;
+        if (isFunction()) {
+            if (isVirtual()) {
+                return Type.UDF;
+            }
+            return Type.Function;
         }
         if (isVirtual()) {
             return Type.StoredQuery;
         }
         return Type.StoredProc;
     }
-    
+
     public int getUpdateCount() {
         return this.updateCount;
     }
-    
-	public List<ProcedureParameter> getParameters() {
-		return parameters;
-	}
-	
+
+    public List<ProcedureParameter> getParameters() {
+        return parameters;
+    }
+
     public ProcedureParameter getParameterByName(String param) {
         for(ProcedureParameter p: this.parameters) {
             if (p.getName().equals(param)) {
@@ -94,19 +94,19 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
             }
         }
         return null;
-    }	
+    }
 
-	public void setParameters(List<ProcedureParameter> parameters) {
-		this.parameters = parameters;
-	}
+    public void setParameters(List<ProcedureParameter> parameters) {
+        this.parameters = parameters;
+    }
 
-	public String getQueryPlan() {
-		return queryPlan;
-	}
+    public String getQueryPlan() {
+        return queryPlan;
+    }
 
-	public void setQueryPlan(String queryPlan) {
-		this.queryPlan = queryPlan;
-	}
+    public void setQueryPlan(String queryPlan) {
+        this.queryPlan = queryPlan;
+    }
 
     /**
      * @param b
@@ -121,33 +121,33 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     public void setVirtual(boolean b) {
         isVirtual = b;
     }
-    
+
     public void setUpdateCount(int count) {
-    	this.updateCount = count;
+        this.updateCount = count;
     }
 
-	public void setResultSet(ColumnSet<Procedure> resultSet) {
-		this.resultSet = resultSet;
-		if (resultSet != null) {
-			resultSet.setParent(this);
-		}
-	}
+    public void setResultSet(ColumnSet<Procedure> resultSet) {
+        this.resultSet = resultSet;
+        if (resultSet != null) {
+            resultSet.setParent(this);
+        }
+    }
 
-	public ColumnSet<Procedure> getResultSet() {
-		return resultSet;
-	}
-	
-	@Override
-	public Schema getParent() {
-		return parent;
-	}
-	
-	public long getLastModified() {
-		return lastModified;
-	}
-	
-	public void setLastModified(long lastModified) {
-		this.lastModified = lastModified;
-	}
+    public ColumnSet<Procedure> getResultSet() {
+        return resultSet;
+    }
+
+    @Override
+    public Schema getParent() {
+        return parent;
+    }
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
 
 }

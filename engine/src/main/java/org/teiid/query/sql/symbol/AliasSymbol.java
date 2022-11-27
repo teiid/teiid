@@ -32,10 +32,10 @@ import org.teiid.query.sql.LanguageVisitor;
  */
 public class AliasSymbol extends Symbol implements DerivedExpression {
 
-	private Expression symbol;
+    private Expression symbol;
 
     /**
-     * Constructor used for cloning 
+     * Constructor used for cloning
      * @param name
      * @param canonicalName
      * @since 4.3
@@ -44,59 +44,59 @@ public class AliasSymbol extends Symbol implements DerivedExpression {
         super(name);
         setSymbol(symbol);
     }
-    
-	/**
-	 * Construct an AliasSymbol given the alias name and the underlying symbol.
-	 * @param name Name of the alias
-	 * @param symbol Underlying symbol
-	 */
-	public AliasSymbol(String name, Expression symbol) {
-		super(name);
+
+    /**
+     * Construct an AliasSymbol given the alias name and the underlying symbol.
+     * @param name Name of the alias
+     * @param symbol Underlying symbol
+     */
+    public AliasSymbol(String name, Expression symbol) {
+        super(name);
         setSymbol(symbol);
-	}
+    }
 
-	/**
-	 * Get the underlying symbol
-	 * @return Underlying symbol
-	 */
-	public Expression getSymbol() {
-		return this.symbol;
-	}
+    /**
+     * Get the underlying symbol
+     * @return Underlying symbol
+     */
+    public Expression getSymbol() {
+        return this.symbol;
+    }
 
-	/**
-	 * Set the underlying symbol
-	 * @param symbol New symbol
-	 */
-	public void setSymbol(Expression symbol) {
+    /**
+     * Set the underlying symbol
+     * @param symbol New symbol
+     */
+    public void setSymbol(Expression symbol) {
         if(symbol instanceof AliasSymbol || symbol == null){
             Assertion.failed(QueryPlugin.Util.getString("ERR.015.010.0029")); //$NON-NLS-1$
         }
-		this.symbol = symbol;
-	}
+        this.symbol = symbol;
+    }
 
-	/**
-	 * Get the type of the symbol
-	 * @return Type of the symbol
-	 */
-	public Class<?> getType() {
-		return this.symbol.getType();
-	}
+    /**
+     * Get the type of the symbol
+     * @return Type of the symbol
+     */
+    public Class<?> getType() {
+        return this.symbol.getType();
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
-	/**
-	 * Return a copy of this object.
-	 */
-	public Object clone() {
-		Expression symbolCopy = (Expression) this.symbol.clone();
-		AliasSymbol result = new AliasSymbol(getName(), getShortName(), symbolCopy);
-		result.outputName = this.outputName;
-		return result;
-	}
-	
-   /** 
+    /**
+     * Return a copy of this object.
+     */
+    public Object clone() {
+        Expression symbolCopy = (Expression) this.symbol.clone();
+        AliasSymbol result = new AliasSymbol(getName(), getShortName(), symbolCopy);
+        result.outputName = this.outputName;
+        return result;
+    }
+
+   /**
      * @see org.teiid.query.sql.symbol.Symbol#equals(java.lang.Object)
      */
     @Override

@@ -37,7 +37,7 @@ public interface LanguageObjectVisitor {
     public void visit(GroupBy obj);
     public void visit(In obj);
     public void visit(DerivedTable obj);
-    public void visit(Insert obj);    
+    public void visit(Insert obj);
     public void visit(IsNull obj);
     public void visit(Join obj);
     public void visit(Like obj);
@@ -57,12 +57,13 @@ public interface LanguageObjectVisitor {
     public void visit(SetQuery obj);
     public void visit(SetClause obj);
     public void visit(SearchedWhenClause obj);
-	public void visit(With obj);
-	public void visit(WithItem obj);
-	public void visit(WindowFunction windowFunction);
-	public void visit(WindowSpecification windowSpecification);
-	public void visit(Parameter obj);
-	public void visit(Array array);
-	public void visit(NamedProcedureCall namedProcedureCall);
-	public void visit(IsDistinct isDistinct);
+    public void visit(With obj);
+    public void visit(WithItem obj);
+    public void visit(WindowFunction windowFunction);
+    public void visit(WindowSpecification windowSpecification);
+    public void visit(Parameter obj);
+    public void visit(Array array);
+    public void visit(NamedProcedureCall namedProcedureCall);
+    public void visit(IsDistinct isDistinct);
+    public void visit(WindowFrame windowFrame);
 }

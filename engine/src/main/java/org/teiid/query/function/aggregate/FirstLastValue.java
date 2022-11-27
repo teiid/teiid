@@ -39,12 +39,12 @@ public class FirstLastValue extends SingleArgumentAggregateFunction {
         value = null;
         set = false;
     }
-    
+
     public FirstLastValue(Class<?> type, boolean first) {
         this.type = type;
         this.first = first;
     }
-    
+
     @Override
     public void addInputDirect(Object input, List<?> tuple,
             CommandContext commandContext) throws TeiidProcessingException,
@@ -63,25 +63,25 @@ public class FirstLastValue extends SingleArgumentAggregateFunction {
     public Object getResult(CommandContext commandContext) {
         return value;
     }
-    
+
     @Override
     public void getState(List<Object> state) {
-    	state.add(value);
-    	state.add(set);
+        state.add(value);
+        state.add(set);
     }
-    
+
     @Override
     public int setState(List<?> state, int index) {
-    	value = state.get(index);
-    	set = (Boolean)state.get(index++);
-    	return index++;
+        value = state.get(index);
+        set = (Boolean)state.get(index++);
+        return index++;
     }
-    
+
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	return Arrays.asList(type, Boolean.class);
+        return Arrays.asList(type, Boolean.class);
     }
-    
+
     @Override
     public boolean respectsNull() {
         return true;

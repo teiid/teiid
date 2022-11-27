@@ -28,12 +28,12 @@ import org.teiid.query.sql.lang.TestSetCriteria;
 
 
 public class TestWhileStatement  extends TestCase{
-    
-    public TestWhileStatement(String name) { 
+
+    public TestWhileStatement(String name) {
         super(name);
-    }   
-    
-    // ################################## TEST HELPERS ################################ 
+    }
+
+    // ################################## TEST HELPERS ################################
 
     public static final WhileStatement sample1() {
         Block block = TestBlock.sample1();
@@ -41,25 +41,25 @@ public class TestWhileStatement  extends TestCase{
         return new WhileStatement(criteria, block);
     }
 
-    public static final WhileStatement sample2() { 
+    public static final WhileStatement sample2() {
         Block block = TestBlock.sample2();
         Criteria criteria = TestSetCriteria.sample2();
         return new WhileStatement(criteria, block);
     }
-    
-    // ################################## ACTUAL TESTS ################################ 
+
+    // ################################## ACTUAL TESTS ################################
 
 
     public void testGetIfBlock() {
         WhileStatement b1 = sample1();
         assertTrue("Incorrect Block on statement", b1.getBlock().equals(TestBlock.sample1())); //$NON-NLS-1$
     }
-    
+
     public void testGetCondition() {
         WhileStatement b1 = sample1();
         assertTrue("Incorrect Block on statement", b1.getCondition().equals(TestSetCriteria.sample1())); //$NON-NLS-1$
     }
-    
+
     public void testSelfEquivalence(){
         WhileStatement s1 = sample1();
         int equals = 0;
@@ -72,7 +72,7 @@ public class TestWhileStatement  extends TestCase{
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
     }
-    
+
     public void testNonEquivalence(){
         WhileStatement s1 = sample1();
         WhileStatement s2 = sample2();

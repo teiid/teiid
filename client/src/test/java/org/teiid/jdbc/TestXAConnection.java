@@ -25,6 +25,7 @@ import java.sql.SQLException;
 
 import javax.sql.ConnectionEvent;
 import javax.sql.ConnectionEventListener;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 
 import org.junit.Test;
@@ -34,46 +35,55 @@ import org.teiid.client.xa.XidImpl;
 import org.teiid.net.ServerConnection;
 
 public class TestXAConnection {
-	
-	@Test public void testConnectionClose() throws Exception {
 
-		final ConnectionImpl mmConn = TestConnection.getMMConnection();
+    @Test public void testConnectionClose() throws Exception {
 
-		XAConnectionImpl xaConn = new XAConnectionImpl(mmConn);
-		
-		Connection conn = xaConn.getConnection();
-		StatementImpl stmt = (StatementImpl)conn.createStatement();
-		conn.setAutoCommit(false);
-		conn.close();
-		
-		ServerConnection sc = xaConn.getConnectionImpl().getServerConnection();
+        final ConnectionImpl mmConn = TestConnection.getMMConnection();
 
-		assertTrue(stmt.isClosed());
-		assertTrue(conn.getAutoCommit());
-		
-		conn = xaConn.getConnection();
-		stmt = (StatementImpl)conn.createStatement();
-		XAResource resource = xaConn.getXAResource();
-		resource.start(new XidImpl(1, new byte[0], new byte[0]), XAResource.TMNOFLAGS);
-		conn.close();
-		
-		assertTrue(stmt.isClosed());
-		assertTrue(conn.getAutoCommit());
-	}
-	
-	@Test public void testNotification() throws Exception {
-		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
-		Mockito.doThrow(new SQLException(new InvalidSessionException())).when(conn).commit();
-		XAConnectionImpl xaConn = new XAConnectionImpl(conn);
-		ConnectionEventListener cel = Mockito.mock(ConnectionEventListener.class);
-		xaConn.addConnectionEventListener(cel);
-		Connection c = xaConn.getConnection();
-		try {
-			c.commit();
-		} catch (SQLException e) {
-			
-		}
-		Mockito.verify(cel).connectionErrorOccurred((ConnectionEvent) Mockito.anyObject());
-	}
+        XAConnectionImpl xaConn = new XAConnectionImpl(mmConn);
+
+        Connection conn = xaConn.getConnection();
+        StatementImpl stmt = (StatementImpl)conn.createStatement();
+        conn.setAutoCommit(false);
+        conn.close();
+
+        ServerConnection sc = xaConn.getConnectionImpl().getServerConnection();
+
+        assertTrue(stmt.isClosed());
+        assertTrue(conn.getAutoCommit());
+
+        conn = xaConn.getConnection();
+        stmt = (StatementImpl)conn.createStatement();
+        XAResource resource = xaConn.getXAResource();
+        resource.start(new XidImpl(1, new byte[0], new byte[0]), XAResource.TMNOFLAGS);
+        conn.close();
+
+        assertTrue(stmt.isClosed());
+        assertTrue(conn.getAutoCommit());
+    }
+
+    @Test public void testNotification() throws Exception {
+        ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+        Mockito.doThrow(new SQLException(new InvalidSessionException())).when(conn).commit();
+        XAConnectionImpl xaConn = new XAConnectionImpl(conn);
+        ConnectionEventListener cel = Mockito.mock(ConnectionEventListener.class);
+        xaConn.addConnectionEventListener(cel);
+        Connection c = xaConn.getConnection();
+        try {
+            c.commit();
+        } catch (SQLException e) {
+
+        }
+        Mockito.verify(cel).connectionErrorOccurred((ConnectionEvent) Mockito.anyObject());
+    }
+
+    @Test(expected=XAException.class) public void testStartFailure() throws Exception {
+        ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+        XidImpl xid = new XidImpl();
+        Mockito.doThrow(new SQLException(new InvalidSessionException())).when(conn).startTransaction(xid, XAResource.TMNOFLAGS, 100);
+        XAConnectionImpl xaConn = new XAConnectionImpl(conn);
+        xaConn.setTransactionTimeout(100);
+        xaConn.start(xid, XAResource.TMNOFLAGS);
+    }
 
 }

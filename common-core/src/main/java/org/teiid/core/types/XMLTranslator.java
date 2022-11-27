@@ -24,18 +24,18 @@ import java.io.Writer;
 
 import javax.xml.transform.TransformerException;
 
-/** 
+/**
  * This an interface defined to convert the various kinds of the XML sources
- * defined into a character stream. 
+ * defined into a character stream.
  */
 public abstract class XMLTranslator {
-    
+
     public abstract void translate(Writer writer) throws TransformerException, IOException;
-    
-	public String getString() throws IOException, TransformerException {
-		StringWriter writer = new StringWriter();
-		this.translate(writer);
-		return writer.toString();
-	}
-    
+
+    public String getString() throws IOException, TransformerException {
+        StringWriter writer = new StringWriter();
+        this.translate(writer);
+        return writer.toString();
+    }
+
 }

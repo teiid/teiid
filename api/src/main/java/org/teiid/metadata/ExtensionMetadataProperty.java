@@ -20,7 +20,7 @@ package org.teiid.metadata;
 import java.lang.annotation.*;
 
 /**
- * Annotates a property that defines a extension metadata property  
+ * Annotates a property that defines a extension metadata property
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -28,35 +28,35 @@ import java.lang.annotation.*;
 @Documented
 public @interface ExtensionMetadataProperty {
     public static final String EMPTY_STRING = ""; //$NON-NLS-1$
-        
+
     /**
-     * Kind of metadata record this property is applicable for  
+     * Kind of metadata record this property is applicable for
      */
     Class[] applicable() default {Table.class};
-    
+
     /**
-     * Display Name 
+     * Display Name
      */
     String display() default EMPTY_STRING;
-    
+
     /**
      * Description of the Property
      */
     String description() default EMPTY_STRING;
-    
+
     /**
-     * Is this a required property 
+     * Is this a required property
      */
     boolean required() default false;
-    
+
     /**
      * Data type of the property
      * @return
      */
-    Class datatype() default java.lang.String.class; 
-    
+    Class datatype() default java.lang.String.class;
+
     /**
-     * If only takes predefined values, this describes comma separated values 
+     * If only takes predefined values, this describes comma separated values
      */
     String allowed() default EMPTY_STRING;
 }

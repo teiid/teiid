@@ -1,0 +1,11 @@
+integer      string                                                             integer    
+oid          nspname                                                            nspowner   
+23           PartsSupplier                                                      0          
+568          pg_catalog                                                         0          
+63           SYS                                                                0          
+389          SYSADMIN                                                           0          
+Row Count : 4
+getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
+oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_namespace  11                    10            0         false            false            false       false                 1           true        true          true      false       
+nspname        12             PartsSupplier   java.lang.String    nspname         string             pg_catalog     pg_namespace  4000                  4000          0         false            true             false       false                 1           true        true          false     false       
+nspowner       4              PartsSupplier   java.lang.Integer   nspowner        integer            pg_catalog     pg_namespace  11                    10            0         false            false            false       false                 1           true        true          true      false       

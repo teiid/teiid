@@ -32,11 +32,11 @@ import java.io.IOException;
  * <p>
  * If request body is in GZIP format, then it will replace input stream
  * with one which inflates input.
- * </p>
+ *
  * <p>
  * If client accepts GZIP encoding, then it will replace output stream
  * with one which deflates output.
- * </p>
+ *
  */
 public class GzipFilter implements Filter{
 

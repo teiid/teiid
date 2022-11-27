@@ -48,29 +48,29 @@ public class SetQueryResolver implements CommandResolver {
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         SetQuery setQuery = (SetQuery) command;
-        
+
         SimpleQueryResolver.resolveWith(metadata, setQuery);
-        
+
         QueryCommand firstCommand = setQuery.getLeftQuery();
-        
+
         QueryResolver.setChildMetadata(firstCommand, setQuery);
         QueryResolver.resolveCommand(firstCommand, metadata.getMetadata(), false);
 
         QueryCommand rightCommand = setQuery.getRightQuery();
-        
+
         QueryResolver.setChildMetadata(rightCommand, setQuery);
         QueryResolver.resolveCommand(rightCommand, metadata.getMetadata(), false);
-        
+
         resolveSetQuery(metadata, resolveNullLiterals, setQuery, firstCommand,
-				rightCommand);
+                rightCommand);
     }
 
-	public void resolveSetQuery(TempMetadataAdapter metadata,
-			boolean resolveNullLiterals, SetQuery setQuery,
-			QueryCommand firstCommand, QueryCommand rightCommand)
-			throws QueryResolverException, QueryMetadataException,
-			TeiidComponentException {
-		List<Expression> firstProject = firstCommand.getProjectedSymbols();
+    public void resolveSetQuery(TempMetadataAdapter metadata,
+            boolean resolveNullLiterals, SetQuery setQuery,
+            QueryCommand firstCommand, QueryCommand rightCommand)
+            throws QueryResolverException, QueryMetadataException,
+            TeiidComponentException {
+        List<Expression> firstProject = firstCommand.getProjectedSymbols();
         List<Class<?>> firstProjectTypes = new ArrayList<Class<?>>();
         for (Expression symbol : firstProject) {
             firstProjectTypes.add(symbol.getType());
@@ -80,11 +80,11 @@ public class SetQueryResolver implements CommandResolver {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30147, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30147, setQuery.getOperation()));
         }
         checkSymbolTypes(firstProjectTypes, rightCommand.getProjectedSymbols());
-        
+
         if (resolveNullLiterals) {
             for (int i = 0; i < firstProjectTypes.size(); i++) {
                 Class<?> clazz = firstProjectTypes.get(i);
-                
+
                 if (clazz == null || clazz.equals(DataTypeManager.DefaultDataClasses.NULL)) {
                     firstProjectTypes.set(i, DataTypeManager.DefaultDataClasses.STRING);
                 }
@@ -92,19 +92,19 @@ public class SetQueryResolver implements CommandResolver {
         }
 
         setQuery.setProjectedTypes(firstProjectTypes, metadata.getMetadata());
-        
+
         // ORDER BY clause
         if(setQuery.getOrderBy() != null) {
             //order by elements must use the short name of the projected symbols
             ResolverUtil.resolveOrderBy(setQuery.getOrderBy(), setQuery, metadata);
-        } 
+        }
 
         setProjectedTypes(setQuery, firstProjectTypes, metadata.getMetadata());
-        
+
         if (setQuery.getLimit() != null) {
             ResolverUtil.resolveLimit(setQuery.getLimit());
         }
-        
+
         setQuery.setTemporaryMetadata(firstCommand.getTemporaryMetadata().clone());
     }
 
@@ -132,48 +132,48 @@ public class SetQueryResolver implements CommandResolver {
             setProjectedTypes(child, firstProjectTypes, metadata);
         }
     }
-    
+
     /**
      * Checks if a variable is in the ORDER BY
      * @param position 0-based index of the variable
      * @return True if the ORDER BY contains the element
      */
     public static boolean orderByContainsVariable(OrderBy orderBy, Expression ses, int position) {
-    	for (OrderByItem item : orderBy.getOrderByItems()) {
-			if (item.getExpressionPosition() == position) {
-				return true;
-			}
-		}
+        for (OrderByItem item : orderBy.getOrderByItems()) {
+            if (item.getExpressionPosition() == position) {
+                return true;
+            }
+        }
         return false;
     }
-    
-	static void checkSymbolTypes(List<Class<?>> firstProjectTypes, List<Expression> projSymbols) throws QueryResolverException {
+
+    static void checkSymbolTypes(List<Class<?>> firstProjectTypes, List<Expression> projSymbols) throws QueryResolverException {
         for(int j=0; j<projSymbols.size(); j++){
             Class<?> firstProjType = firstProjectTypes.get(j);
-    		Expression projSymbol = projSymbols.get(j);
+            Expression projSymbol = projSymbols.get(j);
             Class<?> projType = projSymbol.getType();
-            
+
             if (firstProjType == null) {
                 if (projType != null) {
                     firstProjectTypes.set(j, projType);
                 }
                 continue;
             }
-            
+
             if(firstProjType.equals(projType)){
                 continue;
             }
-            
+
             String sourceType = DataTypeManager.getDataTypeName(firstProjType);
             String targetType = DataTypeManager.getDataTypeName(projType);
-            
+
             String commonType = ResolverUtil.getCommonRuntimeType(new String[] {sourceType, targetType});
-            
+
             if (commonType == null) {
-            	commonType = DataTypeManager.DefaultDataTypes.OBJECT;
+                commonType = DataTypeManager.DefaultDataTypes.OBJECT;
             }
-            
+
             firstProjectTypes.set(j, DataTypeManager.getDataTypeClass(commonType));
         }
-	}
+    }
 }

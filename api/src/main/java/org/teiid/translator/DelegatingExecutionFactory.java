@@ -20,7 +20,7 @@ package org.teiid.translator;
 
 public interface DelegatingExecutionFactory<F, C> {
 
-	String getDelegateName();
-	
-	void setDelegate(ExecutionFactory<F, C> delegate);
+    String getDelegateName();
+
+    void setDelegate(ExecutionFactory<F, C> delegate);
 }

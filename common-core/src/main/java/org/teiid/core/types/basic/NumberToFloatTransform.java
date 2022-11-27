@@ -22,42 +22,42 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 
 public class NumberToFloatTransform extends NumberToNumberTransform {
-	
-	private boolean isNarrowing;
-	private boolean isLossy;
-	
-	public NumberToFloatTransform(Class<?> sourceType, boolean isNarrowing, boolean isLossy) {
-		super(-Float.MAX_VALUE, Float.MAX_VALUE, sourceType);
-		this.isNarrowing = isNarrowing;
-		this.isLossy = isLossy;
-	}
-	
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		if (isNarrowing) {
-			checkValueRange(value);
-		}
-		return Float.valueOf(((Number)value).floatValue());
-	}
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.FLOAT;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return isNarrowing || isLossy;
-	}
-	
+    private boolean isNarrowing;
+    private boolean isLossy;
+
+    public NumberToFloatTransform(Class<?> sourceType, boolean isNarrowing, boolean isLossy) {
+        super(-Float.MAX_VALUE, Float.MAX_VALUE, sourceType);
+        this.isNarrowing = isNarrowing;
+        this.isLossy = isLossy;
+    }
+
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        if (isNarrowing) {
+            checkValueRange(value);
+        }
+        return Float.valueOf(((Number)value).floatValue());
+    }
+
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.FLOAT;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return isNarrowing || isLossy;
+    }
+
 }

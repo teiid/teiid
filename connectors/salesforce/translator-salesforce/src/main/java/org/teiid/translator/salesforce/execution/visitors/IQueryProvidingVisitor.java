@@ -20,7 +20,7 @@ package org.teiid.translator.salesforce.execution.visitors;
 import org.teiid.translator.TranslatorException;
 
 public interface IQueryProvidingVisitor extends ICriteriaVisitor {
-	
-	public String getQuery() throws TranslatorException;
+
+    public String getQuery() throws TranslatorException;
 
 }

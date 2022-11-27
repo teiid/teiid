@@ -58,9 +58,9 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
     public void testMetaMatrixRuntimeExceptionWithNullThrowable() {
         final TeiidRuntimeException err = new TeiidRuntimeException((Throwable)null);
         assertNull(err.getCause());
-        assertNull(err.getCode()); 
+        assertNull(err.getCode());
         assertNull(err.getMessage());
-        
+
     }
 
     public void testMetaMatrixRuntimeExceptionWithMessage() {
@@ -68,7 +68,7 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         assertNull(err.getCause());
         assertNull(err.getCode());
         assertEquals("Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 
     public void testMetaMatrixRuntimeExceptionWithCodeAndMessage() {
@@ -77,11 +77,11 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         assertNull(err.getCause());
         assertEquals(code, err.getCode());
         assertEquals("1234 Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 
     public static enum Event implements BundleUtil.Event {
-    	Code,
+        Code,
     }
     public void testMetaMatrixRuntimeExceptionWithExceptionAndCodeAndMessage() {
         final String code = "1234"; //$NON-NLS-1$
@@ -90,6 +90,6 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         assertSame(child, err.getCause());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 }

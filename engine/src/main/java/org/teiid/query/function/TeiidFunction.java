@@ -33,10 +33,10 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 @Inherited
 @Documented
 public @interface TeiidFunction {
-	String name() default "";
-	String category();
-	boolean nullOnNull() default false;
-	Determinism determinism() default Determinism.DETERMINISTIC;
+    String name() default "";
+    String category() default "";
+    boolean nullOnNull() default false;
+    Determinism determinism() default Determinism.DETERMINISTIC;
     PushDown pushdown() default PushDown.CAN_PUSHDOWN;
-	String alias()  default "";
+    String alias()  default "";
 }

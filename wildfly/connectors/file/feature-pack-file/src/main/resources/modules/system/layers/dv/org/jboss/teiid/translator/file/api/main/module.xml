@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.translator.file.api">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.teiid.connectors:file-api}" />
+        <!-- Insert resources here -->
+    </resources>
+
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.vfs" export="true" />
+        <module name="org.apache.commons.net" export="true"/>
+    </dependencies>
+</module>

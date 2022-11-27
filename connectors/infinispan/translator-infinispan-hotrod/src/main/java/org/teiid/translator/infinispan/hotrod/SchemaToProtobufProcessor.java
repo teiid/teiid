@@ -17,8 +17,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.teiid.language.SQLConstants.Tokens.SEMICOLON;
-import static org.teiid.language.SQLConstants.Tokens.SPACE;
+import static org.teiid.language.SQLConstants.Tokens.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,9 @@ import java.util.TreeMap;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.infinispan.api.InfinispanConnection;
+import org.teiid.infinispan.api.InfinispanPlugin;
 import org.teiid.infinispan.api.ProtobufDataManager;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -52,11 +53,11 @@ public class SchemaToProtobufProcessor {
     public ProtobufResource process(MetadataFactory metadataFactory, InfinispanConnection connection)
             throws TranslatorException {
 
-        String defaultCacheName = "default";
+        String defaultCacheName = null;
         if (connection != null) {
-            defaultCacheName = connection.getCache().getName();            
+            defaultCacheName = connection.getCache().getName();
         }
-    	
+
         this.schema = metadataFactory.getSchema();
         buffer.append("package ").append(schema.getName()).append(";");
         buffer.append(NL);
@@ -79,18 +80,20 @@ public class SchemaToProtobufProcessor {
         buffer.append(TAB);
     }
 
-    private void visit(Table table, String defaultCacheName) {
+    private void visit(Table table, String defaultCacheName) throws TranslatorException {
+
         if (table.getAnnotation() != null) {
             buffer.append("/* ").append(table.getAnnotation()).append(" */").append(NL);
         } else if (isIndexMessages()) {
             buffer.append("/* @Indexed");
             String cacheName = ProtobufMetadataProcessor.getCacheName(table);
             if (cacheName != null && !cacheName.equals(defaultCacheName)) {
-            	buffer.append("@Cache(name=").append(cacheName).append(")");
+                buffer.append("@Cache(name=").append(cacheName).append(")");
             }
             buffer.append(" */").append(NL);
         }
-        buffer.append("message ").append(table.getName()).append(SPACE).append(OPEN_CURLY).append(NL);
+        String id = getUnqualifiedMessageName(table);
+        buffer.append("message ").append(validateIdentifier(id)).append(SPACE).append(OPEN_CURLY).append(NL);
         for (Column column : table.getColumns()) {
             visit(column);
         }
@@ -100,7 +103,24 @@ public class SchemaToProtobufProcessor {
         buffer.append(CLOSE_CURLY);
     }
 
-    private void visitTable(String name, List<Column> columns) {
+    private String getUnqualifiedMessageName(Table table) {
+        String id = ProtobufMetadataProcessor.getMessageName(table);
+        //needs to be unqualfied for protobuf
+        if (id.contains(".")) {
+            id = id.substring(id.indexOf(".")+1);
+        }
+        return id;
+    }
+
+    private String validateIdentifier(String value) throws TranslatorException {
+        if (!value.matches("[a-zA-z]\\w*")) {
+            throw new TranslatorException(InfinispanPlugin.Event.TEIID25021,
+                    InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25021, value));
+        }
+        return value;
+    }
+
+    private void visitTable(String name, List<Column> columns) throws TranslatorException {
         if (isIndexMessages()) {
             buffer.append("/* @Indexed */").append(NL);
         }
@@ -111,7 +131,7 @@ public class SchemaToProtobufProcessor {
         buffer.append(CLOSE_CURLY);
     }
 
-    private void visit(Column column) {
+    private void visit(Column column) throws TranslatorException {
         String messageName = ProtobufMetadataProcessor.getMessageName(column);
         if (messageName != null) {
             if (this.processLater.get(messageName) == null) {
@@ -131,60 +151,59 @@ public class SchemaToProtobufProcessor {
         visitColumn(column);
     }
 
-    private void visitColumn(Column column) {
+    private void visitColumn(Column column) throws TranslatorException {
         addTab();
-        
+
         boolean array = column.getJavaType().isArray();
         String type = getType(column, array);
-        
+        boolean needId = isPartOfPrimaryKey(column) || isPartOfUniqueKey(column);
+
         if (column.getAnnotation() != null) {
             buffer.append("/* ").append(column.getAnnotation().replace('\n', ' ')).append(" */").append(NL);
             addTab();
         } else {
-        	boolean needId = isPartOfPrimaryKey(column) || isPartOfUniqueKey(column);
-        	boolean needType =  ProtobufDataManager.shouldPreserveType(type, column.getRuntimeType());
+            boolean needType =  ProtobufDataManager.shouldPreserveType(type, column.getRuntimeType());
 
-        	if (needId || needType) {
-	        	buffer.append("/* ");
-	            if (needId) {
-	                buffer.append("@Id ");                
-	            }
-	            if (needType) {
-	            	buffer.append("@Teiid(type=").append(column.getRuntimeType());
-					if (column.getLength() != 0 && 
-							(column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)
-							|| column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CHAR))) {
-						buffer.append(", length=").append(column.getLength());
-					}
-					if ((column.getScale() != column.getDatatype().getScale()
-							&& column.getScale() != BaseColumn.DEFAULT_SCALE)
-							|| (column.getPrecision() != column.getDatatype().getPrecision()
-									&& column.getPrecision() != BaseColumn.DEFAULT_PRECISION)) {
-						buffer.append(", precision=").append(column.getPrecision());
-						buffer.append(", scale=").append(column.getScale());
-					}
-	            	buffer.append(") ");
-	            }
-	            buffer.append("*/").append(NL);
-	            addTab();
-        	}
+            if (needId || needType) {
+                buffer.append("/* ");
+                if (needId) {
+                    buffer.append("@Id ");
+                }
+                if (needId || hasIndex(column)) {
+                    buffer.append("@Field(index=Index.YES) ");
+                }
+                if (needType) {
+                    buffer.append("@Teiid(type=").append(column.getRuntimeType());
+                    if (column.getLength() != 0 &&
+                            (column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)
+                            || column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CHAR))) {
+                        buffer.append(", length=").append(column.getLength());
+                    }
+                    if ((column.getScale() != column.getDatatype().getScale()
+                            && column.getScale() != BaseColumn.DEFAULT_SCALE)
+                            || (column.getPrecision() != column.getDatatype().getPrecision()
+                                    && column.getPrecision() != BaseColumn.DEFAULT_PRECISION)) {
+                        buffer.append(", precision=").append(column.getPrecision());
+                        buffer.append(", scale=").append(column.getScale());
+                    }
+                    buffer.append(") ");
+                }
+                buffer.append("*/").append(NL);
+                addTab();
+            }
         }
 
-        if (column.getNullType().equals(NullType.No_Nulls)) {
+        if (column.getNullType().equals(NullType.No_Nulls) || needId) {
             buffer.append("required ");
         } else if (array) {
             buffer.append("repeated ");
         } else {
             buffer.append("optional ");
         }
-        
+
         buffer.append(type).append(SPACE);
 
-        if (column.getNameInSource() != null) {
-            buffer.append(column.getNameInSource()).append(SPACE);
-        } else {
-            buffer.append(column.getName()).append(SPACE);
-        }
+        buffer.append(validateIdentifier(column.getSourceName())).append(SPACE);
 
         int tag = ProtobufMetadataProcessor.getTag(column);
         if (tag == -1) {
@@ -194,17 +213,17 @@ public class SchemaToProtobufProcessor {
         buffer.append("= ").append(tag).append(SEMICOLON).append(NL);
     }
 
-	private String getType(Column column, boolean array) {
-		if (column.getNativeType() != null) {
-			return column.getNativeType();
+    private String getType(Column column, boolean array) {
+        if (column.getNativeType() != null) {
+            return column.getNativeType();
         } else {
             Class<?> clazz = column.getJavaType();
             if (array) {
                 clazz = clazz.getComponentType();
             }
-            return ProtobufDataManager.getCompatibleProtobufType(clazz).toString().toLowerCase();                       
+            return ProtobufDataManager.getCompatibleProtobufType(clazz).toString().toLowerCase();
         }
-	}
+    }
 
     private void processLater(Column column) {
         String messageName = ProtobufMetadataProcessor.getMessageName(column);
@@ -240,6 +259,18 @@ public class SchemaToProtobufProcessor {
         return false;
     }
 
+    public boolean hasIndex(Column column) {
+        List<KeyRecord> list = ((Table) column.getParent()).getIndexes();
+        for (KeyRecord idx : list) {
+            for (Column c : idx.getColumns()) {
+                if (c.getName().equals(column.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Find FK to this table, and add the column
     private void processFKTable(Table table) {
         int increment = 1;
@@ -253,12 +284,7 @@ public class SchemaToProtobufProcessor {
                 for (ForeignKey fk : fks) {
                     if (fk.getReferenceTableName().equals(table.getName())) {
                         addTab();
-                        String messageName = ProtobufMetadataProcessor.getMessageName(t);
-                        if (messageName == null) {
-                            messageName = table.getName();
-                        } else {
-                            messageName = messageName.substring(messageName.lastIndexOf('.') + 1);
-                        }
+                        String messageName = getUnqualifiedMessageName(t);
                         String columnName = ProtobufMetadataProcessor.getParentColumnName(t);
                         if (columnName == null) {
                             columnName = t.getName().toLowerCase();

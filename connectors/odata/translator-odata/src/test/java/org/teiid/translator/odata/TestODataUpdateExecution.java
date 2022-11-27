@@ -62,7 +62,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataUpdateExecution {
@@ -74,95 +74,95 @@ public class TestODataUpdateExecution {
         TransformationMetadata metadata = TestDataEntitySchemaBuilder.getNorthwindMetadataFromODataXML();
         return helpExecute(query, resultXML, expectedURL, responseCode, metadata, times);
     }
-    
+
     private String helpExecute(String query,
             final String resultXML, String expectedURL, int[] responseCode,
             TransformationMetadata metadata, int times) throws Exception {
         ODataExecutionFactory translator = new ODataExecutionFactory();
-        translator.start();        
+        translator.start();
         TranslationUtility utility = new TranslationUtility(metadata);
-		Command cmd = utility.parseCommand(query);
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		WSConnection connection = Mockito.mock(WSConnection.class);
-		
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
-		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode[0]));
-		
-		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-		Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
-		
-		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), 
-		        Mockito.anyString(), Mockito.eq(DataSource.class), 
-		        Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
-		
-		DataSource ds = new DataSource() {
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				return new ByteArrayOutputStream();
-			}
-			@Override
-			public String getName() {
-				return "result";
-			}
-			@Override
-			public InputStream getInputStream() throws IOException {
-				ByteArrayInputStream in = new ByteArrayInputStream(resultXML.getBytes());
-				return in;
-			}
-			@Override
-			public String getContentType() {
-				return "application/xml";
-			}
-		};
-		ArgumentCaptor<DataSource> payload = ArgumentCaptor.forClass(DataSource.class);
-		Mockito.stub(dispatch.invoke(payload.capture())).toReturn(ds);
-		
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        WSConnection connection = Mockito.mock(WSConnection.class);
+
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
+        headers.put(WSConnection.STATUS_CODE, new Integer(responseCode[0]));
+
+        Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
+        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
+        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+
+        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING),
+                Mockito.anyString(), Mockito.eq(DataSource.class),
+                Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+
+        DataSource ds = new DataSource() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+            @Override
+            public String getName() {
+                return "result";
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                ByteArrayInputStream in = new ByteArrayInputStream(resultXML.getBytes());
+                return in;
+            }
+            @Override
+            public String getContentType() {
+                return "application/xml";
+            }
+        };
+        ArgumentCaptor<DataSource> payload = ArgumentCaptor.forClass(DataSource.class);
+        Mockito.stub(dispatch.invoke(payload.capture())).toReturn(ds);
+
         UpdateExecution execution = translator.createUpdateExecution(cmd,
                 context, utility.createRuntimeMetadata(), connection);
-		execution.execute();
-		
-		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
-		
+        execution.execute();
+
+        ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
+
         Mockito.verify(connection, Mockito.times(times)).createDispatch(binding.capture(),
                 endpoint.capture(), Mockito.eq(DataSource.class),
                 Mockito.eq(Mode.MESSAGE));
         Mockito.verify(dispatch, Mockito.times(times)).invoke(payload.capture());
-		assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
-		if (payload.getAllValues() != null) {
-		    List<DataSource> listDS = payload.getAllValues();
-		    InputStream in = null;
-		    if (times > 1) {
-		        in = listDS.get(1).getInputStream();
-		    } else {
-		        in = listDS.get(0).getInputStream();
-		    }
-		    return new String(ObjectConverterUtil.convertToByteArray(in));
-		}
-		return "";
-	}
+        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        if (payload.getAllValues() != null) {
+            List<DataSource> listDS = payload.getAllValues();
+            InputStream in = null;
+            if (times > 1) {
+                in = listDS.get(1).getInputStream();
+            } else {
+                in = listDS.get(0).getInputStream();
+            }
+            return new String(ObjectConverterUtil.convertToByteArray(in));
+        }
+        return "";
+    }
 
-	@Test
-	public void testSimpleInsert() throws Exception {
-		String query = "INSERT INTO Categories(CategoryID, CategoryName, Description) values(1, 'catname', 'desc')";
-		String expectedURL = "Categories";
+    @Test
+    public void testSimpleInsert() throws Exception {
+        String query = "INSERT INTO Categories(CategoryID, CategoryName, Description) values(1, 'catname', 'desc')";
+        String expectedURL = "Categories";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		String payload = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, new int[] {201, 201}, 1);
-		reader.close();
-		
-		String expected =  "<category term=\"NorthwindModel.Category\" "
-		        + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"></category>"
-		        + "<content type=\"application/xml\">"
-		        + "<m:properties><d:CategoryID m:type=\"Edm.Int32\">1</d:CategoryID>"
-		        + "<d:CategoryName>catname</d:CategoryName><d:Description>desc</d:Description>"
-		        + "</m:properties></content>"
-		        + "</entry>";
-		assertTrue(expected, payload.endsWith(expected));
-	}
-	
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        String payload = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, new int[] {201, 201}, 1);
+        reader.close();
+
+        String expected =  "<category term=\"NorthwindModel.Category\" "
+                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"></category>"
+                + "<content type=\"application/xml\">"
+                + "<m:properties><d:CategoryID m:type=\"Edm.Int32\">1</d:CategoryID>"
+                + "<d:CategoryName>catname</d:CategoryName><d:Description>desc</d:Description>"
+                + "</m:properties></content>"
+                + "</entry>";
+        assertTrue(expected, payload.endsWith(expected));
+    }
+
     @Test
     public void testSimpleUpdate() throws Exception {
         String query = "Update Categories set CategoryName = 'catname' where CategoryID=1";
@@ -171,7 +171,7 @@ public class TestODataUpdateExecution {
         FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
         String payload = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, new int[] {200, 204}, 2);
         reader.close();
-        
+
         String expected = "<category term=\"NorthwindModel.Category\" "
                 + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\">"
                 + "</category>"
@@ -182,59 +182,59 @@ public class TestODataUpdateExecution {
                 + "</entry>";
         assertTrue(expected, payload.endsWith(expected));
     }
-    
+
     @Test
     public void testArrayInsert() throws Exception {
         ModelMetaData model = new ModelMetaData();
         model.setName("nw");
         model.setModelType(Type.PHYSICAL);
         MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
-        
+
         EdmDataServices edm = new EdmxFormatParser().parseMetadata(
                 StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("arraytest.xml"))));
         ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
         PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
         metadataProcessor.getMetadata(mf, edm);
-        
+
         Column c = mf.getSchema().getTable("G2").getColumnByName("e3");
         assertEquals("integer[]", c.getRuntimeType());
-        
+
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");        
-        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
+
         String query = "insert into G2 (e1, e3) values(1, (1,2,3))";
         String expectedURL = "G2";
-        
-        String result = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
-                "<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" xml:base=\"http://localhost:8080/odata/loopy/\">\n" + 
-                "   <title type=\"text\">VM1.x</title>\n" + 
-                "   <id>http://localhost:8080/odata/loopy/VM1.x</id>\n" + 
-                "   <updated>2015-10-14T19:36:58Z</updated>\n" + 
-                "   <link rel=\"self\" title=\"VM1.x\" href=\"VM1.x\" />\n" + 
-                "   <entry>\n" + 
-                "      <id>http://localhost:8080/odata/loopy/VM1.x('x')</id>\n" + 
-                "      <title type=\"text\" />\n" + 
-                "      <updated>2015-10-14T19:36:58Z</updated>\n" + 
-                "      <author>\n" + 
-                "         <name />\n" + 
-                "      </author>\n" + 
-                "      <link rel=\"edit\" title=\"x\" href=\"VM1.x('x')\" />\n" + 
-                "      <category term=\"PM1.G2\" scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\" />\n" + 
-                "      <content type=\"application/xml\">\n" + 
-                "         <m:properties>\n" + 
-                "            <d:e1>32</d:e1>\n" + 
-                "            <d:e3 m:type=\"Collection(Edm.Int32)\">\n" + 
-                "               <d:element>1</d:element>\n" + 
-                "               <d:element>2</d:element>\n" + 
-                "               <d:element>3</d:element>\n" + 
-                "            </d:e3>\n" + 
-                "         </m:properties>\n" + 
-                "      </content>\n" + 
-                "   </entry>\n" + 
-                "</feed>";        
-        
+
+        String result = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" xml:base=\"http://localhost:8080/odata/loopy/\">\n" +
+                "   <title type=\"text\">VM1.x</title>\n" +
+                "   <id>http://localhost:8080/odata/loopy/VM1.x</id>\n" +
+                "   <updated>2015-10-14T19:36:58Z</updated>\n" +
+                "   <link rel=\"self\" title=\"VM1.x\" href=\"VM1.x\" />\n" +
+                "   <entry>\n" +
+                "      <id>http://localhost:8080/odata/loopy/VM1.x('x')</id>\n" +
+                "      <title type=\"text\" />\n" +
+                "      <updated>2015-10-14T19:36:58Z</updated>\n" +
+                "      <author>\n" +
+                "         <name />\n" +
+                "      </author>\n" +
+                "      <link rel=\"edit\" title=\"x\" href=\"VM1.x('x')\" />\n" +
+                "      <category term=\"PM1.G2\" scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\" />\n" +
+                "      <content type=\"application/xml\">\n" +
+                "         <m:properties>\n" +
+                "            <d:e1>32</d:e1>\n" +
+                "            <d:e3 m:type=\"Collection(Edm.Int32)\">\n" +
+                "               <d:element>1</d:element>\n" +
+                "               <d:element>2</d:element>\n" +
+                "               <d:element>3</d:element>\n" +
+                "            </d:e3>\n" +
+                "         </m:properties>\n" +
+                "      </content>\n" +
+                "   </entry>\n" +
+                "</feed>";
+
         String payload = helpExecute(query, result, expectedURL, new int[] {201, 201}, metadata, 1);
-        
+
         String expected = "<category term=\"PM1.G2\" "
                 + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\">"
                 + "</category>"
@@ -249,61 +249,61 @@ public class TestODataUpdateExecution {
                 + "</m:properties>"
                 + "</content>"
                 + "</entry>";
-        assertTrue(expected, payload.endsWith(expected));        
-    }    
-    
+        assertTrue(expected, payload.endsWith(expected));
+    }
+
     @Test
     public void testArrayUpdate() throws Exception {
         ModelMetaData model = new ModelMetaData();
         model.setName("nw");
         model.setModelType(Type.PHYSICAL);
         MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
-        
+
         EdmDataServices edm = new EdmxFormatParser().parseMetadata(
                 StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("arraytest.xml"))));
         ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
         PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
         metadataProcessor.getMetadata(mf, edm);
-        
+
         Column c = mf.getSchema().getTable("G2").getColumnByName("e3");
         assertEquals("integer[]", c.getRuntimeType());
-        
+
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");        
-        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
+
         String query = "Update G2 set e3 = (1,2,3) where e1 = 1";
         String expectedURL = "G2(1)";
-        
-        String result = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
-                "<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" xml:base=\"http://localhost:8080/odata/loopy/\">\n" + 
-                "   <title type=\"text\">VM1.x</title>\n" + 
-                "   <id>http://localhost:8080/odata/loopy/VM1.x</id>\n" + 
-                "   <updated>2015-10-14T19:36:58Z</updated>\n" + 
-                "   <link rel=\"self\" title=\"VM1.x\" href=\"VM1.x\" />\n" + 
-                "   <entry>\n" + 
-                "      <id>http://localhost:8080/odata/loopy/VM1.x('x')</id>\n" + 
-                "      <title type=\"text\" />\n" + 
-                "      <updated>2015-10-14T19:36:58Z</updated>\n" + 
-                "      <author>\n" + 
-                "         <name />\n" + 
-                "      </author>\n" + 
-                "      <link rel=\"edit\" title=\"x\" href=\"VM1.x('x')\" />\n" + 
-                "      <category term=\"PM1.G2\" scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\" />\n" + 
-                "      <content type=\"application/xml\">\n" + 
-                "         <m:properties>\n" + 
-                "            <d:e1>32</d:e1>\n" + 
-                "            <d:e3 m:type=\"Collection(Edm.Int32)\">\n" + 
-                "               <d:element>1</d:element>\n" + 
-                "               <d:element>2</d:element>\n" + 
-                "               <d:element>3</d:element>\n" + 
-                "            </d:e3>\n" + 
-                "         </m:properties>\n" + 
-                "      </content>\n" + 
-                "   </entry>\n" + 
-                "</feed>";        
-        
+
+        String result = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<feed xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" xml:base=\"http://localhost:8080/odata/loopy/\">\n" +
+                "   <title type=\"text\">VM1.x</title>\n" +
+                "   <id>http://localhost:8080/odata/loopy/VM1.x</id>\n" +
+                "   <updated>2015-10-14T19:36:58Z</updated>\n" +
+                "   <link rel=\"self\" title=\"VM1.x\" href=\"VM1.x\" />\n" +
+                "   <entry>\n" +
+                "      <id>http://localhost:8080/odata/loopy/VM1.x('x')</id>\n" +
+                "      <title type=\"text\" />\n" +
+                "      <updated>2015-10-14T19:36:58Z</updated>\n" +
+                "      <author>\n" +
+                "         <name />\n" +
+                "      </author>\n" +
+                "      <link rel=\"edit\" title=\"x\" href=\"VM1.x('x')\" />\n" +
+                "      <category term=\"PM1.G2\" scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\" />\n" +
+                "      <content type=\"application/xml\">\n" +
+                "         <m:properties>\n" +
+                "            <d:e1>32</d:e1>\n" +
+                "            <d:e3 m:type=\"Collection(Edm.Int32)\">\n" +
+                "               <d:element>1</d:element>\n" +
+                "               <d:element>2</d:element>\n" +
+                "               <d:element>3</d:element>\n" +
+                "            </d:e3>\n" +
+                "         </m:properties>\n" +
+                "      </content>\n" +
+                "   </entry>\n" +
+                "</feed>";
+
         String payload = helpExecute(query, result, expectedURL, new int[] {200, 204}, metadata, 2);
-        
+
         String expected = "<category term=\"PM1.G2\" "
                 + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\">"
                 + "</category>"
@@ -316,6 +316,6 @@ public class TestODataUpdateExecution {
                 + "</m:properties>"
                 + "</content>"
                 + "</entry>";
-        assertTrue(expected, payload.endsWith(expected));        
-    }     
+        assertTrue(expected, payload.endsWith(expected));
+    }
 }

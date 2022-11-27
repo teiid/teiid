@@ -35,18 +35,16 @@ public class ConstantFunction extends SingleArgumentAggregateFunction {
     public void reset() {
         this.value = null;
     }
-    
+
     @Override
     public boolean respectsNull() {
-    	return true;
+        return true;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-            
+
         value = input;
     }
 
@@ -55,7 +53,7 @@ public class ConstantFunction extends SingleArgumentAggregateFunction {
      */
     public Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-            
+
         return this.value;
     }
 

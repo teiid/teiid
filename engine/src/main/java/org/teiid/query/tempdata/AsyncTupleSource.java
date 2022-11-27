@@ -61,7 +61,7 @@ final class AsyncTupleSource implements TupleSource {
             return result.nextTuple();
         }
     }
-    
+
     @Override
     public void closeSource() {
         try {

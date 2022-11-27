@@ -26,18 +26,18 @@ import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
- * 
+ *
  * See https://issues.jboss.org/browse/TEIID-2786 which describes this implementation.
- * 
+ *
  */
 public class ModeShapeJDBCMetdataProcessor extends JDBCMetadataProcessor {
-	
-	public ModeShapeJDBCMetdataProcessor() {
-		setWidenUnsignedTypes(false);
-		setUseQualifiedName(false);
-		setUseCatalogName(false);
-		setImportForeignKeys(false);
-		setColumnNamePattern("%"); //$NON-NLS-1$
-	}
-	
+
+    public ModeShapeJDBCMetdataProcessor() {
+        setWidenUnsignedTypes(false);
+        setUseQualifiedName(false);
+        setUseCatalogName(false);
+        setImportForeignKeys(false);
+        setColumnNamePattern("%"); //$NON-NLS-1$
+    }
+
 }

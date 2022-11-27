@@ -27,35 +27,37 @@ import java.util.Stack;
 
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+import org.apache.olingo.commons.api.edm.geo.Geospatial;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.uri.*;
-import org.apache.olingo.server.api.uri.queryoption.expression.*;
+import org.apache.olingo.server.api.uri.queryoption.expression.Alias;
+import org.apache.olingo.server.api.uri.queryoption.expression.Binary;
+import org.apache.olingo.server.api.uri.queryoption.expression.Enumeration;
+import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
+import org.apache.olingo.server.api.uri.queryoption.expression.LambdaRef;
+import org.apache.olingo.server.api.uri.queryoption.expression.Literal;
+import org.apache.olingo.server.api.uri.queryoption.expression.Member;
+import org.apache.olingo.server.api.uri.queryoption.expression.Method;
+import org.apache.olingo.server.api.uri.queryoption.expression.TypeLiteral;
+import org.apache.olingo.server.api.uri.queryoption.expression.Unary;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.Assertion;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataExpressionVisitor;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ProjectedColumn;
 import org.teiid.olingo.common.ODataTypeManager;
+import org.teiid.olingo.service.DocumentNode.ContextColumn;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor implements  ODataExpressionVisitor{
@@ -69,13 +71,13 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private DocumentNode ctxLambda;
     private UniqueNameGenerator nameGenerator;
     private URLParseService parseService;
-    private String lastPropertyType;
+    private ContextColumn lastProperty;
     private OData odata;
     private boolean root;
-    
+
     public ODataExpressionToSQLVisitor(DocumentNode resource,
             boolean prepared, UriInfo info, MetadataStore metadata, OData odata,
-            UniqueNameGenerator nameGenerator, 
+            UniqueNameGenerator nameGenerator,
             List<SQLParameter> params, URLParseService parseService) {
         this.ctxQuery = resource;
         this.prepared = prepared;
@@ -89,29 +91,29 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     }
 
     public org.teiid.query.sql.symbol.Expression getExpression(Expression expr) throws TeiidException {
-    	try {
-    		accept(expr);
-    	} catch (TeiidRuntimeException e) {
-    		if (e.getCause() instanceof TeiidException) {
-    			throw (TeiidException)e.getCause();
-    		}
-    		throw e;
-    	}
+        try {
+            accept(expr);
+        } catch (TeiidRuntimeException e) {
+            if (e.getCause() instanceof TeiidException) {
+                throw (TeiidException)e.getCause();
+            }
+            throw e;
+        }
         return this.stack.pop();
     }
-    
+
     public org.teiid.query.sql.symbol.Expression getExpression(UriInfoResource info) throws TeiidException {
         try {
-        	visit(info);
-    	} catch (TeiidRuntimeException e) {
-    		if (e.getCause() instanceof TeiidException) {
-    			throw (TeiidException)e.getCause();
-    		}
-    		throw e;
-    	}
+            visit(info);
+        } catch (TeiidRuntimeException e) {
+            if (e.getCause() instanceof TeiidException) {
+                throw (TeiidException)e.getCause();
+            }
+            throw e;
+        }
         return this.stack.pop();
     }
-    
+
     public DocumentNode getEntityResource() {
         return this.ctxQuery;
     }
@@ -128,30 +130,25 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             else {
                 String type = "Edm.String";
-                if (this.lastPropertyType != null) {
-                    EdmPrimitiveTypeKind kind = ODataTypeManager.odataType(this.lastPropertyType);
+                if (this.lastProperty != null) {
+                    EdmPrimitiveTypeKind kind = this.lastProperty.getEdmPrimitiveTypeKind();
                     type = kind.getFullQualifiedName().getFullQualifiedNameAsString();
-                    this.lastPropertyType = null;
+                    this.lastProperty = null;
                 }
                 Object value = ODataTypeManager.parseLiteral(type, strValue);
-                if (this.prepared) {
-                    stack.add(new Reference(this.params.size()));
-                    this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-                } else {
-                    this.stack.add(new Constant(value));
-                }
+                handleValue(value);
             }
         } catch (TeiidException e) {
             throw new TeiidRuntimeException(e);
         }
-        
+
     }
 
     @Override
     public void visit(Binary expr) {
         accept(expr.getLeftOperand());
         org.teiid.query.sql.symbol.Expression lhs = this.stack.pop();
-        
+
         accept(expr.getRightOperand());
         org.teiid.query.sql.symbol.Expression rhs = this.stack.pop();
 
@@ -217,7 +214,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
     @Override
     public void visit(Enumeration expr) {
-    	throw new TeiidRuntimeException(new TeiidException("unsupported option"));//$NON-NLS-1$
+        throw new TeiidRuntimeException(new TeiidException("unsupported option"));//$NON-NLS-1$
     }
 
     @Override
@@ -233,25 +230,36 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 String type = expr.getType().getFullQualifiedName().getFullQualifiedNameAsString();
                 value = ODataTypeManager.parseLiteral(type, expr.getText());
             }
-            if (this.prepared) {                
-                if (value == null) {
-                    this.stack.add(new Constant(value));                    
-                } else {
-                    Function ref = new Function(
-                            CONVERT,
-                            new org.teiid.query.sql.symbol.Expression[] {
-                                    new Reference(this.params.size()),
-                                    new Constant(DataTypeManager.getDataTypeName(value.getClass())) });
-                    stack.add(ref);
-                    this.params.add(new SQLParameter(value, 
-                            JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
-                }
-            } else {
-                this.stack.add(new Constant(value));
-            }
+            handleValue(value);
         } catch (TeiidException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
+    }
+
+    private void handleValue(Object value) {
+        boolean isGeo = false;
+        if (value instanceof Geospatial) {
+            String geoLiteral = ((Geospatial)value).toString();
+            //extract ewkt
+            value = geoLiteral.substring(geoLiteral.indexOf("'")+1, geoLiteral.length() - 1); //$NON-NLS-1$
+            isGeo = true;
+        }
+        org.teiid.query.sql.symbol.Expression ex = null;
+        if (!this.prepared || value == null) {
+            ex = new Constant(value);
+        } else {
+            ex = new Function(
+                    CONVERT,
+                    new org.teiid.query.sql.symbol.Expression[] {
+                            new Reference(this.params.size()),
+                            new Constant(DataTypeManager.getDataTypeName(value.getClass())) });
+            this.params.add(new SQLParameter(value,
+                    JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+        }
+        if (isGeo) {
+            ex = new Function(SourceSystemFunctions.ST_GEOMFROMEWKT, new org.teiid.query.sql.symbol.Expression[] {ex});
+        }
+        stack.add(ex);
     }
 
     @Override
@@ -262,7 +270,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
     private org.teiid.query.sql.symbol.Expression addOne(
             org.teiid.query.sql.symbol.Expression expr) {
-                
+
         org.teiid.query.sql.symbol.Expression when = new CompareCriteria(expr,
                 CompareCriteria.LT, new Constant(0));
         SearchedCaseExpression caseExpr = new SearchedCaseExpression(Arrays.asList(when),
@@ -275,9 +283,9 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private org.teiid.query.sql.symbol.Expression minusOne(
             org.teiid.query.sql.symbol.Expression expr) {
         return new Function("-", new org.teiid.query.sql.symbol.Expression[] {
-                expr, new Constant(1) });        
+                expr, new Constant(1) });
     }
-    
+
     @Override
     public void visit(Method expr) {
         List<org.teiid.query.sql.symbol.Expression> teiidExprs = new ArrayList<org.teiid.query.sql.symbol.Expression>();
@@ -288,120 +296,132 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
         switch (expr.getMethod()) {
         case CONTAINS:
-            CompareCriteria criteria = new CompareCriteria(new Function("LOCATE", 
+            CompareCriteria criteria = new CompareCriteria(new Function("LOCATE",
                     new org.teiid.query.sql.symbol.Expression[] {
-                        teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }), 
+                        teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }),
                         CompareCriteria.GE, new Constant(1)); //$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case STARTSWITH:
-            criteria = new CompareCriteria(new Function("LOCATE", 
+            criteria = new CompareCriteria(new Function("LOCATE",
                     new org.teiid.query.sql.symbol.Expression[] {
-                    teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }), 
+                    teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }),
                     CompareCriteria.EQ, new Constant(1)); //$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case ENDSWITH:
-            criteria = new CompareCriteria(new Function("ENDSWITH", 
-                    new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(1), teiidExprs.get(0) }), 
+            criteria = new CompareCriteria(new Function("ENDSWITH",
+                    new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(1), teiidExprs.get(0) }),
                     CompareCriteria.EQ, new Constant(Boolean.TRUE));//$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case LENGTH:
-            this.stack.push(new Function("LENGTH", 
+            this.stack.push(new Function("LENGTH",
                     new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case INDEXOF:
-            stack.push(minusOne(new Function("LOCATE", new org.teiid.query.sql.symbol.Expression[] 
+            stack.push(minusOne(new Function("LOCATE", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(1), teiidExprs.get(0)}))); //$NON-NLS-1$
             break;
         case SUBSTRING:
-            org.teiid.query.sql.symbol.Expression[] exprs = 
+            org.teiid.query.sql.symbol.Expression[] exprs =
                 teiidExprs.toArray(new org.teiid.query.sql.symbol.Expression[teiidExprs.size()]);
                 exprs[1] = addOne(exprs[1]);
             this.stack.push(new Function("SUBSTRING", exprs)); //$NON-NLS-1$
             break;
         case TOLOWER:
-            this.stack.push(new Function("LCASE", 
+            this.stack.push(new Function("LCASE",
                     new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case TOUPPER:
-            this.stack.push(new Function("UCASE", 
+            this.stack.push(new Function("UCASE",
                     new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case TRIM:
-            this.stack.push(new Function("TRIM", 
-                    new org.teiid.query.sql.symbol.Expression[] { new Constant("BOTH"), 
+            this.stack.push(new Function("TRIM",
+                    new org.teiid.query.sql.symbol.Expression[] { new Constant("BOTH"),
                     new Constant(' '), teiidExprs.get(0) })); //$NON-NLS-1$ //$NON-NLS-2$
             break;
         case CONCAT:
-            this.stack.push(new Function("CONCAT", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("CONCAT", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0), teiidExprs.get(1) })); //$NON-NLS-1$
             break;
         case YEAR:
-            this.stack.push(new Function("YEAR", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("YEAR", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case MONTH:
-            this.stack.push(new Function("MONTH", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("MONTH", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case DAY:
-            this.stack.push(new Function("DAYOFMONTH", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("DAYOFMONTH", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case HOUR:
-            this.stack.push(new Function("HOUR", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("HOUR", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case MINUTE:
-            this.stack.push(new Function("MINUTE", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("MINUTE", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case SECOND:
-            this.stack.push(new Function("SECOND", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("SECOND", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case NOW:
             this.stack.push(new Function("NOW", new org.teiid.query.sql.symbol.Expression[] {})); //$NON-NLS-1$
             break;
         case ROUND:
-            stack.push(new Function("ROUND", new org.teiid.query.sql.symbol.Expression[] 
+            stack.push(new Function("ROUND", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0), new Constant(0) })); //$NON-NLS-1$
             break;
         case FLOOR:
-            this.stack.push(new Function("FLOOR", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("FLOOR", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case CEILING:
-            this.stack.push(new Function("CEILING", new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function("CEILING", new org.teiid.query.sql.symbol.Expression[]
                     { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case CAST:
-            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
+            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[]
                     {teiidExprs.get(0), teiidExprs.get(1) }));
             break;
-            
+
         case DATE:
-            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
-                    {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.DATE)}));            
+            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[]
+                    {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.DATE)}));
             break;
         case TIME:
-            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
-                    {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.TIME)}));            
+            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[]
+                    {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.TIME)}));
+            break;
+        case GEODISTANCE:
+            this.stack.push(new Function(SourceSystemFunctions.ST_DISTANCE, new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(0), teiidExprs.get(1)
+            }));
+            break;
+        case GEOLENGTH:
+            this.stack.push(new Function(SourceSystemFunctions.ST_LENGTH, new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(0)
+            }));
+            break;
+        case GEOINTERSECTS:
+            this.stack.push(new Function(SourceSystemFunctions.ST_INTERSECTS, new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(0), teiidExprs.get(1)
+            }));
             break;
         case FRACTIONALSECONDS:
         case TOTALSECONDS:
         case TOTALOFFSETMINUTES:
         case MINDATETIME:
         case MAXDATETIME:
-        case GEODISTANCE:
-        case GEOLENGTH:
-        case GEOINTERSECTS:
         case ISOF:
         default:
             throw new TeiidRuntimeException(new TeiidNotImplementedException(
-                    ODataPlugin.Event.TEIID16027, 
+                    ODataPlugin.Event.TEIID16027,
                     ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16027, expr.getMethod())));
         }
     }
@@ -425,7 +445,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             break;
         }
     }
-    
+
     private void accept(Expression expr) {
         if (expr instanceof Alias) {
             visit((Alias) expr);
@@ -447,7 +467,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             visit((Unary) expr);
         }
     }
-    
+
     /////////////////////////////////////////////////////////////////////////
     //RequestURLHierarchyVisitor specific methods
     /////////////////////////////////////////////////////////////////////////
@@ -461,16 +481,16 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.stack.add(new ElementSymbol(info.getProperty().getName(), this.ctxExpression.getGroupSymbol()));
         }
         // hack to resolve the property type.
-        Column c = this.ctxExpression.getColumnByName(info.getProperty().getName());
-        this.lastPropertyType = c.getRuntimeType();
+        ContextColumn c = this.ctxExpression.getColumnByName(info.getProperty().getName());
+        this.lastProperty = c;
         //revert back to the query context
         this.ctxExpression = this.ctxQuery;
     }
-    
+
     @Override
     public void visit(UriResourceCount option) {
     }
-    
+
     @Override
     public void visit(UriResourceNavigation info) {
         try {
@@ -485,14 +505,14 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             Criteria criteria = this.ctxQuery.buildJoinCriteria(navigationResource, info.getProperty());
             if (criteria == null) {
                 throw new TeiidException(ODataPlugin.Event.TEIID16037, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16037));
-            }            
+            }
             query.setCriteria(criteria);
             this.stack.add(new ScalarSubquery(query));
         } catch (TeiidException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
     }
-    
+
     @Override
     public void visit(UriResourceLambdaAll all) {
         accept(all.getExpression());
@@ -534,82 +554,82 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                         this.nameGenerator, false, this.uriInfo,
                         this.parseService);
                 lambda.setGroupSymbol(new GroupSymbol(resource.getVariableName(), lambda.getFullName()));
-                
+
                 this.ctxLambda = lambda;
             }
-            
+
             this.ctxExpression = ctxLambda;
         } catch (TeiidException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
-    }    
-    
+    }
+
     private Query buildSubquery(DocumentNode eResource,
             org.teiid.query.sql.symbol.Expression projected) {
         Select s1 = new Select();
-        s1.addSymbol(projected); 
-        
+        s1.addSymbol(projected);
+
         Query q = new Query();
         From from = new From();
         from.addGroup(eResource.getGroupSymbol());
-        q.setFrom(from);    
+        q.setFrom(from);
         q.setCriteria(DocumentNode.buildJoinCriteria(eResource, this.ctxQuery));
-        
+
         q.setSelect(s1);
         return q;
     }
-    
+
     @Override
     public void visit(UriResourceIt info) {
         if (info.getType() instanceof SingletonPrimitiveType) {
-        	org.teiid.query.sql.symbol.Expression ex = null;
-        	if (this.ctxQuery.getIterator() == null) {
+            org.teiid.query.sql.symbol.Expression ex = null;
+            if (this.ctxQuery.getIterator() == null) {
                 String group = this.nameGenerator.getNextGroup();
                 GroupSymbol groupSymbol = new GroupSymbol(group);
 
                 StoredProcedure procedure = new StoredProcedure();
                 procedure.setProcedureName("arrayiterate");
-                
+
                 //the projected should only be the collection property at this point
                 //we may need more checks here to ensure that is valid
                 Collection<ProjectedColumn> values = this.ctxQuery.getProjectedColumns().values();
                 Assertion.assertTrue(values.size() == 1);
-				ProjectedColumn projectedColumn = values.iterator().next();
-				ElementSymbol projectedEs = (ElementSymbol)projectedColumn.getExpression();
+                ProjectedColumn projectedColumn = values.iterator().next();
+                org.teiid.query.sql.symbol.Expression projectedEs = projectedColumn.getExpression();
                 List<SPParameter> params = new ArrayList<SPParameter>();
                 SPParameter param = new SPParameter(1, SPParameter.IN, "val");
                 param.setExpression(projectedEs);
                 params.add(param);
-                
+
                 procedure.setParameter(param);
-                
+
                 SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
                 fromClause.setLateral(true);
-            
+
                 ElementSymbol es = new ElementSymbol("col", groupSymbol);
                 String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
-                Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
+                Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});
 
                 DocumentNode itResource = new DocumentNode();
                 org.teiid.query.sql.symbol.Expression clone = (org.teiid.query.sql.symbol.Expression) castFunction.clone();
                 AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, clone);
-				AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), symbol);
-                
+                AliasSymbol expression = new AliasSymbol(Symbol.getShortName(projectedEs), symbol);
+
                 itResource.setFromClause(fromClause);
-                itResource.setGroupSymbol(groupSymbol);            
+                itResource.setGroupSymbol(groupSymbol);
                 itResource.addProjectedColumn(expression, info.getType(), projectedColumn.getProperty(), true);
 
                 this.ctxQuery.getProjectedColumns().remove(projectedColumn.getExpression());
                 this.ctxQuery.setIterator(itResource);
-                
+
                 ex = castFunction;
-        	} else {
-        		GroupSymbol groupSymbol = this.ctxQuery.getIterator().getGroupSymbol();
+            } else {
+                GroupSymbol groupSymbol = this.ctxQuery.getIterator().getGroupSymbol();
                 ElementSymbol es = new ElementSymbol("col", groupSymbol);
                 String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
-                ex = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
-        	}
-        	
+                ex = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});
+            }
+
             this.stack.push(ex);
         }
         else {
@@ -629,12 +649,12 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
         }
     }
-    
+
     @Override
     public void visit(UriResourceRoot info) {
         this.root = true;
     }
-    
+
     @Override
     public void visit(UriResourceEntitySet info) {
         EdmEntityType edmEntityType = info.getEntitySet().getEntityType();
@@ -644,16 +664,16 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                         info.getKeyPredicates(), this.metadata, this.odata, this.nameGenerator,
                         true, getUriInfo(), null);
             } catch (TeiidException e) {
-            	throw new TeiidRuntimeException(e);
+                throw new TeiidRuntimeException(e);
             }
         }
         else {
-            if (this.ctxQuery.getEdmEntityType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
+            if (this.ctxQuery.getEdmStructuredType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
                 this.ctxExpression = this.ctxQuery;
             }
             else {
-                for (DocumentNode er: this.ctxQuery.getSibilings()) {
-                    if (er.getEdmEntityType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
+                for (DocumentNode er: this.ctxQuery.getSiblings()) {
+                    if (er.getEdmStructuredType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
                         this.ctxExpression = er;
                         break;
                     }
@@ -661,16 +681,16 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
         }
     }
-    
+
     public QueryCommand buildRootSubQuery(String element, DocumentNode resource) {
         Select s1 = new Select();
-        s1.addSymbol(new ElementSymbol(element, resource.getGroupSymbol())); 
+        s1.addSymbol(new ElementSymbol(element, resource.getGroupSymbol()));
         From f1 = new From();
         f1.addGroup(resource.getGroupSymbol());
         Query q1 = new Query();
         q1.setSelect(s1);
-        q1.setFrom(f1);    
-        q1.setCriteria(resource.getCriteria());  
+        q1.setFrom(f1);
+        q1.setCriteria(resource.getCriteria());
         return q1;
     }
 }

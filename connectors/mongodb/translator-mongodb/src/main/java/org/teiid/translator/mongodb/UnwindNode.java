@@ -24,11 +24,11 @@ import org.teiid.translator.TranslatorException;
 import com.mongodb.BasicDBObject;
 
 public class UnwindNode extends ProcessingNode {
-    
+
     public UnwindNode(MongoDocument document) {
         super(document);
     }
-    
+
     @Override
     public BasicDBObject getInstruction() throws TranslatorException {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\"$unwind\": {$"+getDocumentName()+"}}"); //$NON-NLS-1$ //$NON-NLS-2$

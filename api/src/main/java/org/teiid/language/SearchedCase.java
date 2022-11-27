@@ -24,14 +24,14 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
  * Represents a searched CASE expression:
- * <br/> CASE WHEN criteria THEN expression ... END
+ * <br> CASE WHEN criteria THEN expression ... END
  */
 public class SearchedCase extends BaseLanguageObject implements Expression {
-	
+
     private List<SearchedWhenClause> cases;
     private Expression elseExpression;
     private Class<?> type;
-    
+
     public SearchedCase(List<SearchedWhenClause> cases, Expression elseExpression, Class<?> type) {
         this.cases = cases;
         this.elseExpression = elseExpression;
@@ -41,11 +41,11 @@ public class SearchedCase extends BaseLanguageObject implements Expression {
     public Expression getElseExpression() {
         return elseExpression;
     }
-    
+
     public List<SearchedWhenClause> getCases() {
-		return cases;
-	}
-    
+        return cases;
+    }
+
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }

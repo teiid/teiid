@@ -29,18 +29,18 @@ import org.teiid.query.validator.ValidatorFailure.Status;
 
 public class ValidatorReport extends ActivityReport<ValidatorFailure> {
 
-	public static final String VALIDATOR_REPORT = "Validator Report"; //$NON-NLS-1$
+    public static final String VALIDATOR_REPORT = "Validator Report"; //$NON-NLS-1$
 
     public ValidatorReport() {
         super(VALIDATOR_REPORT);
     }
-    
+
     public ValidatorReport(String name) {
-    	super(name);
+        super(name);
     }
 
     public void collectInvalidObjects(Collection<LanguageObject> invalidObjects) {
-    	for (ValidatorFailure failure : getItems()) {
+        for (ValidatorFailure failure : getItems()) {
             if(failure.getInvalidObjectCount() > 0) {
                 invalidObjects.addAll(failure.getInvalidObjects());
             }
@@ -48,7 +48,7 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
     }
 
     public String getFailureMessage() {
-    	Collection<ValidatorFailure> failures = getItems();
+        Collection<ValidatorFailure> failures = getItems();
         if(failures.size() == 0) {
             return QueryPlugin.Util.getString("ERR.015.012.0064"); //$NON-NLS-1$
         } else if(failures.size() == 1) {
@@ -59,13 +59,13 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
 
             Iterator<ValidatorFailure> iter = failures.iterator();
             while(iter.hasNext()) {
-            	ValidatorFailure next = iter.next();
-            	if (next.getStatus() != Status.ERROR) {
-            		err.append(next.getStatus()).append(" "); //$NON-NLS-1$
-            	}
-				err.append(next.getMessage());
+                ValidatorFailure next = iter.next();
+                if (next.getStatus() != Status.ERROR) {
+                    err.append(next.getStatus()).append(" "); //$NON-NLS-1$
+                }
+                err.append(next.getMessage());
                 if (iter.hasNext()) {
-                	err.append(", "); //$NON-NLS-1$
+                    err.append(", "); //$NON-NLS-1$
                 }
             }
             return err.toString();
@@ -75,13 +75,13 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
     public String toString() {
         return this.getFailureMessage();
     }
-    
+
     public void handleValidationWarning(String message) {
-    	ValidatorFailure vf = new ValidatorFailure(message);
-    	vf.setStatus(Status.WARNING);
+        ValidatorFailure vf = new ValidatorFailure(message);
+        vf.setStatus(Status.WARNING);
         this.addItem(vf);
     }
-    
+
     public void handleValidationError(String message) {
         this.addItem(new ValidatorFailure(message));
     }

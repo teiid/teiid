@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.dqp.internal.datamgr;
 
@@ -35,52 +35,52 @@ import org.teiid.translator.TranslatorException;
 
 
 class ProcedureBatchHandler {
-	private Call proc;
-	private ProcedureExecution procExec;
-	private int paramCols = 0;
-	private int resultSetCols = 0;
-	private List<?> filler;
-    
-	public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) {
-		this.proc = proc;
-		this.procExec = procExec;
+    private Call proc;
+    private ProcedureExecution procExec;
+    private int paramCols = 0;
+    private int resultSetCols = 0;
+    private List<?> filler;
+
+    public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) {
+        this.proc = proc;
+        this.procExec = procExec;
         List<Argument> params = proc.getArguments();
         resultSetCols = proc.getResultSetColumnTypes().length;
         if (proc.getReturnType() != null) {
-        	paramCols++;
+            paramCols++;
         }
         if(params != null && !params.isEmpty()){
-        	for (Argument param : params) {
+            for (Argument param : params) {
                 if(param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                     paramCols += 1;
                 }
             }
         }
         if (paramCols > 0) {
-        	filler = Collections.nCopies(paramCols, null);
+            filler = Collections.nCopies(paramCols, null);
         }
-	}
-	
-	List<?> padRow(List<?> row) throws TranslatorException {
+    }
+
+    List<?> padRow(List<?> row) throws TranslatorException {
         if (row.size() != resultSetCols) {
              throw new TranslatorException(QueryPlugin.Event.TEIID30479, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30479, proc, new Integer(resultSetCols), new Integer(row.size())));
         }
         if (paramCols == 0) {
-        	return row;
+            return row;
         }
         List<Object> result = new ArrayList<Object>(resultSetCols + paramCols);
         result.addAll(row);
         result.addAll(filler);
         return result;
-	}
-	
-	List<?> getParameterRow() throws TranslatorException {
-		if (paramCols == 0) {
-			return null;
-		}
+    }
+
+    List<?> getParameterRow() throws TranslatorException {
+        if (paramCols == 0) {
+            return null;
+        }
         List<Object> result = new ArrayList<Object>(Arrays.asList(new Object[resultSetCols]));
         result.addAll(procExec.getOutputParameterValues());
         return result;
-	}
-	
+    }
+
 }

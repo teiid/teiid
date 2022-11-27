@@ -1,0 +1,22 @@
+<resource-adapter id="ftp">
+    <module slot="main" id="org.jboss.teiid.resource-adapter.ftp"/>
+    <connection-definitions>
+        <connection-definition class-name="org.teiid.resource.adapter.ftp.FtpManagedConnectionFactory" jndi-name="java:/ftpDS" enabled="true" use-java-context="true" pool-name="ftpDS">
+            <config-property name="Host">
+                localhost
+            </config-property>
+            <config-property name="ParentDirectory">
+                /home/kylin/vsftpd
+            </config-property>
+            <config-property name="Username">
+                user
+            </config-property>
+            <config-property name="Port">
+                21
+            </config-property>
+            <config-property name="Password">
+                redhat
+            </config-property>
+        </connection-definition>
+    </connection-definitions>
+</resource-adapter>

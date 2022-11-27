@@ -37,18 +37,15 @@ public class StaticContentServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String pathInfo = request.getPathInfo();
-        
+
         try {
-            if (pathInfo.endsWith(".xml") //$NON-NLS-1$
-                    && !pathInfo.endsWith("pom.xml") //$NON-NLS-1$
-                    && !pathInfo.contains("META-INF") //$NON-NLS-1$
-                    && !pathInfo.contains("WEB-INF") //$NON-NLS-1$
+            if (pathInfo.endsWith("org.apache.olingo.v1.xml") || pathInfo.endsWith("org.teiid.v1.xml") //$NON-NLS-1$ //$NON-NLS-2$
                     && !pathInfo.substring(1).contains("/")) { //$NON-NLS-1$
                 InputStream contents = getClass().getResourceAsStream(pathInfo);
                 if (contents != null) {
-	                writeContent(response, contents);
-	                response.flushBuffer();
-	                return;
+                    writeContent(response, contents);
+                    response.flushBuffer();
+                    return;
                 }
             }
             throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16055, pathInfo));
@@ -56,8 +53,8 @@ public class StaticContentServlet extends HttpServlet {
             ODataFilter.writeError(request, e, response, 404);
         }
     }
-    
+
     private void writeContent(HttpServletResponse response, InputStream contents) throws IOException {
         ObjectConverterUtil.write(response.getOutputStream(), contents, -1);
-    }    
+    }
 }

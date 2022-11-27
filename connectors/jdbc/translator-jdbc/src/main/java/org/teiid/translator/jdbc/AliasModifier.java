@@ -25,23 +25,23 @@ import org.teiid.language.*;
 public class AliasModifier extends FunctionModifier {
     // The alias to use
     protected String alias;
-        
+
     /**
      * Constructor that takes the alias to use for functions.
      * @param alias The alias to replace the incoming function name with
      */
     public AliasModifier(String alias) {
-        this.alias = alias;    
-    }
-    
-    @Override
-    public List<?> translate(Function function) {
-    	modify(function);
-    	return null;
+        this.alias = alias;
     }
 
-	protected void modify(Function function) {
-		function.setName(alias);
-	}
-    
+    @Override
+    public List<?> translate(Function function) {
+        modify(function);
+        return null;
+    }
+
+    protected void modify(Function function) {
+        function.setName(alias);
+    }
+
 }

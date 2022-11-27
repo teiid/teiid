@@ -28,24 +28,24 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 
 
 public class TranslatorRepository implements Serializable {
-	
-	private static final long serialVersionUID = -1212280886010974273L;
-	private Map<String, VDBTranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
 
-	public void addTranslatorMetadata(String name, VDBTranslatorMetaData factory) {
-		this.translatorRepo.put(name, factory);
-	}	
-	
-	public VDBTranslatorMetaData getTranslatorMetaData(String name) {
-		VDBTranslatorMetaData factory = this.translatorRepo.get(name);
-		return factory;
-	}
-	
-	public VDBTranslatorMetaData removeTranslatorMetadata(String name) {
-		return this.translatorRepo.remove(name);
-	}	
-	
-	public List<VDBTranslatorMetaData> getTranslators(){
-		return new ArrayList<VDBTranslatorMetaData>(translatorRepo.values());
-	}
+    private static final long serialVersionUID = -1212280886010974273L;
+    private Map<String, VDBTranslatorMetaData> translatorRepo = new ConcurrentHashMap<String, VDBTranslatorMetaData>();
+
+    public void addTranslatorMetadata(String name, VDBTranslatorMetaData factory) {
+        this.translatorRepo.put(name, factory);
+    }
+
+    public VDBTranslatorMetaData getTranslatorMetaData(String name) {
+        VDBTranslatorMetaData factory = this.translatorRepo.get(name);
+        return factory;
+    }
+
+    public VDBTranslatorMetaData removeTranslatorMetadata(String name) {
+        return this.translatorRepo.remove(name);
+    }
+
+    public List<VDBTranslatorMetaData> getTranslators(){
+        return new ArrayList<VDBTranslatorMetaData>(translatorRepo.values());
+    }
 }

@@ -29,27 +29,27 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 /**
- * This Metadata repository adds the "native" procedure to all the execution factories that support them. 
+ * This Metadata repository adds the "native" procedure to all the execution factories that support them.
  */
-public class DirectQueryMetadataRepository extends MetadataRepository {
-	
-	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
+public class DirectQueryMetadataRepository implements MetadataRepository {
 
-		if (executionFactory != null && executionFactory.supportsDirectQueryProcedure() && factory.getSchema().getProcedure(executionFactory.getDirectQueryProcedureName()) == null) {
-			Procedure p = factory.addProcedure(executionFactory.getDirectQueryProcedureName());
-			p.setAnnotation("Invokes translator with a native query that returns results in an array of values"); //$NON-NLS-1$
+    @Override
+    public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 
-			ProcedureParameter param = factory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
-			param.setAnnotation("The native query to execute"); //$NON-NLS-1$
-			param.setNullType(NullType.No_Nulls);
+        if (executionFactory != null && executionFactory.supportsDirectQueryProcedure() && factory.getSchema().getProcedure(executionFactory.getDirectQueryProcedureName()) == null) {
+            Procedure p = factory.addProcedure(executionFactory.getDirectQueryProcedureName());
+            p.setAnnotation("Invokes translator with a native query that returns results in an array of values"); //$NON-NLS-1$
 
-			param = factory.addProcedureParameter("variable", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
-			param.setAnnotation("Any number of varaibles; usage will vary by translator"); //$NON-NLS-1$
-			param.setNullType(NullType.Nullable);
-			param.setVarArg(true);
-			
-			factory.addProcedureResultSetColumn("tuple", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(TypeFacility.RUNTIME_TYPES.OBJECT)), p); //$NON-NLS-1$		
-		}
-	}	
+            ProcedureParameter param = factory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
+            param.setAnnotation("The native query to execute"); //$NON-NLS-1$
+            param.setNullType(NullType.No_Nulls);
+
+            param = factory.addProcedureParameter("variable", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
+            param.setAnnotation("Any number of varaibles; usage will vary by translator"); //$NON-NLS-1$
+            param.setNullType(NullType.Nullable);
+            param.setVarArg(true);
+
+            factory.addProcedureResultSetColumn("tuple", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(TypeFacility.RUNTIME_TYPES.OBJECT)), p); //$NON-NLS-1$
+        }
+    }
 }

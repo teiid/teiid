@@ -32,16 +32,16 @@ public class Document {
     private Map<String, List<Document>> children = new LinkedHashMap<String, List<Document>>();
     private boolean array;
     private Document parent;
-    
+
     public Document() {
     }
-    
+
     public Document(String name, boolean array, Document parent) {
         this.name = name;
         this.parent = parent;
         this.array = array;
-    }    
-    
+    }
+
     public boolean isArray() {
         return array;
     }
@@ -50,7 +50,7 @@ public class Document {
             List<Map<String, Object>> left, List<? extends Document> rightDocuments) {
         ArrayList<Map<String, Object>> joined = new ArrayList<Map<String,Object>>();
         for (Document right : rightDocuments) {
-            List<Map<String,Object>> rightRows = right.flatten();            
+            List<Map<String,Object>> rightRows = right.flatten();
             for (Map<String, Object> outer : left) {
                 for (Map<String, Object> inner : rightRows) {
                     LinkedHashMap<String, Object> row = new LinkedHashMap<String, Object>();
@@ -62,14 +62,14 @@ public class Document {
         }
         return joined;
     }
-    
+
     public List<Map<String, Object>> flatten(){
         List<Map<String, Object>> joined = new ArrayList<Map<String, Object>>();
         LinkedHashMap<String, Object> row = new LinkedHashMap<String, Object>();
         if (this.properties != null) {
             row.putAll(this.properties);
         }
-        joined.add(row);            
+        joined.add(row);
         if (this.children != null && !this.children.isEmpty()) {
             for (List<? extends Document> childDoc:this.children.values()) {
                 joined = crossjoinWith(joined, childDoc);
@@ -77,11 +77,11 @@ public class Document {
         }
         return joined;
     }
-    
+
     public Map<String, Object> getProperties(){
         return this.properties;
     }
-    
+
     public Map<String, List<Document>> getChildren() {
         return children;
     }
@@ -91,8 +91,8 @@ public class Document {
             int index = path.indexOf('/');
             if (index != -1) {
                 String parentName = path.substring(0, index);
-                if (parentName.equals(this.name)) {                    
-                    return this.children.get(path.substring(index+1));    
+                if (parentName.equals(this.name)) {
+                    return this.children.get(path.substring(index+1));
                 } else {
                     // then this is the sibiling
                     return this.parent.getChildDocuments(parentName);
@@ -116,7 +116,7 @@ public class Document {
             return s2;
         }
     }
-    
+
     public String getName() {
         if (this.parent != null) {
             return name(this.parent.getName(), this.name);
@@ -136,11 +136,11 @@ public class Document {
         if (this.properties == null) {
             this.properties = new LinkedHashMap<String, Object>();
         }
-        
+
         String propkey = this.parent == null?key:name(getName(), key);
         @SuppressWarnings("unchecked")
         List<Object> propValue = (List<Object>)this.properties.get(propkey);
-        
+
         if (propValue == null) {
             propValue = new ArrayList<Object>();
             propValue.add(value);
@@ -148,12 +148,12 @@ public class Document {
             propValue.add(value);
         }
         this.properties.put(propkey, propValue);
-    }    
-    
+    }
+
     public void addChildDocuments(String path, List<Document> child) {
         this.children.put(path, child);
     }
-    
+
     public List<Document> addChildDocument(String path, Document child) {
         if (this.children == null) {
             this.children = new LinkedHashMap<String, List<Document>>();
@@ -163,13 +163,17 @@ public class Document {
         }
         this.children.get(path).add(child);
         return this.children.get(path);
-    }    
-           
+    }
+
     public String toString() {
         return this.name;
     }
-    
+
     public Document getParent() {
         return this.parent;
+    }
+
+    public String getSimpleName() {
+        return name;
     }
 }

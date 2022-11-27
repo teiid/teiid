@@ -24,57 +24,76 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class Worksheet {
-	private String id;
-	private String name;
-	private LinkedHashMap<String, Column> columns = new LinkedHashMap<String, Column>();
-	private boolean headerEnabled=false;
+    //google ids / names
+    private String id;
+    private String title;
+    private String spreadsheetId;
 
-	public LinkedHashMap<String, Column> getColumns() {
-		return columns;
-	}
+    //teiid name, will be same as title for a single spreadsheet
+    private String name; //teiid name
 
-	public List<Column> getColumnsAsList() {
-		return new ArrayList<Column>(columns.values());
-	}
+    private LinkedHashMap<String, Column> columns = new LinkedHashMap<String, Column>();
+    private boolean headerEnabled=false;
 
-	public void addColumn(String label, Column column) {
-		columns.put(label, column);
-	}
+    public LinkedHashMap<String, Column> getColumns() {
+        return columns;
+    }
 
-	public String getColumnID(String columnLabel) {
-		Column column = columns.get(columnLabel);
-		if (column == null) {
-			return null;
-		} 
-		return column.getAlphaName();
-	}
+    public List<Column> getColumnsAsList() {
+        return new ArrayList<Column>(columns.values());
+    }
 
-	public Worksheet( String name) {
-		this.name = name;
-	}
+    public void addColumn(String label, Column column) {
+        columns.put(label, column);
+    }
 
-	public String getName() {
-		return name;
-	}
-	
-	public int getColumnCount() {
-		return columns.size();
-	}
+    public String getColumnID(String columnLabel) {
+        Column column = columns.get(columnLabel);
+        if (column == null) {
+            return null;
+        }
+        return column.getAlphaName();
+    }
 
-	public String getId() {
-		return id;
-	}
+    public Worksheet(String name, String title) {
+        this.name = name;
+        this.title = title;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public String getTitle() {
+        return title;
+    }
 
-	public boolean isHeaderEnabled() {
-		return headerEnabled;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setHeaderEnabled(boolean headerEnabled) {
-		this.headerEnabled = headerEnabled;
-	}
+    public int getColumnCount() {
+        return columns.size();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public boolean isHeaderEnabled() {
+        return headerEnabled;
+    }
+
+    public void setHeaderEnabled(boolean headerEnabled) {
+        this.headerEnabled = headerEnabled;
+    }
+
+    public String getSpreadsheetId() {
+        return spreadsheetId;
+    }
+
+    public void setSpreadsheetId(String spreadsheetId) {
+        this.spreadsheetId = spreadsheetId;
+    }
 
 }

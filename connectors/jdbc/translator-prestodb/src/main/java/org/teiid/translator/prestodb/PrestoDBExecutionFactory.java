@@ -18,7 +18,14 @@
 
 package org.teiid.translator.prestodb;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.CHAR;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -27,9 +34,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.language.Argument;
 import org.teiid.language.Call;
-import org.teiid.language.Command;
 import org.teiid.language.Function;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -43,17 +48,16 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
-import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.util.Version;
 
 @Translator(name="prestodb", description="PrestoDB custom translator")
 public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     private static final String PRESTODB = "prestodb"; //$NON-NLS-1$
-    
+
     public static final Version V_0_153 = Version.getVersion("0.153"); //$NON-NLS-1$
 
     private ConvertModifier convert = new ConvertModifier();
-    
+
     public PrestoDBExecutionFactory() {
         setSupportsSelectDistinct(true);
         setSupportsInnerJoins(true);
@@ -62,46 +66,34 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         setUseBindVariables(false);
         setTransactionSupport(TransactionSupport.NONE);
     }
-    
-    @Override
-    public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-            throws TranslatorException {
-        throw new TranslatorException(PrestoDBPlugin.Event.TEIID26000, PrestoDBPlugin.Util.gs(PrestoDBPlugin.Event.TEIID26000, command));
-    }   
-    
+
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
             throws TranslatorException {
         throw new TranslatorException(PrestoDBPlugin.Event.TEIID26000, PrestoDBPlugin.Util.gs(PrestoDBPlugin.Event.TEIID26000, command));
-    }    
-    
-    @Override
-    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-            throws TranslatorException {
-        throw new TranslatorException(PrestoDBPlugin.Event.TEIID26000, PrestoDBPlugin.Util.gs(PrestoDBPlugin.Event.TEIID26000, command));
-    } 
-    
+    }
+
     @Override
     public boolean useAnsiJoin() {
         return true;
     }
-    
+
     @Deprecated
     @Override
     protected JDBCMetadataProcessor createMetadataProcessor() {
         return (PrestoDBMetadataProcessor)getMetadataProcessor();
     }
-    
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor(){
         return new PrestoDBMetadataProcessor();
     }
-    
+
     @Override
     public boolean isSourceRequiredForMetadata() {
         return true;
     }
-    
+
     @Override
     public boolean supportsConvert(int fromType, int toType) {
         if (!super.supportsConvert(fromType, toType)) {
@@ -112,13 +104,13 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         }
         return false;
     }
-    
+
 
     @Override
     protected boolean usesDatabaseVersion() {
         return true;
     }
-    
+
     @Override
     public void initCapabilities(Connection connection)
             throws TranslatorException {
@@ -130,11 +122,11 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
             convert.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public void start() throws TranslatorException {
         super.start();
-        
+
         convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
         convert.addTypeMapping("bigint", FunctionModifier.BIGINTEGER, FunctionModifier.LONG); //$NON-NLS-1$
         convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
@@ -144,9 +136,9 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("varbinary", FunctionModifier.BLOB); //$NON-NLS-1$
         convert.addTypeMapping("json", FunctionModifier.BLOB); //$NON-NLS-1$
-        
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);        
-        
+
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
+
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
@@ -165,8 +157,8 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
                 if(function.getParameters().size() == 1){
                     super.modify(function);
                 }
-            }}); 
-        
+            }});
+
         addPushDownFunction(PRESTODB, "cbrt", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "ceil", INTEGER, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "current_timestamp", TIMESTAMP); //$NON-NLS-1$
@@ -204,12 +196,12 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PRESTODB, "url_extract_port", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "url_extract_protocol", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "url_extract_query", STRING, STRING); //$NON-NLS-1$
-        
+
         // TODO: JSON functions, not sure how to represent the JSON type?
         // Array Functions, MAP functions?
         // aggregate functions?
-    }    
-    
+    }
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -230,7 +222,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CHAR);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
-        supportedFunctions.add(SourceSystemFunctions.COS);        
+        supportedFunctions.add(SourceSystemFunctions.COS);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
         supportedFunctions.add(SourceSystemFunctions.CURDATE);
         supportedFunctions.add(SourceSystemFunctions.CURTIME);
@@ -241,7 +233,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
-        
+
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
@@ -264,8 +256,8 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.REPLACE);
 
 //        supportedFunctions.add(SourceSystemFunctions.RADIANS);
-        
-        supportedFunctions.add(SourceSystemFunctions.ROUND);       
+
+        supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
 //        supportedFunctions.add(SourceSystemFunctions.RPAD);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
@@ -273,12 +265,12 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.SIN);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TAN);
-        supportedFunctions.add(SourceSystemFunctions.TRIM);        
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.WEEK);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
-    }     
+    }
 
     /**
      * Base on https://prestodb.io/docs/current/functions/datetime.html, the support format are
@@ -303,7 +295,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSelectWithoutFrom() {
         return true;
     }
-    
+
     @Override
     public boolean supportsSubqueryInOn() {
         return true;
@@ -317,27 +309,27 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsExistsCriteria() {
         return false;
-    }    
-    
+    }
+
     public boolean supportsOnlyLiteralComparison() {
         return true;
     }
-    
+
     @Override
     public boolean supportsOrderByNullOrdering() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsIntersect() {
         return false;
     }
-    
+
     @Override
     public boolean supportsExcept() {
         return false;
@@ -347,37 +339,37 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowLimit() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowOffset() {
         return false;
     }
-    
+
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsBulkUpdate() {
         return true;
     }
-    
+
     @Override
     public boolean supportsBatchedUpdates() {
         return true;
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsElementaryOlapOperations() {
         return true;
     }
-    
+
     @Override
     public boolean supportsArrayType() {
         return true;
@@ -386,5 +378,5 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsCorrelatedSubqueries() {
         return false;
-    }    
+    }
 }

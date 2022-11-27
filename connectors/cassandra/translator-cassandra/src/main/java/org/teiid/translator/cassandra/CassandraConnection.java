@@ -20,8 +20,8 @@ package org.teiid.translator.cassandra;
 
 import java.util.List;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
+import org.teiid.resource.api.Connection;
+import org.teiid.translator.TranslatorException;
 
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.ResultSetFuture;
@@ -30,39 +30,37 @@ import com.datastax.driver.core.VersionNumber;
 /**
  * Connection to Cassandra NoSql database.
  * */
-public interface CassandraConnection extends Connection{
-	
-	/**
-	 * Executes a CQL query.
-	 * */
-	public ResultSetFuture executeQuery(String query);
-	
-	/**
-	 * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
-	 * @throws KeyspaceNotDefinedException 
-	 * */
-	public KeyspaceMetadata keyspaceInfo() throws ResourceException;
+public interface CassandraConnection extends Connection {
 
-	/**
-	 * Execute a batch of updates
-	 * @param updates
-	 * @return
-	 */
-	ResultSetFuture executeBatch(List<String> updates);
+    /**
+     * Executes a CQL query.
+     * */
+    public ResultSetFuture executeQuery(String query);
 
-	/**
-	 * Execute a bulk update
-	 * @param update
-	 * @param values
-	 * @return
-	 * @throws ResourceException 
-	 */
-	ResultSetFuture executeBatch(String update, List<Object[]> values);
+    /**
+     * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
+     * */
+    public KeyspaceMetadata keyspaceInfo() throws TranslatorException;
 
-	/**
-	 * Get the version in use for this connection
-	 * @return
-	 */
-	VersionNumber getVersion();
-	
+    /**
+     * Execute a batch of updates
+     * @param updates
+     * @return
+     */
+    ResultSetFuture executeBatch(List<String> updates);
+
+    /**
+     * Execute a bulk update
+     * @param update
+     * @param values
+     * @return
+     */
+    ResultSetFuture executeBatch(String update, List<Object[]> values);
+
+    /**
+     * Get the version in use for this connection
+     * @return
+     */
+    VersionNumber getVersion();
+
 }

@@ -30,13 +30,13 @@ public class SetQuery extends QueryExpression {
         /** Represents set difference of two queries */
         EXCEPT
     }
-	
+
     private boolean all;
     private QueryExpression leftQuery;
     private QueryExpression rightQuery;
     private Operation operation;
-    
-    /** 
+
+    /**
      * @see org.teiid.language.QueryExpression#getProjectedQuery()
      */
     public Select getProjectedQuery() {
@@ -46,56 +46,56 @@ public class SetQuery extends QueryExpression {
         return leftQuery.getProjectedQuery();
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#getLeftQuery()
      */
     public QueryExpression getLeftQuery() {
         return leftQuery;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#getOperation()
      */
     public Operation getOperation() {
         return operation;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#getRightQuery()
      */
     public QueryExpression getRightQuery() {
         return rightQuery;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#isAll()
      */
     public boolean isAll() {
         return all;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#setAll(boolean)
      */
     public void setAll(boolean all) {
         this.all = all;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#setLeftQuery(org.teiid.language.QueryExpression)
      */
     public void setLeftQuery(QueryExpression leftQuery) {
         this.leftQuery = leftQuery;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#setOperation(org.teiid.language.SetQuery.Operation)
      */
     public void setOperation(Operation operation) {
         this.operation = operation;
     }
 
-    /** 
+    /**
      * @see org.teiid.language.SetQuery#setRightQuery(org.teiid.language.QueryExpression)
      */
     public void setRightQuery(QueryExpression rightQuery) {

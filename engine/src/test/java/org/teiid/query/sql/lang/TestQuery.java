@@ -32,44 +32,44 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 public class TestQuery extends TestCase {
 
     // ################################## FRAMEWORK ################################
-    
-    public TestQuery(String name) { 
+
+    public TestQuery(String name) {
         super(name);
-    }   
-    
-    // ################################## TEST HELPERS ################################ 
+    }
+
+    // ################################## TEST HELPERS ################################
 
 
     /** SELECT y FROM h ORDER BY x */
-    public static final Query sample1() { 
+    public static final Query sample1() {
         Query q2 = new Query();
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y"));        //$NON-NLS-1$
-        q2.setSelect(select);        
+        q2.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("h")); //$NON-NLS-1$
         q2.setFrom(from);
         OrderBy orderBy = new OrderBy();
         orderBy.addVariable(new ElementSymbol("x")); //$NON-NLS-1$
-        q2.setOrderBy(orderBy); 
-        return q2;    
+        q2.setOrderBy(orderBy);
+        return q2;
     }
-    
-    public static final Query sample2() { 
+
+    public static final Query sample2() {
         Query q1 = new Query();
         Select select = new Select();
         select.addSymbol(new ElementSymbol("xml"));        //$NON-NLS-1$
-        q1.setSelect(select);        
-        
+        q1.setSelect(select);
+
         From from = new From();
         from.addGroup(new GroupSymbol("xmltest.doc1")); //$NON-NLS-1$
         q1.setFrom(from);
 
-        return q1;    
+        return q1;
     }
-    
+
     // ################################## ACTUAL TESTS ################################
-    
+
     public void testSelfEquivalence(){
         Object s1 = sample1();
         int equals = 0;
@@ -82,15 +82,15 @@ public class TestQuery extends TestCase {
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
     }
-    
+
     public void testNonEquivalence(){
         Object s1 = sample1();
         Object s2 = sample2();
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
-    
-    public void testClone() {    
+
+    public void testClone() {
         Query q = sample2();
         Query qclone = (Query)q.clone();
         int equals = 0;
@@ -98,11 +98,11 @@ public class TestQuery extends TestCase {
     }
 
     public void testAreResultsCachable(){
-    	//SELECT y FROM h
+        //SELECT y FROM h
         Query query = new Query();
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y"));        //$NON-NLS-1$
-        query.setSelect(select);        
+        query.setSelect(select);
         From from = new From();
         from.addGroup(new GroupSymbol("h")); //$NON-NLS-1$
         query.setFrom(from);
@@ -111,28 +111,28 @@ public class TestQuery extends TestCase {
         select = new Select();
         ElementSymbol column = new ElementSymbol("y");//$NON-NLS-1$
         column.setType(BlobType.class);
-        select.addSymbol(column);        
-        query.setSelect(select);        
+        select.addSymbol(column);
+        query.setSelect(select);
         query.setFrom(from);
         assertTrue(query.areResultsCachable());
         select = new Select();
         column = new ElementSymbol("y");//$NON-NLS-1$
         column.setType(ClobType.class);
-        select.addSymbol(column);        
-        query.setSelect(select);        
+        select.addSymbol(column);
+        query.setSelect(select);
         query.setFrom(from);
         assertTrue(query.areResultsCachable());
         select = new Select();
         column = new ElementSymbol("y");//$NON-NLS-1$
         column.setType(XMLType.class);
-        select.addSymbol(column);        
-        query.setSelect(select);        
+        select.addSymbol(column);
+        query.setSelect(select);
         query.setFrom(from);
-        assertTrue(query.areResultsCachable());        
+        assertTrue(query.areResultsCachable());
     }
-    
+
     public void testClone3() {
-    	Query q = sample2();
+        Query q = sample2();
         q.setInto(new Into(new GroupSymbol("#foo"))); //$NON-NLS-1$
         Query qclone = (Query)q.clone();
         assertNotNull(qclone.getInto());

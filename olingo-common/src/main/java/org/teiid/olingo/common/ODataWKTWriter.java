@@ -4,7 +4,7 @@
  * geo-spatial data set to a known topological specification.
  *
  * Copyright (C) 2001 Vivid Solutions
- * 
+ *
  * Copyright Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags and
  * the COPYRIGHT.txt file distributed with this work.
@@ -29,10 +29,9 @@ import java.io.Writer;
 
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDouble;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.util.Assert;
 import org.teiid.core.TeiidRuntimeException;
-
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.util.Assert;
 
 /**
  * Writes the Well-Known Text representation of a {@link Geometry}.
@@ -40,18 +39,18 @@ import com.vividsolutions.jts.util.Assert;
  * OGC <A HREF="http://www.opengis.org/techno/specs.htm">
  * <p>
  * The <code>WKTWriter</code> outputs coordinates rounded to the precision
- * model. Only the maximum number of decimal places 
+ * model. Only the maximum number of decimal places
  * necessary to represent the ordinates to the required precision will be
  * output.
  * <p>
  * The SFS WKT spec does not define a special tag for {@link LinearRing}s.
  * Under the spec, rings are output as <code>LINESTRING</code>s.
- * In order to allow precisely specifying constructed geometries, 
- * JTS also supports a non-standard <code>LINEARRING</code> tag which is used 
+ * In order to allow precisely specifying constructed geometries,
+ * JTS also supports a non-standard <code>LINEARRING</code> tag which is used
  * to output LinearRings.
  *
  * Forked from JTS to conform to OData BNF
- * 
+ *
  * Relicensed to ASL as the work is reasonably distinct from the original
  * and implements a trivial mapping to OData WKT
  *
@@ -205,7 +204,7 @@ class ODataWKTWriter
    *@param  multiLineString  the <code>MultiLineString</code> to process
    *@param  writer           the output writer to append to
    */
-  private void appendMultiLineStringTaggedText(MultiLineString multiLineString, 
+  private void appendMultiLineStringTaggedText(MultiLineString multiLineString,
       Writer writer)
     throws IOException
   {
@@ -234,7 +233,7 @@ class ODataWKTWriter
    *@param  geometryCollection  the <code>GeometryCollection</code> to process
    *@param  writer              the output writer to append to
    */
-  private void appendGeometryCollectionTaggedText(GeometryCollection geometryCollection, 
+  private void appendGeometryCollectionTaggedText(GeometryCollection geometryCollection,
       Writer writer)
     throws IOException
   {
@@ -257,7 +256,7 @@ class ODataWKTWriter
   {
       writer.write("(");
       if (coordinate != null) {
-    	  appendCoordinate(coordinate, writer);
+          appendCoordinate(coordinate, writer);
       }
       writer.write(")");
   }
@@ -289,10 +288,10 @@ class ODataWKTWriter
    */
   private String writeNumber(double d) {
     try {
-		return EdmDouble.getInstance().valueToString(d, false, null, null, null, false);
-	} catch (EdmPrimitiveTypeException e) {
-		throw new TeiidRuntimeException(e);
-	}
+        return EdmDouble.getInstance().valueToString(d, false, null, null, null, false);
+    } catch (EdmPrimitiveTypeException e) {
+        throw new TeiidRuntimeException(e);
+    }
   }
 
   /**
@@ -308,7 +307,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < lineString.getNumPoints(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         appendCoordinate(lineString.getCoordinateN(i), writer);
       }
@@ -326,11 +325,11 @@ class ODataWKTWriter
     throws IOException
   {
       writer.write("(");
-      appendLineStringText(polygon.getExteriorRing(), writer);
       for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-        writer.write(", ");
         appendLineStringText(polygon.getInteriorRingN(i), writer);
+        writer.write(",");
       }
+      appendLineStringText(polygon.getExteriorRing(), writer);
       writer.write(")");
   }
 
@@ -347,7 +346,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < multiPoint.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         writer.write("(");
         appendCoordinate(((Point) multiPoint.getGeometryN(i)).getCoordinate(), writer);
@@ -363,14 +362,14 @@ class ODataWKTWriter
    *@param  multiLineString  the <code>MultiLineString</code> to process
    *@param  writer           the output writer to append to
    */
-  private void appendMultiLineStringText(MultiLineString multiLineString, 
+  private void appendMultiLineStringText(MultiLineString multiLineString,
       Writer writer)
     throws IOException
   {
       writer.write("(");
       for (int i = 0; i < multiLineString.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         appendLineStringText((LineString) multiLineString.getGeometryN(i), writer);
       }
@@ -390,7 +389,7 @@ class ODataWKTWriter
       writer.write("(");
       for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         appendPolygonText((Polygon) multiPolygon.getGeometryN(i), writer);
       }
@@ -404,14 +403,14 @@ class ODataWKTWriter
    *@param  geometryCollection  the <code>GeometryCollection</code> to process
    *@param  writer              the output writer to append to
    */
-  private void appendGeometryCollectionText(GeometryCollection geometryCollection, 
+  private void appendGeometryCollectionText(GeometryCollection geometryCollection,
       Writer writer)
     throws IOException
   {
       writer.write("(");
       for (int i = 0; i < geometryCollection.getNumGeometries(); i++) {
         if (i > 0) {
-          writer.write(", ");
+          writer.write(",");
         }
         write(geometryCollection.getGeometryN(i), writer);
       }

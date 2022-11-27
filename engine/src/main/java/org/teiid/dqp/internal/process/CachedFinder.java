@@ -44,88 +44,80 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class CachedFinder implements CapabilitiesFinder {
 
-	static class InvalidCaps extends BasicSourceCapabilities {
-		
-	};
-	private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
-	static {
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_IN, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
-		SYSTEM_CAPS.setCapabilitySupport(Capability.NO_PROJECTION, true);
-		SYSTEM_CAPS.setFunctionSupport(SourceSystemFunctions.UCASE, true);
-		SYSTEM_CAPS.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
-		SYSTEM_CAPS.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
-	}
-	
+    static class InvalidCaps extends BasicSourceCapabilities {
+
+    };
+    private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
+    static {
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
+        SYSTEM_CAPS.setCapabilitySupport(Capability.NO_PROJECTION, true);
+        SYSTEM_CAPS.setFunctionSupport(SourceSystemFunctions.UCASE, true);
+        SYSTEM_CAPS.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
+        SYSTEM_CAPS.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+    }
+
     private ConnectorManagerRepository connectorRepo;
     private VDBMetaData vdb;
-    
+
     private Map<String, SourceCapabilities> userCache = new HashMap<String, SourceCapabilities>();
-    
-    /**
-     * Construct a CacheFinder that wraps another finder
-     * @param internalFinder Finder to wrap
-     */
+
     public CachedFinder(ConnectorManagerRepository repo, VDBMetaData vdb) {
         this.connectorRepo = repo;
         this.vdb = vdb;
-    	userCache.put(CoreConstants.SYSTEM_MODEL, SYSTEM_CAPS);
-    	userCache.put(CoreConstants.ODBC_MODEL, SYSTEM_CAPS);
-    	userCache.put(CoreConstants.SYSTEM_ADMIN_MODEL, SYSTEM_CAPS);
+        userCache.put(CoreConstants.SYSTEM_MODEL, SYSTEM_CAPS);
+        userCache.put(CoreConstants.ODBC_MODEL, SYSTEM_CAPS);
+        userCache.put(CoreConstants.SYSTEM_ADMIN_MODEL, SYSTEM_CAPS);
     }
 
     /**
      * Find capabilities used the cache if possible, otherwise do the lookup.
      */
     public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
-    	SourceCapabilities caps = userCache.get(modelName);
+        SourceCapabilities caps = userCache.get(modelName);
         if(caps != null) {
             return caps;
         }
         ModelMetaData model = vdb.getModel(modelName);
         List<String> sourceNames = model.getSourceNames();
         if (sourceNames.isEmpty()) {
-        	throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30499, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30499, modelName));
+            throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30499, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30499, modelName));
         }
         TeiidException cause = null;
         for (String sourceName:sourceNames) {
-        	//TOOD: in multi-source mode it may be necessary to compute minimal capabilities across the sources
-        	ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
-    		if (mgr == null) {
-    			throw new TeiidComponentException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, sourceName, modelName, sourceName));
-    		}
-        	try {
-        		caps = mgr.getCapabilities();
-        		break;
+            //TOOD: in multi-source mode it may be necessary to compute minimal capabilities across the sources
+            ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
+            if (mgr == null) {
+                throw new TeiidComponentException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, modelName, sourceName));
+            }
+            try {
+                caps = mgr.getCapabilities();
+                break;
             } catch(TeiidException e) {
-            	cause = e;
-            	LogManager.logDetail(LogConstants.CTX_DQP, e, "Could not obtain capabilities for" + sourceName); //$NON-NLS-1$
+                cause = e;
+                LogManager.logDetail(LogConstants.CTX_DQP, e, "Could not obtain capabilities for" + sourceName); //$NON-NLS-1$
             }
         }
 
         if (caps == null) {
-        	InvalidCaps ic = new InvalidCaps();
-        	ic.setSourceProperty(Capability.INVALID_EXCEPTION, cause);
-        	caps = ic;
+            InvalidCaps ic = new InvalidCaps();
+            ic.setSourceProperty(Capability.INVALID_EXCEPTION, cause);
+            caps = ic;
         }
-        
+
         userCache.put(modelName, caps);
         return caps;
     }
-    
-    public void addCapabilities(String connBinding, SourceCapabilities sourceCaps) {
-    	userCache.put(connBinding, sourceCaps);
-    }
-    
+
     public boolean isValid(String modelName) {
-    	SourceCapabilities caps = userCache.get(modelName);
-    	return caps != null && !(caps instanceof InvalidCaps);
+        SourceCapabilities caps = userCache.get(modelName);
+        return caps != null && !(caps instanceof InvalidCaps);
     }
-        
+
 }

@@ -25,7 +25,7 @@ import org.teiid.metadata.Column;
  */
 public class MultiSourceElement extends Column {
 
-	private static final long serialVersionUID = 5275578893617706914L;
-	public static final String DEFAULT_MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
-    
+    private static final long serialVersionUID = 5275578893617706914L;
+    public static final String DEFAULT_MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
+
 }

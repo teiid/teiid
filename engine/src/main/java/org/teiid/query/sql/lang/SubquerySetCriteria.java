@@ -31,11 +31,11 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * A criteria which is true is the expression's value is a member in a list
  * of values returned from a subquery.  This criteria can be represented as
- * "<expression> IN (SELECT ...)".
+ * "&lt;expression&gt; IN (SELECT ...)".
  */
 public class SubquerySetCriteria extends AbstractSetCriteria implements SubqueryContainer<QueryCommand>, ContextReference {
 
-	private static AtomicInteger ID = new AtomicInteger();
+    private static AtomicInteger ID = new AtomicInteger();
 
     private QueryCommand command;
     private SubqueryHint subqueryHint = new SubqueryHint();
@@ -52,20 +52,20 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         setExpression(expression);
         setCommand(subCommand);
     }
-    
+
     public SubqueryHint getSubqueryHint() {
-		return subqueryHint;
-	}
-    
+        return subqueryHint;
+    }
+
     public void setSubqueryHint(SubqueryHint subqueryHint) {
-		this.subqueryHint = subqueryHint;
-	}
-    
+        this.subqueryHint = subqueryHint;
+    }
+
     @Override
     public String getContextSymbol() {
-    	return id;
+        return id;
     }
-    
+
     /**
      * Set the subquery command (either a SELECT or a procedure execution).
      * @param command Command to execute to get the values for the criteria
@@ -117,7 +117,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         SubquerySetCriteria sc = (SubquerySetCriteria)obj;
 
         return this.isNegated() == sc.isNegated() &&
-         	   EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
+                EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
                EquivalenceUtil.areEqual(getCommand(), sc.getCommand()) &&
                this.subqueryHint.equals(sc.getSubqueryHint());
     }
@@ -136,7 +136,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
 
         QueryCommand copyCommand = null;
         if(getCommand() != null) {
-        	copyCommand = (QueryCommand) getCommand().clone();
+            copyCommand = (QueryCommand) getCommand().clone();
         }
 
         SubquerySetCriteria criteriaCopy = new SubquerySetCriteria(copy, copyCommand);

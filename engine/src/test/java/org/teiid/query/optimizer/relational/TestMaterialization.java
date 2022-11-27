@@ -43,15 +43,15 @@ import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TestMaterialization {
-	
+
     @Test public void testMaterializedTransformation() throws Exception {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         Collection<Annotation> annotations = analysis.getAnnotations();
@@ -63,96 +63,111 @@ public class TestMaterialization {
     @Ignore("we no longer auto detect this case, if we need this logic it will have to be added to the rewriter since it changes select into to an insert")
     @Test public void testMaterializedTransformationLoading() throws Exception {
         String userSql = "SELECT MATVIEW.E1 INTO MatTable.MatStage FROM MATVIEW"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
 
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        Collection<Annotation> annotations = analysis.getAnnotations();
-        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
-        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
-        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
-    }    
-    
-    @Test public void testMaterializedTransformationNoCache() throws Exception {
-        String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE MatView.MatView"; //$NON-NLS-1$
-        
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
-        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
-        Command command = helpGetCommand(userSql, metadata);
-        
-        TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
-    
+
+    @Test public void testMaterializedTransformationNoCache() throws Exception {
+        String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE MatView.MatView"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+
+        Command command = helpGetCommand(userSql, metadata);
+
+        TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+
     //related to defect 14423
     @Test public void testMaterializedTransformationNoCache2() throws Exception {
         String userSql = "SELECT MATVIEW.E1 FROM MATVIEW OPTION NOCACHE"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
+
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertTrue("Expected one annotation", annotations.size() == 1); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
-    
+
     @Test public void testNoCacheInTransformation() throws Exception {
         String userSql = "SELECT VGROUP.E1 FROM VGROUP"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
+
     @Test public void testTableNoCacheDoesntCascade() throws Exception {
         String userSql = "SELECT MATVIEW1.E1 FROM MATVIEW1 option nocache matview.matview1"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE g_0.e1 = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
+
     @Test public void testNoCacheCascade() throws Exception {
         String userSql = "SELECT MATVIEW1.E1 FROM MATVIEW1 option nocache"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
+
+    @Test public void testNoCacheCascadeSubquery() throws Exception {
+        String userSql = "SELECT (select MATVIEW1.E1 FROM MATVIEW1) from MatSrc option nocache"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+
+        Command command = helpGetCommand(userSql, metadata);
+
+        TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT (SELECT g_0.x FROM MatSrc.MatSrc AS g_0 WHERE g_0.x = '1') FROM MatSrc.MatSrc AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertEquals("Expected one annotation",3, annotations.size()); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+
     @Test public void testDefaultMaterialization() throws Exception {
         String userSql = "SELECT * from vgroup2"; //$NON-NLS-1$
-        
+
         TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
-    	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
-    	cc.setGlobalTableStore(gts);
+        GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
+        cc.setGlobalTableStore(gts);
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP2.x FROM #MAT_MATVIEW.VGROUP2"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
@@ -160,17 +175,17 @@ public class TestMaterialization {
         assertEquals("Expected one annotation", 1, annotations.size()); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
-    
+
     @Test public void testDefaultMaterializationWithPK() throws Exception {
         String userSql = "SELECT * from vgroup3 where x = 'foo'"; //$NON-NLS-1$
-        
+
         TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
         GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
-    	cc.setGlobalTableStore(gts);
+        cc.setGlobalTableStore(gts);
         RelationalPlan plan = (RelationalPlan)TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         assertEquals(1f, plan.getRootNode().getEstimateNodeCardinality());
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP3.x, #MAT_MATVIEW.VGROUP3.y FROM #MAT_MATVIEW.VGROUP3 WHERE #MAT_MATVIEW.VGROUP3.x = 'foo'"}, plan);
@@ -179,17 +194,17 @@ public class TestMaterialization {
         assertEquals("Expected one annotation", 1, annotations.size()); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
-    
+
     @Test public void testDefaultMaterializationWithCacheHint() throws Exception {
         String userSql = "SELECT * from vgroup4"; //$NON-NLS-1$
-        
+
         TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
         GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
-    	cc.setGlobalTableStore(gts);
+        cc.setGlobalTableStore(gts);
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP4.x FROM #MAT_MATVIEW.VGROUP4"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
@@ -200,12 +215,12 @@ public class TestMaterialization {
 
     @Test public void testManagedMaterializedTransformation() throws Exception {
         String userSql = "SELECT * FROM ManagedMatView"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         RelationalPlan plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
                 analysis,
                 new String[] {
@@ -216,25 +231,25 @@ public class TestMaterialization {
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
-    
+
     @Test public void testManagedMaterializedTransformationInsert() throws Exception {
         String userSql = "insert into MatTable1 SELECT * FROM ManagedMatView option nocache ManagedMatView"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        
+
         RelationalPlan plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(bsc),
                 analysis,
                 new String[] {
                         "SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE mvstatus('MatView', 'ManagedMatView') = 1" }, //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING);
-        
+
         bsc.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
-        
+
         plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(bsc),
                 analysis,
                 new String[] {
@@ -245,30 +260,30 @@ public class TestMaterialization {
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
-    
+
     @Test public void testManagedMaterializedTransformationJoin() throws Exception {
         //make sure view removal is not inhibited
         String userSql = "SELECT MatTable1.*,ManagedMatView.* FROM ManagedMatView left outer join MatTable1 on ManagedMatView.e1 = MatTable1.e1"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
-        
+
         TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
                 analysis,
                 new String[] {
                         "SELECT g_1.e1, g_0.e1 FROM MatTable.MatTable AS g_0 LEFT OUTER JOIN MatTable.MatTable1 AS g_1 ON g_0.e1 = g_1.e1 WHERE mvstatus('MatView', 'ManagedMatView') = 1" }, //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING);
     }
-    
+
     @Test public void testManagedMaterializedTransformationUnion() throws Exception {
         //make sure view removal is not inhibited
         String userSql = "SELECT * FROM ManagedMatView union all SELECT * FROM ManagedMatView"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
         BasicSourceCapabilities capabilities = getTypicalCapabilities();
         capabilities.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -278,13 +293,13 @@ public class TestMaterialization {
                         "SELECT g_1.e1 AS c_0 FROM MatTable.MatTable AS g_1 WHERE mvstatus('MatView', 'ManagedMatView') = 1 UNION ALL SELECT g_0.e1 AS c_0 FROM MatTable.MatTable AS g_0" }, //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING);
     }
-    
+
     @Test public void testManagedMaterializedTransformationSubquery() throws Exception {
         String userSql = "SELECT e1, (select min(e1) from ManagedMatView x where x.e1 > MatTable1.e1) FROM MatTable1"; //$NON-NLS-1$
-        
+
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
-        
+
         Command command = helpGetCommand(userSql, metadata);
         BasicSourceCapabilities capabilities = getTypicalCapabilities();
         capabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
@@ -297,5 +312,5 @@ public class TestMaterialization {
                         "SELECT g_0.e1, (SELECT MIN(g_1.e1) FROM MatTable.MatTable AS g_1 WHERE (mvstatus('MatView', 'ManagedMatView') = 1) AND (g_1.e1 > g_0.e1)) FROM MatTable.MatTable1 AS g_0" }, //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING);
     }
-    
+
 }

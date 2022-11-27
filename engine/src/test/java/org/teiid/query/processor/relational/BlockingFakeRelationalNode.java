@@ -28,9 +28,9 @@ import org.teiid.core.TeiidProcessingException;
 public class BlockingFakeRelationalNode extends FakeRelationalNode {
 
     private int count = 1;
-    
+
     private int returnPeriod = 2;
-    
+
     /**
      * @param nodeID
      * @param data
@@ -51,14 +51,14 @@ public class BlockingFakeRelationalNode extends FakeRelationalNode {
     public BlockingFakeRelationalNode(int nodeID, TupleSource source, int batchSize) {
         super(nodeID, source, batchSize);
     }
-    
+
     public void setReturnPeriod(int returnPeriod) {
-		this.returnPeriod = returnPeriod;
-	}
+        this.returnPeriod = returnPeriod;
+    }
 
     public TupleBatch nextBatchDirect() throws BlockedException, TeiidComponentException, TeiidProcessingException {
         if (count++%returnPeriod != 0) {
-        	throw BlockedException.INSTANCE;
+            throw BlockedException.INSTANCE;
         }
         return super.nextBatchDirect();
     }

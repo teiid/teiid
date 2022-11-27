@@ -65,27 +65,27 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.SourceSystemFunctions;
 
-/** 
- * It's important here that the MultiSourceCapabilityFinder is used since some capabilities 
+/**
+ * It's important here that the MultiSourceCapabilityFinder is used since some capabilities
  * will never be pushed to the source
- * 
+ *
  * @since 4.2
  */
 @SuppressWarnings("nls")
 public class TestMultiSourcePlanToProcessConverter {
-    
+
     private final class MultiSourceDataManager extends HardcodedDataManager {
-        
+
         public MultiSourceDataManager() {
             setMustRegisterCommands(false);
         }
 
         public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws org.teiid.core.TeiidComponentException {
-        	assertNotNull(parameterObject.connectorBindingId);
-        	
-        	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(command, true, true);
-            
-        	for (ElementSymbol symbol : elements) {
+            assertNotNull(parameterObject.connectorBindingId);
+
+            Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(command, true, true);
+
+            for (ElementSymbol symbol : elements) {
                 if (symbol.getMetadataID() instanceof MultiSourceElement) {
                     fail("Query Contains a MultiSourceElement -- MultiSource expansion did not happen"); //$NON-NLS-1$
                 }
@@ -97,62 +97,62 @@ public class TestMultiSourcePlanToProcessConverter {
     private static final boolean DEBUG = false;
 
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb) throws Exception {
-    	return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
+        return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
     }
-    
-    
+
+
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb, List<?> params, Options options) throws Exception {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
         bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-        
+
         bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, params, options, bsc);
     }
-    
+
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb, List<?> params, Options options, SourceCapabilities bsc) throws Exception {
         Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(vdb);
         for (String model:multiSourceModels.keySet()) {
             char sourceID = 'a';
-            // by default every model has one binding associated, but for multi-source there were none assigned. 
+            // by default every model has one binding associated, but for multi-source there were none assigned.
             ModelMetaData m = vdb.getModel(model);
             int x = m.getSourceNames().size();
             for(int i=x; i<sourceCount; i++, sourceID++) {
-            	 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
+                 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
         QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
         wrapper = new TempMetadataAdapter(wrapper, new TempMetadataStore());
-    	DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
-        
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
+
         AnalysisRecord analysis = new AnalysisRecord(DEBUG, DEBUG);
-        
-        Command command = TestResolver.helpResolve(userSql, wrapper);               
+
+        Command command = TestResolver.helpResolve(userSql, wrapper);
         ValidatorReport report = Validator.validate(command, metadata);
         if (report.hasItems()) {
-        	fail(report.toString());
+            fail(report.toString());
         }
         // Plan
         command = QueryRewriter.rewrite(command, wrapper, null);
         DefaultCapabilitiesFinder fakeFinder = new DefaultCapabilitiesFinder(bsc);
-        
+
         CapabilitiesFinder finder = new TempCapabilitiesFinder(fakeFinder);
         IDGenerator idGenerator = new IDGenerator();
-        
+
         CommandContext context = new CommandContext("test", "user", null, vdb.getName(), vdb.getVersion(), false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         context.setDQPWorkContext(workContext);
         context.setOptions(options);
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);
-                        
+
         if(DEBUG) {
-        	System.out.println(analysis.getDebugLog());
-        	System.out.println("\nMultiSource Plan:"); //$NON-NLS-1$
+            System.out.println(analysis.getDebugLog());
+            System.out.println("\nMultiSource Plan:"); //$NON-NLS-1$
             System.out.println(plan);
-            
+
         }
         if (params != null) {
-        	TestProcessor.setParameterValues(params, command, context);
+            TestProcessor.setParameterValues(params, command, context);
         }
         TestProcessor.helpProcess(plan, context, dataMgr, expectedResults);
         return plan;
@@ -163,7 +163,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final String userSql = "SELECT * FROM MultiModel.Phys WHERE SOURCE_NAME = 'bogus'"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 2;
-        final List<?>[] expected = 
+        final List<?>[] expected =
             new List[0];
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
@@ -174,33 +174,33 @@ public class TestMultiSourcePlanToProcessConverter {
         final String userSql = "SELECT * FROM MultiModel.Phys WHERE SOURCE_NAME = 'a'"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 2;
-        final List<?>[] expected = 
+        final List<?>[] expected =
             new List<?>[] { Arrays.asList(new Object[] { null, null}) };
         final HardcodedDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(false);
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testSingleReplacementAltName() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT * FROM MultiModel.Phys WHERE foo = 'a'"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 2;
-        final List<?>[] expected = 
+        final List<?>[] expected =
             new List<?>[] { Arrays.asList(new Object[] { null, null}) };
         final HardcodedDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(false);
         VDBMetaData vdb = RealMetadataFactory.exampleMultiBindingVDB();
         vdb.getModel("MultiModel").addProperty(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME, "foo");
-		helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, vdb);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, vdb);
     }
-    
+
     @Test public void testPreparedReplacement() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT * FROM MultiModel.Phys WHERE SOURCE_NAME = ?"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 2;
-        final List<?>[] expected = 
+        final List<?>[] expected =
             new List<?>[] { Arrays.asList(new Object[] { null, null}) };
         final HardcodedDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(false);
@@ -212,14 +212,14 @@ public class TestMultiSourcePlanToProcessConverter {
         final String userSql = "SELECT * FROM MultiModel.Phys"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
-        final List<?>[] expected = 
+        final List<?>[] expected =
             new List<?>[] { Arrays.asList(new Object[] { null, null}),
                          Arrays.asList(new Object[] { null, null}),
                          Arrays.asList(new Object[] { null, null})};
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testMultiReplacementWithOrderBy() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -243,7 +243,7 @@ public class TestMultiSourcePlanToProcessConverter {
                             Arrays.asList("f", "z", "bf")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testNested() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -256,11 +256,11 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_1.a AS c_0, 'a' AS c_1 FROM MultiModel.Phys AS g_1 UNION ALL SELECT g_0.b AS c_0, 'a' AS c_1 FROM MultiModel.Phys1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList(1, "a")}); 
+                            Arrays.asList(1, "a")});
         dataMgr.addData("SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_1.a AS c_0, 'b' AS c_1 FROM MultiModel.Phys AS g_1 UNION ALL SELECT g_0.b AS c_0, 'b' AS c_1 FROM MultiModel.Phys1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$
                 new List<?>[] {
                     Arrays.asList(1, "b")});
-        
+
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -268,10 +268,10 @@ public class TestMultiSourcePlanToProcessConverter {
         bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
         bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
-        
+
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, null, bsc);
     }
-    
+
     @Test public void testMultiJoinImplicit() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -285,10 +285,10 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0, MultiModel.Phys1 AS g_1 WHERE g_0.a = g_1.b", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("a")}); 
+                            Arrays.asList("a")});
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     /**
      * With implicit join turned off, we now get the join of the union of the source queries.
      */
@@ -306,12 +306,12 @@ public class TestMultiSourcePlanToProcessConverter {
             };
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
-                        new List<?>[] {Arrays.asList("a")}); 
+                        new List<?>[] {Arrays.asList("a")});
         dataMgr.addData("SELECT g_0.b FROM MultiModel.Phys1 AS g_0", //$NON-NLS-1$
-                new List<?>[] {Arrays.asList("a")}); 
+                new List<?>[] {Arrays.asList("a")});
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false));
     }
-    
+
     @Test public void testMultiJoinPartitionedExplicit() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -325,10 +325,10 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0, MultiModel.Phys1 AS g_1 WHERE g_0.a = g_1.b", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("a")}); 
+                            Arrays.asList("a")});
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false));
     }
-    
+
     @Test public void testAggParitioned() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -361,7 +361,7 @@ public class TestMultiSourcePlanToProcessConverter {
                 1       // UnionAll
             });
     }
-    
+
     @Test public void testAggNotParitioned() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -374,7 +374,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT MAX(g_0.a) FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("y")}); 
+                            Arrays.asList("y")});
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 3,      // Access
@@ -393,7 +393,7 @@ public class TestMultiSourcePlanToProcessConverter {
                 1       // UnionAll
             });
     }
-    
+
     @Test public void testAggNotParitionedGroupBy() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -406,7 +406,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT g_0.b, MAX(g_0.a) FROM MultiModel.Phys AS g_0 GROUP BY g_0.b", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("x", "y")}); 
+                            Arrays.asList("x", "y")});
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 3,      // Access
@@ -425,7 +425,7 @@ public class TestMultiSourcePlanToProcessConverter {
                 1       // UnionAll
             });
     }
-    
+
     @Test public void testGroupByNotParitioned() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -438,7 +438,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0 GROUP BY g_0.a", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("y")}); 
+                            Arrays.asList("y")});
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 3,      // Access
@@ -457,7 +457,7 @@ public class TestMultiSourcePlanToProcessConverter {
                 1       // UnionAll
             });
     }
-    
+
     @Test public void testMultiReplacementWithLimit() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT distinct a, b, source_name || a FROM MultiModel.Phys order by a limit 1"; //$NON-NLS-1$
@@ -477,7 +477,7 @@ public class TestMultiSourcePlanToProcessConverter {
                     Arrays.asList("f", "z", "bf")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testMultiReplacementWithLimit1() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT a, b FROM MultiModel.Phys limit 1, 1"; //$NON-NLS-1$
@@ -494,7 +494,7 @@ public class TestMultiSourcePlanToProcessConverter {
         RelationalPlan plan = (RelationalPlan)helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
         assertTrue(plan.getRootNode() instanceof LimitNode);
     }
-    
+
     @Test public void testMultiReplacementWithProjectConstant() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "SELECT a, b, source_name || a, '1' FROM MultiModel.Phys"; //$NON-NLS-1$
@@ -511,14 +511,14 @@ public class TestMultiSourcePlanToProcessConverter {
                 new List<?>[] {});
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testMultiDependentJoin() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
-        
+
         final String userSql = "SELECT a.a FROM MultiModel.Phys a inner join MultiModel.Phys b makedep on (a.a = b.a) order by a"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 2;
-        final List<?>[] expected = 
+        final List<?>[] expected =
             new List<?>[] { Arrays.asList(new Object[] { "x"}), //$NON-NLS-1$
                          Arrays.asList(new Object[] { "x"}), //$NON-NLS-1$
                          Arrays.asList(new Object[] { "x"}), //$NON-NLS-1$
@@ -527,7 +527,7 @@ public class TestMultiSourcePlanToProcessConverter {
                          Arrays.asList(new Object[] { "y"}), //$NON-NLS-1$
                          Arrays.asList(new Object[] { "y"}), //$NON-NLS-1$
                          Arrays.asList(new Object[] { "y"})}; //$NON-NLS-1$
-                         
+
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT g_0.a FROM MultiModel.Phys AS g_0",  //$NON-NLS-1$
                         new List<?>[] { Arrays.asList(new Object[] { "x" }), //$NON-NLS-1$
@@ -537,7 +537,7 @@ public class TestMultiSourcePlanToProcessConverter {
                                      Arrays.asList(new Object[] { "y" })}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testSingleReplacementInDynamicCommand() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "exec Virt.sq1('a')"; //$NON-NLS-1$
@@ -547,7 +547,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testSingleReplacementInDynamicCommandNullValue() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "exec Virt.sq1(null)"; //$NON-NLS-1$
@@ -557,7 +557,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final ProcessorDataManager dataMgr = new MultiSourceDataManager();
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testMultiUpdateAll() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "update MultiModel.Phys set a = '1' where b = 'z'"; //$NON-NLS-1$
@@ -569,7 +569,7 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.addData("UPDATE MultiModel.Phys SET a = '1' WHERE b = 'z'", new List<?>[] {Arrays.asList(1)}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testInsertMatching() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES ('a', 'a')"; //$NON-NLS-1$
@@ -581,7 +581,7 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.addData("INSERT INTO MultiModel.Phys (a) VALUES ('a')", new List<?>[] {Arrays.asList(1)}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testInsertNotMatching() throws Exception {
         final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "INSERT INTO MultiModel.Phys(a, SOURCE_NAME) VALUES ('a', 'x')"; //$NON-NLS-1$
@@ -592,9 +592,9 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.setMustRegisterCommands(true);
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testProcedure() throws Exception {
-    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "exec MultiModel.proc('b', 'a')"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
@@ -604,9 +604,9 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.addData("EXEC MultiModel.proc('b')", new List<?>[] {Arrays.asList(1)}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testProcedureAll() throws Exception {
-    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "exec MultiModel.proc(\"in\"=>'b')"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
@@ -616,9 +616,9 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.addData("EXEC MultiModel.proc('b')", new List<?>[] {Arrays.asList(1)}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testTempInsert() throws Exception {
-    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "INSERT INTO #x select * from MultiModel.Phys"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
@@ -628,7 +628,7 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.addData("SELECT g_0.a, g_0.b FROM MultiModel.Phys AS g_0", new List<?>[] {Arrays.asList("a", "b")}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
-    
+
     @Test public void testUnsupportedPredicate() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -641,11 +641,11 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager();
         dataMgr.addData("SELECT MultiModel.Phys.a FROM MultiModel.Phys", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("a")}); 
+                            Arrays.asList("a")});
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), new BasicSourceCapabilities());
         assertEquals(3, dataMgr.getCommandHistory().size());
     }
-    
+
     @Test public void testCountStar() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -658,50 +658,50 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
         dataMgr.addData("SELECT COUNT(*) FROM Phys AS g_0", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList(2)}); 
-        
+                            Arrays.asList(2)});
+
         BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
         bsc.setFunctionSupport("ifnull", true);
-        
+
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
     }
-    
+
     @Test public void testGroupByCountPushdownMultiSource() throws Exception {
         String userSql = "SELECT s.e1, m.e1, COUNT(*) FROM pm1.g1 AS s INNER JOIN pm2.g2 AS m ON s.e2 = m.e2 GROUP BY s.e1, m.e1";
-        
+
         HardcodedDataManager hdm = new HardcodedDataManager();
-        hdm.addData("SELECT g_0.e2, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e2", 
+        hdm.addData("SELECT g_0.e2, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e2",
                 Arrays.asList(1, 2));
-        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0",
                 Arrays.asList(1, "other"));
-        
+
         BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
         bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
-        
+
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
-        
+
         final List<?>[] expected = new List<?>[] {
                 Arrays.asList("a", "other", 2),
                 Arrays.asList("b", "other", 2),
             };
-        
+
         VDBMetaData vdb = new VDBMetaData();
         vdb.setName("exampleMultiBinding");
         vdb.setVersion(1);
-        
+
         ModelMetaData model = new ModelMetaData();
         model.setName("pm1");
         model.setModelType(Model.Type.PHYSICAL);
         model.setVisible(true);
-        
+
         model.setSupportsMultiSourceBindings(true);
         model.addProperty(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME, "e1");
         vdb.addModel(model);
-        
+
         helpTestMultiSourcePlan(metadata, userSql, "pm1", 2, hdm, expected, vdb, null, new Options().implicitMultiSourceJoin(false), bsc);
     }
-    
+
     @Test public void testNonPartitionedDistinct() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -714,14 +714,14 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
         dataMgr.addData("SELECT DISTINCT g_0.a FROM Phys AS g_0", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("a")}); 
-        
+                            Arrays.asList("a")});
+
         BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        
+
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
     }
-    
+
     @Test public void testOtherPartitionedGroupBy() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -735,13 +735,13 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
         dataMgr.addData("SELECT MAX(g_0.a) FROM Phys1 AS g_0 GROUP BY g_0.c", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("a")}); 
-        
+                            Arrays.asList("a")});
+
         BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
-        
+
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
     }
-    
+
     @Test public void testNotPartitionedGroupBy() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
@@ -754,11 +754,11 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
         dataMgr.addData("SELECT g_0.b, MAX(g_0.a) FROM Phys1 AS g_0 GROUP BY g_0.b", //$NON-NLS-1$
                         new List<?>[] {
-                            Arrays.asList("b", "a")}); 
-        
+                            Arrays.asList("b", "a")});
+
         BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
-        
+
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
     }
-    
+
 }

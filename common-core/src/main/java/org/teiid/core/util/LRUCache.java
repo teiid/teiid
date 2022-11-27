@@ -30,29 +30,29 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
      * Default amount of space in the cache
      */
     protected static final int DEFAULT_SPACELIMIT = 100;
-	
-	protected int maxSize;
-	
+
+    protected int maxSize;
+
     /**
-     * Creates a new cache.  Size of cache is defined by 
+     * Creates a new cache.  Size of cache is defined by
      * <code>DEFAULT_SPACELIMIT</code>.
      */
     public LRUCache() {
         this(DEFAULT_SPACELIMIT);
     }
-	
-	public LRUCache(int maxSize) {
-		super(16, .75f, true);
-		this.maxSize = maxSize;
-	}
-	
-	@Override
-	protected boolean removeEldestEntry(Entry<K, V> eldest) {
-		return size() > maxSize;
-	}
 
-	public int getSpaceLimit() {
-		return maxSize;
-	}
+    public LRUCache(int maxSize) {
+        super(16, .75f, true);
+        this.maxSize = maxSize;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Entry<K, V> eldest) {
+        return size() > maxSize;
+    }
+
+    public int getSpaceLimit() {
+        return maxSize;
+    }
 
 }

@@ -34,21 +34,21 @@ import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
 
 @SuppressWarnings("nls")
 public class TestProcedureExecution {
-	
-	private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
 
-	@Test public void testProcedureName() throws Exception {
-		Call command = (Call)translationUtility.parseCommand("exec getupdated('foo', {d '1970-01-01'}, {d '1990-01-01'})"); //$NON-NLS-1$
-		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
-		UpdatedResult ur = new UpdatedResult();
-		ur.setIDs(Arrays.asList("1", "2"));
-		Mockito.stub(sfc.getUpdated(Mockito.eq("foo"), (Calendar)Mockito.anyObject(), (Calendar)Mockito.anyObject())).toReturn(ur);
-		ProcedureExecutionParentImpl pepi = new ProcedureExecutionParentImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
-		pepi.execute();
-		assertNotNull(pepi.next());
-		assertNotNull(pepi.next());
-		assertNull(pepi.next());
-		pepi.close();
-	}
-	
+    private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
+
+    @Test public void testProcedureName() throws Exception {
+        Call command = (Call)translationUtility.parseCommand("exec getupdated('foo', {d '1970-01-01'}, {d '1990-01-01'})"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        UpdatedResult ur = new UpdatedResult();
+        ur.setIDs(Arrays.asList("1", "2"));
+        Mockito.stub(sfc.getUpdated(Mockito.eq("foo"), (Calendar)Mockito.anyObject(), (Calendar)Mockito.anyObject())).toReturn(ur);
+        ProcedureExecutionParentImpl pepi = new ProcedureExecutionParentImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
+        pepi.execute();
+        assertNotNull(pepi.next());
+        assertNotNull(pepi.next());
+        assertNull(pepi.next());
+        pepi.close();
+    }
+
 }

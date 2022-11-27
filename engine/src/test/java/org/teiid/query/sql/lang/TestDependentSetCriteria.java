@@ -26,18 +26,18 @@ import junit.framework.TestCase;
 
 
 
-/** 
+/**
  */
 public class TestDependentSetCriteria extends TestCase {
 
-    /** 
-     * 
+    /**
+     *
      */
     public TestDependentSetCriteria() {
         super();
     }
 
-    /** 
+    /**
      * @param name
      */
     public TestDependentSetCriteria(String name) {
@@ -47,27 +47,27 @@ public class TestDependentSetCriteria extends TestCase {
     private DependentSetCriteria example() {
         ElementSymbol e1 = new ElementSymbol("pm1.g1.e1"); //$NON-NLS-1$
         DependentSetCriteria dsc = new DependentSetCriteria(e1, ""); //$NON-NLS-1$
-        
+
         final ElementSymbol e2 = new ElementSymbol("pm2.g1.e2"); //$NON-NLS-1$
         dsc.setValueExpression(e2);
-        
+
         return dsc;
     }
-    
+
     public void testEquivalence() {
         DependentSetCriteria dsc = example();
-        
-        UnitTestUtil.helpTestEquivalence(0, dsc, dsc);            
-        UnitTestUtil.helpTestEquivalence(0, dsc, dsc.clone());            
+
+        UnitTestUtil.helpTestEquivalence(0, dsc, dsc);
+        UnitTestUtil.helpTestEquivalence(0, dsc, dsc.clone());
     }
-    
+
     public void testEquivalence1() {
         DependentSetCriteria dsc = example();
         DependentSetCriteria dsc1 = example();
-        
+
         dsc1.setValueExpression(new ElementSymbol("foo")); //$NON-NLS-1$
-        
+
         assertNotSame(dsc, dsc1);
     }
-    
+
 }

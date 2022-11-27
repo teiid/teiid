@@ -28,67 +28,67 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class SetClause implements LanguageObject {
-	
-	private static final long serialVersionUID = 8174681510498719451L;
-	
-	private ElementSymbol symbol;
-	private Expression value;
-	
-	public SetClause(ElementSymbol symbol, Expression value) {
-		ArgCheck.isNotNull(symbol);
-		ArgCheck.isNotNull(value);
-		this.symbol = symbol;
-		this.value = value;
-	}
 
-	public ElementSymbol getSymbol() {
-		return symbol;
-	}
+    private static final long serialVersionUID = 8174681510498719451L;
 
-	public void setSymbol(ElementSymbol symbol) {
-		this.symbol = symbol;
-	}
+    private ElementSymbol symbol;
+    private Expression value;
 
-	public Expression getValue() {
-		return value;
-	}
+    public SetClause(ElementSymbol symbol, Expression value) {
+        ArgCheck.isNotNull(symbol);
+        ArgCheck.isNotNull(value);
+        this.symbol = symbol;
+        this.value = value;
+    }
 
-	public void setValue(Expression value) {
-		this.value = value;
-	}
+    public ElementSymbol getSymbol() {
+        return symbol;
+    }
 
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
-	@Override
-	public Object clone() {
-		return new SetClause((ElementSymbol)symbol.clone(), (Expression)value.clone());
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-    	if(this == obj) {
-    		return true;
-		}
+    public void setSymbol(ElementSymbol symbol) {
+        this.symbol = symbol;
+    }
 
-    	if(!(obj instanceof SetClause)) {
-    		return false;
-		}
+    public Expression getValue() {
+        return value;
+    }
 
-    	SetClause other = (SetClause) obj;
-    	
-    	return this.symbol.equals(other.symbol) && this.value.equals(other.value);
-	}
-	
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(symbol.hashCode(), value.hashCode());
-	}
+    public void setValue(Expression value) {
+        this.value = value;
+    }
+
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
+    @Override
+    public Object clone() {
+        return new SetClause((ElementSymbol)symbol.clone(), (Expression)value.clone());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+
+        if(!(obj instanceof SetClause)) {
+            return false;
+        }
+
+        SetClause other = (SetClause) obj;
+
+        return this.symbol.equals(other.symbol) && this.value.equals(other.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(symbol.hashCode(), value.hashCode());
+    }
 
 }

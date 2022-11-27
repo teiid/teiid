@@ -31,7 +31,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 
 
-/** 
+/**
  * @since 4.2
  */
 @SuppressWarnings("nls")
@@ -43,11 +43,11 @@ public class ResultSetUtil {
     private static final String MORE = "$ ";
 
     public static void printResultSet(ResultSet rs) throws SQLException, IOException {
-    	PrintWriter pw = new PrintWriter(System.out);
-    	printResultSet(rs, 100, true, pw);
-    	pw.flush();
+        PrintWriter pw = new PrintWriter(System.out);
+        printResultSet(rs, 100, true, pw);
+        pw.flush();
     }
-    
+
     /**
      * Prints the ResultSet (and optionally the ResultSetMetaData) to a stream. If you're using the stream from getPrintStream(),
      * then you can also compare data with expected results.
@@ -56,7 +56,7 @@ public class ResultSetUtil {
      * @param printMetadata
      * @param out
      * @throws SQLException
-     * @throws IOException 
+     * @throws IOException
      * @since 4.2
      */
     public static void printResultSet(ResultSet rs, int maxColWidth, boolean printMetadata, Writer out) throws SQLException, IOException {
@@ -93,14 +93,14 @@ public class ResultSetUtil {
             for (int j = 1; j <= count; j++) {
                 Object obj = rs.getObject(j);
                 if (obj instanceof SQLXML) {
-                	obj = ((SQLXML)obj).getString();
+                    obj = ((SQLXML)obj).getString();
                 } else if (obj instanceof Clob) {
-                	obj = "Clob[" + ((Clob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                    obj = "Clob[" + ((Clob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
                 } else if (obj instanceof Blob) {
-                	obj = "Blob[" + ((Blob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                    obj = "Blob[" + ((Blob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 if (maxColWidth == 0) {
-                    out.append(obj == null ? NULL : obj.toString()); 
+                    out.append(obj == null ? NULL : obj.toString());
                     if (j != count) out.append(SPACER);
                 } else {
                     String resizedString = resizeString(obj, sizes[j-1]);
@@ -116,7 +116,7 @@ public class ResultSetUtil {
         out.append("Row Count : " + totalRows).append("\n"); //$NON-NLS-1$
         if (printMetadata) printResultSetMetadata(rsmd, out);
     }
-    
+
     private static String[] METADATA_METHODS = {
         "getColumnName", //$NON-NLS-1$
         "getColumnType", //$NON-NLS-1$
@@ -139,13 +139,13 @@ public class ResultSetUtil {
         "isSigned", //$NON-NLS-1$
         "isWritable", //$NON-NLS-1$
     };
-    
+
     /**
      * Prints the ResultSetMetaData values for each column
      * @param rsmd
      * @param out
      * @throws SQLException
-     * @throws IOException 
+     * @throws IOException
      * @since 4.2
      */
     public static void printResultSetMetadata(ResultSetMetaData rsmd, Writer out) throws SQLException, IOException {
@@ -166,13 +166,13 @@ public class ResultSetUtil {
                 try {
                     Method m = RSMD.getMethod(METADATA_METHODS[i], params);
                     Object obj = m.invoke(rsmd, columnParam);
-                    String stringVal = (obj == null) ? NULL : obj.toString(); 
+                    String stringVal = (obj == null) ? NULL : obj.toString();
                     metadataStrings[col - 1][i] = stringVal;
-                    if (maxColWidths[i] < stringVal.length()) { 
+                    if (maxColWidths[i] < stringVal.length()) {
                         maxColWidths[i] = stringVal.length();
                     }
                 } catch (Throwable t) {
-                    
+
                 }
             }
         }
@@ -198,7 +198,7 @@ public class ResultSetUtil {
 
     private static String resizeString(Object obj, int size) {
         if (obj == null) {
-            return resizeString(NULL, size); 
+            return resizeString(NULL, size);
         }
         String str = obj.toString();
         if (str.length() == size) {
@@ -209,7 +209,7 @@ public class ResultSetUtil {
             return str.substring(0, size) + MORE;
         }
     }
-    
+
     private static String pad(String str, int padding) {
         StringBuffer buf = new StringBuffer(str);
         for (int i = 0; i < padding; i++) {

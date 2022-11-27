@@ -20,25 +20,25 @@ package org.teiid.jdbc;
 
 
 public class RequestOptions {
-	
-	/**
-	 * true indicates that the query should be re-executed upon completion, such that
-	 * the current Executions and CommandContext are reused.
-	 * Continuous queries must be forward-only and return a result set.
-	 */
-	private boolean continuous;
-	
-	public boolean isContinuous() {
-		return continuous;
-	}
-	
-	public RequestOptions continuous(boolean isContinuous) {
-		this.continuous = isContinuous;
-		return this;
-	}
-	
-	public void setContinuous(boolean continuous) {
-		this.continuous = continuous;
-	}
+
+    /**
+     * true indicates that the query should be re-executed upon completion, such that
+     * the current Executions and CommandContext are reused.
+     * Continuous queries must be forward-only and return a result set.
+     */
+    private boolean continuous;
+
+    public boolean isContinuous() {
+        return continuous;
+    }
+
+    public RequestOptions continuous(boolean isContinuous) {
+        this.continuous = isContinuous;
+        return this;
+    }
+
+    public void setContinuous(boolean continuous) {
+        this.continuous = continuous;
+    }
 
 }

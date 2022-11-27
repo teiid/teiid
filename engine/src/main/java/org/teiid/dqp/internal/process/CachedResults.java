@@ -40,85 +40,85 @@ import org.teiid.query.sql.lang.Command;
 
 
 public class CachedResults implements Serializable, Cachable {
-	private static final long serialVersionUID = -5603182134635082207L;
-	
-	private transient Command command;
-	private transient TupleBuffer results;
+    private static final long serialVersionUID = -5603182134635082207L;
 
-	private String uuid;
-	private boolean hasLobs;
-	private int rowLimit;
-	
-	private AccessInfo accessInfo = new AccessInfo();
-	
-	public String getId() {
-		return this.uuid;
-	}
-	
-	public TupleBuffer getResults() {
-		return results;
-	}
-	
-	public void setResults(TupleBuffer results, ProcessorPlan plan) {
-		this.results = results;
-		this.uuid = results.getId();
-		this.hasLobs = results.isLobs();
-		if (plan != null) {
-			this.accessInfo.populate(plan.getContext(), true);
-		}
-	}
-	
-	public void setCommand(Command command) {
-		this.command = command;
-	}
-	
-	public synchronized Command getCommand(String sql, QueryMetadataInterface metadata, ParseInfo info) throws QueryParserException, QueryResolverException, TeiidComponentException {
-		if (command == null) {
-			command = QueryParser.getQueryParser().parseCommand(sql, info);
-		}
-		QueryResolver.resolveCommand(command, metadata);
-		return command;
-	}
+    private transient Command command;
+    private transient TupleBuffer results;
 
-	@Override
-	public boolean prepare(TupleBufferCache bufferManager) {
-		Assertion.assertTrue(!this.results.isForwardOnly());
-		bufferManager.distributeTupleBuffer(this.results.getId(), results);
-		return true;
-	}
+    private String uuid;
+    private boolean hasLobs;
+    private int rowLimit;
 
-	@Override
-	public synchronized boolean restore(TupleBufferCache bufferManager) {
-		if (this.results == null) {
-			if (this.hasLobs) {
-				return false; //the lob store is local only and not distributed
-			}
-			TupleBuffer buffer = bufferManager.getTupleBuffer(this.uuid);
-			if (buffer != null) {
-				this.results = buffer;
-			}
-			
-			try {
-				this.accessInfo.restore();
-			} catch (TeiidException e) {
-				LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30025));
-				return false;
-			}
-		}
-		return (this.results != null);
-	}	
-	
-	@Override
-	public AccessInfo getAccessInfo() {
-		return accessInfo;
-	}
-	
-	public int getRowLimit() {
-		return rowLimit;
-	}
-	
-	public void setRowLimit(int rowLimit) {
-		this.rowLimit = rowLimit;
-	}
-	
+    private AccessInfo accessInfo = new AccessInfo();
+
+    public String getId() {
+        return this.uuid;
+    }
+
+    public TupleBuffer getResults() {
+        return results;
+    }
+
+    public void setResults(TupleBuffer results, ProcessorPlan plan) {
+        this.results = results;
+        this.uuid = results.getId();
+        this.hasLobs = results.isLobs();
+        if (plan != null) {
+            this.accessInfo.populate(plan.getContext(), true);
+        }
+    }
+
+    public void setCommand(Command command) {
+        this.command = command;
+    }
+
+    public synchronized Command getCommand(String sql, QueryMetadataInterface metadata, ParseInfo info) throws QueryParserException, QueryResolverException, TeiidComponentException {
+        if (command == null) {
+            command = QueryParser.getQueryParser().parseCommand(sql, info);
+        }
+        QueryResolver.resolveCommand(command, metadata);
+        return command;
+    }
+
+    @Override
+    public boolean prepare(TupleBufferCache bufferManager) {
+        Assertion.assertTrue(!this.results.isForwardOnly());
+        bufferManager.distributeTupleBuffer(this.results.getId(), results);
+        return true;
+    }
+
+    @Override
+    public synchronized boolean restore(TupleBufferCache bufferManager) {
+        if (this.results == null) {
+            if (this.hasLobs) {
+                return false; //the lob store is local only and not distributed
+            }
+            TupleBuffer buffer = bufferManager.getTupleBuffer(this.uuid);
+            if (buffer != null) {
+                this.results = buffer;
+            }
+
+            try {
+                this.accessInfo.restore();
+            } catch (TeiidException e) {
+                LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30025));
+                return false;
+            }
+        }
+        return (this.results != null);
+    }
+
+    @Override
+    public AccessInfo getAccessInfo() {
+        return accessInfo;
+    }
+
+    public int getRowLimit() {
+        return rowLimit;
+    }
+
+    public void setRowLimit(int rowLimit) {
+        this.rowLimit = rowLimit;
+    }
+
 }

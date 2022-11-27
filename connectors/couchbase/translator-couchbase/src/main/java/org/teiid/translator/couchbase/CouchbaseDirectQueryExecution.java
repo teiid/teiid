@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.InputStreamFactory;
@@ -43,28 +41,24 @@ import org.teiid.translator.TranslatorException;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseDirectQueryExecution extends CouchbaseExecution implements ProcedureExecution {
-    
+
     private List<Argument> arguments;
-    
+
     private Iterator<N1qlQueryRow> results;
 
     public CouchbaseDirectQueryExecution(List<Argument> arguments, Command command, CouchbaseExecutionFactory executionFactory, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) {
         super(executionFactory, executionContext, metadata, connection);
         this.arguments = arguments;
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         String n1ql = (String)this.arguments.get(0).getArgumentValue().getValue();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
         executionContext.logCommand(n1ql);
-        try {
-            this.results = connection.execute(n1ql).iterator();
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
-        }
+        this.results = connection.execute(n1ql).iterator();
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         ArrayList<Object[]> returns = new ArrayList<>(1);
@@ -83,7 +77,7 @@ public class CouchbaseDirectQueryExecution extends CouchbaseExecution implements
         } else {
             return null;
         }
-        
+
     }
 
     @Override

@@ -43,31 +43,31 @@ import org.teiid.query.util.CommandContext;
 
 
 
-/** 
+/**
  * Node that batches commands sent to the DataManager.
  * @since 4.2
  */
 public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
-    
+
     private static final List<Integer> ZERO_COUNT_TUPLE = Arrays.asList(Integer.valueOf(0));
 
     /** The commands in this batch. */
     private List<Command> updateCommands;
     private List<VariableContext> contexts;
     private List<Boolean> shouldEvaluate;
-    
+
     /** The model name within the scope of which these commands are being executed. */
     private String modelName;
     /** The tuple source containing the update counts after the batch has been executed. */
     private TupleSource tupleSource;
-    
+
     /** Set containing the indexes of commands that weren't executed. */
     private boolean[] unexecutedCommands;
 
-	private int commandCount;
-    
+    private int commandCount;
+
     /**
-     *  
+     *
      * @param nodeID
      * @param commands The Commands in this batch
      * @param modelName The name of the model. All the commands in this batch must update groups only within this model.
@@ -81,7 +81,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         this.modelName = modelName;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.relational.RelationalNode#open()
      * @since 4.2
      */
@@ -94,8 +94,8 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
             Command updateCommand = (Command)updateCommands.get(i).clone();
             CommandContext context = this.getContext();
             if (this.contexts != null && !this.contexts.isEmpty()) {
-            	context = context.clone();
-            	context.setVariableContext(this.contexts.get(i));
+                context = context.clone();
+                context.setVariableContext(this.contexts.get(i));
             }
             boolean needProcessing = false;
             if(shouldEvaluate != null && shouldEvaluate.get(i)) {
@@ -117,9 +117,9 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
             tupleSource = getDataManager().registerRequest(getContext(), command, modelName, new RegisterRequestParameter(null, getID(), -1));
         }
     }
-    
-    /** 
-     * @throws TeiidProcessingException 
+
+    /**
+     * @throws TeiidProcessingException
      * @see org.teiid.query.processor.relational.RelationalNode#nextBatchDirect()
      * @since 4.2
      */
@@ -145,19 +145,19 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         return pullBatch();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.relational.RelationalNode#close()
      * @since 4.2
      */
     public void closeDirect() {
-    	super.closeDirect();
+        super.closeDirect();
         if (tupleSource != null) {
-        	tupleSource.closeSource();
-        	tupleSource = null;
+            tupleSource.closeSource();
+            tupleSource = null;
         }
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.relational.RelationalNode#reset()
      * @since 4.2
      */
@@ -167,8 +167,8 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         unexecutedCommands = null;
         commandCount = 0;
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#clone()
      * @since 4.2
      */
@@ -177,22 +177,22 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         super.copyTo(clonedNode);
         return clonedNode;
     }
-    
+
     @Override
     public Collection<? extends LanguageObject> getObjects() {
-    	return null;
+        return null;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	return null;
+        return null;
     }
-    
+
     @Override
     public PlanNode getDescriptionProperties() {
-    	PlanNode node = super.getDescriptionProperties();
-    	AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_SQL, this.updateCommands);
-    	return node;
+        PlanNode node = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_SQL, this.updateCommands);
+        return node;
     }
 
 }

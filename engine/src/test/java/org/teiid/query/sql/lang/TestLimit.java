@@ -24,7 +24,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Reference;
 
 
-/** 
+/**
  * @since 4.3
  */
 public class TestLimit extends TestCase {
@@ -34,13 +34,13 @@ public class TestLimit extends TestCase {
         assertEquals(new Constant(new Integer(50)), limit.getOffset());
         assertEquals(new Constant(new Integer(50)), limit.getOffset()); // Idempotent
     }
-    
+
     public void testGetRowLimit() {
         Limit limit = new Limit(new Constant(new Integer(10)), new Constant(new Integer(30)));
         assertEquals(new Constant(new Integer(30)), limit.getRowLimit());
         assertEquals(new Constant(new Integer(30)), limit.getRowLimit());
     }
-    
+
     public void testEquals() {
         Limit limit1 = new Limit(new Constant(new Integer(100)), new Constant(new Integer(50)));
         Limit limit2 = new Limit(new Constant(new Integer(100)), new Constant(new Integer(50)));
@@ -65,14 +65,14 @@ public class TestLimit extends TestCase {
         assertFalse(limit8.equals(limit9));
         assertFalse(limit5.equals(limit9));
     }
-    
+
     public void testHashcode() {
         // Ensure that the hashcode for offset = null and offset = 0 are the same.
         Limit limit1 = new Limit(null, new Constant(new Integer(50)));
         Limit limit2 = new Limit(new Constant(new Integer(0)), new Constant(new Integer(50)));
         assertEquals(limit1.hashCode(), limit2.hashCode());
     }
-    
+
     public void testClone() {
         Limit limit = new Limit(new Constant(new Integer(100)), new Constant(new Integer(50)));
         Limit clone = (Limit)limit.clone();
@@ -81,12 +81,12 @@ public class TestLimit extends TestCase {
         assertEquals(new Constant(new Integer(100)), clone.getOffset());
         assertEquals(new Constant(new Integer(50)), clone.getRowLimit());
     }
-    
+
     public void testToString() {
         assertEquals("LIMIT 50", new Limit(null, new Constant(new Integer(50))).toString()); //$NON-NLS-1$
         assertEquals("LIMIT 100, 50", new Limit(new Constant(new Integer(100)), new Constant(new Integer(50))).toString()); //$NON-NLS-1$
         assertEquals("LIMIT ?, ?", new Limit(new Reference(0), new Reference(1)).toString()); //$NON-NLS-1$
         assertEquals("LIMIT -1, ?", new Limit(new Constant(new Integer(-1)), new Reference(1)).toString()); //$NON-NLS-1$
     }
-    
+
 }

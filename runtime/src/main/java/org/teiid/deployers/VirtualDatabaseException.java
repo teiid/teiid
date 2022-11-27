@@ -25,8 +25,8 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class VirtualDatabaseException extends TeiidProcessingException {
 
-	private static final long serialVersionUID = -6654557123904497650L;
-	public static final String NO_MODELS = "1"; //$NON-NLS-1$
+    private static final long serialVersionUID = -6654557123904497650L;
+    public static final String NO_MODELS = "1"; //$NON-NLS-1$
     public static final String MODEL_NON_DEPLOYABLE_STATE = "2";  //$NON-NLS-1$
     public static final String VDB_NON_DEPLOYABLE_STATE = "3";  //$NON-NLS-1$
 
@@ -36,7 +36,7 @@ public class VirtualDatabaseException extends TeiidProcessingException {
     public VirtualDatabaseException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -63,11 +63,10 @@ public class VirtualDatabaseException extends TeiidProcessingException {
      */
     public VirtualDatabaseException(Exception e) {
         super(e);
-    }    
+    }
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param code A code denoting the exception
      * @param e An exception to nest within this one
      */
     public VirtualDatabaseException( Exception e, String message ) {
@@ -80,7 +79,7 @@ public class VirtualDatabaseException extends TeiidProcessingException {
      *
      * @param e An exception to nest within this one
      * @param message A message describing the exception
-     * @param code A code denoting the exception
+     * @param event A code denoting the exception
      */
     public VirtualDatabaseException(BundleUtil.Event event, Exception e, String message ) {
         super(event, e, message );

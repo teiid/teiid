@@ -82,14 +82,14 @@ public class RulePushLargeIn implements OptimizerRule {
                 case NodeConstants.Types.SELECT:
                     break;
                 default:
-                    break accessLoop; 
+                    break accessLoop;
                 }
                 childAccess = childAccess.getFirstChild();
             }
             if (childAccess.getType() != NodeConstants.Types.ACCESS) {
                 continue;
             }
-            
+
             //use a dummy value to test if we can raise
             critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new SetCriteria(setCriteria.getExpression(), Collections.EMPTY_LIST));
             boolean canRaise = RuleRaiseAccess.canRaiseOverSelect(childAccess, metadata, capabilitiesFinder, critNode, analysisRecord);
@@ -97,18 +97,18 @@ public class RulePushLargeIn implements OptimizerRule {
             if (!canRaise) {
                 continue;
             }
-            
+
             //push the crit node and mark as dependent set
             critNode.getParent().replaceChild(critNode, critNode.getFirstChild());
             childAccess.addAsParent(critNode);
             RuleRaiseAccess.performRaise(plan, childAccess, critNode);
-            
+
             childAccess.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, true);
             childAccess.setProperty(NodeConstants.Info.EST_CARDINALITY, null);
         }
         return plan;
     }
-    
+
     @Override
     public String toString() {
         return "PushLargeIn"; //$NON-NLS-1$

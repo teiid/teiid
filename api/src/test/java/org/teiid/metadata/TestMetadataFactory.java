@@ -32,32 +32,32 @@ import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 @SuppressWarnings("nls")
 public class TestMetadataFactory {
 
-	@Test public void testSchemaProperties() {
-		ModelMetaData mmd = new ModelMetaData();
-		mmd.setName("foo");
-		mmd.addProperty("teiid_rel:data-ttl", "1");
-		MetadataFactory mf = new MetadataFactory("x", 1, Collections.EMPTY_MAP, mmd);
-		Schema s = mf.getSchema();
-		assertEquals("foo", s.getName());
-		String val = s.getProperty(DataModifiable.DATA_TTL, false);
-		assertEquals("1", val);
-	}
-	
-	@Test public void testCreateFunction() throws NoSuchMethodException, SecurityException {
-		FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", TestMetadataFactory.class.getMethod("someFunction"));
-		assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
-		
-		fm = MetadataFactory.createFunctionFromMethod("x", TestMetadataFactory.class.getMethod("someArrayFunction"));
-		assertEquals(String[].class, fm.getOutputParameter().getJavaType());
-	}
-	
-	@Test public void testCreateAggregateFunction() throws NoSuchMethodException, SecurityException {
-		FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", MyUDAF.class.getMethod("addInput", String.class));
-		assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
-		assertNotNull(fm.getAggregateAttributes());
-	}
-	
-	@Test public void testCorrectName() {
+    @Test public void testSchemaProperties() {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("foo");
+        mmd.addProperty("teiid_rel:data-ttl", "1");
+        MetadataFactory mf = new MetadataFactory("x", 1, Collections.EMPTY_MAP, mmd);
+        Schema s = mf.getSchema();
+        assertEquals("foo", s.getName());
+        String val = s.getProperty(DataModifiable.DATA_TTL, false);
+        assertEquals("1", val);
+    }
+
+    @Test public void testCreateFunction() throws NoSuchMethodException, SecurityException {
+        FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", TestMetadataFactory.class.getMethod("someFunction"));
+        assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
+
+        fm = MetadataFactory.createFunctionFromMethod("x", TestMetadataFactory.class.getMethod("someArrayFunction"));
+        assertEquals(String[].class, fm.getOutputParameter().getJavaType());
+    }
+
+    @Test public void testCreateAggregateFunction() throws NoSuchMethodException, SecurityException {
+        FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", MyUDAF.class.getMethod("addInput", String.class));
+        assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
+        assertNotNull(fm.getAggregateAttributes());
+    }
+
+    @Test public void testCorrectName() {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("foo");
         HashMap<String, Datatype> types = new HashMap<String, Datatype>();
@@ -69,8 +69,8 @@ public class TestMetadataFactory {
         Column c = factory.addColumn("a.b", "string", x);
         assertEquals("a_b", c.getName());
     }
-	
-	@Test public void testDuplicateColumns() {
+
+    @Test public void testDuplicateColumns() {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("foo");
         mmd.addProperty("importer.renameDuplicateColumns", "true");
@@ -85,7 +85,7 @@ public class TestMetadataFactory {
         c = factory.addColumn("a_B", "string", x);
         assertEquals("a_B_1", c.getName());
     }
-	
+
     @Test public void testDuplicateTables() {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("foo");
@@ -102,7 +102,7 @@ public class TestMetadataFactory {
         Table x2 = factory.addTable("X");
         assertEquals("X_2", x2.getName());
     }
-    
+
     @Test public void testDuplicateProcedure() {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("foo");
@@ -119,32 +119,32 @@ public class TestMetadataFactory {
         Procedure x2 = factory.addProcedure("X");
         assertEquals("X_2", x2.getName());
     }
-	
-	public static boolean someFunction() {
-		return true;
-	}
-	
-	public static String[] someArrayFunction() {
-		return null;
-	}
-	
-	public static class MyUDAF implements UserDefinedAggregate<Boolean> {
-		@Override
-		public Boolean getResult(CommandContext commandContext) {
-			return null;
-		}
-		
-		@Override
-		public void reset() {
-			
-		}
-		
-		public void addInput(String val) {
-			
-		}
-	}
-	
-	@Test public void testNameFormat() {
+
+    public static boolean someFunction() {
+        return true;
+    }
+
+    public static String[] someArrayFunction() {
+        return null;
+    }
+
+    public static class MyUDAF implements UserDefinedAggregate<Boolean> {
+        @Override
+        public Boolean getResult(CommandContext commandContext) {
+            return null;
+        }
+
+        @Override
+        public void reset() {
+
+        }
+
+        public void addInput(String val) {
+
+        }
+    }
+
+    @Test public void testNameFormat() {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("foo");
         mmd.addProperty("importer.nameFormat", "x_%s_y");
@@ -152,9 +152,13 @@ public class TestMetadataFactory {
         MetadataFactory factory = new MetadataFactory("x", 1, types, mmd);
         Table x = factory.addTable("x");
         assertEquals("x_x_y", x.getName());
-        
+
         Procedure p = factory.addProcedure("a%b.c");
         assertEquals("x_a%b.c_y", p.getName());
     }
-	
+
+    @Test public void testPropertyKey() {
+        assertEquals("teiid_rest:key", NamespaceContainer.resolvePropertyKey("{http://teiid.org/rest}key"));
+    }
+
 }

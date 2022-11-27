@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="sample" version="1">
+    <property name="cache-metadata" value="true" />
+    <property name="{http://teiid.org/rest}auto-generate" value="true"/>
+    
+    <model name="Txns">
+        <source name="text-connector" translator-name="loopback" />
+         <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE G1 (e1 string, e2 integer);
+                CREATE FOREIGN TABLE G2 (e1 string, e2 integer);
+        ]]> </metadata>
+    </model>
+    <model name="View" type ="VIRTUAL">
+         <metadata type="DDL"><![CDATA[
+            CREATE VIRTUAL PROCEDURE g1Table(IN p1 integer) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'g1/{p1}')
+            AS
+            BEGIN
+                SELECT XMLELEMENT(NAME sample.g1Table.p1, XMLATTRIBUTES (g1Table.p1 as p1), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;
+            END        
+            CREATE VIRTUAL PROCEDURE g2Table() RETURNS TABLE (xml_out string) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'g2')
+            AS
+            BEGIN
+                SELECT '{ "age":100, "name":test,messages:["msg1","msg2","msg3"]}' as xml_out;
+            END                    
+            ]]> </metadata>
+    </model>
+
+</vdb>

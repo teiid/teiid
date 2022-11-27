@@ -28,95 +28,95 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class OrderByItem implements LanguageObject {
-	
-	private static final long serialVersionUID = 6937561370697819126L;
-	
-	private Integer expressionPosition; //set during resolving to the select clause position
-	private boolean ascending = true;
-	private Expression symbol;
-	private NullOrdering nullOrdering;
 
-	public OrderByItem(Expression symbol, boolean ascending) {
-		setSymbol(symbol);
-		this.ascending = ascending;
-	}
-	
-	public int getExpressionPosition() {
-		return expressionPosition == null?-1:expressionPosition;
-	}
+    private static final long serialVersionUID = 6937561370697819126L;
 
-	public void setExpressionPosition(int expressionPosition) {
-		this.expressionPosition = expressionPosition;
-	}
+    private Integer expressionPosition; //set during resolving to the select clause position
+    private boolean ascending = true;
+    private Expression symbol;
+    private NullOrdering nullOrdering;
 
-	public boolean isAscending() {
-		return ascending;
-	}
+    public OrderByItem(Expression symbol, boolean ascending) {
+        setSymbol(symbol);
+        this.ascending = ascending;
+    }
 
-	public void setAscending(boolean ascending) {
-		this.ascending = ascending;
-	}
+    public int getExpressionPosition() {
+        return expressionPosition == null?-1:expressionPosition;
+    }
 
-	public Expression getSymbol() {
-		return symbol;
-	}
+    public void setExpressionPosition(int expressionPosition) {
+        this.expressionPosition = expressionPosition;
+    }
 
-	public void setSymbol(Expression symbol) {
-		if (symbol != null && !(symbol instanceof Symbol) && !(symbol instanceof Constant)) {
-			symbol = new ExpressionSymbol("expr", symbol); //$NON-NLS-1$
-		}
-		this.symbol = symbol;
-	}
-	
-	public NullOrdering getNullOrdering() {
-		return nullOrdering;
-	}
-	
-	public void setNullOrdering(NullOrdering nullOrdering) {
-		this.nullOrdering = nullOrdering;
-	}
+    public boolean isAscending() {
+        return ascending;
+    }
 
-	/**
-	 * 
-	 * @return true if the expression does not appear in the select clause
-	 */
-	public boolean isUnrelated() {
-		return getExpressionPosition() == -1;
-	}
+    public void setAscending(boolean ascending) {
+        this.ascending = ascending;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public OrderByItem clone() {
-		OrderByItem clone = new OrderByItem((Expression)this.symbol.clone(), ascending);
-		clone.expressionPosition = this.expressionPosition;
-		clone.nullOrdering = this.nullOrdering;
-		return clone;
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof OrderByItem)) {
-			return false;
-		}
-		OrderByItem o = (OrderByItem)obj;
-		return o.symbol.equals(symbol) && o.ascending == this.ascending && o.nullOrdering == this.nullOrdering;
-	}
-	
-	@Override
-	public int hashCode() {
-		return symbol.hashCode();
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
+    public Expression getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(Expression symbol) {
+        if (symbol != null && !(symbol instanceof Symbol) && !(symbol instanceof Constant)) {
+            symbol = new ExpressionSymbol("expr", symbol); //$NON-NLS-1$
+        }
+        this.symbol = symbol;
+    }
+
+    public NullOrdering getNullOrdering() {
+        return nullOrdering;
+    }
+
+    public void setNullOrdering(NullOrdering nullOrdering) {
+        this.nullOrdering = nullOrdering;
+    }
+
+    /**
+     *
+     * @return true if the expression does not appear in the select clause
+     */
+    public boolean isUnrelated() {
+        return getExpressionPosition() == -1;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public OrderByItem clone() {
+        OrderByItem clone = new OrderByItem((Expression)this.symbol.clone(), ascending);
+        clone.expressionPosition = this.expressionPosition;
+        clone.nullOrdering = this.nullOrdering;
+        return clone;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof OrderByItem)) {
+            return false;
+        }
+        OrderByItem o = (OrderByItem)obj;
+        return o.symbol.equals(symbol) && o.ascending == this.ascending && o.nullOrdering == this.nullOrdering;
+    }
+
+    @Override
+    public int hashCode() {
+        return symbol.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
 }

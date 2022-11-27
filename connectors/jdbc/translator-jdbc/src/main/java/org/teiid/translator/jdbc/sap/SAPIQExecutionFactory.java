@@ -31,30 +31,30 @@ import org.teiid.util.Version;
  */
 @Translator(name="sap-iq", description="A translator for hte Sybase/SAP IQ and Database")
 public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
-	
-	public static final Version FIFTEEN_4 = Version.getVersion("15.4"); //$NON-NLS-1$
-	
-	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
+
+    public static final Version FIFTEEN_4 = Version.getVersion("15.4"); //$NON-NLS-1$
+
+    protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
 
     private Boolean jConnectDriver;
-	
-	public SAPIQExecutionFactory() {
-		setSupportsFullOuterJoins(false);
-		setMaxInCriteriaSize(250);
-		setMaxDependentInPredicates(7);
-	}
-	
+
+    public SAPIQExecutionFactory() {
+        setSupportsFullOuterJoins(false);
+        setMaxInCriteriaSize(250);
+        setMaxDependentInPredicates(7);
+    }
+
     public void start() throws TranslatorException {
         super.start();
-        
-    	registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()) {
-    		@Override
-    		public List<?> translate(Function function) {
-    			function.setName("||"); //$NON-NLS-1$
-    			return super.translate(function);
-    		}
-    	});
-    	registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("STRING")); //$NON-NLS-1$
+
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()) {
+            @Override
+            public List<?> translate(Function function) {
+                function.setName("||"); //$NON-NLS-1$
+                return super.translate(function);
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("STRING")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new TemplateFunctionModifier("DATEPART(dy,",0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier());
@@ -63,7 +63,7 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, this.getLanguageFactory()).supportsQuarter(true).literalPart(false));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier(SourceSystemFunctions.COALESCE));
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
-            
+
             @Override
             public List<?> translate(Function function) {
                 List<Expression> params = function.getParameters();
@@ -73,32 +73,32 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
                 return null;
             }
         });
-        
+
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.setBooleanNullable(booleanNullable());
         convertModifier.addNumericBooleanConversions();
         //boolean isn't treated as bit, since it doesn't support null
         //byte is treated as smallint, since tinyint is unsigned
-    	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("numeric(38, 0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varbinary", FunctionModifier.VARBINARY); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new FunctionModifier() {
+        convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+        convertModifier.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("numeric(38, 0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varbinary", FunctionModifier.VARBINARY); //$NON-NLS-1$
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
                 return convertTimeToString(function);
             }
-        }); 
+        });
         convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
@@ -111,21 +111,21 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
                 return convertTimestampToString(function);
             }
         });
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
-    
+
     private List<Object> convertTimeToString(Function function) {
         return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 8)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     protected List<Object> convertDateToString(Function function) {
         return Arrays.asList("stuff(stuff(convert(varchar, ", function.getParameters().get(0), ", 102), 5, 1, '-'), 8, 1, '-')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     protected List<?> convertTimestampToString(Function function) {
         return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 121)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -140,7 +140,7 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("COS"); //$NON-NLS-1$
         supportedFunctions.add("COT"); //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
-        supportedFunctions.add(SourceSystemFunctions.CONCAT); 
+        supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.CONCAT2);
         supportedFunctions.add("DEGREES"); //$NON-NLS-1$
         supportedFunctions.add("EXP"); //$NON-NLS-1$
@@ -149,7 +149,7 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
-        supportedFunctions.add(SourceSystemFunctions.LCASE); 
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("LOG"); //$NON-NLS-1$
         supportedFunctions.add("LOG10"); //$NON-NLS-1$
@@ -161,8 +161,8 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("SIN"); //$NON-NLS-1$
         supportedFunctions.add("SQRT"); //$NON-NLS-1$
         supportedFunctions.add("TAN"); //$NON-NLS-1$
-        
-        supportedFunctions.add(SourceSystemFunctions.REPEAT); 
+
+        supportedFunctions.add(SourceSystemFunctions.REPEAT);
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
         supportedFunctions.add("RIGHT"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
@@ -193,7 +193,7 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         return supportedFunctions;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
@@ -203,83 +203,83 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
     public boolean supportsFunctionsInGroupBy() {
         return true;
     }
-    
+
     @Override
     public int getMaxFromGroups() {
         return 50;
-    } 
-    
+    }
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
-    
+
     public boolean booleanNullable() {
-    	return false;
+        return false;
     }
-    
+
     @Override
     public String translateLiteralTime(Time timeValue) {
-    	return "CAST('" + formatDateValue(timeValue) +"' AS TIME)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "CAST('" + formatDateValue(timeValue) +"' AS TIME)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-    	return "CAST('" + formatDateValue(timestampValue) +"' AS TIMESTAMP)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "CAST('" + formatDateValue(timestampValue) +"' AS TIMESTAMP)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralDate(Date dateValue) {
-    	return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
-	@Override
-	public boolean supportsRowLimit() {
-		return getVersion().compareTo(FIFTEEN_4) >= 0; 
-	}
 
-	@Override
-	protected boolean usesDatabaseVersion() {
-		return true;
-	}
-	
+    @Override
+    public boolean supportsRowLimit() {
+        return getVersion().compareTo(FIFTEEN_4) >= 0;
+    }
+
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
+
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
-    	return "org.hibernate.dialect.SybaseAnywhereDialect"; //$NON-NLS-1$
+        return "org.hibernate.dialect.SybaseAnywhereDialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsGroupByRollup() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean useUnicodePrefix() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean hasTimeType() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public boolean useAsInGroupAlias() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public void initCapabilities(Connection connection)
             throws TranslatorException {
         try {
             this.jConnectDriver = connection.getMetaData().getDriverName().contains("jConnect"); //$NON-NLS-1$
             if (this.jConnectDriver) {
-                //jConnect does not use the correct bind logic 
+                //jConnect does not use the correct bind logic
                 setUseBindVariables(false);
                 setUseBindingsForDependentJoin(false);
             }
@@ -288,14 +288,14 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         }
         super.initCapabilities(connection);
     }
-    
+
     public boolean isSourceRequiredForCapabilities() {
         return super.isSourceRequiredForCapabilities() || jConnectDriver == null;
     }
-    
+
     @Override
     public boolean useParensForJoins() {
         return true;
     }
-	
+
 }

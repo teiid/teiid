@@ -34,21 +34,21 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class DynamicCommand extends Command {
 
     private Expression sql;
-    
+
     private List asColumns;
-    
+
     private GroupSymbol intoGroup;
-    
+
     private int updatingModelCount;
-    
+
     private SetClauseList using;
-    
+
     private boolean asClauseSet;
-        
+
     public DynamicCommand() {
         super();
     }
-    
+
     public DynamicCommand(Expression sql, List columns, GroupSymbol intoGroup, SetClauseList using) {
         super();
         this.sql = sql;
@@ -57,18 +57,18 @@ public class DynamicCommand extends Command {
         this.using = using;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.lang.QueryCommand#clone()
      */
     public Object clone() {
         DynamicCommand clone = new DynamicCommand();
-        
+
         clone.setSql((Expression)getSql().clone());
         if (asColumns != null) {
             List<ElementSymbol> cloneColumns = LanguageObject.Util.deepClone(asColumns, ElementSymbol.class);
             clone.setAsColumns(cloneColumns);
         }
-        
+
         if (intoGroup != null) {
             clone.setIntoGroup(intoGroup.clone());
         }
@@ -76,23 +76,23 @@ public class DynamicCommand extends Command {
         if (using != null) {
             clone.setUsing((SetClauseList)using.clone());
         }
-        
+
         clone.setUpdatingModelCount(getUpdatingModelCount());
         copyMetadataState(clone);
         clone.setAsClauseSet(isAsClauseSet());
         return clone;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.lang.Command#getType()
      */
     public int getType() {
         return Command.TYPE_DYNAMIC;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.lang.Command#getProjectedSymbols()
-     * 
+     *
      * Once past resolving, an EMPTY set of project columns indicates that the
      * project columns of the actual command do not need to be checked during
      * processing.
@@ -101,21 +101,21 @@ public class DynamicCommand extends Command {
         if (intoGroup != null) {
             return Command.getUpdateCommandSymbol();
         }
-        
+
         if (asColumns != null) {
             return asColumns;
         }
-        
+
         return Collections.EMPTY_LIST;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.lang.Command#areResultsCachable()
      */
     public boolean areResultsCachable() {
         return false;
     }
-    
+
     public void setUpdatingModelCount(int count) {
         if (count < 0) {
             count = 0;
@@ -124,19 +124,19 @@ public class DynamicCommand extends Command {
         }
         this.updatingModelCount = count;
     }
-    
+
     public int getUpdatingModelCount() {
         return this.updatingModelCount;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.LanguageObject#acceptVisitor(org.teiid.query.sql.LanguageVisitor)
      */
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
-    /** 
+
+    /**
      * @return Returns the columns.
      */
     public List getAsColumns() {
@@ -146,77 +146,77 @@ public class DynamicCommand extends Command {
         return this.asColumns;
     }
 
-    /** 
+    /**
      * @param columns The columns to set.
      */
     public void setAsColumns(List columns) {
         this.asColumns = columns;
     }
-    
-    /** 
+
+    /**
      * @return Returns the intoGroup.
      */
     public GroupSymbol getIntoGroup() {
         return this.intoGroup;
     }
-    
-    /** 
+
+    /**
      * @param intoGroup The intoGroup to set.
      */
     public void setIntoGroup(GroupSymbol intoGroup) {
         this.intoGroup = intoGroup;
     }
-    
-    /** 
+
+    /**
      * @return Returns the sql.
      */
     public Expression getSql() {
         return this.sql;
     }
-    
-    /** 
+
+    /**
      * @param sql The sql to set.
      */
     public void setSql(Expression sql) {
         this.sql = sql;
     }
-            
-    /** 
+
+    /**
      * @return Returns the using.
      */
     public SetClauseList getUsing() {
         return this.using;
     }
-    
-    /** 
+
+    /**
      * @param using The using to set.
      */
     public void setUsing(SetClauseList using) {
         this.using = using;
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof DynamicCommand)) {
             return false;
         }
-        
+
         DynamicCommand other = (DynamicCommand)obj;
-        
-        return this.updatingModelCount == other.updatingModelCount && 
+
+        return this.updatingModelCount == other.updatingModelCount &&
         EquivalenceUtil.areEqual(getAsColumns(), other.getAsColumns()) &&
         EquivalenceUtil.areEqual(getSql(), other.getSql()) &&
         EquivalenceUtil.areEqual(getIntoGroup(), other.getIntoGroup()) &&
         EquivalenceUtil.areEqual(getUsing(), other.getUsing());
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
@@ -225,40 +225,40 @@ public class DynamicCommand extends Command {
         myHash = HashCodeUtil.hashCode(myHash, this.asColumns);
         return myHash;
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#toString()
      */
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
 
-    /** 
+    /**
      * @return Returns the asClauseSet.
      */
     public boolean isAsClauseSet() {
         return this.asClauseSet;
     }
 
-    /** 
+    /**
      * @param asClauseSet The asClauseSet to set.
      */
     public void setAsClauseSet(boolean asClauseSet) {
         this.asClauseSet = asClauseSet;
     }
-    
+
     @Override
     public boolean returnsResultSet() {
-    	return intoGroup == null;
+        return intoGroup == null;
     }
-    
+
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public List<? extends Expression> getResultSetColumns() {
-    	if (returnsResultSet()) {
-    		return asColumns;
-    	}
-    	return Collections.emptyList();
+        if (returnsResultSet()) {
+            return asColumns;
+        }
+        return Collections.emptyList();
     }
 
 }

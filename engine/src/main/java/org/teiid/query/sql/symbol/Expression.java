@@ -22,15 +22,15 @@ import org.teiid.query.sql.LanguageObject;
 
 /**
  * This is the interface for an expression in a SQL string.  Expressions can be of several
- * types (see subclasses), but all expressions have a type.  These types are used for 
+ * types (see subclasses), but all expressions have a type.  These types are used for
  * type checking.
  */
 public interface Expression extends LanguageObject {
 
-	/**
-	 * Get the return type of this expression. 
-	 * @return Java class may be null prior to being resolved
-	 */
-	Class<?> getType();
-		
+    /**
+     * Get the return type of this expression.
+     * @return Java class may be null prior to being resolved
+     */
+    Class<?> getType();
+
 }

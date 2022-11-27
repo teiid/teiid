@@ -2,26 +2,22 @@
     <parent>
         <artifactId>teiid-parent</artifactId>
         <groupId>org.teiid</groupId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.teiid</groupId>
+
     <modelVersion>4.0.0</modelVersion>
     <artifactId>teiid-olingo</artifactId>
     <name>teiid-olingo</name>
     <description>Teiid OData4 Server module</description>
-    <packaging>bundle</packaging>
+    
+    <properties>
+	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	    -->
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
     
     <build>
         <plugins>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>      
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -72,22 +68,22 @@
 
         <dependency>
             <groupId>org.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.teiid</groupId>
-            <artifactId>teiid-olingo-patches</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.teiid</groupId>
             <artifactId>teiid-olingo-common</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-server-api</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-api</artifactId>
+        </dependency>        
+
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-core</artifactId>
         </dependency>
 
         <dependency>
@@ -106,23 +102,18 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss.spec.javax.servlet</groupId>
-            <artifactId>jboss-servlet-api_3.1_spec</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
         
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
                 
         <!--  runtime dependencies -->
 
-        <!-- odata-server-core runtime dependencies -->
-        <dependency>
-            <groupId>com.fasterxml</groupId>
-            <artifactId>aalto-xml</artifactId>
-        </dependency> 
-        
+        <!-- odata-server-core runtime dependencies -->      
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -137,13 +128,12 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>
-                                
-        <!-- aalto-xml runtime dependency -->
+        
 		<dependency>
 		    <groupId>org.codehaus.woodstox</groupId>
 		    <artifactId>stax2-api</artifactId>
 		</dependency>
-
+		
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.teiid</groupId>
@@ -163,12 +153,6 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>                
-                </exclusion>
-            </exclusions>            
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -201,16 +185,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <dependency>
-          <groupId>org.jboss.spec.javax.transaction</groupId>
-          <artifactId>jboss-transaction-api_1.2_spec</artifactId>
-          <scope>test</scope>
-        </dependency>        
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-            <scope>test</scope>
-        </dependency>        
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>

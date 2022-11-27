@@ -1,0 +1,36 @@
+string                                                             clob                                                             
+Name                                                               Body                                                             
+GEOGRAPHY_COLUMNS                                                  Clob[555]                                                        
+GEOMETRY_COLUMNS                                                   Clob[551]                                                        
+information_schema.columns                                         Clob[1148]                                                       
+information_schema.key_column_usage                                Clob[176]                                                        
+information_schema.referential_constraints                         Clob[252]                                                        
+information_schema.table_constraints                               Clob[233]                                                        
+information_schema.tables                                          Clob[153]                                                        
+information_schema.views                                           Clob[129]                                                        
+matpg_datatype                                                     Clob[1560]                                                       
+pg_am                                                              Clob[34]                                                         
+pg_attrdef                                                         Clob[273]                                                        
+pg_attribute                                                       Clob[1724]                                                       
+pg_class                                                           Clob[815]                                                        
+pg_constraint                                                      Clob[349]                                                        
+pg_database                                                        Clob[167]                                                        
+pg_description                                                     Clob[26]                                                         
+pg_index                                                           Clob[476]                                                        
+pg_inherits                                                        Clob[49]                                                         
+pg_namespace                                                       Clob[94]                                                         
+pg_prepared_xacts                                                  Clob[55]                                                         
+pg_proc                                                            Clob[7248]                                                       
+pg_rewrite                                                         Clob[49]                                                         
+pg_roles                                                           Clob[43]                                                         
+pg_stats                                                           Clob[49]                                                         
+pg_tables                                                          Clob[158]                                                        
+pg_tablespace                                                      Clob[61]                                                         
+pg_trigger                                                         Clob[188]                                                        
+pg_type                                                            Clob[2100]                                                       
+pg_user                                                            Clob[95]                                                         
+spatial_ref_sys                                                    Clob[209]                                                        
+Row Count : 30
+getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
+Name           12             PartsSupplier   java.lang.String    Name            string             SYSADMIN       Views         255                   255           0         false            true             false       false                 0           true        true          false     false       
+Body           2005           PartsSupplier   java.sql.Clob       Body            clob               SYSADMIN       Views         2097152               2097152       0         false            true             false       false                 0           true        true          false     false       

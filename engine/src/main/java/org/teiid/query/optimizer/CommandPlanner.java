@@ -31,28 +31,27 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * <p>The common interface of all planners which take a user's command 
- * object and produce a 
- * {@link org.teiid.query.processor.ProcessorPlan ProcessorPlan} 
- * object, which is a plan for executing the query.</p>
+ * <p>The common interface of all planners which take a user's command
+ * object and produce a
+ * {@link org.teiid.query.processor.ProcessorPlan ProcessorPlan}
+ * object, which is a plan for executing the query.
  */
 public interface CommandPlanner {
-	
-	/**
-	 * Allows the planner a chance to optimize the canonical plan(s) stored in
-	 * the CommandTreeNode tree.  This method should be called in a bottom-up
-	 * manner; from leaf nodes up to the root node.
-	 * @param command TODO
-	 * @param metadata source of metadata
-	 * @param capFinder Class usable to find the connector capabilities for a particular model
-	 * @param context 
-	 * @param debug whether or not to generate verbose debug output during planning
-	 * @return ProcessorPlan implementation specific to the CommandPlanner
+
+    /**
+     * Allows the planner a chance to optimize the canonical plan(s) stored in
+     * the CommandTreeNode tree.  This method should be called in a bottom-up
+     * manner; from leaf nodes up to the root node.
+     * @param command TODO
+     * @param metadata source of metadata
+     * @param capFinder Class usable to find the connector capabilities for a particular model
+     * @param context
+     * @return ProcessorPlan implementation specific to the CommandPlanner
      * @throws QueryPlannerException indicating a problem in planning
      * @throws QueryMetadataException indicating an exception in accessing the metadata
      * @throws TeiidComponentException indicating an unexpected exception
-	 */
-	ProcessorPlan optimize(Command command, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
-	throws QueryPlannerException, QueryMetadataException, TeiidComponentException;
+     */
+    ProcessorPlan optimize(Command command, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
+    throws QueryPlannerException, QueryMetadataException, TeiidComponentException;
 
 }

@@ -27,41 +27,41 @@ import org.teiid.core.types.TransformationException;
 
 public class StringToBigIntegerTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		try {
-			return new BigInteger(((String)value).trim());
-		} catch(NumberFormatException e) {
-			  throw new TransformationException(CorePlugin.Event.TEIID10081, CorePlugin.Util.gs(CorePlugin.Event.TEIID10081, value));
-		}
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        try {
+            return new BigInteger(((String)value).trim());
+        } catch(NumberFormatException e) {
+              throw new TransformationException(CorePlugin.Event.TEIID10081, CorePlugin.Util.gs(CorePlugin.Event.TEIID10081, value));
+        }
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
-		return String.class;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class getSourceType() {
+        return String.class;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class getTargetType() {
-		return BigInteger.class;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class getTargetType() {
+        return BigInteger.class;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
 
 }

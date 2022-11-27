@@ -41,8 +41,8 @@ import org.teiid.translator.jdbc.intersyscache.InterSystemsCacheExecutionFactory
 public class TestInterSystemsCacheTranslation {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
-    
-    private static InterSystemsCacheExecutionFactory TRANSLATOR; 
+
+    private static InterSystemsCacheExecutionFactory TRANSLATOR;
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
@@ -52,36 +52,36 @@ public class TestInterSystemsCacheTranslation {
     }
 
     public String helpGetString(Expression expr) throws Exception {
-        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
-        
-        return sqlVisitor.toString();        
+        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor();
+        sqlVisitor.append(expr);
+
+        return sqlVisitor.toString();
     }
 
     public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
         Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            Arrays.asList( 
+            Arrays.asList(
                 srcExpression,
                 LANG_FACTORY.createLiteral(tgtType, String.class)),
             TypeFacility.getDataTypeClass(tgtType));
-        
-        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$ 
-            expectedExpression, helpGetString(func)); 
+
+        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$
+            expectedExpression, helpGetString(func));
     }
 
     // Source = STRING
     @Test public void testStringToChar() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("5", String.class), "char", "cast('5' AS character)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-        
+
     // Source = Boolean
 
     @Test public void testBooleanToBigDecimal() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "cast(1 AS decimal(38,19))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     // Source = BYTE
-    
+
     @Test public void testByteToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -93,11 +93,11 @@ public class TestInterSystemsCacheTranslation {
     @Test public void testBigIntegerToDouble() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testBigIntegerDecimal() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "biginteger", "cast(1 AS decimal(19,0))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     // Source = FLOAT
 
     @Test public void testFloatToLong() throws Exception {
@@ -105,13 +105,13 @@ public class TestInterSystemsCacheTranslation {
     }
 
     // Source = DOUBLE
-    
+
     @Test public void testDoubleToShort() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "short", "cast(1.2 AS smallint)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = BIGDECIMAL
-    
+
     @Test public void testBigDecimalToByte() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "byte", "cast(1.0 AS tinyint)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -130,9 +130,9 @@ public class TestInterSystemsCacheTranslation {
 
 
     // Source = TIMESTAMP
-    
+
     @Test public void testTimestampToString() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "cast(to_timestamp('2003-11-01 12:05:02.0', 'yyyy-mm-dd hh:mi:ss.fffffffff') AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -140,13 +140,13 @@ public class TestInterSystemsCacheTranslation {
     @Test public void testLongToBigInt() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(5, Long.class), "long", "cast(5 AS bigint)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testSubstring1() throws Exception {
         String input = "SELECT intnum/intkey FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT cast((SmallA.IntNum / SmallA.IntKey) AS integer) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
-                input, output, 
+                input, output,
                 TRANSLATOR);
     }
 

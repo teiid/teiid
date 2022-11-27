@@ -21,11 +21,11 @@ package org.teiid.query.sql.proc;
 import org.teiid.query.sql.symbol.Expression;
 
 public interface ExpressionStatement {
-	
-	Expression getExpression();
-	
-	void setExpression(Expression expr);
-	
-	Class<?> getExpectedType();
+
+    Expression getExpression();
+
+    void setExpression(Expression expr);
+
+    Class<?> getExpectedType();
 
 }

@@ -19,16 +19,16 @@ package org.teiid.translator.ldap;
 
 import javax.naming.directory.*;
 
-/** 
- * Utility class to maintain list of constants for the LDAPConnector. 
+/**
+ * Utility class to maintain list of constants for the LDAPConnector.
  * Please modify constants here; changes should be reflected throughout
- * the connector code. 
+ * the connector code.
  */
 public class LDAPConnectorConstants {
 
-	public static final String ldapDefaultSortName = "guid"; //$NON-NLS-1$
-	public static final int ldapDefaultSearchScope = SearchControls.ONELEVEL_SCOPE;
-	public static final boolean ldapDefaultIsAscending = true;
-		
-	public static final String ldapTimestampFormat = "yyyyMMddhhmmss\'Z\'"; //$NON-NLS-1$
+    public static final String ldapDefaultSortName = "guid"; //$NON-NLS-1$
+    public static final int ldapDefaultSearchScope = SearchControls.ONELEVEL_SCOPE;
+    public static final boolean ldapDefaultIsAscending = true;
+
+    public static final String ldapTimestampFormat = "yyyyMMddhhmmss\'Z\'"; //$NON-NLS-1$
 }

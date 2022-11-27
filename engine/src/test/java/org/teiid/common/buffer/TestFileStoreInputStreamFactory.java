@@ -30,15 +30,15 @@ import org.teiid.core.types.Streamable;
 @SuppressWarnings("nls")
 public class TestFileStoreInputStreamFactory {
 
-	@Test public void testInputStream() throws IOException {
-		FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test");
-		FileStoreInputStreamFactory factory = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-		OutputStream os = factory.getOuputStream(0);
-		os.write(new byte[2]);
-		os.close();
-		InputStream is = factory.getInputStream(0, 1);
-		is.read();
-		assertEquals(-1, is.read());
-	}
-	
+    @Test public void testInputStream() throws IOException {
+        FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test");
+        FileStoreInputStreamFactory factory = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+        OutputStream os = factory.getOuputStream(0);
+        os.write(new byte[2]);
+        os.close();
+        InputStream is = factory.getInputStream(0, 1);
+        is.read();
+        assertEquals(-1, is.read());
+    }
+
 }

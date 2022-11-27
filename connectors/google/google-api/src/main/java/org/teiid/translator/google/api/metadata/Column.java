@@ -20,31 +20,31 @@ package org.teiid.translator.google.api.metadata;
 
 
 public class Column {
-	private String alphaName;
-	private String label;
-	private SpreadsheetColumnType dataType = SpreadsheetColumnType.STRING;
+    private String alphaName;
+    private String label;
+    private SpreadsheetColumnType dataType = SpreadsheetColumnType.STRING;
 
-	public String getAlphaName() {
-		return alphaName;
-	}
+    public String getAlphaName() {
+        return alphaName;
+    }
 
-	public void setAlphaName(String alphaName) {
-		this.alphaName = alphaName;
-	}
-	
-	public String getLabel() {
-		return label;
-	}
-	
-	public void setLabel(String label) {
-		this.label = label;
-	}
+    public void setAlphaName(String alphaName) {
+        this.alphaName = alphaName;
+    }
 
-	public SpreadsheetColumnType getDataType() {
-		return dataType;
-	}
+    public String getLabel() {
+        return label;
+    }
 
-	public void setDataType(SpreadsheetColumnType dataType) {
-		this.dataType = dataType;
-	}
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public SpreadsheetColumnType getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(SpreadsheetColumnType dataType) {
+        this.dataType = dataType;
+    }
 }

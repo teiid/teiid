@@ -24,47 +24,47 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 
 /**
- * This class can do a simple null-->anything.  
- * Incoming value must be null and outgoing value is the same.  
+ * This class can do a simple null to anything.
+ * Incoming value must be null and outgoing value is the same.
  * This is purely for type purposes.
  */
 public class NullToAnyTransform extends Transform {
-	
-	public static final NullToAnyTransform INSTANCE = new NullToAnyTransform(Object.class);
 
-	private Class<?> targetType;
-	
-	public NullToAnyTransform(Class<?> targetType) {
-		this.targetType = targetType;
-	}
-	
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
+    public static final NullToAnyTransform INSTANCE = new NullToAnyTransform(Object.class);
+
+    private Class<?> targetType;
+
+    public NullToAnyTransform(Class<?> targetType) {
+        this.targetType = targetType;
+    }
+
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class getSourceType() {
         return NullType.class;
     }
-    
+
     /**
      * Type of the outgoing value.
      * @return Target type
      */
     public Class getTargetType() {
-    	return targetType;
+        return targetType;
     }
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value - Integer
-	 * @return Outgoing value - String
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		Assertion.isNull(value);
-		return null;
-	}
-	
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value - Integer
+     * @return Outgoing value - String
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        Assertion.isNull(value);
+        return null;
+    }
+
 }

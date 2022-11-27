@@ -29,6 +29,7 @@ import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
 import org.teiid.client.RequestMessage;
+import org.teiid.jdbc.ExecutionProperties.Values;
 import org.teiid.net.TeiidURL;
 
 /**
@@ -40,27 +41,27 @@ import org.teiid.net.TeiidURL;
  * and set using setter methods, and where the getter and setter methods follow the JavaBean
  * naming convention (e.g., <code>get</code><i>PropertyName</i><code>() : </code><i>PropertyType</i>
  * and <code>set</code><i>PropertyName</i><code>(</code><i>PropertyType</i><code>) : void</code>).
- * </p>
+ *
  * The {@link javax.sql.XADataSource} interface is almost identical to the {@link javax.sql.DataSource}
  * interface, but rather than returning {@link java.sql.Connection} instances, there are methods that
  * return {@link javax.sql.XAConnection} instances that can be used with distributed transactions.
  */
 public abstract class BaseDataSource extends WrapperImpl implements javax.sql.DataSource, XADataSource, ConnectionPoolDataSource, java.io.Serializable {
-	public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
-	
+    public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
+
     // constant indicating Virtual database name
-    public static final String VDB_NAME = TeiidURL.JDBC.VDB_NAME; 
+    public static final String VDB_NAME = TeiidURL.JDBC.VDB_NAME;
     // constant indicating Virtual database version
-    public static final String VDB_VERSION = TeiidURL.JDBC.VDB_VERSION; 
+    public static final String VDB_VERSION = TeiidURL.JDBC.VDB_VERSION;
     // constant for vdb version part of serverURL
-    public static final String VERSION = TeiidURL.JDBC.VERSION; 
+    public static final String VERSION = TeiidURL.JDBC.VERSION;
     // name of the application which is obtaining connection
-    public static final String APP_NAME = TeiidURL.CONNECTION.APP_NAME; 
+    public static final String APP_NAME = TeiidURL.CONNECTION.APP_NAME;
     // constant for username part of url
-    public static final String USER_NAME = TeiidURL.CONNECTION.USER_NAME; 
+    public static final String USER_NAME = TeiidURL.CONNECTION.USER_NAME;
     // constant for password part of url
-    public static final String PASSWORD = TeiidURL.CONNECTION.PASSWORD; 
-    
+    public static final String PASSWORD = TeiidURL.CONNECTION.PASSWORD;
+
     protected static final int DEFAULT_TIMEOUT = 0;
     protected static final int DEFAULT_LOG_LEVEL = 0;
 
@@ -118,33 +119,33 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 
     /** Support partial results mode or not.*/
     private String partialResultsMode;
-    
-    /** Default fetch size, <= 0 indicates not set. */
+
+    /** Default fetch size, &lt;= 0 indicates not set. */
     private int fetchSize = BaseDataSource.DEFAULT_FETCH_SIZE;
 
     /** Whether to use result set cache if it available **/
     private String resultSetCacheMode;
-    
+
     /**
      * The number of milliseconds before timing out.
      * This property is <i>optional</i> and defaults to "0" (meaning no time out).
      */
     private int loginTimeout;
-    
+
     private String showPlan;
-    
+
     private boolean noExec;
-    
+
     private String disableLocalTxn;
 
     private String transactionAutoWrap;
-    
+
     private boolean ansiQuotedIdentifiers = true;
-    
+
     private int queryTimeout;
-    
-    private boolean useJDBC4ColumnNameAndLabelSemantics = true; 
-    
+
+    private boolean useJDBC4ColumnNameAndLabelSemantics = true;
+
     /**
      * Reference to the logWriter, which is transient and is therefore not serialized with the DataSource.
      */
@@ -154,30 +155,30 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     protected static final int DEFAULT_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE;
     protected static final String DEFAULT_PARTIAL_RESULTS_MODE = "FALSE"; //$NON-NLS-1$
     protected static final String DEFAULT_RESULT_SET_CACHE_MODE = "FALSE"; //$NON-NLS-1$
-    
+
     /**
      * Transaction auto wrap constant - never wrap a command execution in a transaction
      * and allow multi-source updates to occur outside of a transaction.
      */
-    public static final String TXN_WRAP_OFF = ExecutionProperties.TXN_WRAP_OFF;
+    public static final String TXN_WRAP_OFF = Values.TXN_WRAP_OFF;
 
     /**
      * Transaction auto wrap constant - always wrap every non-transactional command
      * execution in a transaction.
      */
-    public static final String TXN_WRAP_ON = ExecutionProperties.TXN_WRAP_ON;
+    public static final String TXN_WRAP_ON = Values.TXN_WRAP_ON;
 
     /**
      * Transaction auto wrap constant - checks if a command
      * requires a transaction and will be automatically wrap it.
      */
-    public static final String TXN_WRAP_AUTO = ExecutionProperties.TXN_WRAP_DETECT;
+    public static final String TXN_WRAP_AUTO = Values.TXN_WRAP_DETECT;
 
     /**
      * String to hold additional properties that are not represented with an explicit getter/setter
      */
     private String additionalProperties;
-    
+
     /**
      * Constructor for MMDataSource.
      */
@@ -212,47 +213,47 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         if ( this.getApplicationName() != null && this.getApplicationName().trim().length() != 0 ) {
             props.setProperty(BaseDataSource.APP_NAME,this.getApplicationName());
         }
-        
+
         if (this.getPartialResultsMode() != null && this.getPartialResultsMode().trim().length() != 0) {
             props.setProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, this.getPartialResultsMode());
         }
-        
+
         if(this.getFetchSize() > 0) {
-            props.setProperty(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(this.getFetchSize())); 
+            props.setProperty(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(this.getFetchSize()));
         }
-        
+
         if (this.getQueryTimeout() > 0) {
-        	props.setProperty(ExecutionProperties.QUERYTIMEOUT, String.valueOf(this.getQueryTimeout()));
+            props.setProperty(ExecutionProperties.QUERYTIMEOUT, String.valueOf(this.getQueryTimeout()));
         }
 
         if (this.getResultSetCacheMode() != null && this.getResultSetCacheMode().trim().length() != 0) {
             props.setProperty(ExecutionProperties.RESULT_SET_CACHE_MODE, this.getResultSetCacheMode());
         }
-        
+
         if (this.getShowPlan() != null) {
             props.setProperty(ExecutionProperties.SQL_OPTION_SHOWPLAN, this.getShowPlan());
         }
-        
+
         if (this.isNoExec()) {
-        	props.setProperty(ExecutionProperties.NOEXEC, String.valueOf(this.isNoExec()));
+            props.setProperty(ExecutionProperties.NOEXEC, String.valueOf(this.isNoExec()));
         }
-        
+
         if ( this.getAutoCommitTxn() != null && this.getAutoCommitTxn().trim().length() != 0   ) {
             props.setProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, this.getAutoCommitTxn());
         }
-        
+
         if (this.getDisableLocalTxn() != null) {
             props.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, this.getDisableLocalTxn());
         }
-        
+
         if (!this.getUseJDBC4ColumnNameAndLabelSemantics()) {
-        	props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, Boolean.FALSE.toString());
+            props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, Boolean.FALSE.toString());
         }
-        
+
         if (this.additionalProperties != null) {
-        	JDBCURL.parseConnectionProperties(this.additionalProperties, props);
+            JDBCURL.parseConnectionProperties(this.additionalProperties, props);
         }
-                      
+
         return props;
     }
 
@@ -308,12 +309,12 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         if ( reason != null ) {
             throw new SQLException(reason);
         }
-        
+
         if (this.queryTimeout < 0) {
-        	throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Bad_timeout_value")); //$NON-NLS-1$
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Bad_timeout_value")); //$NON-NLS-1$
         }
-                
-        
+
+
     }
 
     // --------------------------------------------------------------------------------------------
@@ -329,93 +330,51 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     public Connection getConnection() throws java.sql.SQLException {
         return getConnection(null,null);
     }
-    
-    /** 
+
+    /**
      * @see javax.sql.XADataSource#getXAConnection()
      */
     public XAConnection getXAConnection() throws SQLException {
         return getXAConnection(null,null);
     }
-    
-    public PooledConnection getPooledConnection() throws SQLException {
-		return getPooledConnection(null, null);
-	}
 
-	public PooledConnection getPooledConnection(final String userName, final String password)
-			throws SQLException {
-		return getXAConnection(userName, password);
-	}
-	
+    public PooledConnection getPooledConnection() throws SQLException {
+        return getPooledConnection(null, null);
+    }
+
+    public PooledConnection getPooledConnection(final String userName, final String password)
+            throws SQLException {
+        return getXAConnection(userName, password);
+    }
+
     // --------------------------------------------------------------------------------------------
     //                        P R O P E R T Y   M E T H O D S
     // --------------------------------------------------------------------------------------------
 
-	public String getDisableLocalTxn() {
-		return disableLocalTxn;
-	}
+    public String getDisableLocalTxn() {
+        return disableLocalTxn;
+    }
 
-	public void setDisableLocalTxn(String disableLocalTxn) {
-		this.disableLocalTxn = disableLocalTxn;
-	}
+    public void setDisableLocalTxn(String disableLocalTxn) {
+        this.disableLocalTxn = disableLocalTxn;
+    }
 
-    /**
-     * Get the log writer for this data source.
-     * <p>
-     * The log writer is a character output stream to which all logging and tracing
-     * messages for this data source object instance will be printed. This includes
-     * messages printed by the methods of this object, messages printed by methods
-     * of other objects manufactured by this object, and so on. Messages printed
-     * to a data source specific log writer are not printed to the log writer
-     * associated with the {@link java.sql.DriverManager} class. When a DataSource object is
-     * created the log writer is initially null, in other words, logging is disabled.
-     * @return the log writer for this data source, null if disabled
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#getLogWriter()
-     */
+    @Override
     public PrintWriter getLogWriter() throws java.sql.SQLException{
         return this.logWriter;
     }
 
-    /**
-     * Gets the maximum time in seconds that this data source can wait while attempting
-     * to connect to a database. A value of zero means that the timeout is the default
-     * system timeout if there is one; otherwise it means that there is no timeout.
-     * When a DataSource object is created the login timeout is initially zero.
-     * @return the data source login time limit
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#getLoginTimeout()
-     */
+    @Override
     public int getLoginTimeout() {
         return this.loginTimeout;
     }
 
-    /**
-     * Set the log writer for this data source.
-     * <p>
-     * The log writer is a character output stream to which all logging and tracing
-     * messages for this data source object instance will be printed. This includes
-     * messages printed by the methods of this object, messages printed by methods
-     * of other objects manufactured by this object, and so on. Messages printed
-     * to a data source specific log writer are not printed to the log writer
-     * associated with the {@link java.sql.DriverManager} class. When a DataSource object is
-     * created the log writer is initially null, in other words, logging is disabled.
-     * @param writer the log writer for this data source, null if disabled
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#setLogWriter(java.io.PrintWriter)
-     */
+    @Override
     public void setLogWriter( final PrintWriter writer) throws java.sql.SQLException{
         this.logWriter = writer;
     }
 
-    /**
-     * Sets the maximum time in seconds that this data source can wait while attempting
-     * to connect to a database. A value of zero means that the timeout is the default
-     * system timeout if there is one; otherwise it means that there is no timeout.
-     * When a DataSource object is created the login timeout is initially zero.
-     * @param timeOut the data source login time limit
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#setLoginTimeout(int)
-     */
+    @Override
     public void setLoginTimeout( final int timeOut) throws java.sql.SQLException {
         this.loginTimeout = timeOut;
     }
@@ -481,7 +440,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-<     * Sets the name of the application.  Supplying this property may allow an administrator of a
+     * Sets the name of the application.  Supplying this property may allow an administrator of a
      * Teiid Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
      * @param applicationName The applicationName to set
@@ -555,7 +514,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     public int getFetchSize() {
         return this.fetchSize;
     }
-    
+
     public void setResultSetCacheMode(String resultSetCacheMode) {
         this.resultSetCacheMode = resultSetCacheMode;
     }
@@ -563,23 +522,23 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     public String getResultSetCacheMode() {
         return this.resultSetCacheMode;
     }
-    
+
     public String getShowPlan() {
-		return showPlan;
-	}
-    
+        return showPlan;
+    }
+
     public void setShowPlan(String showPlan) {
-		this.showPlan = showPlan;
-	}
-    
+        this.showPlan = showPlan;
+    }
+
     public void setNoExec(boolean noExec) {
-		this.noExec = noExec;
-	}
-    
+        this.noExec = noExec;
+    }
+
     public boolean isNoExec() {
-		return noExec;
-	}
-    
+        return noExec;
+    }
+
     /**
      * Returns the current setting for how connections are created by this DataSource manage transactions
      * for client requests when client applications do not use transactions.
@@ -591,9 +550,9 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * be used.
      */
     public String getAutoCommitTxn() {
-		return this.transactionAutoWrap;
-	}
-    
+        return this.transactionAutoWrap;
+    }
+
     /**
      * Sets the setting for how connections are created by this DataSource manage transactions
      * for client requests with autoCommit = true.
@@ -614,21 +573,20 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * This is the default mode.
      * The {@link #TXN_WRAP_AUTO} constant value is provided for convenience.</li>
      * </ul>
-     * </p>
      * @param transactionAutoWrap The transactionAutoWrap to set
      */
     public void setAutoCommitTxn(String transactionAutoWrap) {
-    	this.transactionAutoWrap = transactionAutoWrap;
+        this.transactionAutoWrap = transactionAutoWrap;
     }
-    
-    
-	public boolean getUseJDBC4ColumnNameAndLabelSemantics() {
-		return useJDBC4ColumnNameAndLabelSemantics;
-	}
 
-	public void setUseJDBC4ColumnNameAndLabelSemantics(boolean useJDBC4ColumnNameAndLabelSemantics) {
-		this.useJDBC4ColumnNameAndLabelSemantics = useJDBC4ColumnNameAndLabelSemantics;
-	}
+
+    public boolean getUseJDBC4ColumnNameAndLabelSemantics() {
+        return useJDBC4ColumnNameAndLabelSemantics;
+    }
+
+    public void setUseJDBC4ColumnNameAndLabelSemantics(boolean useJDBC4ColumnNameAndLabelSemantics) {
+        this.useJDBC4ColumnNameAndLabelSemantics = useJDBC4ColumnNameAndLabelSemantics;
+    }
 
     // --------------------------------------------------------------------------------------------
     //                  V A L I D A T I O N   M E T H O D S
@@ -655,7 +613,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * @see #setDatabaseName(String)
      */
     public static String reasonWhyInvalidDatabaseName( final String databaseName ) {
-        if ( databaseName == null || databaseName.trim().length() == 0 ) {                                  
+        if ( databaseName == null || databaseName.trim().length() == 0 ) {
             return JDBCPlugin.Util.getString("MMDataSource.Virtual_database_name_must_be_specified"); //$NON-NLS-1$
         }
         return null;
@@ -677,10 +635,10 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * if it is considered valid.
      * <p>
      * This method checks to see that the value is one of the allowable values.
-     * </p>
+     *
      * @param autoWrap a possible value for the auto wrap property.
      * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setTransactionAutoWrap(String)
+     * @see #setAutoCommitTxn(String)
      */
     public static String reasonWhyInvalidTransactionAutoWrap( final String autoWrap ) {
         if ( autoWrap == null || autoWrap.trim().length() == 0 ) {
@@ -701,7 +659,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
             TXN_WRAP_ON, TXN_WRAP_OFF, TXN_WRAP_AUTO };
         return JDBCPlugin.Util.getString("MMDataSource.Invalid_trans_auto_wrap_mode", params); //$NON-NLS-1$
     }
-         
+
     /**
      * Return the reason why the supplied virtual database version may be invalid, or null
      * if it is considered valid.
@@ -772,30 +730,30 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
         return null;
     }
-    
-	public void setAdditionalProperties(String additionalProperties) {
-		this.additionalProperties = additionalProperties;
-	}
 
-	public String getAdditionalProperties() {
-		return additionalProperties;
-	}
+    public void setAdditionalProperties(String additionalProperties) {
+        this.additionalProperties = additionalProperties;
+    }
 
-	public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
-		this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
-	}
+    public String getAdditionalProperties() {
+        return additionalProperties;
+    }
 
-	public boolean isAnsiQuotedIdentifiers() {
-		return ansiQuotedIdentifiers;
-	}
-	
-	public int getQueryTimeout() {
-		return queryTimeout;
-	}
-	
-	public void setQueryTimeout(int queryTimeout) {
-		this.queryTimeout = queryTimeout;
-	}
+    public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
+        this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
+    }
+
+    public boolean isAnsiQuotedIdentifiers() {
+        return ansiQuotedIdentifiers;
+    }
+
+    public int getQueryTimeout() {
+        return queryTimeout;
+    }
+
+    public void setQueryTimeout(int queryTimeout) {
+        this.queryTimeout = queryTimeout;
+    }
 
 }
 

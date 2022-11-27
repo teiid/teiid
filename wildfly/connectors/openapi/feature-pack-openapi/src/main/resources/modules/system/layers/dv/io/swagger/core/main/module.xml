@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="io.swagger.core">
+
+	<properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${io.swagger:swagger-jaxrs}"/>
+        <artifact name="${io.swagger:swagger-core}"/>
+        <artifact name="${io.swagger:swagger-annotations}"/>
+        <artifact name="${io.swagger:swagger-models}"/>
+        <artifact name="${io.swagger:swagger-parser}"/>
+        <artifact name="${io.swagger:swagger-compat-spec-parser}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser-v3}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser-v2-converter}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser-core}"/>
+        <artifact name="${io.swagger.core.v3:swagger-models}"/>
+        <artifact name="${io.swagger.core.v3:swagger-annotations}"/>
+        <artifact name="${io.swagger.core.v3:swagger-core}"/>
+    </resources>
+    
+    <dependencies>
+        <module name="org.reflections"/>
+        <module name="javax.ws.rs.api"/>
+        <module name="javax.servlet.api"/>
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="com.fasterxml.jackson.dataformat"/>
+        <module name="javax.api"/>
+        <module name="javax.validation.api"/>
+        <module name="com.google.guava"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.commons.commons-lang3"/>
+        <module name="javax.xml.bind.api"/>
+        <module name="org.apache.commons.io"/>
+    </dependencies>
+    
+</module>

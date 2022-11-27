@@ -36,34 +36,34 @@ import org.teiid.query.sql.symbol.Function;
  * <p>This visitor class will traverse a language object tree and collect all Function
  * references it finds.  It uses a collection to collect the Functions in so
  * different collections will give you different collection properties - for instance,
- * using a Set will remove duplicates.</p>
- * 
- * <p>This visitor can optionally collect functions of only a specific name</p>
+ * using a Set will remove duplicates.
+ *
+ * <p>This visitor can optionally collect functions of only a specific name
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor (and possibly the collection), run the visitor, and return the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class FunctionCollectorVisitor extends LanguageVisitor {
 
     private Collection<Function> functions;
-    
+
     private String functionName;
 
     /**
      * Construct a new visitor with the specified collection, which should
      * be non-null.
-     * @param elements Collection to use for elements
+     * @param functions Collection to use for functions
      * @throws IllegalArgumentException If elements is null
      */
-	public FunctionCollectorVisitor(Collection<Function> functions) {
+    public FunctionCollectorVisitor(Collection<Function> functions) {
         this(functions, null);
-	}
+    }
 
     /**
      * Construct a new visitor with the specified collection, which should
      * be non-null.
-     * @param elements Collection to use for elements
+     * @param functions Collection to use for functions
      * @throws IllegalArgumentException If elements is null
      */
     public FunctionCollectorVisitor(Collection<Function> functions, String functionName) {
@@ -72,8 +72,8 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
         }
         this.functions = functions;
         this.functionName = functionName;
-    }    
-    
+    }
+
     /**
      * Get the elements collected by the visitor.  This should best be called
      * after the visitor has been run on the language object tree.
@@ -97,16 +97,16 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
     /**
      * Helper to quickly get the elements from obj in the elements collection
      * @param obj Language object
-     * @param elements Collection to collect elements in
+     * @param functions Collection to collect functions in
      */
     public static final void getFunctions(LanguageObject obj, Collection<Function> functions) {
         getFunctions(obj, functions, false);
     }
-    
+
     /**
      * Helper to quickly get the elements from obj in the elements collection
      * @param obj Language object
-     * @param elements Collection to collect elements in
+     * @param functions Collection to collect functions in
      */
     public static final void getFunctions(LanguageObject obj, Collection<Function> functions, boolean deep) {
         FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(functions);
@@ -139,26 +139,26 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
         getFunctions(obj, functions, deep);
         return functions;
     }
-    
+
     /**
      * Checks to see if the object is non-deterministic
      * iff all function are non-deterministic, and all correlated subqueries are deterministic
      * @param ex
      * @return
      */
-	public static boolean isNonDeterministic(LanguageObject ex) {
-		Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
-		for (Function function : functions) {
-			if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
-				return true;
-			}
-		}
-		for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex)) {
-		    if (container.getCommand().getCorrelatedReferences() != null && isNonDeterministic(container.getCommand())) {
-	            return true;
-		    }
-		}
-		return false;
-	}
+    public static boolean isNonDeterministic(LanguageObject ex) {
+        Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
+        for (Function function : functions) {
+            if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
+                return true;
+            }
+        }
+        for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex)) {
+            if (container.getCommand().getCorrelatedReferences() != null && isNonDeterministic(container.getCommand())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

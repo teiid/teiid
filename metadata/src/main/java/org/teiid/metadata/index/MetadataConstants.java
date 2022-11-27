@@ -19,22 +19,22 @@ import org.teiid.core.util.StringUtil;
  * method needs to subtract 1 from the argument.
  */
 public final class MetadataConstants {
-    
-	/** Definition of not defined long type. */
+
+    /** Definition of not defined long type. */
     public static final long NOT_DEFINED_LONG = Long.MIN_VALUE;
-	/**  Definition of not defined int type. */
+    /**  Definition of not defined int type. */
     public static final int NOT_DEFINED_INT = Integer.MIN_VALUE;
-	/**  Definition of not defined short type. */
+    /**  Definition of not defined short type. */
     public static final short NOT_DEFINED_SHORT = Short.MIN_VALUE;
 
     public final static String BLANK = StringUtil.Constants.EMPTY_STRING;
-        
+
     //properties
     public static final String VERSION_DATE = "versionDate"; //$NON-NLS-1$
 
-	/**
-	 * These types are associated with a KEY, indicating the type of matching that can be performed on it.
-	 */
+    /**
+     * These types are associated with a KEY, indicating the type of matching that can be performed on it.
+     */
     public final static class MATCH_TYPES {
         public final static short FULL_MATCH    = 0;
         public final static short PARTIAL_MATCH = 1;
@@ -50,12 +50,12 @@ public final class MetadataConstants {
         return  MATCH_TYPES.TYPE_NAMES[type];
     }
 
-    
-	/**
-	 * These types indicate the type of KEY it is. 
-     * The values must be kept consistent with the values referenced in 
+
+    /**
+     * These types indicate the type of KEY it is.
+     * The values must be kept consistent with the values referenced in
      * KeyTypeEnumeration.properties in connector.metadata
-	 */
+     */
     public final static class KEY_TYPES {
         public final static short PRIMARY_KEY    = 0;
         public final static short FOREIGN_KEY    = 1;
@@ -75,8 +75,8 @@ public final class MetadataConstants {
     }
 
     /**
-     * These types indicate the type of COLUMN_SET it is. 
-     * The values must be kept consistent with the values referenced in 
+     * These types indicate the type of COLUMN_SET it is.
+     * The values must be kept consistent with the values referenced in
      * KeyTypeEnumeration.properties in connector.metadata
      */
     public final static class COLUMN_SET_TYPES {
@@ -97,11 +97,11 @@ public final class MetadataConstants {
         return  KEY_TYPES.TYPE_NAMES[type];
     }
 
-	/**
-	 * These types indicate the type of PROCEDURE it is. 
-     * The values must be kept consistent with the values referenced in 
+    /**
+     * These types indicate the type of PROCEDURE it is.
+     * The values must be kept consistent with the values referenced in
      * ProcTypeEnumeration.properties in connector.metadata
-	 */
+     */
     public final static class PROCEDURE_TYPES {
         public final static short FUNCTION         = 0;
         public final static short STORED_PROCEDURE = 1;
@@ -115,7 +115,7 @@ public final class MetadataConstants {
     }
 
     /**
-     * These types indicate the type of TRANSFORMATION it it. 
+     * These types indicate the type of TRANSFORMATION it it.
      */
     public final static class SQL_TRANSFORMATION_TYPES {
         public final static short MAPPING_DEFN            = 0;
@@ -135,11 +135,11 @@ public final class MetadataConstants {
         return SQL_TRANSFORMATION_TYPES.TYPE_NAMES[type];
     }
 
-	/**
-	 * These types indicate the type of  PROCEDURE_PARAMETER it is.
+    /**
+     * These types indicate the type of  PROCEDURE_PARAMETER it is.
      * The values must be kept consistent with the DirectionKind enumeration in the relational
      * metamodel and the values referenced in ProcParamDirectionEnumeration.properties in connector.metadata
-	 */
+     */
     public final static class PARAMETER_TYPES {
         public final static short IN_PARM      = 0;
         public final static short OUT_PARM     = 1;
@@ -155,12 +155,12 @@ public final class MetadataConstants {
     public final static String getParameterTypeName(short type) {
         return PARAMETER_TYPES.TYPE_NAMES[type];
     }
-    
-	/**
-	 * These types are associated with the Element having valid search types. 
+
+    /**
+     * These types are associated with the Element having valid search types.
      * The values must be kept consistent with the SearchabilityType enumeration in the relational
      * metamodel and the values referenced in SearchTypeEnumeration.properties in connector.metadata
-	 */
+     */
     public final static class SEARCH_TYPES {
         public final static short SEARCHABLE    = 0;
         public final static short ALLEXCEPTLIKE = 1;
@@ -175,11 +175,11 @@ public final class MetadataConstants {
         return SEARCH_TYPES.TYPE_NAMES[type];
     }
 
-	/**
-	 * A DataType object will be identified as being of one of these types.
-     * The values must be kept consistent with the values referenced in 
+    /**
+     * A DataType object will be identified as being of one of these types.
+     * The values must be kept consistent with the values referenced in
      * DatatypeTypeEnumeration.properties in connector.metadata
-	 */
+     */
     public final static class DATATYPE_TYPES {
         public final static short BASIC        = 0;
         public final static short USER_DEFINED = 1;
@@ -195,7 +195,7 @@ public final class MetadataConstants {
     /**
      * User defined DataType objects will be categorized by a variety
      * The values must be kept consistent with the XSDVariety enumeration in the xsd
-     * metamodel and the values referenced in DatatypeVarietyEnumeration.properties in 
+     * metamodel and the values referenced in DatatypeVarietyEnumeration.properties in
      * connector.metadata
      */
     public final static class DATATYPE_VARIETIES {
@@ -211,10 +211,10 @@ public final class MetadataConstants {
     public final static String getDataTypeVarietyName(short type) {
         return DATATYPE_VARIETIES.TYPE_NAMES[type];
     }
-    
-	/**
-	 * These types represent the type of table a Group is. 
-	 */
+
+    /**
+     * These types represent the type of table a Group is.
+     */
     public final static class TABLE_TYPES {
         public static final short TABLE_TYPE             = 0;
         public static final short VIEW_TYPE              = 1;
@@ -233,11 +233,11 @@ public final class MetadataConstants {
         return TABLE_TYPES.TYPE_NAMES[type];
     }
 
-	/**
-	 * These types are associated with a DataType or an Element needing the indication of null types. 
+    /**
+     * These types are associated with a DataType or an Element needing the indication of null types.
      * The values must be kept consistent with the NullableType enumeration in the relational
      * metamodel and the values referenced in NullTypeEnumeration.properties in connector.metadata
-	 */
+     */
     public final static class NULL_TYPES {
         public static final short NOT_NULL = 0;
         public static final short NULLABLE = 1;
@@ -247,36 +247,36 @@ public final class MetadataConstants {
                                                     "Unknown" }; //$NON-NLS-1$
     }
     //Record type Constants
-	public static class RECORD_TYPE {
-	    public final static char MODEL               = 'A';
-	    public final static char TABLE               = 'B';
-	    public final static char RESULT_SET          = 'C';
-	    public final static char JOIN_DESCRIPTOR     = 'D';
-	    public final static char CALLABLE            = 'E';
-	    public final static char CALLABLE_PARAMETER  = 'F';
-	    public final static char COLUMN              = 'G';
-	    public final static char ACCESS_PATTERN      = 'H';        
-	    public final static char UNIQUE_KEY          = 'I';
-	    public final static char FOREIGN_KEY         = 'J';
-	    public final static char PRIMARY_KEY         = 'K';                
-	    public final static char INDEX               = 'L';
-	    public final static char DATATYPE            = 'M';
-	    //public final static char DATATYPE_ELEMENT    = 'N';
-	    //public final static char DATATYPE_FACET      = 'O';
-	    public final static char SELECT_TRANSFORM    = 'P';
-	    public final static char INSERT_TRANSFORM    = 'Q';
-	    public final static char UPDATE_TRANSFORM    = 'R';
-	    public final static char DELETE_TRANSFORM    = 'S';
-	    public final static char PROC_TRANSFORM      = 'T';
-	    public final static char MAPPING_TRANSFORM   = 'U';
-	    public final static char VDB_ARCHIVE         = 'V';
-	    public final static char ANNOTATION          = 'W';
-	    public final static char PROPERTY            = 'X';
-	    public final static char FILE            	 = 'Z';
-	    public final static char RECORD_CONTINUATION = '&';
-	}
+    public static class RECORD_TYPE {
+        public final static char MODEL               = 'A';
+        public final static char TABLE               = 'B';
+        public final static char RESULT_SET          = 'C';
+        public final static char JOIN_DESCRIPTOR     = 'D';
+        public final static char CALLABLE            = 'E';
+        public final static char CALLABLE_PARAMETER  = 'F';
+        public final static char COLUMN              = 'G';
+        public final static char ACCESS_PATTERN      = 'H';
+        public final static char UNIQUE_KEY          = 'I';
+        public final static char FOREIGN_KEY         = 'J';
+        public final static char PRIMARY_KEY         = 'K';
+        public final static char INDEX               = 'L';
+        public final static char DATATYPE            = 'M';
+        //public final static char DATATYPE_ELEMENT    = 'N';
+        //public final static char DATATYPE_FACET      = 'O';
+        public final static char SELECT_TRANSFORM    = 'P';
+        public final static char INSERT_TRANSFORM    = 'Q';
+        public final static char UPDATE_TRANSFORM    = 'R';
+        public final static char DELETE_TRANSFORM    = 'S';
+        public final static char PROC_TRANSFORM      = 'T';
+        public final static char MAPPING_TRANSFORM   = 'U';
+        public final static char VDB_ARCHIVE         = 'V';
+        public final static char ANNOTATION          = 'W';
+        public final static char PROPERTY            = 'X';
+        public final static char FILE                 = 'Z';
+        public final static char RECORD_CONTINUATION = '&';
+    }
 
-	public final static String getNullTypeName(short type) {
+    public final static String getNullTypeName(short type) {
         return NULL_TYPES.TYPE_NAMES[type];
     }
 }

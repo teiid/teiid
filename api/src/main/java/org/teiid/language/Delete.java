@@ -31,12 +31,12 @@ public class Delete extends BaseLanguageObject implements BulkCommand {
     private NamedTable table;
     private Condition where;
     private Iterator<? extends List<?>> parameterValues;
-    
+
     public Delete(NamedTable group, Condition criteria) {
         this.table = group;
         this.where = criteria;
     }
-    
+
     /**
      * Get group that is being deleted from.
      * @return Insert group
@@ -45,7 +45,7 @@ public class Delete extends BaseLanguageObject implements BulkCommand {
         return table;
     }
 
-    /** 
+    /**
      * Get criteria that is being used with the delete - may be null
      * @return Criteria, may be null
      */
@@ -56,7 +56,7 @@ public class Delete extends BaseLanguageObject implements BulkCommand {
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     /**
      * Set group that is being deleted from.
      * @param group Insert group
@@ -65,21 +65,21 @@ public class Delete extends BaseLanguageObject implements BulkCommand {
         this.table = group;
     }
 
-    /** 
+    /**
      * Set criteria that is being used with the delete - may be null
      * @param criteria Criteria, may be null
      */
     public void setWhere(Condition criteria) {
         this.where = criteria;
     }
-    
+
     @Override
     public Iterator<? extends List<?>> getParameterValues() {
-    	return parameterValues;
+        return parameterValues;
     }
-    
+
     public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
-		this.parameterValues = parameterValues;
-	}
+        this.parameterValues = parameterValues;
+    }
 
 }

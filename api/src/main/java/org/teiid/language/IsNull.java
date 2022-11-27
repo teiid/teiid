@@ -24,10 +24,10 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  * Represents an IS NULL predicate.
  */
 public class IsNull extends Condition implements Predicate {
-    
+
     private Expression expression;
     private boolean negated;
-    
+
     public IsNull(Expression expr, boolean isNegated) {
         expression = expr;
         this.negated = isNegated;

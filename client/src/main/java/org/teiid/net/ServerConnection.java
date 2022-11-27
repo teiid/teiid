@@ -21,25 +21,25 @@ package org.teiid.net;
 import org.teiid.client.security.LogonResult;
 
 public interface ServerConnection {
-	
-	public static final int PING_INTERVAL = 120000;
 
-	<T> T getService(Class<T> iface);
-	
-	void close();
-	
-	boolean isOpen(long msToTest);
-	
-	LogonResult getLogonResult();
-	
-	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
-	
-	void authenticate() throws ConnectionException, CommunicationException;
-	
-	boolean supportsContinuous();
-	
-	boolean isLocal();
+    public static final int PING_INTERVAL = 120000;
 
-	String getServerVersion();
-	
+    <T> T getService(Class<T> iface);
+
+    void close();
+
+    boolean isOpen(long msToTest);
+
+    LogonResult getLogonResult();
+
+    boolean isSameInstance(ServerConnection conn) throws CommunicationException;
+
+    void authenticate() throws ConnectionException, CommunicationException;
+
+    boolean supportsContinuous();
+
+    boolean isLocal();
+
+    String getServerVersion();
+
 }

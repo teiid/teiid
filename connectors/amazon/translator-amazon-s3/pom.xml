@@ -4,12 +4,17 @@
     <parent>
         <groupId>org.teiid.connectors</groupId>
         <artifactId>amazon</artifactId>
-        <version>11.1.0-SNAPSHOT</version>    
+        <version>17.0.0-SNAPSHOT</version>    
    </parent>
     <artifactId>translator-amazon-s3</artifactId>
     <name>S3 Translator</name>
     <description>This translator provides access to the S3 file system.</description>
-    <packaging>bundle</packaging>
+    
+    <properties>
+        <!-- there is a duplicate resource in several of the javax jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -22,10 +27,6 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-ws</artifactId>
-        </dependency>        
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
     </dependencies>
 

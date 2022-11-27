@@ -28,13 +28,14 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 
 /**
- * Accumulates (per tuple) and calculates the sum of the values 
+ * Accumulates (per tuple) and calculates the sum of the values
  * of a column.  The type of the result varies depending on the type
- * of the input {@see AggregateSymbol}
+ * of the input {@link AggregateSymbol}
  */
 public class Sum extends SingleArgumentAggregateFunction {
 
@@ -43,9 +44,9 @@ public class Sum extends SingleArgumentAggregateFunction {
     protected static final int DOUBLE = 1;
     protected static final int BIG_INTEGER = 2;
     protected static final int BIG_DECIMAL = 3;
-    
+
     protected int accumulatorType = LONG;
-    
+
     private long sumLong;
     private double sumDouble;
     private BigDecimal sumBigDecimal;
@@ -54,30 +55,28 @@ public class Sum extends SingleArgumentAggregateFunction {
     /**
      * Allows subclasses to determine type of accumulator for the SUM.
      * @return Type, as defined in constants
-     */    
+     */
     protected int getAccumulatorType() {
         return this.accumulatorType;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(boolean, String)
-     */
+    @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
         if(dataType.equals(DataTypeManager.DefaultDataClasses.LONG)) {
-                    
-            this.accumulatorType = LONG;    
-            
+
+            this.accumulatorType = LONG;
+
         } else if(dataType.equals(DataTypeManager.DefaultDataClasses.DOUBLE)) {
-        
+
             this.accumulatorType = DOUBLE;
 
         } else if(dataType.equals(DataTypeManager.DefaultDataClasses.BIG_INTEGER)) {
-        	this.accumulatorType = BIG_INTEGER;
+            this.accumulatorType = BIG_INTEGER;
         } else {
             this.accumulatorType = BIG_DECIMAL;
         }
     }
-    
+
     public void reset() {
         sumLong = 0;
         sumDouble = 0;
@@ -85,15 +84,13 @@ public class Sum extends SingleArgumentAggregateFunction {
         isNull = true;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-        
-    	isNull = false;
-    	
-        switch(this.accumulatorType) {        
+
+        isNull = false;
+
+        switch(this.accumulatorType) {
             case LONG:
                 this.sumLong = FunctionMethods.plus(this.sumLong, ((Number)input).longValue());
                 break;
@@ -102,111 +99,113 @@ public class Sum extends SingleArgumentAggregateFunction {
                 break;
             case BIG_INTEGER:
             case BIG_DECIMAL:
-            	if (sumBigDecimal == null) {
-            		sumBigDecimal = BigDecimal.valueOf(0);
-            	}
+                if (sumBigDecimal == null) {
+                    sumBigDecimal = BigDecimal.valueOf(0);
+                }
                 if (input instanceof BigInteger) {
                     BigInteger bigIntegerInput = (BigInteger) input;
                     this.sumBigDecimal = this.sumBigDecimal.add( new BigDecimal(bigIntegerInput) );
                 } else if (input instanceof BigDecimal){
                     this.sumBigDecimal = this.sumBigDecimal.add( (BigDecimal) input );
                 } else {
-                	this.sumBigDecimal = this.sumBigDecimal.add( new BigDecimal(((Number)input).longValue()));
+                    this.sumBigDecimal = this.sumBigDecimal.add( new BigDecimal(((Number)input).longValue()));
                 }
-                break;    
+                break;
         }
     }
 
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult(CommandContext commandContext) 
+    public Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-        
-    	if (isNull){
-    		return null;
-    	}
 
-        switch(this.accumulatorType) {        
+        if (isNull){
+            return null;
+        }
+
+        switch(this.accumulatorType) {
         case LONG:
-        	return this.sumLong;
+            return this.sumLong;
         case DOUBLE:
             return this.sumDouble;
         case BIG_INTEGER:
-        	return this.sumBigDecimal.toBigInteger();
+            return this.sumBigDecimal.toBigInteger();
         }
         return this.sumBigDecimal;
     }
-    
+
     @Override
     public void getState(List<Object> state) {
-    	switch (this.accumulatorType) {
-    	case LONG:
-    		if (isNull) {
-    			state.add(null);
-    		} else {
-    			state.add(sumLong);
-    		}
-    		break;
-    	case DOUBLE:
-    		if (isNull) {
-    			state.add(null);
-    		} else {
-    			state.add(sumDouble);
-    		}
-    		break;
-    	default:
-    		state.add(sumBigDecimal);
-    		break;
-    	}
+        switch (this.accumulatorType) {
+        case LONG:
+            if (isNull) {
+                state.add(null);
+            } else {
+                state.add(sumLong);
+            }
+            break;
+        case DOUBLE:
+            if (isNull) {
+                state.add(null);
+            } else {
+                state.add(sumDouble);
+            }
+            break;
+        default:
+            state.add(sumBigDecimal);
+            break;
+        }
     }
-    
+
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	switch (this.accumulatorType) {
-    	case LONG:
-    		return Arrays.asList(Long.class);
-    	case DOUBLE:
-    		return Arrays.asList(Double.class);
-    	default:
-    		return Arrays.asList(BigDecimal.class);
-    	}
+        switch (this.accumulatorType) {
+        case LONG:
+            return Arrays.asList(Long.class);
+        case DOUBLE:
+            return Arrays.asList(Double.class);
+        default:
+            return Arrays.asList(BigDecimal.class);
+        }
     }
 
     public int setState(java.util.List<?> state, int index) {
-    	switch (this.accumulatorType) {
-    	case LONG:
-    	{
-    		Long val = (Long)state.get(index);
-    		if (val == null) {
-    			isNull = true;
-    			sumLong = 0;
-    		} else {
-    			isNull = false;
-    			sumLong = val;
-    		}
-    		break;
-    	}
-    	case DOUBLE:
-    	{
-    		Double val = (Double)state.get(index);
-    		if (val == null) {
-    			isNull = true;
-    			sumDouble = 0;
-    		} else {
-    			isNull = false;
-    			sumDouble = val;
-    		}
-    		break;
-    	}
-    	default:
-    		this.sumBigDecimal = (BigDecimal)state.get(index);
-    		if (this.sumBigDecimal != null) {
-    			isNull = false;
-    		}
-    		break;
-    	}
-    	return index + 1;
+        switch (this.accumulatorType) {
+        case LONG:
+        {
+            Long val = (Long)state.get(index);
+            if (val == null) {
+                isNull = true;
+                sumLong = 0;
+            } else {
+                isNull = false;
+                sumLong = val;
+            }
+            break;
+        }
+        case DOUBLE:
+        {
+            Double val = (Double)state.get(index);
+            if (val == null) {
+                isNull = true;
+                sumDouble = 0;
+            } else {
+                isNull = false;
+                sumDouble = val;
+            }
+            break;
+        }
+        default:
+            this.sumBigDecimal = (BigDecimal)state.get(index);
+            if (this.sumBigDecimal != null) {
+                isNull = false;
+            } else {
+                isNull = true;
+            }
+            break;
+        }
+        return index + 1;
     }
 
 }

@@ -36,45 +36,45 @@ import org.teiid.translator.TypeFacility;
  */
 public class ModFunctionModifier extends AliasModifier {
 
-	private Set<Class<?>> supportedTypes = new HashSet<Class<?>>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
+    private Set<Class<?>> supportedTypes = new HashSet<Class<?>>(Arrays.asList(TypeFacility.RUNTIME_TYPES.INTEGER, TypeFacility.RUNTIME_TYPES.LONG));
 
-	private LanguageFactory langFactory;
+    private LanguageFactory langFactory;
 
     public ModFunctionModifier(String modFunction, LanguageFactory langFactory) {
-    	this(modFunction, langFactory, null);
+        this(modFunction, langFactory, null);
     }
 
     public ModFunctionModifier(String modFunction, LanguageFactory langFactory, Collection<? extends Class<?>> supportedTypes) {
-    	super(modFunction);
-    	this.langFactory = langFactory;
-    	if (supportedTypes != null) {
-    		this.supportedTypes.addAll(supportedTypes);
-    	}
+        super(modFunction);
+        this.langFactory = langFactory;
+        if (supportedTypes != null) {
+            this.supportedTypes.addAll(supportedTypes);
+        }
     }
-    
+
     @Override
     public List<?> translate(Function function) {
-    	List<Expression> expressions = function.getParameters();
-		Class<?> type = function.getType();
-		if (supportedTypes.contains(type)) {
-			modify(function);
-			return null;
-		}
-		//x % y => x - sign(x) * floor(abs(x / y)) * y
-		Function divide = langFactory.createFunction(SourceSystemFunctions.DIVIDE_OP, new ArrayList<Expression>(expressions), type); 
+        List<Expression> expressions = function.getParameters();
+        Class<?> type = function.getType();
+        if (supportedTypes.contains(type)) {
+            modify(function);
+            return null;
+        }
+        //x % y => x - sign(x) * floor(abs(x / y)) * y
+        Function divide = langFactory.createFunction(SourceSystemFunctions.DIVIDE_OP, new ArrayList<Expression>(expressions), type);
 
-		Function abs = langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(divide), type);
-		
-		Function floor = langFactory.createFunction(SourceSystemFunctions.FLOOR, Arrays.asList(abs), type); 
-		
-		Function sign = langFactory.createFunction(SourceSystemFunctions.SIGN, Arrays.asList(expressions.get(0)), type);
-		
-		List<? extends Expression> multArgs = Arrays.asList(sign, floor, langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(expressions.get(1)), type));
-		Function mult = langFactory.createFunction(SourceSystemFunctions.MULTIPLY_OP, multArgs, type); 
+        Function abs = langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(divide), type);
 
-		List<Expression> minusArgs = Arrays.asList(expressions.get(0), mult);
-		
-		return Arrays.asList(langFactory.createFunction(SourceSystemFunctions.SUBTRACT_OP, minusArgs, type)); 
-	}
-	
+        Function floor = langFactory.createFunction(SourceSystemFunctions.FLOOR, Arrays.asList(abs), type);
+
+        Function sign = langFactory.createFunction(SourceSystemFunctions.SIGN, Arrays.asList(expressions.get(0)), type);
+
+        List<? extends Expression> multArgs = Arrays.asList(sign, floor, langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(expressions.get(1)), type));
+        Function mult = langFactory.createFunction(SourceSystemFunctions.MULTIPLY_OP, multArgs, type);
+
+        List<Expression> minusArgs = Arrays.asList(expressions.get(0), mult);
+
+        return Arrays.asList(langFactory.createFunction(SourceSystemFunctions.SUBTRACT_OP, minusArgs, type));
+    }
+
 }

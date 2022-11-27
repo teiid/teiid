@@ -25,12 +25,12 @@ import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 public class NoDocumentNode extends DocumentNode {
     private ProcedureReturn procedureReturn;
     private String query;
-    
+
     @Override
     public List<String> getKeyColumnNames(){
         return new ArrayList<String>();
     }
-    
+
     public void setProcedureReturn(ProcedureReturn pp) {
         this.procedureReturn = pp;
     }
@@ -46,8 +46,8 @@ public class NoDocumentNode extends DocumentNode {
     public String getQuery() {
         return query;
     }
-    
+
     @Override
     protected void addAllColumns(boolean onlyPK) {
-    }    
+    }
 }

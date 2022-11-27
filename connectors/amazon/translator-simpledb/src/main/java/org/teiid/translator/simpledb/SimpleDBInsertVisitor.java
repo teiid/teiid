@@ -41,11 +41,11 @@ public class SimpleDBInsertVisitor extends HierarchyVisitor {
             throw this.exceptions.get(0);
         }
     }
-    
+
     public List<Column> getColumns() {
         return this.columns;
     }
-    
+
     public Iterator<? extends List<?>> values() {
         if (this.values != null) {
             return this.values;
@@ -58,7 +58,7 @@ public class SimpleDBInsertVisitor extends HierarchyVisitor {
     public String getDomainName(){
         return this.tableName;
     }
-    
+
     @Override
     public void visit(Insert obj) {
         visitNode(obj.getTable());
@@ -70,12 +70,12 @@ public class SimpleDBInsertVisitor extends HierarchyVisitor {
             // bulk insert values
             this.values = obj.getParameterValues();
         }
-    }    
+    }
 
     @Override
     public void visit(NamedTable obj) {
         this.tableName = SimpleDBMetadataProcessor.getName(obj.getMetadataObject());
-    }	
+    }
 
     @Override
     public void visit(ColumnReference obj) {
@@ -91,14 +91,14 @@ public class SimpleDBInsertVisitor extends HierarchyVisitor {
                 if (values.get(i) instanceof Literal){
                     Literal lit = (Literal) values.get(i);
                     this.expressionValues.add(lit.getValue());
-                } 
-                else if (values.get(i) instanceof Array){                
+                }
+                else if (values.get(i) instanceof Array){
                     Array array  = (Array)values.get(i);
                     String[] result = getValuesArray(array);
                     this.expressionValues.add(result);
                 }
                 else {
-                    this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001))); 
+                    this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001)));
                 }
             }
             super.visit(obj);
@@ -116,7 +116,7 @@ public class SimpleDBInsertVisitor extends HierarchyVisitor {
                 result[j] = (String)SimpleDBDataTypeManager.convertToSimpleDBType(lit.getValue(), lit.getType());
             }
             else {
-                new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001));                        
+                new TranslatorException(SimpleDBPlugin.Event.TEIID24001, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24001));
             }
         }
         return result;

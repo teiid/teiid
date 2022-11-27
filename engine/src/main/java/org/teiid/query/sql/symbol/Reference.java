@@ -32,20 +32,20 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class Reference implements Expression, ContextReference {
 
-	public interface Constraint {
-		public void validate(Object value) throws QueryValidatorException;
-	}
-	
+    public interface Constraint {
+        public void validate(Object value) throws QueryValidatorException;
+    }
+
     private boolean positional;
     private boolean optional;
 
     private int refIndex;
     private Class<?> type;
-    
+
     private ElementSymbol expression;
-    
+
     private Constraint constraint;
-    
+
     /**
      * Constructor for a positional Reference.
      */
@@ -53,54 +53,54 @@ public class Reference implements Expression, ContextReference {
         this.refIndex = refIndex;
         this.positional = true;
     }
-    
+
     public Constraint getConstraint() {
-		return constraint;
-	}
-    
+        return constraint;
+    }
+
     public void setConstraint(Constraint constraint) {
-		this.constraint = constraint;
-	}
-    
+        this.constraint = constraint;
+    }
+
     /**
      * Constructor for an element Reference.
      */
     public Reference(ElementSymbol expression) {
         this.expression = expression;
         this.positional = false;
-    }  
-    
+    }
+
     private Reference(Reference ref) {
-    	this.refIndex = ref.refIndex;
-    	this.positional = ref.positional;
-    	this.type = ref.type;
-    	if (ref.expression != null) {
-    		this.expression = ref.expression.clone();
-    	}
-    	this.constraint = ref.constraint;
-    	this.optional = ref.optional;
+        this.refIndex = ref.refIndex;
+        this.positional = ref.positional;
+        this.type = ref.type;
+        if (ref.expression != null) {
+            this.expression = ref.expression.clone();
+        }
+        this.constraint = ref.constraint;
+        this.optional = ref.optional;
     }
 
     public int getIndex() {
         return this.refIndex;
     }
-    
+
     @Override
     public String getContextSymbol() {
-    	return "$param/pos" + this.refIndex; //$NON-NLS-1$
+        return "$param/pos" + this.refIndex; //$NON-NLS-1$
     }
-    
+
     public ElementSymbol getExpression() {
-        return this.expression;    
+        return this.expression;
     }
 
     public Class<?> getType() {
-    	if (this.isPositional() && this.expression == null) {
-    		return type;
-    	}
-    	return expression.getType();
+        if (this.isPositional() && this.expression == null) {
+            return type;
+        }
+        return expression.getType();
     }
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -121,7 +121,7 @@ public class Reference implements Expression, ContextReference {
         if(this == obj) {
             return true;
         }
-        
+
         if(!(obj instanceof Reference)) {
             return false;
         }
@@ -130,67 +130,67 @@ public class Reference implements Expression, ContextReference {
         if (this.positional != other.positional) {
             return false;
         }
-        
+
         if (this.positional) {
             return other.getIndex() == getIndex();
         }
-        
+
         // Compare based on name
         return this.expression.equals(other.expression);
     }
-    
+
     public void setType(Class<?> type) {
-    	Assertion.assertTrue(this.positional);
-		this.type = type;
-	}
-    
+        Assertion.assertTrue(this.positional);
+        this.type = type;
+    }
+
     /**
      * Define hash code to be that of the underlying object to make it stable.
      * @return Hash code, based on value
      */
-    public int hashCode() { 
-    	if (this.isPositional()) {
-    		return getIndex();
-    	}
-    	return this.expression.hashCode();
+    public int hashCode() {
+        if (this.isPositional()) {
+            return getIndex();
+        }
+        return this.expression.hashCode();
     }
-    
+
     /**
      * Return a String representation of this object using SQLStringVisitor.
      * @return String representation using SQLStringVisitor
      */
     public String toString() {
-        return SQLStringVisitor.getSQLString(this);    
+        return SQLStringVisitor.getSQLString(this);
     }
 
     public boolean isCorrelated() {
-    	if (this.isPositional()) {
-    		return false;
-    	}
-    	//metadata hack
-    	if (this.expression.getGroupSymbol() == null || !(this.expression.getGroupSymbol().getMetadataID() instanceof TempMetadataID)) {
-    		return true;
-    	}
-    	
-    	TempMetadataID tid = (TempMetadataID)this.expression.getGroupSymbol().getMetadataID();
-    	return !tid.isScalarGroup();
+        if (this.isPositional()) {
+            return false;
+        }
+        //metadata hack
+        if (this.expression.getGroupSymbol() == null || !(this.expression.getGroupSymbol().getMetadataID() instanceof TempMetadataID)) {
+            return true;
+        }
+
+        TempMetadataID tid = (TempMetadataID)this.expression.getGroupSymbol().getMetadataID();
+        return !tid.isScalarGroup();
     }
-    
+
     public boolean isPositional() {
         return this.positional;
     }
-    
-    public void setExpression(ElementSymbol expression) {
-    	assert this.expression != null && !this.positional;
-		this.expression = expression;
-	}
 
-	public boolean isOptional() {
-		return optional;
-	}
-	
-	public void setOptional(boolean optional) {
-		this.optional = optional;
-	}
-    
+    public void setExpression(ElementSymbol expression) {
+        assert this.expression != null && !this.positional;
+        this.expression = expression;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
+
 }

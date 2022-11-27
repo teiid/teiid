@@ -27,19 +27,19 @@ import org.teiid.jdbc.JDBCPlugin;
 @SuppressWarnings("nls")
 public class TestExceptionUtil {
 
-	@Test public void testSanitize() {
-		TeiidException te = new TeiidException(JDBCPlugin.Event.TEIID20000, "you don't want to see this");
-		te.initCause(new Exception("or this"));
-		
-		Throwable t = ExceptionUtil.sanitize(te, true);
-		assertTrue(t.getStackTrace().length != 0);
-		assertNotNull(t.getCause());
-		assertEquals("TEIID20000", t.getMessage());
-		assertEquals("java.lang.Exception", t.getCause().getMessage());
-		
-		t = ExceptionUtil.sanitize(te, false);
-		assertEquals(0, t.getStackTrace().length);
-		assertEquals("TEIID20000", t.getMessage());
-	}
-	
+    @Test public void testSanitize() {
+        TeiidException te = new TeiidException(JDBCPlugin.Event.TEIID20000, "you don't want to see this");
+        te.initCause(new Exception("or this"));
+
+        Throwable t = ExceptionUtil.sanitize(te, true);
+        assertTrue(t.getStackTrace().length != 0);
+        assertNotNull(t.getCause());
+        assertEquals("TEIID20000", t.getMessage());
+        assertEquals("java.lang.Exception", t.getCause().getMessage());
+
+        t = ExceptionUtil.sanitize(te, false);
+        assertEquals(0, t.getStackTrace().length);
+        assertEquals("TEIID20000", t.getMessage());
+    }
+
 }

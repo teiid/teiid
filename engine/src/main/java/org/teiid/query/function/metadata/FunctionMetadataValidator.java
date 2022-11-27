@@ -42,35 +42,34 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class FunctionMetadataValidator {
 
-	/**
-	 *  Maximum length for function names, parameter names, categories, and descriptions.
-	 */
-	public static final int MAX_LENGTH = 255;
+    /**
+     *  Maximum length for function names, parameter names, categories, and descriptions.
+     */
+    public static final int MAX_LENGTH = 255;
 
     // Can't construct
-	private FunctionMetadataValidator() {
+    private FunctionMetadataValidator() {
     }
 
-	/**
-	 * Validate a collection of {@link FunctionMethod} objects.
-	 * @param methods Collection of {@link FunctionMethod} objects
-	 * @param report Report to store validation errors
-	 * @param runtimeTypeMap 
-	 */
-	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report) {
-		validateFunctionMethods(methods, report, null);
-	}
-	
-	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report, Map<String, Datatype> runtimeTypeMap) {
-		if (runtimeTypeMap == null) {
-			runtimeTypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
-		}
-	    if(methods != null) {
-	    	for (FunctionMethod method : methods) {
-	    		validateFunctionMethod(method, report, runtimeTypeMap);
-	    	}
-	    }
-	}
+    /**
+     * Validate a collection of {@link FunctionMethod} objects.
+     * @param methods Collection of {@link FunctionMethod} objects
+     * @param report Report to store validation errors
+     */
+    public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report) {
+        validateFunctionMethods(methods, report, null);
+    }
+
+    public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report, Map<String, Datatype> runtimeTypeMap) {
+        if (runtimeTypeMap == null) {
+            runtimeTypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
+        }
+        if(methods != null) {
+            for (FunctionMethod method : methods) {
+                validateFunctionMethod(method, report, runtimeTypeMap);
+            }
+        }
+    }
 
     /**
      * Determine whether a FunctionMethod is valid.  The following items are validated:
@@ -92,41 +91,41 @@ public class FunctionMetadataValidator {
         }
 
         try {
-	        // Validate attributes
-	        validateName(method.getName());
-	        validateDescription(method.getDescription());
-	        validateCategory(method.getCategory());
-	        validateInvocationMethod(method.getInvocationClass(), method.getInvocationMethod(), method.getPushdown());
-	        // Validate input parameters
-	       List<FunctionParameter> params = method.getInputParameters();
-			if(params != null && !params.isEmpty()) {
-	            for(int i=0; i<params.size(); i++) {
-	            	FunctionParameter param = params.get(i);
-	                validateFunctionParameter(param);
-	                param.setPosition(i+1);
-	                MetadataFactory.setDataType(param.getRuntimeType(), param, runtimeTypeMap, true);
-	                param.getUUID();
-	            }
-	        }
+            // Validate attributes
+            validateName(method.getName());
+            validateDescription(method.getDescription());
+            validateCategory(method.getCategory());
+            validateInvocationMethod(method.getInvocationClass(), method.getInvocationMethod(), method.getPushdown());
+            // Validate input parameters
+           List<FunctionParameter> params = method.getInputParameters();
+            if(params != null && !params.isEmpty()) {
+                for(int i=0; i<params.size(); i++) {
+                    FunctionParameter param = params.get(i);
+                    validateFunctionParameter(param);
+                    param.setPosition(i+1);
+                    MetadataFactory.setDataType(param.getRuntimeType(), param, runtimeTypeMap, true);
+                    param.getUUID();
+                }
+            }
 
-	        // Validate output parameters
-	        validateFunctionParameter(method.getOutputParameter());
+            // Validate output parameters
+            validateFunctionParameter(method.getOutputParameter());
             method.getOutputParameter().setPosition(0);
             MetadataFactory.setDataType(method.getOutputParameter().getRuntimeType(), method.getOutputParameter(), runtimeTypeMap, true);
         } catch(FunctionMetadataException e) {
-        	updateReport(report, method, e.getMessage());
+            updateReport(report, method, e.getMessage());
         }
     }
 
-	/**
-	 * Update a report with a validation error.
-	 * @param report The report to update
-	 * @param method The function method
-	 * @param message The message about the validation failure
-	 */
-	private static final void updateReport(ValidatorReport report, FunctionMethod method, String message) {
-	    report.addItem(new InvalidFunctionItem(method, message));
-	}
+    /**
+     * Update a report with a validation error.
+     * @param report The report to update
+     * @param method The function method
+     * @param message The message about the validation failure
+     */
+    private static final void updateReport(ValidatorReport report, FunctionMethod method, String message) {
+        report.addItem(new InvalidFunctionItem(method, message));
+    }
 
     /**
      * Determine whether a FunctionParameter is valid.  The following items are validated:
@@ -152,7 +151,7 @@ public class FunctionMetadataValidator {
      * Determine whether a function or parameter name is valid.  The following items are validated:
      * <UL>
      * <LI>Validate that name is not null</LI>
-     * <LI>Validate that name has length <= MAX_LENGTH</LI>
+     * <LI>Validate that name has length &lt;= MAX_LENGTH</LI>
      * <LI>Validate that name starts with alphabetic character</LI>
      * <LI>Validate that name contains only valid characters: letters, numbers, and _</LI>
      * </UL>
@@ -167,29 +166,29 @@ public class FunctionMetadataValidator {
     /**
      * Determine whether a description is valid.  The following items are validated:
      * <UL>
-     * <LI>Validate that description (if not null) has length <= 4000</LI>
+     * <LI>Validate that description (if not null) has length &lt;= 4000</LI>
      * </UL>
      * @param description Description to validate
      * @throws FunctionMetadataException Thrown if description is not valid in some way
      */
     public static final void validateDescription(String description) throws FunctionMetadataException {
-		if(description != null) {
-        	validateLength(description, DataTypeManager.MAX_STRING_LENGTH, "Description"); //$NON-NLS-1$
-		}
+        if(description != null) {
+            validateLength(description, DataTypeManager.MAX_STRING_LENGTH, "Description"); //$NON-NLS-1$
+        }
     }
 
     /**
      * Determine whether a category is valid.  The following items are validated:
      * <UL>
      * <LI>Validate that category is not null</LI>
-     * <LI>Validate that category has length <= MAX_LENGTH</LI>
+     * <LI>Validate that category has length &lt;= MAX_LENGTH</LI>
      * </UL>
      * @param category Category to validate
      * @throws FunctionMetadataException Thrown if category is not valid in some way
      */
     public static final void validateCategory(String category) throws FunctionMetadataException {
         if (category != null) {
-        	validateLength(category, MAX_LENGTH, "Category"); //$NON-NLS-1$
+            validateLength(category, MAX_LENGTH, "Category"); //$NON-NLS-1$
         }
     }
 
@@ -206,7 +205,7 @@ public class FunctionMetadataValidator {
      * @throws FunctionMetadataException Thrown if invocation method is not valid in some way
      */
     public static final void validateInvocationMethod(String invocationClass, String invocationMethod, PushDown pushdown) throws FunctionMetadataException {
-    	if (pushdown == PushDown.CAN_PUSHDOWN || pushdown == PushDown.CANNOT_PUSHDOWN) {
+        if (pushdown == PushDown.CAN_PUSHDOWN || pushdown == PushDown.CANNOT_PUSHDOWN) {
             validateIsNotNull(invocationClass, "Invocation class"); //$NON-NLS-1$
             validateIsNotNull(invocationMethod, "Invocation method"); //$NON-NLS-1$
             validateJavaIdentifier(invocationClass, "Invocation class", true); //$NON-NLS-1$
@@ -220,11 +219,11 @@ public class FunctionMetadataValidator {
      * @param objName Object name used when throwing exception
      * @throws FunctionMetadataException Thrown when object == null
      */
-	private static final void validateIsNotNull(Object object, String objName) throws FunctionMetadataException {
-		if(object == null) {
-		     throw new FunctionMetadataException(QueryPlugin.Event.TEIID30429, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30429, objName));
-		}
-	}
+    private static final void validateIsNotNull(Object object, String objName) throws FunctionMetadataException {
+        if(object == null) {
+             throw new FunctionMetadataException(QueryPlugin.Event.TEIID30429, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30429, objName));
+        }
+    }
 
     /**
      * Check that specified string is no longer than maxLength.  If string is longer, an exception is thrown
@@ -234,11 +233,11 @@ public class FunctionMetadataValidator {
      * @param strName Name of string to use in exception message
      * @throws FunctionMetadataException Thrown when string.length() > maxLength
      */
-	private static final void validateLength(String string, int maxLength, String strName) throws FunctionMetadataException {
-	 	if(string.length() > maxLength) {
-	 	 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30430, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30430,strName, new Integer(maxLength)));
-	 	}
-	}
+    private static final void validateLength(String string, int maxLength, String strName) throws FunctionMetadataException {
+         if(string.length() > maxLength) {
+               throw new FunctionMetadataException(QueryPlugin.Event.TEIID30430, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30430,strName, new Integer(maxLength)));
+         }
+    }
 
     /**
      * Check that specified string is valid Java identifier.  If not, an exception is thrown using
@@ -248,28 +247,28 @@ public class FunctionMetadataValidator {
      * @param allowMultiple True if multiple identifiers are allowed, as in a class name
      * @throws FunctionMetadataException Thrown when string is not valid Java identifier
      */
-	private static final void validateJavaIdentifier(String identifier, String strName, boolean allowMultiple) throws FunctionMetadataException {
-	    // First check first character
-		if(identifier.length() > 0) {
-			char firstChar = identifier.charAt(0);
-			if(! Character.isJavaIdentifierStart(firstChar)) {
-			 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30432, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30432,strName, new Character(firstChar)));
-			}
+    private static final void validateJavaIdentifier(String identifier, String strName, boolean allowMultiple) throws FunctionMetadataException {
+        // First check first character
+        if(identifier.length() > 0) {
+            char firstChar = identifier.charAt(0);
+            if(! Character.isJavaIdentifierStart(firstChar)) {
+                  throw new FunctionMetadataException(QueryPlugin.Event.TEIID30432, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30432,strName, new Character(firstChar)));
+            }
 
-			// Then check the rest of the characters
-			for(int i=1; i<identifier.length(); i++) {
-				char ch = identifier.charAt(i);
-				if(! Character.isJavaIdentifierPart(ch)) {
-				    if(! allowMultiple || ! (ch == '.')) {
-					 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30431, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,strName, new Character(ch)));
-				    }
-				}
-			}
+            // Then check the rest of the characters
+            for(int i=1; i<identifier.length(); i++) {
+                char ch = identifier.charAt(i);
+                if(! Character.isJavaIdentifierPart(ch)) {
+                    if(! allowMultiple || ! (ch == '.')) {
+                          throw new FunctionMetadataException(QueryPlugin.Event.TEIID30431, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,strName, new Character(ch)));
+                    }
+                }
+            }
 
-			if(identifier.charAt(identifier.length()-1) == '.') {
-			 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30434, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30434,strName));
-			}
-	    }
-	}
+            if(identifier.charAt(identifier.length()-1) == '.') {
+                  throw new FunctionMetadataException(QueryPlugin.Event.TEIID30434, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30434,strName));
+            }
+        }
+    }
 
 }

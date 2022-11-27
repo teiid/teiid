@@ -17,16 +17,73 @@
  */
 package org.teiid.olingo.web;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
+
+    public static HttpServletRequest handleProxiedRequest(
+            HttpServletRequest httpRequest) {
+        String proxyUrl = getProxyUrl(httpRequest);
+        if (proxyUrl != null) {
+            httpRequest = new ProxyHttpServletRequest(httpRequest, proxyUrl);
+        }
+        return httpRequest;
+    }
+
+    /**
+     *
+     * @param httpRequest
+     * @return the url or null if not proxied
+     */
+    static String getProxyUrl(HttpServletRequest httpRequest) {
+        /*
+        Forwarded for=192.168.42.1;host=hostname:80;proto=http;proto-version=
+        X-Forwarded-Proto http
+        X-Forwarded-Host hostname
+        X-Forwarded-Port 80
+        */
+        String host = httpRequest.getHeader("X-Forwarded-Host"); //$NON-NLS-1$
+        String protocol = httpRequest.getHeader("X-Forwarded-Proto"); //$NON-NLS-1$
+        String port = httpRequest.getHeader("X-Forwarded-Port"); //$NON-NLS-1$
+        if (host == null) {
+            String forwarded = httpRequest.getHeader("Forwarded"); //$NON-NLS-1$
+            if (forwarded != null) {
+                String[] parts = forwarded.split(";"); //$NON-NLS-1$
+                for (String part : parts) {
+                    String[] keyValue = part.split("=", 2); //$NON-NLS-1$
+                    if (keyValue.length != 2) {
+                        continue;
+                    }
+                    if (keyValue[0].equals("host")) { //$NON-NLS-1$
+                        host = keyValue[1];
+                        port = null;
+                    } else if (keyValue[0].equals("proto")) { //$NON-NLS-1$
+                        protocol = keyValue[1];
+                    }
+                }
+            }
+        }
+        String proxyUrl = null;
+        if (host != null) {
+            StringBuffer buf = new StringBuffer();
+            buf.append(protocol==null?"http":protocol); //$NON-NLS-1$
+            buf.append("://").append(host); //$NON-NLS-1$
+            if (port != null) {
+                String portSuffix = ":" + port; //$NON-NLS-1$
+                if (!host.endsWith(portSuffix)) {
+                    buf.append(portSuffix);
+                }
+            }
+            proxyUrl = buf.toString();
+        }
+        return proxyUrl;
+    }
+
     private URI encodedURI;
     private URL encodedURL;
 
@@ -47,7 +104,7 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
         } catch (Exception e) {
             throw new RuntimeException("Unable to create URI: " + buf, e); //$NON-NLS-1$
         }
-        
+
         try {
             encodedURL = new URL(encodedURI.toString());
         } catch (MalformedURLException e) {
@@ -55,18 +112,18 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
         }
     }
 
-    private static String extractURI(URL url, String baseURI) throws UnsupportedEncodingException {
+    private static String extractURI(URL url, String baseURI) {
         StringBuffer buffer = new StringBuffer();
 
         buffer.append(baseURI);
         if (url.getPath() != null) {
-            buffer.append(url.getPath()); //$NON-NLS-1$
+            buffer.append(url.getPath());
         }
         if (url.getQuery() != null) {
             buffer.append("?").append(url.getQuery()); //$NON-NLS-1$
         }
         if (url.getRef() != null) {
-            buffer.append("#").append(url.getRef()); //$NON-NLS-1$ //$NON-NLS-2$
+            buffer.append("#").append(url.getRef()); //$NON-NLS-1$
         }
         String buf = buffer.toString();
         return buf;

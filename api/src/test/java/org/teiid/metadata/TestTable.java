@@ -24,24 +24,24 @@ import org.junit.Test;
 
 public class TestTable {
 
-	@Test public void testCardinality() {
-		Table t = new Table();
-		assertEquals(-1, t.getCardinalityAsFloat(), 0);
-		t.setCardinality(1000);
-		assertEquals(1000, t.getCardinalityAsFloat(), 0);
-		t.setCardinality(100000111000111100l);
-		assertEquals(100000111000111100l/t.getCardinalityAsFloat(), 1, .01);
-	}
-	
-	@Test public void testColumnPrecisionScale() {
-	    Column c = new Column();
-	    Datatype datatype = new Datatype();
-	    datatype.setName("bigdecimal");
-        c.setDatatype(datatype);
-	    c.setPrecision(0);
-	    c.setScale(2);
-	    assertEquals(2, c.getScale());
-	    assertEquals(BaseColumn.DEFAULT_PRECISION, c.getPrecision());
+    @Test public void testCardinality() {
+        Table t = new Table();
+        assertEquals(-1, t.getCardinalityAsFloat(), 0);
+        t.setCardinality(1000);
+        assertEquals(1000, t.getCardinalityAsFloat(), 0);
+        t.setCardinality(100000111000111100L);
+        assertEquals(100000111000111100L/t.getCardinalityAsFloat(), 1, .01);
     }
-	
+
+    @Test public void testColumnPrecisionScale() {
+        Column c = new Column();
+        Datatype datatype = new Datatype();
+        datatype.setName("bigdecimal");
+        c.setDatatype(datatype);
+        c.setPrecision(0);
+        c.setScale(2);
+        assertEquals(2, c.getScale());
+        assertEquals(BaseColumn.DEFAULT_PRECISION, c.getPrecision());
+    }
+
 }

@@ -19,9 +19,8 @@
 package org.teiid.metadata;
 
 import java.io.Serializable;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.util.StringUtil;
@@ -30,7 +29,7 @@ import org.teiid.core.util.StringUtil;
  * Defines a base schema that is the holder for namespace and type information
  */
 public class NamespaceContainer implements Serializable {
-    
+
     static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
     private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
     private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
@@ -39,6 +38,7 @@ public class NamespaceContainer implements Serializable {
     private static final String TEIID_ODATA = "teiid_odata"; //$NON-NLS-1$
     private static final String TEIID_ACCUMULO = "teiid_accumulo"; //$NON-NLS-1$
     private static final String TEIID_EXCEL = "teiid_excel"; //$NON-NLS-1$
+    private static final String TEIID_PARQUET = "teiid_parquet"; //$NON-NLS-1$
     private static final String TEIID_JPA = "teiid_jpa"; //$NON-NLS-1$
     private static final String TEIID_HBASE = "teiid_hbase"; //$NON-NLS-1$
     private static final String TEIID_SPATIAL = "teiid_spatial"; //$NON-NLS-1$
@@ -48,86 +48,88 @@ public class NamespaceContainer implements Serializable {
     private static final String TEIID_COUCHBASE = "teiid_couchbase"; //$NON-NLS-1$
     private static final String TEIID_INFINISPAN = "teiid_ispn"; //$NON-NLS-1$
 
-    public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
-    public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
-    public static final String MONGO_URI = "{http://www.teiid.org/translator/mongodb/2013}"; //$NON-NLS-1$
-    public static final String ODATA_URI = "{http://www.jboss.org/teiiddesigner/ext/odata/2012}"; //$NON-NLS-1$
-    public static final String ACCUMULO_URI = "{http://www.teiid.org/translator/accumulo/2013}"; //$NON-NLS-1$
-    public static final String EXCEL_URI = "{http://www.teiid.org/translator/excel/2014}"; //$NON-NLS-1$
-    public static final String JPA_URI = "{http://www.teiid.org/translator/jpa/2014}"; //$NON-NLS-1$
-    public static final String HBASE_URI = "{http://www.teiid.org/translator/hbase/2014}"; //$NON-NLS-1$
-    public static final String SPATIAL_URI = "{http://www.teiid.org/translator/spatial/2015}"; //$NON-NLS-1$
-    public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
-    public static final String REST_URI = "{http://teiid.org/rest}"; //$NON-NLS-1$
-    public static final String PI_URI = "{http://www.teiid.org/translator/pi/2016}"; //$NON-NLS-1$
-    public static final String COUCHBASE_URI = "{http://www.teiid.org/translator/couchbase/2017}"; //$NON-NLS-1$
-    public static final String INFINISPAN_URI = "{http://www.teiid.org/translator/infinispan/2017}"; //$NON-NLS-1$
+    public static final String SF_PREFIX = TEIID_SF+":"; //$NON-NLS-1$
+    public static final String WS_PREFIX = TEIID_WS+":"; //$NON-NLS-1$
+    public static final String MONGO_PREFIX = TEIID_MONGO+":"; //$NON-NLS-1$
+    public static final String ODATA_PREFIX = TEIID_ODATA+":"; //$NON-NLS-1$
+    public static final String ACCUMULO_PREFIX = TEIID_ACCUMULO+":"; //$NON-NLS-1$
+    public static final String EXCEL_PREFIX = TEIID_EXCEL+":"; //$NON-NLS-1$
+    public static final String PARQUET_PREFIX = TEIID_PARQUET+":"; //$NON-NLS-1$
+    public static final String JPA_PREFIX = TEIID_JPA+":"; //$NON-NLS-1$
+    public static final String HBASE_PREFIX = TEIID_HBASE+":"; //$NON-NLS-1$
+    public static final String SPATIAL_PREFIX = TEIID_SPATIAL+":"; //$NON-NLS-1$
+    public static final String LDAP_PREFIX = TEIID_LDAP+":"; //$NON-NLS-1$
+    public static final String REST_PREFIX = TEIID_REST+":"; //$NON-NLS-1$
+    public static final String PI_PREFIX = TEIID_PI+":"; //$NON-NLS-1$
+    public static final String COUCHBASE_PREFIX = TEIID_COUCHBASE+":"; //$NON-NLS-1$
+    public static final String INFINISPAN_PREFIX = TEIID_INFINISPAN+":"; //$NON-NLS-1$
+    public static final String RELATIONAL_PREFIX = NamespaceContainer.TEIID_RELATIONAL+":"; //$NON-NLS-1$
 
-    public static final Map<String, String> BUILTIN_NAMESPACES;
+    private static final Map<String, String> BUILTIN = new HashMap<String, String>() {
+
+        public String put(String key, String value) {
+            super.put(value.substring(0, value.length() - 1), key);
+            return super.put(key, value);
+        };
+
+    };
     static {
-        Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-        map.put(TEIID_RELATIONAL, AbstractMetadataRecord.RELATIONAL_URI.substring(1, AbstractMetadataRecord.RELATIONAL_URI.length()-1));
-        map.put(TEIID_SF, SF_URI.substring(1, SF_URI.length()-1));
-        map.put(TEIID_WS, WS_URI.substring(1, WS_URI.length()-1));
-        map.put(TEIID_MONGO, MONGO_URI.substring(1, MONGO_URI.length()-1));
-        map.put(TEIID_ODATA, ODATA_URI.substring(1, ODATA_URI.length()-1));
-        map.put(TEIID_ACCUMULO, ACCUMULO_URI.substring(1, ACCUMULO_URI.length()-1));
-        map.put(TEIID_EXCEL, EXCEL_URI.substring(1, EXCEL_URI.length()-1));
-        map.put(TEIID_JPA, JPA_URI.substring(1, JPA_URI.length()-1));
-        map.put(TEIID_HBASE, HBASE_URI.substring(1, HBASE_URI.length()-1));
-        map.put(TEIID_SPATIAL, SPATIAL_URI.substring(1, SPATIAL_URI.length()-1));
-        map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
-        map.put(TEIID_REST, REST_URI.substring(1, REST_URI.length()-1));
-        map.put(TEIID_PI, PI_URI.substring(1, PI_URI.length()-1));
-        map.put(TEIID_COUCHBASE, COUCHBASE_URI.substring(1, COUCHBASE_URI.length()-1));
-        map.put(TEIID_INFINISPAN, INFINISPAN_URI.substring(1, INFINISPAN_URI.length()-1));
-        BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
+        BUILTIN.put("{http://www.teiid.org/ext/relational/2012}", RELATIONAL_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/salesforce/2012}", SF_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/ws/2012}", WS_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/mongodb/2013}", MONGO_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.jboss.org/teiiddesigner/ext/odata/2012}", ODATA_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/accumulo/2013}", ACCUMULO_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/excel/2014}", EXCEL_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/jpa/2014}", JPA_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/hbase/2014}", HBASE_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/spatial/2015}", SPATIAL_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/ldap/2015}", LDAP_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://teiid.org/rest}", REST_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/pi/2016}", PI_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/couchbase/2017}", COUCHBASE_PREFIX); //$NON-NLS-1$
+        BUILTIN.put("{http://www.teiid.org/translator/infinispan/2017}", INFINISPAN_PREFIX); //$NON-NLS-1$
     }
-    
-    protected Map<String, String> namespaces;
-    
+
     public void addNamespace(String prefix, String uri) {
         if (uri == null || uri.indexOf('}') != -1) {
             throw new MetadataException(DataPlugin.Event.TEIID60018, DataPlugin.Util.gs(DataPlugin.Event.TEIID60018, uri));
         }
-        
+
         if (StringUtil.startsWithIgnoreCase(prefix, MetadataFactory.TEIID_RESERVED)) {
-            String validURI = MetadataFactory.BUILTIN_NAMESPACES.get(prefix);
-            if (validURI == null || !uri.equals(validURI)) {
+            String validURI = BUILTIN.get(prefix);
+            if (validURI == null || !uri.equals(validURI.substring(1, validURI.length()-1))) {
                 throw new MetadataException(DataPlugin.Event.TEIID60017, DataPlugin.Util.gs(DataPlugin.Event.TEIID60017, prefix));
             }
+            return;
         }
-        
-        if (this.namespaces == null) {
-             this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-        }
-        String old = this.namespaces.put(prefix, uri);
-        if (old != null && !old.equals(uri)) {
-            throw new MetadataException(DataPlugin.Event.TEIID60037, DataPlugin.Util.gs(DataPlugin.Event.TEIID60037, prefix, old, uri));
-        }
+
+        throw new MetadataException(DataPlugin.Event.TEIID60037, DataPlugin.Util.gs(DataPlugin.Event.TEIID60037, prefix, uri));
     }
-    
-    public Map<String, String> getNamespaces() {
-        if (this.namespaces == null) {
-            return Collections.emptyMap();
-        }
-        return this.namespaces;
-    }
-    
-    public static String resolvePropertyKey(NamespaceContainer baseSchema, String key) {
-        int index = key.indexOf(':');
-        if (index > 0 && index < key.length() - 1) {
-            String prefix = key.substring(0, index);
-            String uri = BUILTIN_NAMESPACES.get(prefix);
-            if (uri == null && baseSchema != null) {
-                uri = baseSchema.getNamespaces().get(prefix);
+
+
+    public static String resolvePropertyKey(String key) {
+        int index = key.indexOf('}');
+        if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {
+            String uri_prefix = key.substring(0, index + 1);
+            String prefix = BUILTIN.get(uri_prefix);
+            if (prefix != null) {
+                key = prefix + key.substring(index+1, key.length());
             }
-            if (uri != null) {
-                key = '{' +uri + '}' + key.substring(index + 1, key.length());
-            }
-            //TODO warnings or errors if not resolvable 
         }
+
         return key;
     }
-    
+
+    public static String getLegacyKey(String key) {
+        int index = key.indexOf(':');
+        if (index > 0 && index < key.length()) {
+            String uri_prefix = BUILTIN.get(key.substring(0, index));
+            if (uri_prefix != null) {
+                return uri_prefix + key.substring(index + 1, key.length());
+            }
+        }
+        return null;
+    }
+
 }

@@ -28,42 +28,42 @@ import org.teiid.core.util.HashCodeUtil;
 
 /**
  * <p>This class represents an identifier for a request.  However, there are some
- * differences in what constitutes "uniqueness" for a given RequestID that 
+ * differences in what constitutes "uniqueness" for a given RequestID that
  * is based on context (where the id is used).  The RequestID has 2 parts:
- * connectionID, and executionIDFor the purposes of the RequestID, the combined 
+ * connectionID, and executionIDFor the purposes of the RequestID, the combined
  * representation is "connectionID.executionID" - this implies a scoping
- * for the name parts.  The connectionID specifies a particular connection that 
- * is making requests.  Each connection generates a unique executionID for each 
- * request execution, so the executionID is only unique in the context of a 
- * connectionID.  </p>
- * 
+ * for the name parts.  The connectionID specifies a particular connection that
+ * is making requests.  Each connection generates a unique executionID for each
+ * request execution, so the executionID is only unique in the context of a
+ * connectionID.
+ *
  * <p>When this class is used between client and server, the connectionID is implied
- * and thus only the executionID part will be used.  The server will qualify the 
- * executionID with a connectionID when it reaches the server.  </p>
- * 
- * <p>RequestIDs are immutable so no setters exist.  This allows hashcodes to be 
- * pre-computed for faster comparison in equals.</p>  
+ * and thus only the executionID part will be used.  The server will qualify the
+ * executionID with a connectionID when it reaches the server.
+ *
+ * <p>RequestIDs are immutable so no setters exist.  This allows hashcodes to be
+ * pre-computed for faster comparison in equals.
  */
 public class RequestID implements Externalizable {
 
     static final long serialVersionUID = -2888539138291776071L;
-    
+
     public static final String NO_CONNECTION_STR = "C"; //$NON-NLS-1$
     private static final String SEPARATOR = "."; //$NON-NLS-1$
 
     // Basic state
     private String connectionID;
     private long executionID;
-    
+
     // Derived state
     private String combinedID;
 
     /**
-     * Necessary for implementing Externalizable 
+     * Necessary for implementing Externalizable
      */
-    public RequestID() {        
+    public RequestID() {
     }
-    
+
     /**
      * Create a RequestID using all of the ID parts.
      * @param connectionID Identifies a connection, may be null
@@ -73,14 +73,14 @@ public class RequestID implements Externalizable {
         this.connectionID = connectionID;
         this.executionID = executionID;
     }
-    
+
     public RequestID(long connectionID, long executionID) {
         this.connectionID = String.valueOf(connectionID);
         this.executionID = executionID;
-    }    
-    
+    }
+
     /**
-     * Create a RequestID for an execution where the connection is 
+     * Create a RequestID for an execution where the connection is
      * not specified.
      * @param executionID Identifies an execution, cannot be null
      */
@@ -88,7 +88,7 @@ public class RequestID implements Externalizable {
         this(null, executionID);
     }
 
-    
+
     /**
      * Return connectionID, may be null if connection has not been specified.
      * @return Connection ID, may be null
@@ -96,7 +96,7 @@ public class RequestID implements Externalizable {
     public String getConnectionID() {
         return this.connectionID;
     }
-    
+
     /**
      * Return executionID, which identifies a per-connection execution.
      * @return Execution ID
@@ -106,7 +106,7 @@ public class RequestID implements Externalizable {
     }
 
     /**
-     * Create a unique combined ID string from the RequestID parts. 
+     * Create a unique combined ID string from the RequestID parts.
      */
     private void createCombinedID() {
         StringBuffer combinedStr = new StringBuffer();
@@ -115,34 +115,34 @@ public class RequestID implements Externalizable {
         } else {
             combinedStr.append(NO_CONNECTION_STR);
         }
-        combinedStr.append(SEPARATOR);               
+        combinedStr.append(SEPARATOR);
         combinedStr.append(this.executionID);
-                
+
         this.combinedID = combinedStr.toString();
     }
-    
+
     public int hashCode() {
         return HashCodeUtil.hashCode(connectionID==null?0:connectionID.hashCode(), executionID);
     }
-    
+
     public boolean equals(Object obj) {
         if(obj == this) {
             return true;
         } else if(obj == null || !(obj instanceof RequestID)) {
             return false;
-        } 
+        }
         RequestID other = (RequestID)obj;
-        return this.executionID == other.executionID 
-        	&& EquivalenceUtil.areEqual(this.connectionID, other.connectionID);
+        return this.executionID == other.executionID
+            && EquivalenceUtil.areEqual(this.connectionID, other.connectionID);
     }
-    
+
     /**
      * Return a combined string for the ID.
      */
     public String toString() {
-    	if (combinedID == null) {
-    		createCombinedID();
-    	}
+        if (combinedID == null) {
+            createCombinedID();
+        }
         return this.combinedID;
     }
 

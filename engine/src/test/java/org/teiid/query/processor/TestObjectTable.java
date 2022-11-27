@@ -37,82 +37,82 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings({"nls", "unchecked"})
 public class TestObjectTable {
 
-	@Test public void testIterator() throws Exception {
-    	String sql = "select x.* from bqt1.smalla, objecttable('ov' passing objectvalue as ov COLUMNS x string 'teiid_row', y integer 'teiid_row_number') x"; //$NON-NLS-1$
-    	
-        List<?>[] expected = new List[] {
-        		Arrays.asList("hello", 1),
-        		Arrays.asList("world", 2),
-        		Arrays.asList("x", 1),
-        		Arrays.asList("y", 2),
-        };    
-
-        process(sql, expected);
-    }
-	
-	@Test public void testProjection() throws Exception {
-    	String sql = "select y, z from bqt1.smalla, objecttable('ov' passing objectvalue as ov COLUMNS x string 'teiid_row', y integer 'teiid_row_number', z integer 'teiid_row.length') x order by x.x desc limit 1"; //$NON-NLS-1$
-    	
-        List<?>[] expected = new List[] {
-        		Arrays.asList(2, 1),
-        };    
-
-        process(sql, expected);
-    }
-	
-	@Test public void testContext() throws Exception {
-    	String sql = "select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.userName') as X"; //$NON-NLS-1$
-    	
-        List<?>[] expected = new List[] {
-        		Arrays.asList("user"),
-        };    
-
-        process(sql, expected);
-    }
-		
-    public static void process(String sql, List<?>[] expectedResults) throws Exception {
-	    process(sql, expectedResults, new List[] {Collections.singletonList(Arrays.asList("hello", "world")), Collections.singletonList(Arrays.asList("x", null, "y")), Collections.singletonList(null)});
-	}
-
-	public static void process(String sql, List<?>[] expectedResults, List<?>[] rows) throws Exception {    
-    	HardcodedDataManager dataManager = new HardcodedDataManager();
-    	dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", rows);
-    	Properties p = new Properties();
-		p.put(TransformationMetadata.ALLOWED_LANGUAGES, ObjectTable.DEFAULT_LANGUAGE);
-		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt", p);
-		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
-        helpProcess(plan, createCommandContext(), dataManager, expectedResults);
-    }
-	
-	@Test public void testNull() throws Exception {
-		String sql = "select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.generatedKeys.toString') as X"; //$NON-NLS-1$
-    	
-        List<?>[] expected = new List[] {
-        		Collections.singletonList(null),
-        };    
-
-        process(sql, expected);
-	}
-	
-	@Test public void testClone() throws Exception {
-    	String sql = "select * from objecttable(language 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') as X"; //$NON-NLS-1$
-    	
-    	Command c = QueryParser.getQueryParser().parseCommand(sql);
-    	assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.toString());
-    	assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.clone().toString());
-    }
-	
-    @Test public void testArray() throws Exception {
+    @Test public void testIterator() throws Exception {
         String sql = "select x.* from bqt1.smalla, objecttable('ov' passing objectvalue as ov COLUMNS x string 'teiid_row', y integer 'teiid_row_number') x"; //$NON-NLS-1$
-        
+
         List<?>[] expected = new List[] {
                 Arrays.asList("hello", 1),
                 Arrays.asList("world", 2),
                 Arrays.asList("x", 1),
                 Arrays.asList("y", 2),
-        };    
+        };
+
+        process(sql, expected);
+    }
+
+    @Test public void testProjection() throws Exception {
+        String sql = "select y, z from bqt1.smalla, objecttable('ov' passing objectvalue as ov COLUMNS x string 'teiid_row', y integer 'teiid_row_number', z integer 'teiid_row.length') x order by x.x desc limit 1"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] {
+                Arrays.asList(2, 1),
+        };
+
+        process(sql, expected);
+    }
+
+    @Test public void testContext() throws Exception {
+        String sql = "select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.userName') as X"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] {
+                Arrays.asList("user"),
+        };
+
+        process(sql, expected);
+    }
+
+    public static void process(String sql, List<?>[] expectedResults) throws Exception {
+        process(sql, expectedResults, new List[] {Collections.singletonList(Arrays.asList("hello", "world")), Collections.singletonList(Arrays.asList("x", null, "y")), Collections.singletonList(null)});
+    }
+
+    public static void process(String sql, List<?>[] expectedResults, List<?>[] rows) throws Exception {
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", rows);
+        Properties p = new Properties();
+        p.put(TransformationMetadata.ALLOWED_LANGUAGES, ObjectTable.DEFAULT_LANGUAGE);
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt", p);
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata);
+        helpProcess(plan, createCommandContext(), dataManager, expectedResults);
+    }
+
+    @Test public void testNull() throws Exception {
+        String sql = "select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.generatedKeys.toString') as X"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] {
+                Collections.singletonList(null),
+        };
+
+        process(sql, expected);
+    }
+
+    @Test public void testClone() throws Exception {
+        String sql = "select * from objecttable(language 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') as X"; //$NON-NLS-1$
+
+        Command c = QueryParser.getQueryParser().parseCommand(sql);
+        assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.toString());
+        assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.clone().toString());
+    }
+
+    @Test public void testArray() throws Exception {
+        String sql = "select x.* from bqt1.smalla, objecttable('ov' passing objectvalue as ov COLUMNS x string 'teiid_row', y integer 'teiid_row_number') x"; //$NON-NLS-1$
+
+        List<?>[] expected = new List[] {
+                Arrays.asList("hello", 1),
+                Arrays.asList("world", 2),
+                Arrays.asList("x", 1),
+                Arrays.asList("y", 2),
+        };
 
         process(sql, expected, new List<?>[] {Collections.singletonList(new String[] {"hello", "world"}), Arrays.asList(new ArrayImpl("x", "y"))});
     }
-	
+
 }

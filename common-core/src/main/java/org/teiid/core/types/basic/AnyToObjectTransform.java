@@ -23,38 +23,38 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
 public class AnyToObjectTransform extends Transform {
-	
-	public static final AnyToObjectTransform INSTANCE = new AnyToObjectTransform(Object.class);
-	
-	private Class<?> sourceType;
-	
-	public AnyToObjectTransform(Class<?> sourceType) {
-		this.sourceType = sourceType;
-	}
-	
-	@Override
-	public Class<?> getSourceType() {
-		return sourceType;
-	}
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		return value;
-	}
+    public static final AnyToObjectTransform INSTANCE = new AnyToObjectTransform(Object.class);
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.OBJECT;
-	}
+    private Class<?> sourceType;
+
+    public AnyToObjectTransform(Class<?> sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    @Override
+    public Class<?> getSourceType() {
+        return sourceType;
+    }
+
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        return value;
+    }
+
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.OBJECT;
+    }
 
 }

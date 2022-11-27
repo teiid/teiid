@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connector version="1.5">
+
+   <vendor-name>Red Hat Middleware LLC</vendor-name>
+   <eis-type>Teiid Infinispan DSL Resource Adapter</eis-type>
+   <resourceadapter-version>1.0</resourceadapter-version>
+   <license>
+      <description>
+ Copyright Red Hat, Inc. and/or its affiliates
+ and other contributors as indicated by the @author tags and
+ the COPYRIGHT.txt file distributed with this work.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+      </description>
+      <license-required>true</license-required>
+   </license>
+   <resourceadapter>
+      <resourceadapter-class>org.teiid.resource.adapter.infinispan.hotrod.InfinispanResourceAdapter</resourceadapter-class>
+
+      <outbound-resourceadapter>
+         <connection-definition>
+            <managedconnectionfactory-class>org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory</managedconnectionfactory-class>
+  
+            <config-property>
+               <description>{$display:"Server List",$description:"Remote Server List (host:port[;host:port...]) to connect to"}</description>
+               <config-property-name>RemoteServerList</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+
+            <config-property>
+               <description>{$display:"Cache name",$description:"Name of Cache to connect to"}</description>
+               <config-property-name>CacheName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+                <description>{$display:"Transaction Mode",$description:"Transaction Mode",$required:"false"}</description>
+               <config-property-name>TransactionMode</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+                                   
+            <config-property>
+                <description>{$display:"TrustStore File Name",$description:"File name of the truststore",$required:"false"}</description>
+               <config-property-name>TrustStoreFileName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+            
+            <config-property>
+                <description>{$display:"TrustStore Password",$description:"TrustStore Password",$required:"false",$masked:"true"}</description>
+               <config-property-name>TrustStorePassword</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"KeyStore File Name",$description:"File name of the keystore",$required:"false"}</description>
+               <config-property-name>KeyStoreFileName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"KeyStore Password",$description:"KeyStore Password",$required:"false",$masked:"true"}</description>
+               <config-property-name>KeyStorePassword</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>                       
+
+            <config-property>
+                <description>{$display:"Authentication Server Name",$description:"Authentication Server Name",$required:"false"}</description>
+               <config-property-name>AuthenticationServerName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+   
+            <config-property>
+                <description>{$display:"Authentication Application Realm",$description:"Authentication Application Realm",$required:"false"}</description>
+               <config-property-name>AuthenticationRealm</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+                     
+            <config-property>
+                <description>{$display:"Authentication SASL Mechanism",$description:"Authentication SASL Mechanism",$required:"false"}</description>
+               <config-property-name>SaslMechanism</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+             
+            <config-property>
+                <description>{$display:"Authentication User Name",$description:"Authentication User Name",$required:"false"}</description>
+               <config-property-name>UserName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+            
+            <config-property>
+                <description>{$display:"Authentication User Password",$description:"Authentication User Password",$required:"false",$masked:"true"}</description>
+               <config-property-name>Password</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>    
+            
+            <config-property>
+                <description>{$display:"Cache Template",$description:"Default Cache template to use to create dynamic cache stores",$required:"false",$masked:"false"}</description>
+               <config-property-name>CacheTemplate</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+ 
+            <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connection-interface>javax.resource.cci.Connection</connection-interface>
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>          
+
+         </connection-definition>
+         
+         <transaction-support>NoTransaction</transaction-support>
+        
+        <authentication-mechanism>
+            <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+            <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+        </authentication-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+      </outbound-resourceadapter>
+   </resourceadapter>
+</connector>

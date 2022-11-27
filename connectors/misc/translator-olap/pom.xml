@@ -4,13 +4,18 @@
     <parent>
       <groupId>org.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
-      <version>11.1.0-SNAPSHOT</version>
+      <version>17.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>translator-olap</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>OLAP Translator</name>
     <description>This translator provides access to Query Analysis Cubes</description>
-    <packaging>bundle</packaging>
+    <properties>
+        <!-- the xmla dependency -->
+        <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+        <!-- resource overlap in the olap jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -20,10 +25,6 @@
             <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-        </dependency>    
          <dependency>
           <groupId>org.olap4j</groupId>
           <artifactId>olap4j</artifactId>

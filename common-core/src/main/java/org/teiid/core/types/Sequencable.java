@@ -23,5 +23,5 @@ import java.sql.SQLException;
 public interface Sequencable {
 
     public CharSequence getCharSequence() throws SQLException;
-    
+
 }

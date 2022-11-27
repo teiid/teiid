@@ -20,29 +20,29 @@ package org.teiid.metadata;
 
 public class KeyRecord extends ColumnSet<Table> {
 
-	private static final long serialVersionUID = -3526999525526556933L;
+    private static final long serialVersionUID = -3526999525526556933L;
 
-	public enum Type {
-		Primary,
-		Foreign,
-		Unique, //constraint
-		@Deprecated
-		NonUnique,
-		AccessPattern,
-		Index,
-	}
-	
-	private Type type;
+    public enum Type {
+        Primary,
+        Foreign,
+        Unique, //constraint
+        @Deprecated
+        NonUnique,
+        AccessPattern,
+        Index,
+    }
 
-	public KeyRecord(Type type) {
-		if (type == Type.NonUnique) {
-			type = Type.Index;
-		}
-		this.type = type;
-	}
-	
-	public Type getType() {
-		return type;
-	}
-	
+    private Type type;
+
+    public KeyRecord(Type type) {
+        if (type == Type.NonUnique) {
+            type = Type.Index;
+        }
+        this.type = type;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
 }

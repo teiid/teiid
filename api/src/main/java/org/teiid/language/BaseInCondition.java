@@ -19,43 +19,43 @@
 package org.teiid.language;
 
 public abstract class BaseInCondition extends Condition implements Predicate {
-	
+
     private Expression leftExpression;
     private boolean negated;
-    
+
     public BaseInCondition(Expression leftExpression, boolean negated) {
-    	this.leftExpression = leftExpression;
-    	this.negated = negated;
-	}
+        this.leftExpression = leftExpression;
+        this.negated = negated;
+    }
 
     /**
      * Get left expression of IN criteria
      * @return Left expression
      */
     public Expression getLeftExpression() {
-		return leftExpression;
-	}
+        return leftExpression;
+    }
 
     /**
      * Set left expression of IN criteria
      */
     public void setLeftExpression(Expression leftExpression) {
-		this.leftExpression = leftExpression;
-	}
+        this.leftExpression = leftExpression;
+    }
 
     /**
      * Returns whether this criteria is negated.
      * @return flag indicating whether this criteria contains a NOT
      */
     public boolean isNegated() {
-		return negated;
-	}
-    
+        return negated;
+    }
+
     /**
      * Sets whether this criteria is negated.
      * @param negated Flag indicating whether this criteria contains a NOT
      */
     public void setNegated(boolean negated) {
-		this.negated = negated;
-	}
+        this.negated = negated;
+    }
 }

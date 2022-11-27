@@ -45,12 +45,12 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
         Function func = LANG_FACTORY.createFunction(target,
             Arrays.asList( c, d ),
             String.class);
-        
+
         OracleExecutionFactory trans = new OracleExecutionFactory();
         trans.start();
-        
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(func);  
+
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+        sqlVisitor.append(func);
         assertEquals(expectedStr, sqlVisitor.toString());
     }
 
@@ -60,5 +60,5 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
         helpTestMod(arg1, count, "left", //$NON-NLS-1$
             "substr('1234214', 1, 11)"); //$NON-NLS-1$
     }
-    
+
 }

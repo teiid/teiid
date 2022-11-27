@@ -31,7 +31,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * Represents a SQL Update statement of the form:
- * "UPDATE <group> SET <element> = <expression>, ... [WHERE <criteria>]".
+ * "UPDATE &lt;group&gt; SET &lt;element&gt; = &lt;expression&gt;, ... [WHERE &lt;criteria&gt;]".
  */
 public class Update extends ProcedureContainer implements FilteredCommand {
 
@@ -42,7 +42,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
 
     /** optional criteria defining which row get updated. */
     private Criteria criteria;
-    
+
     private Criteria constraint;
 
     // =========================================================================
@@ -54,19 +54,19 @@ public class Update extends ProcedureContainer implements FilteredCommand {
      */
     public Update() {
     }
-    
-	/**
-	 * Return type of command.
-	 * @return TYPE_UPDATE
-	 */
-	public int getType() {
-		return Command.TYPE_UPDATE;
-	}
+
+    /**
+     * Return type of command.
+     * @return TYPE_UPDATE
+     */
+    public int getType() {
+        return Command.TYPE_UPDATE;
+    }
 
     /**
      * Construct with group and change list
      * @param group Group to by updated
-     * @param changeList List of CompareCriteria that represent Element->expression updates
+     * @param changeList List of CompareCriteria that represent Element and expression updates
      */
     public Update(GroupSymbol group, SetClauseList changeList) {
         this.group = group;
@@ -76,7 +76,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     /**
      * Construct with group, change list, and criteria
      * @param group DataGroupID that represents the group being updated
-     * @param List of changeCriteria that represent Element->value pairings
+     * @param changeList of changeCriteria that represent Element and value pairings
      * @param criteria Criteria that defines what rows get updated
      */
     public Update(GroupSymbol group, SetClauseList changeList, Criteria criteria) {
@@ -103,14 +103,14 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     public void setGroup(GroupSymbol group) {
         this.group = group;
     }
-    
+
     /**
      * Set the list of CompareCriteria representing updates being made
      * @param changeList List of CompareCriteria
      */
     public void setChangeList(SetClauseList changeList) {
         this.changeList = changeList;
-    }    
+    }
 
     /**
      * Return the list of CompareCriteria representing updates being made
@@ -154,7 +154,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     //                  P A R S E R     M E T H O D S
     // =========================================================================
 
-	
+
     /**
      * Get hashcode for command.  WARNING: This hash code relies on the hash codes of the
      * Group, changeList and Criteria clause.  If the command changes, it's hash code will change and
@@ -163,21 +163,21 @@ public class Update extends ProcedureContainer implements FilteredCommand {
      * @return Hash code
      */
     public int hashCode() {
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.group);
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.group);
         myHash = HashCodeUtil.hashCode(myHash, this.changeList);
         if (this.criteria != null) {
             myHash = HashCodeUtil.hashCode(myHash, this.criteria);
         }
-		return myHash;
-	}
+        return myHash;
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 
     /**
@@ -188,74 +188,74 @@ public class Update extends ProcedureContainer implements FilteredCommand {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof Update)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof Update)) {
+            return false;
+        }
 
-		Update other = (Update) obj;
-        
-        return 
+        Update other = (Update) obj;
+
+        return
             EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
             getChangeList().equals(other.getChangeList()) &&
             sameOptionAndHint(other) &&
             EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
 
-	/**
-	 * Return a copy of this Update.
-	 * @return Deep clone
-	 */
-	public Object clone() {
-		Update copy = new Update();
-		
-	    if(group != null) { 
-	        copy.setGroup(group.clone());
-	    }
-	    
-	    copy.setChangeList((SetClauseList)this.changeList.clone());
+    /**
+     * Return a copy of this Update.
+     * @return Deep clone
+     */
+    public Object clone() {
+        Update copy = new Update();
 
-		if(criteria != null) { 
-			copy.setCriteria((Criteria) criteria.clone());
-		}
+        if(group != null) {
+            copy.setGroup(group.clone());
+        }
+
+        copy.setChangeList((SetClauseList)this.changeList.clone());
+
+        if(criteria != null) {
+            copy.setCriteria((Criteria) criteria.clone());
+        }
 
         this.copyMetadataState(copy);
         if (this.constraint != null) {
-        	copy.constraint = (Criteria) this.constraint.clone();
+            copy.constraint = (Criteria) this.constraint.clone();
         }
-		return copy;
-	}
-	
-	/**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public List getProjectedSymbols(){
+        return copy;
+    }
+
+    /**
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public List getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
-	}
-	
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable(){
-		return false;
-	}
-	
-	public Criteria getConstraint() {
-		return constraint;
-	}
-	
-	public void setConstraint(Criteria constraint) {
-		this.constraint = constraint;
-	}
-    
+    }
+
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable(){
+        return false;
+    }
+
+    public Criteria getConstraint() {
+        return constraint;
+    }
+
+    public void setConstraint(Criteria constraint) {
+        this.constraint = constraint;
+    }
+
 }
 
 

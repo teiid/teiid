@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.teiid.wildfly.connectors</groupId>
+		<artifactId>infinispan</artifactId>
+		<version>17.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>connector-infinispan-hotrod</artifactId>
+	<name>Infinispan Hotrod Protocol Based Resource Adapter</name>
+	<description>This resource adapter uses Hotrod protocol to create a connection to the Infinispan Cache</description>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.teiid</groupId>
+			<artifactId>teiid-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.teiid.connectors</groupId>
+			<artifactId>infinispan-api</artifactId>
+		</dependency>
+		<dependency>
+            <groupId>org.teiid.wildfly</groupId>
+            <artifactId>teiid-resource-spi</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.jboss.spec.javax.resource</groupId>
+			<artifactId>jboss-connector-api_1.7_spec</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-commons</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-query</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<scope>test</scope>
+		</dependency>		
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-client-hotrod</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-remote-query-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-remote-query-server</artifactId>
+		</dependency>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>        
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-server-hotrod</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-hotrod</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-infinispan-hotrod</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+	</dependencies>
+
+</project>
+ 

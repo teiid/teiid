@@ -26,7 +26,7 @@ public class CouchbasePlugin {
     public static final String PLUGIN_ID = "org.teiid.translator.couchbase" ; //$NON-NLS-1$
 
     private static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
-    
+
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
 
     public static enum Event implements BundleUtil.Event{
@@ -49,10 +49,10 @@ public class CouchbasePlugin {
         TEIID29018,
         TEIID29019,
         TEIID29020,
-        TEIID29021, 
-        TEIID29022, 
+        TEIID29021,
+        TEIID29022,
         TEIID29023,
-        TEIID29024, 
+        TEIID29024,
         TEIID29025
     }
 }

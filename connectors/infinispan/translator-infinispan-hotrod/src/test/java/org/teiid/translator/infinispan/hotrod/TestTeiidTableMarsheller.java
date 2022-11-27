@@ -17,12 +17,8 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -32,21 +28,18 @@ import java.util.TreeMap;
 
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.ProtobufUtil;
-import org.infinispan.protostream.RawProtoStreamReader;
-import org.infinispan.protostream.RawProtoStreamWriter;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.WrappedMessage;
 import org.infinispan.protostream.config.Configuration;
-import org.infinispan.protostream.impl.RawProtoStreamReaderImpl;
-import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.infinispan.api.InfinispanDocument;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.infinispan.api.TableWireFormat;
-import org.teiid.infinispan.api.TeiidTableMarsheller;
+import org.teiid.infinispan.api.TeiidTableMarshaller;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
@@ -78,11 +71,19 @@ public class TestTeiidTableMarsheller {
         return visitor;
     }
 
+    byte[] writeMessage(SerializationContext ctx, Object obj) throws IOException {
+    	return ProtobufUtil.toWrappedByteArray(ctx, obj);
+    }
+
+    Object readMessage(SerializationContext ctx, byte[] in) throws IOException {
+    	return ProtobufUtil.fromWrappedByteArray(ctx, in, 0, in.length);
+    }
+
     @Test
     public void testReadSimple() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G1");
 
-        TeiidTableMarsheller g1ReadMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller g1ReadMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -99,16 +100,11 @@ public class TestTeiidTableMarsheller {
 
         G1 g1 = buildG1();
         ctx.registerMarshaller(g1WriteMarshller);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        RawProtoStreamWriter out = RawProtoStreamWriterImpl.newInstance(baos);
-        WrappedMessage.writeMessage(ctx, out, g1);
-        out.flush();
-        baos.flush();
+        byte[] contents = writeMessage(ctx, g1);
         ctx.unregisterMarshaller(g1WriteMarshller);
 
         ctx.registerMarshaller(g1ReadMarshaller);
-        RawProtoStreamReader in = RawProtoStreamReaderImpl.newInstance(baos.toByteArray());
-        Document result = WrappedMessage.readMessage(ctx, in);
+        Document result = (Document)readMessage(ctx, contents);
         Map<String, Object> row = result.flatten().get(0);
 
         assertEquals(1, row.get("e1"));
@@ -124,7 +120,7 @@ public class TestTeiidTableMarsheller {
     public void testWriteSimple() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G1");
 
-        TeiidTableMarsheller g1WriteMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller g1WriteMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -151,17 +147,12 @@ public class TestTeiidTableMarsheller {
 
         // write to buffer
         ctx.registerMarshaller(g1WriteMarshaller);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        RawProtoStreamWriter out = RawProtoStreamWriterImpl.newInstance(baos);
-        WrappedMessage.writeMessage(ctx, out, g1);
-        out.flush();
-        baos.flush();
+        byte[] contents = writeMessage(ctx, g1);
         ctx.unregisterMarshaller(g1WriteMarshaller);
 
         // read from buffer
         ctx.registerMarshaller(g1ReadMarshaller);
-        RawProtoStreamReader in = RawProtoStreamReaderImpl.newInstance(baos.toByteArray());
-        G1 result = WrappedMessage.readMessage(ctx, in);
+        G1 result = (G1)readMessage(ctx, contents);
         ctx.unregisterMarshaller(g1ReadMarshaller);
 
         assertEquals(buildG1(), result);
@@ -189,14 +180,9 @@ public class TestTeiidTableMarsheller {
 
         G2 g2 = buildG2();
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        RawProtoStreamWriter out = RawProtoStreamWriterImpl.newInstance(baos);
-        WrappedMessage.writeMessage(ctx, out, g2);
-        out.flush();
-        baos.flush();
+        byte[] contents = writeMessage(ctx, g2);
 
-        RawProtoStreamReader in = RawProtoStreamReaderImpl.newInstance(baos.toByteArray());
-        G2 result = WrappedMessage.readMessage(ctx, in);
+        G2 result = (G2) readMessage(ctx, contents);
         //System.out.println(result);
         assertNotNull(result);
         assertEquals(g2, result);
@@ -290,7 +276,7 @@ public class TestTeiidTableMarsheller {
     public void testReadComplex() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G2");
 
-        TeiidTableMarsheller readMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller readMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -312,16 +298,11 @@ public class TestTeiidTableMarsheller {
 
         // this is used for writing, if reading is being attempted then fail
         ctx.registerMarshaller(writeMarshaller);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        RawProtoStreamWriter out = RawProtoStreamWriterImpl.newInstance(baos);
-        WrappedMessage.writeMessage(ctx, out, g2);
-        out.flush();
-        baos.flush();
+        byte[] contents = writeMessage(ctx, g2);
         ctx.unregisterMarshaller(writeMarshaller);
 
         ctx.registerMarshaller(readMarshaller);
-        RawProtoStreamReader in = RawProtoStreamReaderImpl.newInstance(baos.toByteArray());
-        InfinispanDocument result = WrappedMessage.readMessage(ctx, in);
+        InfinispanDocument result = (InfinispanDocument)readMessage(ctx, contents);
         //System.out.println(result.flatten());
         assertG2(result);
         ctx.unregisterMarshaller(readMarshaller);
@@ -333,7 +314,7 @@ public class TestTeiidTableMarsheller {
     public void testWriteComplex() throws Exception {
         IckleConversionVisitor visitor = helpExecute("select * from G2");
 
-        TeiidTableMarsheller writeMarshaller = new TeiidTableMarsheller(
+        TeiidTableMarshaller writeMarshaller = new TeiidTableMarshaller(
                 ProtobufMetadataProcessor.getMessageName(visitor.getParentTable()),
                 MarshallerBuilder.getWireMap(visitor.getParentTable(), visitor.getMetadata()));
 
@@ -353,17 +334,12 @@ public class TestTeiidTableMarsheller {
         InfinispanDocument g2 = buildG2(visitor);
 
         ctx.registerMarshaller(writeMarshaller);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        RawProtoStreamWriter out = RawProtoStreamWriterImpl.newInstance(baos);
-        WrappedMessage.writeMessage(ctx, out, g2);
-        out.flush();
-        baos.flush();
+        byte[] contents = writeMessage(ctx, g2);
         ctx.unregisterMarshaller(writeMarshaller);
 
         // this is used for writing, if reading is being attempted then fail
         ctx.registerMarshaller(readMarshaller);
-        RawProtoStreamReader in = RawProtoStreamReaderImpl.newInstance(baos.toByteArray());
-        G2 result = WrappedMessage.readMessage(ctx, in);
+        G2 result = (G2)readMessage(ctx, contents);
         ctx.unregisterMarshaller(readMarshaller);
         assertEquals(buildG2(), result);
     }

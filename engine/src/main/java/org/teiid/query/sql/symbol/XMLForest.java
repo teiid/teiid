@@ -29,63 +29,63 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLForest implements Expression {
 
-	private List<DerivedColumn> args;
-	private XMLNamespaces namespaces;
-	
-	public XMLForest(List<DerivedColumn> args) {
-		this.args = args;
-	}
-	
-	public XMLNamespaces getNamespaces() {
-		return namespaces;
-	}
-	
-	public void setNamespaces(XMLNamespaces namespaces) {
-		this.namespaces = namespaces;
-	}
-	
-	public List<DerivedColumn> getArgs() {
-		return args;
-	}
+    private List<DerivedColumn> args;
+    private XMLNamespaces namespaces;
 
-	@Override
-	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.XML;
-	}
+    public XMLForest(List<DerivedColumn> args) {
+        this.args = args;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-		
-	@Override
-	public XMLForest clone() {
-		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, DerivedColumn.class));
-		if (namespaces != null) {
-			clone.namespaces = namespaces.clone();
-		}
-		return clone;
-	}
-	
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(args.hashCode());
-	}
-	
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof XMLForest)) {
-			return false;
-		}
-		XMLForest other = (XMLForest)obj;
-		return args.equals(other.args) && EquivalenceUtil.areEqual(namespaces, other.namespaces);
-	}
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
-	
+    public XMLNamespaces getNamespaces() {
+        return namespaces;
+    }
+
+    public void setNamespaces(XMLNamespaces namespaces) {
+        this.namespaces = namespaces;
+    }
+
+    public List<DerivedColumn> getArgs() {
+        return args;
+    }
+
+    @Override
+    public Class<?> getType() {
+        return DataTypeManager.DefaultDataClasses.XML;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public XMLForest clone() {
+        XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, DerivedColumn.class));
+        if (namespaces != null) {
+            clone.namespaces = namespaces.clone();
+        }
+        return clone;
+    }
+
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(args.hashCode());
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof XMLForest)) {
+            return false;
+        }
+        XMLForest other = (XMLForest)obj;
+        return args.equals(other.args) && EquivalenceUtil.areEqual(namespaces, other.namespaces);
+    }
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
+
 }

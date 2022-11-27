@@ -32,5 +32,5 @@ import org.teiid.query.sql.symbol.Expression;
 public interface VariableResolver {
 
     Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException;
-    
+
 }

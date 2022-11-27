@@ -98,6 +98,7 @@ CREATE FOREIGN TABLE Keys (
 	RefTableUID string(50) NOT NULL,
 	RefSchemaUID string(50) NOT NULL,
 	ColPositions short[] NOT NULL,
+	ColNames string[] NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Sys.Tables (VDBName, SchemaName, Name),
 	UNIQUE (UID)
@@ -107,6 +108,7 @@ CREATE FOREIGN TABLE ProcedureParams (
 	VDBName string(255) NOT NULL,
 	SchemaName string(255),
 	ProcedureName string(255) NOT NULL,
+	ProcedureUID string(50) NOT NULL,
 	Name string(255) NOT NULL,
 	DataType string(25) NOT NULL,
 	Position integer NOT NULL,
@@ -164,7 +166,7 @@ CREATE FOREIGN TABLE FunctionParams (
     ColumnSize integer,
     UNIQUE (UID),
     PRIMARY KEY (VDBName, SchemaName, FunctionName, Name),
-    FOREIGN KEY (VDBName, SchemaName, FunctionName) REFERENCES Functions (VDBName, SchemaName, Name)
+    FOREIGN KEY (VDBName, SchemaName, FunctionName, FunctionUID) REFERENCES Functions (VDBName, SchemaName, Name, UID)
 );
 
 CREATE FOREIGN TABLE Functions (
@@ -175,7 +177,8 @@ CREATE FOREIGN TABLE Functions (
     UID string(50) NOT NULL,
     Description string(4000),
     IsVarArgs boolean,
-    PRIMARY KEY (VDBName, SchemaName, Name),
+    SchemaUID string (50) NOT NULL,
+    PRIMARY KEY (VDBName, SchemaName, Name, UID),
     FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
     UNIQUE (UID)    
 );
@@ -241,11 +244,10 @@ CREATE FOREIGN TABLE VirtualDatabases (
 	Name string(255) NOT NULL,
 	Version string(50) NOT NULL,
 	Description string(4000),
+	LoadingTimestamp timestamp,
+	ActiveTimestamp timestamp,
 	PRIMARY KEY (Name, Version)
 );
-
-CREATE FOREIGN PROCEDURE getXMLSchemas(IN document string NOT NULL) RETURNS TABLE (schema xml)
-OPTIONS (UPDATECOUNT 0);
 
 CREATE VIEW spatial_ref_sys (
     srid integer primary key,
@@ -270,5 +272,19 @@ as select c.VDBName, c.SchemaName, c.TableName, c.Name,
   nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 0),
   nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOMETRY') 
   from sys.columns as c where DataType = 'geometry';
+
+CREATE VIEW GEOGRAPHY_COLUMNS ( 
+    F_TABLE_CATALOG VARCHAR(256) NOT NULL, 
+    F_TABLE_SCHEMA VARCHAR(256) NOT NULL, 
+    F_TABLE_NAME VARCHAR(256) NOT NULL, 
+    F_GEOMETRY_COLUMN VARCHAR(256) NOT NULL,
+    COORD_DIMENSION INTEGER NOT NULL, 
+    SRID INTEGER NOT NULL, 
+    TYPE VARCHAR(30) NOT NULL)
+as select c.VDBName, c.SchemaName, c.TableName, c.Name, 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}coord_dimension') as integer), 2), 
+  nvl(cast((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}srid') as integer), 4326),
+  nvl((select "value" from sys.properties where uid = c.UID and name='{http://www.teiid.org/translator/spatial/2015}type'), 'GEOGRAPY') 
+  from sys.columns as c where DataType = 'geography';
   
 CREATE FOREIGN PROCEDURE ARRAYITERATE (val object[]) RETURNS TABLE (col object);

@@ -24,39 +24,39 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 /**
  * <p> This class represents the a statement in the stored procedure language.
  * The subclasses of this class represent specific statements like an
- * <code>IfStatement</code>, <code>AssignmentStatement</code> etc.</p>
+ * <code>IfStatement</code>, <code>AssignmentStatement</code> etc.
  */
 public abstract class Statement implements LanguageObject {
-	
-	public interface Labeled {
-		String getLabel();
-		void setLabel(String label);
-	}
 
-	/** 
-	 * Represents an unknown type of statement 
-	 */
-	public static final int TYPE_UNKNOWN = 0;
+    public interface Labeled {
+        String getLabel();
+        void setLabel(String label);
+    }
 
-	/**
-	 * Represents a IF statement
-	 */
-	public static final int TYPE_IF = 1;
+    /**
+     * Represents an unknown type of statement
+     */
+    public static final int TYPE_UNKNOWN = 0;
 
-	/**
-	 * Represents a SQL COMMAND statement
-	 */
-	public static final int TYPE_COMMAND = 2;
+    /**
+     * Represents a IF statement
+     */
+    public static final int TYPE_IF = 1;
 
-	/**
-	 * Represents a DECLARE statement
-	 */
-	public static final int TYPE_DECLARE = 3;
+    /**
+     * Represents a SQL COMMAND statement
+     */
+    public static final int TYPE_COMMAND = 2;
 
-	/**
-	 * Represents a ERROR statement
-	 */
-	public static final int TYPE_ERROR = 4;
+    /**
+     * Represents a DECLARE statement
+     */
+    public static final int TYPE_DECLARE = 3;
+
+    /**
+     * Represents a ERROR statement
+     */
+    public static final int TYPE_ERROR = 4;
 
     /**
      * Represents a ASSIGNMENT statement
@@ -72,43 +72,43 @@ public abstract class Statement implements LanguageObject {
      * Represents a WHILE statement
      */
     public static final int TYPE_WHILE = 7;
-    
+
     /**
      * Represents a CONTINUE statement
      */
     public static final int TYPE_CONTINUE = 8;
-    
+
     /**
      * Represents a BREAK statement
      */
     public static final int TYPE_BREAK = 9;
-    
+
     public static final int TYPE_UPDATE = 10;
-    
+
     public static final int TYPE_COMPOUND = 11;
-    
+
     public static final int TYPE_LEAVE = 12;
 
-	public static final int TYPE_RETURN = 13;
-    
-	/**
-	 * Return type of statement to make it easier to build switch statements by statement type.
-	 * @return Type from TYPE constants
-	 */	
-	public abstract int getType();
+    public static final int TYPE_RETURN = 13;
+
+    /**
+     * Return type of statement to make it easier to build switch statements by statement type.
+     * @return Type from TYPE constants
+     */
+    public abstract int getType();
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
 
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
-	 */
-	public abstract Object clone();
-	
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public abstract Object clone();
+
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
 }

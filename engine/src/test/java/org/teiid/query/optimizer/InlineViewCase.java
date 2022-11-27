@@ -22,20 +22,20 @@ import java.util.List;
 import java.util.Set;
 
 public class InlineViewCase {
-	public String name;
-	public String userQuery;
-	public String optimizedQuery;
-	public Set<String> sourceQueries;
-	public List<List<Object>> expectedResults;
-	
-	public String getFullyQualifiedQuery() {
-		return optimizedQuery;    	
-	}		
-	public InlineViewCase(String name, String userQuery, String optimizedQuery, Set<String> sourceQueries, List expectedResults) {
-		this.name = name;
-		this.userQuery = userQuery;
-		this.optimizedQuery = optimizedQuery;
-		this.sourceQueries = sourceQueries;
-		this.expectedResults = expectedResults;
-	}	
+    public String name;
+    public String userQuery;
+    public String optimizedQuery;
+    public Set<String> sourceQueries;
+    public List<List<Object>> expectedResults;
+
+    public String getFullyQualifiedQuery() {
+        return optimizedQuery;
+    }
+    public InlineViewCase(String name, String userQuery, String optimizedQuery, Set<String> sourceQueries, List expectedResults) {
+        this.name = name;
+        this.userQuery = userQuery;
+        this.optimizedQuery = optimizedQuery;
+        this.sourceQueries = sourceQueries;
+        this.expectedResults = expectedResults;
+    }
 }

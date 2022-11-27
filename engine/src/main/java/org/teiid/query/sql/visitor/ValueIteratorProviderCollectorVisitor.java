@@ -37,48 +37,48 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 
 /**
  * <p>This visitor class will traverse a language object tree and collect all language
- * objects that implement {@link SubqueryContainer}.  
- * By default it uses a java.util.ArrayList to collect the objects in the order 
- * they're found.</p>
- * 
- * <p>The easiest way to use this visitor is to call one of the static methods which create 
- * the visitor, run the visitor, and get the collection. 
- * The public visit() methods should NOT be called directly.</p>
+ * objects that implement {@link SubqueryContainer}.
+ * By default it uses a java.util.ArrayList to collect the objects in the order
+ * they're found.
+ *
+ * <p>The easiest way to use this visitor is to call one of the static methods which create
+ * the visitor, run the visitor, and get the collection.
+ * The public visit() methods should NOT be called directly.
  */
 public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
 
     private List<SubqueryContainer<?>> valueIteratorProviders;
-	private boolean collectLateral;
-    
-    /**
-     * Construct a new visitor with the default collection type, which is a 
-     * {@link java.util.ArrayList}.  
-     */
-    public ValueIteratorProviderCollectorVisitor() { 
-        this.valueIteratorProviders = new ArrayList<SubqueryContainer<?>>();
-    }   
+    private boolean collectLateral;
 
-	/**
-	 * Construct a new visitor with the given Collection to accumulate
-     * ValueIteratorProvider instances
-	 * @param valueIteratorProviders Collection to accumulate found 
-	 */
-	ValueIteratorProviderCollectorVisitor(List<SubqueryContainer<?>> valueIteratorProviders) { 
-		this.valueIteratorProviders = valueIteratorProviders;
-	}   
-    
     /**
-     * Get the value iterator providers collected by the visitor.  This should best be called 
+     * Construct a new visitor with the default collection type, which is a
+     * {@link java.util.ArrayList}.
+     */
+    public ValueIteratorProviderCollectorVisitor() {
+        this.valueIteratorProviders = new ArrayList<SubqueryContainer<?>>();
+    }
+
+    /**
+     * Construct a new visitor with the given Collection to accumulate
+     * ValueIteratorProvider instances
+     * @param valueIteratorProviders Collection to accumulate found
+     */
+    ValueIteratorProviderCollectorVisitor(List<SubqueryContainer<?>> valueIteratorProviders) {
+        this.valueIteratorProviders = valueIteratorProviders;
+    }
+
+    /**
+     * Get the value iterator providers collected by the visitor.  This should best be called
      * after the visitor has been run on the language object tree.
      * @return Collection of {@link SubqueryContainer}
      * (by default, this is a java.util.ArrayList)
      */
-    public List<SubqueryContainer<?>> getValueIteratorProviders() { 
+    public List<SubqueryContainer<?>> getValueIteratorProviders() {
         return this.valueIteratorProviders;
     }
-    
+
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
@@ -87,18 +87,18 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
     }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
     public void visit(SubqueryCompareCriteria obj) {
-    	if (obj.getCommand() != null) {
-    		this.valueIteratorProviders.add(obj);
-    	}
+        if (obj.getCommand() != null) {
+            this.valueIteratorProviders.add(obj);
+        }
     }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
@@ -107,22 +107,22 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
     }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
     public void visit(ScalarSubquery obj) {
         this.valueIteratorProviders.add(obj);
     }
-    
+
     public void visit(SubqueryFromClause obj) {
-    	if (collectLateral && obj.isLateral()) {
-    		this.valueIteratorProviders.add(obj);
-    	} else {
-    	    getValueIteratorProviders(obj.getCommand(), this.valueIteratorProviders);
-    	}
+        if (collectLateral && obj.isLateral()) {
+            this.valueIteratorProviders.add(obj);
+        } else {
+            getValueIteratorProviders(obj.getCommand(), this.valueIteratorProviders);
+        }
     }
-    
+
     /**
      * Helper to quickly get the ValueIteratorProvider instances from obj
      * @param obj Language object
@@ -134,16 +134,16 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
         return visitor.getValueIteratorProviders();
     }
 
-	public static final void getValueIteratorProviders(LanguageObject obj, List<SubqueryContainer<?>> valueIteratorProviders) {
-		ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(valueIteratorProviders);
+    public static final void getValueIteratorProviders(LanguageObject obj, List<SubqueryContainer<?>> valueIteratorProviders) {
+        ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(valueIteratorProviders);
         PreOrderNavigator.doVisit(obj, visitor);
-	}
-          	
+    }
+
     public static final List<SubqueryContainer<?>> getValueIteratorProviders(Collection<? extends LanguageObject> languageObjects) {
-    	if (languageObjects == null || languageObjects.isEmpty()) {
-    		return Collections.emptyList();
-    	}
-    	List<SubqueryContainer<?>> result = new LinkedList<SubqueryContainer<?>>();
+        if (languageObjects == null || languageObjects.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SubqueryContainer<?>> result = new LinkedList<SubqueryContainer<?>>();
         ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(result);
         for (LanguageObject obj : languageObjects) {
             PreOrderNavigator.doVisit(obj, visitor);
@@ -151,7 +151,7 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
         return result;
     }
 
-	public void setCollectLateral(boolean b) {
-		this.collectLateral = b;
-	}            
+    public void setCollectLateral(boolean b) {
+        this.collectLateral = b;
+    }
 }

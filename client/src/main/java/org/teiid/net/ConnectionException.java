@@ -24,12 +24,12 @@ import org.teiid.core.TeiidException;
 /**
  * This exception indicates that an error has occurred during connection.  There
  * are many possible reasons for this, but the most likely is a problem with
- * connection parameters.  
+ * connection parameters.
  */
 public class ConnectionException extends TeiidException {
-	private static final long serialVersionUID = -5647655775983865084L;
+    private static final long serialVersionUID = -5647655775983865084L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public ConnectionException(  ) {
@@ -57,8 +57,8 @@ public class ConnectionException extends TeiidException {
     public ConnectionException(Throwable e, String message) {
         super(e, message);
     }
-    
+
     public ConnectionException(BundleUtil.Event event, Throwable e, String message) {
         super(event, e, message);
-    }    
+    }
 }

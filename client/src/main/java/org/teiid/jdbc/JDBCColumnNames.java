@@ -21,7 +21,7 @@ package org.teiid.jdbc;
 /* <p> This class contains constants indicating names of the columns in the
  *  result sets returned by methods on DatabaseMetaData. Each inner class represents
  *  a particular method and the class attributes give the names of the columns on
- *  methods ResultSet.</p>
+ *  methods ResultSet.
  */
 
 interface JDBCColumnNames {
@@ -97,21 +97,21 @@ interface JDBCColumnNames {
         /** name of column that has an String value indicating nullablity */
         static final String IS_NULLABLE = "IS_NULLABLE"; //$NON-NLS-1$
 
-        /** name of column that is the scope of a reference attribute (null if DATA_TYPE isn't REF)*/ 
+        /** name of column that is the scope of a reference attribute (null if DATA_TYPE isn't REF)*/
         static final String SCOPE_CATLOG = "SCOPE_CATLOG"; //$NON-NLS-1$
-        
-        /** name of column that is the scope of a reference attribute (null if the DATA_TYPE isn't REF) */ 
+
+        /** name of column that is the scope of a reference attribute (null if the DATA_TYPE isn't REF) */
         static final String SCOPE_SCHEMA = "SCOPE_SCHEMA"; //$NON-NLS-1$
-        
+
         /** name of column that is the scope of a reference attribure (null if the DATA_TYPE isn't REF) */
         static final String SCOPE_TABLE = "SCOPE_TABLE"; //$NON-NLS-1$
-        
-        /** 
+
+        /**
          * name of column that is source type of a distinct type or user-generated Ref type, SQL type
          * from java.sql.Types (null if DATA_TYPE isn't DISTINCT or user-generated REF)
-         */ 
+         */
         static final String SOURCE_DATA_TYPE = "SOURCE_DATA_TYPE"; //$NON-NLS-1$
-        
+
         /** name of column that has an String value indicating format */
         static final String FORMAT = "FORMAT"; //$NON-NLS-1$
 
@@ -310,7 +310,7 @@ interface JDBCColumnNames {
 
         /** name of column indicating kind of the procedure. */
         static final String PROCEDURE_TYPE = "PROCEDURE_TYPE"; //$NON-NLS-1$
-        
+
         static final String RESERVED_1 = "RESERVED_1"; //$NON-NLS-1$
         static final String RESERVED_2 = "RESERVED_2"; //$NON-NLS-1$
         static final String RESERVED_3 = "RESERVED_3";   //$NON-NLS-1$
@@ -360,7 +360,7 @@ interface JDBCColumnNames {
         static final String SELF_REFERENCING_COL_NAME = "SELF_REFERENCING_COL_NAME"; //$NON-NLS-1$
         static final String REF_GENERATION = "REF_GENERATION"; //$NON-NLS-1$
         static final String ISPHYSICAL = "ISPHYSICAL"; //$NON-NLS-1$
-    
+
     }
 
     /**
@@ -549,7 +549,7 @@ interface JDBCColumnNames {
         // name of the column containing pseudo column
         static final String PSEUDO_COLUMN = "PSEUDO_COLUMN"; //$NON-NLS-1$
     }
-    
+
     /**
      * This class contains constants representing column names on ResultSet
      * returned by getSuperTables method on DatabaseMetaData. These constant values
@@ -565,13 +565,13 @@ interface JDBCColumnNames {
         // name of the column containing super table.
         static final String SUPERTABLE_NAME = "SUPERTABLE_NAME"; //$NON-NLS-1$
     }
-    
+
     /**
      * This class contains constants representing column names on ResultSet
      * returned by getSuperTypes method on DatabaseMetaData. These constant values
      * are be used to hardcode the column names used in constructin the ResultSet obj.
      */
-    
+
     interface SUPER_TYPES {
 
         // name of the column containing catalog or Virtual database name.

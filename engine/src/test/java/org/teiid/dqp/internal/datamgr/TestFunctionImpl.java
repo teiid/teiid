@@ -40,7 +40,7 @@ public class TestFunctionImpl {
         f.setType(Integer.class);
         return f;
     }
-    
+
     public static Function example(String name) throws Exception {
         return (Function) TstLanguageBridgeFactory.factory.translate(helpExample(name));
     }
@@ -61,19 +61,19 @@ public class TestFunctionImpl {
     @Test public void testGetType() throws Exception {
         assertEquals(Integer.class, example("test").getType()); //$NON-NLS-1$
     }
-    
+
     @Test(expected=TeiidRuntimeException.class) public void testLongTimestampAddLiteral() throws Exception {
         org.teiid.query.sql.symbol.Expression ex = TestFunctionResolving.getExpression("timestampadd(sql_tsi_second, 9999999999, now())");
         TstLanguageBridgeFactory.factory.translate(ex);
     }
-    
+
     @Test public void testLongTimestampAddLiteral1() throws Exception {
         org.teiid.query.sql.symbol.Function ex = (org.teiid.query.sql.symbol.Function)TestFunctionResolving.getExpression("timestampadd(sql_tsi_second, 1, now())");
-        ex.getArgs()[1] = new Constant(1l);
+        ex.getArgs()[1] = new Constant(1L);
         Function f = (Function) TstLanguageBridgeFactory.factory.translate(ex);
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, f.getParameters().get(1).getType());
     }
-    
+
     @Test public void testLongTimestampAddLongExpression() throws Exception {
         org.teiid.query.sql.symbol.Function ex = (org.teiid.query.sql.symbol.Function)TestFunctionResolving.getExpression("timestampadd(sql_tsi_second, cast(1 as long), now())");
         Function f = (Function) TstLanguageBridgeFactory.factory.translate(ex);

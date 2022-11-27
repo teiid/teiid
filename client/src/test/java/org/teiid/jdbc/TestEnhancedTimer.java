@@ -25,25 +25,25 @@ import org.teiid.jdbc.EnhancedTimer.Task;
 
 @SuppressWarnings("nls")
 public class TestEnhancedTimer {
-	
-	private final class SimpleCancelTask implements Runnable {
-		@Override
-		public void run() {
-		}
-	}
 
-	@Test public void testRemove() {
-		EnhancedTimer ct = new EnhancedTimer("foo");
-		SimpleCancelTask sct = new SimpleCancelTask();
-		Task tt = ct.add(sct, 20000);
-		Task tt1 = ct.add(sct, 20000);
-		assertTrue(tt.compareTo(tt1) < 0);
-		Task tt2 = ct.add(sct, 10000);
-		assertEquals(3, ct.getQueueSize());
-		tt.cancel();
-		tt1.cancel();
-		tt2.cancel();
-		assertEquals(0, ct.getQueueSize());
-	}
-	
+    private final class SimpleCancelTask implements Runnable {
+        @Override
+        public void run() {
+        }
+    }
+
+    @Test public void testRemove() {
+        EnhancedTimer ct = new EnhancedTimer("foo");
+        SimpleCancelTask sct = new SimpleCancelTask();
+        Task tt = ct.add(sct, 20000);
+        Task tt1 = ct.add(sct, 20000);
+        assertTrue(tt.compareTo(tt1) < 0);
+        Task tt2 = ct.add(sct, 10000);
+        assertEquals(3, ct.getQueueSize());
+        tt.cancel();
+        tt1.cancel();
+        tt2.cancel();
+        assertEquals(0, ct.getQueueSize());
+    }
+
 }

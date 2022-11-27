@@ -1,0 +1,27 @@
+<server-provisioning xmlns="urn:wildfly:server-provisioning:1.1" extract-schemas="true" copy-module-artifacts="true" extract-schemas-groups="org.wildfly.core" exclude-dependencies="true">
+    <feature-packs>
+        <feature-pack groupId="org.teiid.wildfly" artifactId="teiid-client-feature-pack" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly" artifactId="rest-service-feature-pack" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly" artifactId="olingo-feature-pack" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly" artifactId="teiid-wildfly-integration-feature-pack" version="${project.version}" /> 
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-jdbc" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-file" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-ws" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-openapi" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-solr" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-amazon" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-accumulo" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-cassandra" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-google" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-ldap" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-odata" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-misc" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-mongodb" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-couchbase" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-salesforce" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-salesforce-34" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-salesforce-41" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-infinispan" version="${project.version}" />
+    </feature-packs>
+</server-provisioning>
+

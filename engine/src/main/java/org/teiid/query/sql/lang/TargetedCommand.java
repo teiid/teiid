@@ -22,5 +22,5 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public interface TargetedCommand {
 
-	GroupSymbol getGroup();
+    GroupSymbol getGroup();
 }

@@ -22,19 +22,19 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 
 public final class RuleConstants {
 
-	private RuleConstants() { }
+    private RuleConstants() { }
 
-	public static final OptimizerRule PLACE_ACCESS = new RulePlaceAccess();
-	public static final OptimizerRule PUSH_SELECT_CRITERIA = new RulePushSelectCriteria();
-	public static final OptimizerRule ACCESS_PATTERN_VALIDATION = new RuleAccessPatternValidation();
-	public static final OptimizerRule MERGE_VIRTUAL = new RuleMergeVirtual();
+    public static final OptimizerRule PLACE_ACCESS = new RulePlaceAccess();
+    public static final OptimizerRule PUSH_SELECT_CRITERIA = new RulePushSelectCriteria();
+    public static final OptimizerRule ACCESS_PATTERN_VALIDATION = new RuleAccessPatternValidation();
+    public static final OptimizerRule MERGE_VIRTUAL = new RuleMergeVirtual();
     public static final OptimizerRule CHOOSE_JOIN_STRATEGY = new RuleChooseJoinStrategy();
-	public static final OptimizerRule RAISE_ACCESS = new RuleRaiseAccess();
+    public static final OptimizerRule RAISE_ACCESS = new RuleRaiseAccess();
     public static final OptimizerRule CHOOSE_DEPENDENT = new RuleChooseDependent();
-	public static final OptimizerRule COLLAPSE_SOURCE = new RuleCollapseSource();
+    public static final OptimizerRule COLLAPSE_SOURCE = new RuleCollapseSource();
     public static final OptimizerRule COPY_CRITERIA = new RuleCopyCriteria();
-    public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();    
-    public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();    
+    public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();
+    public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();
     public static final OptimizerRule REMOVE_OPTIONAL_JOINS = new RuleRemoveOptionalJoins();
     public static final OptimizerRule PUSH_NON_JOIN_CRITERIA = new RulePushNonJoinCriteria(true);
     public static final OptimizerRule RAISE_NULL = new RuleRaiseNull();
@@ -49,4 +49,5 @@ public final class RuleConstants {
     public static final OptimizerRule SUBSTITUTE_EXPRESSIONS = new RuleSubstituteExpressions();
     public static final OptimizerRule PLAN_OUTER_JOINS = new RulePlanOuterJoins();
     public static final OptimizerRule PUSH_LARGE_IN = new RulePushLargeIn();
+    public static final OptimizerRule MERGE_CRITERIA = new RuleMergeCriteria();
 }

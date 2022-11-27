@@ -38,18 +38,18 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  * <p>This visitor class will traverse a language object tree and collect all group
  * symbol references it finds.  It uses a collection to collect the groups in so
  * different collections will give you different collection properties - for instance,
- * using a Set will remove duplicates.</p>
+ * using a Set will remove duplicates.
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor (and possibly the collection), run the visitor, and get the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class GroupCollectorVisitor extends LanguageVisitor {
 
     private Collection<GroupSymbol> groups;
 
     private boolean isIntoClauseGroup;
-       
+
     // In some cases, set a flag to ignore groups created by a subquery from clause
     private boolean ignoreInlineViewGroups = false;
     private Collection<GroupSymbol> inlineViewGroups;    // groups defined by a SubqueryFromClause
@@ -60,7 +60,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param groups Collection to use for groups
      * @throws IllegalArgumentException If groups is null
      */
-	public GroupCollectorVisitor(Collection<GroupSymbol> groups) {
+    public GroupCollectorVisitor(Collection<GroupSymbol> groups) {
         if(groups == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0023")); //$NON-NLS-1$
         }
@@ -75,15 +75,15 @@ public class GroupCollectorVisitor extends LanguageVisitor {
     public Collection<GroupSymbol> getGroups() {
         return this.groups;
     }
-    
+
     public Collection<GroupSymbol> getInlineViewGroups() {
         return this.inlineViewGroups;
     }
-    
+
     public void setIgnoreInlineViewGroups(boolean ignoreInlineViewGroups) {
         this.ignoreInlineViewGroups = ignoreInlineViewGroups;
     }
-    
+
     /**
      * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
@@ -113,21 +113,21 @@ public class GroupCollectorVisitor extends LanguageVisitor {
     public void visit(Into obj) {
         this.isIntoClauseGroup = true;
     }
-    
-    
+
+
     public void visit(SubqueryFromClause obj) {
         if(this.ignoreInlineViewGroups) {
-            if(this.inlineViewGroups == null) { 
+            if(this.inlineViewGroups == null) {
                 this.inlineViewGroups = new ArrayList<GroupSymbol>();
             }
             this.inlineViewGroups.add(obj.getGroupSymbol());
         }
     }
-    
+
     /**
      * Helper to quickly get the groups from obj in the groups collection
      * @param obj Language object
-     * @param elements Collection to collect groups in
+     * @param groups Collection to collect groups in
      */
     public static void getGroups(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
@@ -153,27 +153,27 @@ public class GroupCollectorVisitor extends LanguageVisitor {
         PreOrderNavigator.doVisit(obj, visitor);
         return groups;
     }
-    
+
     /**
      * Helper to quickly get the groups from obj in the groups collection
      * @param obj Language object
-     * @param elements Collection to collect groups in
+     * @param groups Collection to collect groups in
      */
     public static void getGroupsIgnoreInlineViewsAndEvaluatableSubqueries(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         visitor.setIgnoreInlineViewGroups(true);
         PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
         nav.setSkipEvaluatable(true);
-        obj.acceptVisitor(nav);  
-        
+        obj.acceptVisitor(nav);
+
         if(visitor.getInlineViewGroups() != null) {
             groups.removeAll(visitor.getInlineViewGroups());
         }
     }
 
     /**
-     * Helper to quickly get the groups from obj in a collection.  The 
-     * removeDuplicates flag affects whether duplicate groups will be 
+     * Helper to quickly get the groups from obj in a collection.  The
+     * removeDuplicates flag affects whether duplicate groups will be
      * filtered out.
      * @param obj Language object
      * @param removeDuplicates True to remove duplicates
@@ -181,21 +181,21 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      */
     public static Collection<GroupSymbol> getGroupsIgnoreInlineViews(LanguageObject obj, boolean removeDuplicates) {
         Collection<GroupSymbol> groups = null;
-        if(removeDuplicates) { 
+        if(removeDuplicates) {
             groups = new LinkedHashSet<GroupSymbol>();
         } else {
             groups = new ArrayList<GroupSymbol>();
-        }    
+        }
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         visitor.setIgnoreInlineViewGroups(true);
         DeepPreOrderNavigator.doVisit(obj, visitor);
-        
+
         if(visitor.getInlineViewGroups() != null) {
             groups.removeAll(visitor.getInlineViewGroups());
         }
 
         return groups;
     }
-    
+
 
 }

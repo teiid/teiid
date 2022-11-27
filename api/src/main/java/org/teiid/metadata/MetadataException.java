@@ -22,26 +22,26 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.BundleUtil.Event;
 
 public class MetadataException extends TeiidRuntimeException {
-	private static final long serialVersionUID = -7889770730039591817L;
+    private static final long serialVersionUID = -7889770730039591817L;
 
-	public MetadataException(Event event, Throwable cause) {
-		super(event, cause);
-	}
-	
-	public MetadataException(Throwable cause) {
-		super(cause);
-	}
-	
-	public MetadataException(Event event, String message) {
-		super(event, message);
-	}
-	
-	public MetadataException(String message) {
-		super(message);
-	}
+    public MetadataException(Event event, Throwable cause) {
+        super(event, cause);
+    }
 
-	public MetadataException(Event event,
-			Throwable e, String message) {
-		super(event, e, message);
-	}
+    public MetadataException(Throwable cause) {
+        super(cause);
+    }
+
+    public MetadataException(Event event, String message) {
+        super(event, message);
+    }
+
+    public MetadataException(String message) {
+        super(message);
+    }
+
+    public MetadataException(Event event,
+            Throwable e, String message) {
+        super(event, e, message);
+    }
 }

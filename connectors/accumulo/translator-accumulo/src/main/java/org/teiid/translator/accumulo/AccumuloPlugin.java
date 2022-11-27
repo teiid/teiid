@@ -30,11 +30,11 @@ public class AccumuloPlugin {
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
 
     public static enum Event implements BundleUtil.Event{
-    	TEIID19001,
-    	TEIID19002,
-    	TEIID19003,
-    	TEIID19004,
-    	TEIID19005,
-    	TEIID19006
+        TEIID19001,
+        TEIID19002,
+        TEIID19003,
+        TEIID19004,
+        TEIID19005,
+        TEIID19006
     }
 }

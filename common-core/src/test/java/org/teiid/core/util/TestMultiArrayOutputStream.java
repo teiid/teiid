@@ -26,31 +26,31 @@ import org.junit.Test;
 
 public class TestMultiArrayOutputStream {
 
-	@Test public void testArrayWrites() throws IOException {
-		MultiArrayOutputStream maos = new MultiArrayOutputStream(2);
-		for (int i = 0; i < 10; i++) {
-			int len = 1 << i;
-			maos.write(new byte[len], 0, len);
-		}
-		assertEquals((1<<10)-1, maos.getCount());
-		assertEquals(1, maos.getIndex());
-	}
-	
-	@Test public void testCount() throws IOException {
-		MultiArrayOutputStream maos = new MultiArrayOutputStream(2);
-		for (int i = 0; i < 4; i++) {
-			maos.write(i);
-		}
-		assertEquals(4, maos.getCount());
-		assertEquals(2, maos.getIndex());
-		
-		maos = new MultiArrayOutputStream(2);
-		for (int i = 0; i < 4; i++) {
-			int len = 3;
-			maos.write(new byte[len]);
-		}
-		assertEquals(12, maos.getCount());
-		assertEquals(6, maos.getIndex());
-	}
-	
+    @Test public void testArrayWrites() throws IOException {
+        MultiArrayOutputStream maos = new MultiArrayOutputStream(2);
+        for (int i = 0; i < 10; i++) {
+            int len = 1 << i;
+            maos.write(new byte[len], 0, len);
+        }
+        assertEquals((1<<10)-1, maos.getCount());
+        assertEquals(1, maos.getIndex());
+    }
+
+    @Test public void testCount() throws IOException {
+        MultiArrayOutputStream maos = new MultiArrayOutputStream(2);
+        for (int i = 0; i < 4; i++) {
+            maos.write(i);
+        }
+        assertEquals(4, maos.getCount());
+        assertEquals(2, maos.getIndex());
+
+        maos = new MultiArrayOutputStream(2);
+        for (int i = 0; i < 4; i++) {
+            int len = 3;
+            maos.write(new byte[len]);
+        }
+        assertEquals(12, maos.getCount());
+        assertEquals(6, maos.getIndex());
+    }
+
 }

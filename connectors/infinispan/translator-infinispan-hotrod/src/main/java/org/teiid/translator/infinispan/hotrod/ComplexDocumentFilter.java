@@ -27,6 +27,8 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.infinispan.api.DocumentFilter;
+import org.teiid.infinispan.api.MarshallerBuilder;
+import org.teiid.infinispan.api.ProtobufMetadataProcessor;
 import org.teiid.language.NamedTable;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
@@ -45,6 +47,7 @@ public class ComplexDocumentFilter implements DocumentFilter {
     private RuntimeMetadata metadata;
     private Map<ElementSymbol, Integer> elementMap = new HashMap<>();
     private Action action;
+    private String childName;
 
     public ComplexDocumentFilter(NamedTable parentTable, NamedTable childTable, RuntimeMetadata metadata, String filter,
             Action action) throws TranslatorException {
@@ -52,6 +55,7 @@ public class ComplexDocumentFilter implements DocumentFilter {
         this.childTable = childTable;
         this.metadata = metadata;
         this.action = action;
+        this.childName = ProtobufMetadataProcessor.getMessageName(childTable.getMetadataObject());
 
         int i = 0;
         for (Column column : parentTable.getMetadataObject().getColumns()) {
@@ -83,7 +87,12 @@ public class ComplexDocumentFilter implements DocumentFilter {
             }
 
             for (Column column : childTable.getMetadataObject().getColumns()) {
-                tuple.add(i++, childProperties.get(MarshallerBuilder.getDocumentAttributeName(column, true, metadata)));
+                if (ProtobufMetadataProcessor.isPseudo(column)) {
+                    Column parentColumn = IckleConversionVisitor.normalizePseudoColumn(column, this.metadata);
+                    tuple.add(i++, parentProperties.get(MarshallerBuilder.getDocumentAttributeName(parentColumn, false, metadata)));
+                } else {
+                    tuple.add(i++, childProperties.get(MarshallerBuilder.getDocumentAttributeName(column, true, metadata)));
+                }
             }
             org.teiid.query.util.CommandContext cc = new org.teiid.query.util.CommandContext();
             final Evaluator evaluator = new Evaluator(elementMap, null, cc);
@@ -101,4 +110,10 @@ public class ComplexDocumentFilter implements DocumentFilter {
     public Action action() {
         return this.action;
     }
+
+    @Override
+    public String getChildName() {
+        return this.childName;
+    }
+
 }

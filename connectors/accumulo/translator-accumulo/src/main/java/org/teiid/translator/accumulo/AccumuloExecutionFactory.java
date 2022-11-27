@@ -17,7 +17,7 @@
  */
 package org.teiid.translator.accumulo;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -34,90 +34,90 @@ import org.teiid.translator.UpdateExecution;
 
 @Translator(name="accumulo", description="Accumulo Translator, reads and writes the data to Accumulo Key/Value store")
 public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory, AccumuloConnection> {
-	private int queryThreadsCount = 10;
-	
-	public AccumuloExecutionFactory() {
-		setTransactionSupport(TransactionSupport.NONE);
-		setSourceRequiredForMetadata(true);
-	}
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-	}
+    private int queryThreadsCount = 10;
 
-	@TranslatorProperty(display="Execution Query Threads", description="Number of threads to use on Accumulo for Query", advanced=true)
-	public int getQueryThreadsCount() {
-		return queryThreadsCount;
-	}
+    public AccumuloExecutionFactory() {
+        setTransactionSupport(TransactionSupport.NONE);
+        setSourceRequiredForMetadata(true);
+    }
 
-	public void setQueryThreadsCount(int queryThreadsCount) {
-		this.queryThreadsCount = queryThreadsCount;
-	}
-	
-	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			AccumuloConnection connection) throws TranslatorException {
-		return new AccumuloQueryExecution(this, (Select) command, executionContext, metadata, connection);
-	}
-	
-	@Override
-	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, AccumuloConnection connection) throws TranslatorException {
-		return new AccumuloUpdateExecution(this, command, executionContext, metadata, connection);
-	} 	
-		
-	@Override
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+    }
+
+    @TranslatorProperty(display="Execution Query Threads", description="Number of threads to use on Accumulo for Query", advanced=true)
+    public int getQueryThreadsCount() {
+        return queryThreadsCount;
+    }
+
+    public void setQueryThreadsCount(int queryThreadsCount) {
+        this.queryThreadsCount = queryThreadsCount;
+    }
+
+    @Override
+    public ResultSetExecution createResultSetExecution(QueryExpression command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            AccumuloConnection connection) throws TranslatorException {
+        return new AccumuloQueryExecution(this, (Select) command, executionContext, metadata, connection);
+    }
+
+    @Override
+    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, AccumuloConnection connection) throws TranslatorException {
+        return new AccumuloUpdateExecution(this, command, executionContext, metadata, connection);
+    }
+
+    @Override
     public MetadataProcessor<AccumuloConnection> getMetadataProcessor() {
         return new AccumuloMetadataProcessor();
-    }	
-	
-	@Override
-	public boolean supportsAggregatesCountStar() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsCompareCriteriaEquals() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsNotCriteria() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsInCriteria() {
-		return true;
-	}	
-	
-	@Override
-	public boolean supportsOnlyLiteralComparison() {
-		return true;
-	}	
-
-    @Override
-	public boolean supportsIsNullCriteria() {
-    	return false;
-    }	
-    
-    @Override
-	public boolean supportsOrCriteria() {
-    	return true;
     }
-	
+
     @Override
-	public boolean supportsBulkUpdate() {
-		return true;
-	}    
-    
+    public boolean supportsAggregatesCountStar() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsNotCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsInCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsIsNullCriteria() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsBulkUpdate() {
+        return true;
+    }
+
     public boolean returnsSingleUpdateCount() {
-    	return true;
+        return true;
     }
 }

@@ -18,7 +18,8 @@
 
 package org.teiid.common.buffer.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.impl.BufferManagerImpl.BatchManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -42,7 +44,7 @@ import org.teiid.query.util.Options;
 
 @SuppressWarnings("nls")
 public class TestBufferManagerImpl {
-	
+
     @Test public void testReserve() throws Exception {
         BufferManagerImpl bufferManager = new BufferManagerImpl();
         bufferManager.setCache(new MemoryStorageManager());
@@ -50,33 +52,33 @@ public class TestBufferManagerImpl {
         bufferManager.setMaxReserveKB(1024);
         bufferManager.initialize();
         bufferManager.setNominalProcessingMemoryMax(512000);
-        
+
         //restricted by nominal max
         assertEquals(512000, bufferManager.reserveBuffers(1024000, BufferReserveMode.NO_WAIT));
-		//forced
+        //forced
         assertEquals(1024000, bufferManager.reserveBuffersBlocking(1024000, new long[] {0,0}, true));
-        
+
         //not forced, so we get noting
         assertEquals(0, bufferManager.reserveBuffersBlocking(1024000, new long[] {0,0}, false));
-        
+
         bufferManager.releaseBuffers(512000);
         //the difference between 1mb and 1000k
         assertEquals(24576, bufferManager.reserveBuffers(1024000, BufferReserveMode.NO_WAIT));
     }
-    
+
     @Test public void testLargeReserve() throws Exception {
         BufferManagerImpl bufferManager = new BufferManagerImpl();
         bufferManager.setCache(new MemoryStorageManager());
         bufferManager.setMaxReserveKB((1<<22) + 11);
         assertEquals(4194315, bufferManager.getMaxReserveKB());
     }
-    
+
     @Test(expected=IOException.class) public void testFileStoreMax() throws Exception {
         BufferManagerImpl bufferManager = new BufferManagerImpl();
         bufferManager.setCache(new MemoryStorageManager() {
             @Override
             public long getMaxStorageSpace() {
-                return 640;
+                return 59; //only about 1/6th will be usable by a single file store
             }
         });
         bufferManager.setMaxActivePlans(20);
@@ -84,7 +86,7 @@ public class TestBufferManagerImpl {
         FileStore fs = bufferManager.createFileStore("x");
         fs.write(new byte[10], 0, 10);
     }
-    
+
     @Test(expected=TeiidComponentException.class) public void testTupleBufferMax() throws Exception {
         BufferManagerImpl bufferManager = new BufferManagerImpl();
         bufferManager.setCache(new MemoryStorageManager() {
@@ -95,6 +97,7 @@ public class TestBufferManagerImpl {
         });
         bufferManager.setMaxReserveKB(10);
         bufferManager.setMaxActivePlans(20);
+        bufferManager.setEnforceMaxBatchManagerSizeEstimate(true);
         bufferManager.initialize();
         TupleBuffer tb = bufferManager.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, String.class)), "x", TupleSourceType.PROCESSOR);
         //fill one batch, which should then exceed the max
@@ -102,7 +105,7 @@ public class TestBufferManagerImpl {
             tb.addTuple(Arrays.asList("a"));
         }
     }
-    
+
     @Test public void testTupleBufferSessionMax() throws Exception {
         BufferManagerImpl bufferManager = new BufferManagerImpl();
         bufferManager.setCache(new MemoryStorageManager() {
@@ -141,49 +144,64 @@ public class TestBufferManagerImpl {
         }
         fail();
     }
-    
+
     @Test
     public void testProcessorBatchSize(){
-    	BufferManager bm = BufferManagerFactory.createBufferManager();
-    	
-    	int processorBatchSize = bm.getProcessorBatchSize();
-		
-		List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		ElementSymbol a = new ElementSymbol("a");
-		a.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-		
-		//we use a somewhat high estimate of string size
-		ElementSymbol b = new ElementSymbol("b");
-		b.setType(DataTypeManager.DefaultDataClasses.STRING);
-		
-		elements.add(a);
-		//fixed/small
-		assertEquals(processorBatchSize * 8, bm.getProcessorBatchSize(elements));
-		
-		elements.add(b);
-		//small
-		assertEquals(processorBatchSize * 4, bm.getProcessorBatchSize(elements));
-		
-		elements.add(b);
-		//moderately small
-		assertEquals(processorBatchSize * 2, bm.getProcessorBatchSize(elements));
-		
-		elements.add(b);
-		elements.add(b);
-		//"normal"
-		assertEquals(processorBatchSize, bm.getProcessorBatchSize(elements));
-		
-		elements.addAll(Collections.nCopies(28, b));
-		//large
-		assertEquals(processorBatchSize/2, bm.getProcessorBatchSize(elements));
-		
-		elements.addAll(Collections.nCopies(100, b));
-		//huge
-		assertEquals(processorBatchSize/4, bm.getProcessorBatchSize(elements));
-		
-		elements.addAll(Collections.nCopies(375, b));
-		//extreme
-		assertEquals(processorBatchSize/8, bm.getProcessorBatchSize(elements));
+        BufferManager bm = BufferManagerFactory.createBufferManager();
+
+        int processorBatchSize = bm.getProcessorBatchSize();
+
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        ElementSymbol a = new ElementSymbol("a");
+        a.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+
+        //we use a somewhat high estimate of string size
+        ElementSymbol b = new ElementSymbol("b");
+        b.setType(DataTypeManager.DefaultDataClasses.STRING);
+
+        elements.add(a);
+        //fixed/small
+        assertEquals(processorBatchSize * 8, bm.getProcessorBatchSize(elements));
+
+        elements.add(b);
+        //small
+        assertEquals(processorBatchSize * 4, bm.getProcessorBatchSize(elements));
+
+        elements.add(b);
+        //moderately small
+        assertEquals(processorBatchSize * 2, bm.getProcessorBatchSize(elements));
+
+        elements.add(b);
+        elements.add(b);
+        //"normal"
+        assertEquals(processorBatchSize, bm.getProcessorBatchSize(elements));
+
+        elements.addAll(Collections.nCopies(28, b));
+        //large
+        assertEquals(processorBatchSize/2, bm.getProcessorBatchSize(elements));
+
+        elements.addAll(Collections.nCopies(100, b));
+        //huge
+        assertEquals(processorBatchSize/4, bm.getProcessorBatchSize(elements));
+
+        elements.addAll(Collections.nCopies(375, b));
+        //extreme
+        assertEquals(processorBatchSize/8, bm.getProcessorBatchSize(elements));
+    }
+
+    @Test public void testRemovedException() throws TeiidComponentException {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setCache(new MemoryStorageManager());
+        bufferManager.initialize();
+        BatchManagerImpl batchManager = bufferManager.createBatchManager(1L, new Class<?>[] {Integer.class});
+        batchManager.describe(null); //should not error
+        batchManager.remove();
+        try {
+            batchManager.getBatch(1L, false);
+            fail();
+        } catch (TeiidComponentException e) {
+
+        }
     }
 
 }

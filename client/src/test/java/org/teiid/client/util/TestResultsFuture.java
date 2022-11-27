@@ -27,17 +27,17 @@ import junit.framework.TestCase;
 
 public class TestResultsFuture extends TestCase {
 
-	public void testGet() throws Exception {
-		ResultsFuture<Object> future = new ResultsFuture<Object>();
-		try {
-			future.get(-1, TimeUnit.MILLISECONDS);
-			fail("expected timeout exception"); //$NON-NLS-1$
-		} catch (TimeoutException e) {
-			
-		}
-		future.getResultsReceiver().receiveResults(new Object());
-		
-		assertNotNull(future.get(-1, TimeUnit.MILLISECONDS));
-	}
-	
+    public void testGet() throws Exception {
+        ResultsFuture<Object> future = new ResultsFuture<Object>();
+        try {
+            future.get(-1, TimeUnit.MILLISECONDS);
+            fail("expected timeout exception"); //$NON-NLS-1$
+        } catch (TimeoutException e) {
+
+        }
+        future.getResultsReceiver().receiveResults(new Object());
+
+        assertNotNull(future.get(-1, TimeUnit.MILLISECONDS));
+    }
+
 }

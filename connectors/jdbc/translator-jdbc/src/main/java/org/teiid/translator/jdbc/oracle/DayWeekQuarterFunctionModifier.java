@@ -35,14 +35,14 @@ import org.teiid.translator.jdbc.FunctionModifier;
  */
 public class DayWeekQuarterFunctionModifier extends FunctionModifier {
     private String format;
-    
+
     public DayWeekQuarterFunctionModifier(String format) {
         this.format = format;
     }
-    
+
     @Override
     public List<?> translate(Function function) {
-        return Arrays.asList("to_number(TO_CHAR(",function.getParameters().get(0), ", '", format,"'))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$    
+        return Arrays.asList("to_number(TO_CHAR(",function.getParameters().get(0), ", '", format,"'))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 }
 

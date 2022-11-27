@@ -1,0 +1,25 @@
+
+<assembly>
+  
+  <id>src</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}/..</directory>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>wildfly</outputDirectory>
+      <excludes>
+          <exclude>**/target/**</exclude>
+          <exclude>**/.settings/**</exclude>
+          <exclude>**/*.log</exclude>        
+      </excludes>
+    </fileSet>
+  </fileSets>
+     
+</assembly>

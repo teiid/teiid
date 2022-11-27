@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
-import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -62,8 +61,8 @@ import org.teiid.query.util.CommandContext;
 public final class RulePlaceAccess implements
                                   OptimizerRule {
 
-    public static final String CONFORMED_SOURCES = AbstractMetadataRecord.RELATIONAL_URI + "conformed-sources"; //$NON-NLS-1$
-	public static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
+    public static final String CONFORMED_SOURCES = AbstractMetadataRecord.RELATIONAL_PREFIX + "conformed-sources"; //$NON-NLS-1$
+    public static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
 
     public PlanNode execute(PlanNode plan,
                             QueryMetadataInterface metadata,
@@ -93,11 +92,10 @@ public final class RulePlaceAccess implements
     }
 
     /**
-     * Adds a access node if the node is a source leaf node.  
-     * 
+     * Adds a access node if the node is a source leaf node.
+     *
      * @param metadata
      * @param sourceNode
-     * @return true if the source node has an access pattern
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
@@ -109,9 +107,9 @@ public final class RulePlaceAccess implements
         if (req == null) {
             req = sourceNode.getProperty(NodeConstants.Info.NESTED_COMMAND);
         }
-        
+
         if (sourceNode.getProperty(NodeConstants.Info.TABLE_FUNCTION) != null) {
-        	return;
+            return;
         }
 
         if (req instanceof Insert) {
@@ -139,63 +137,63 @@ public final class RulePlaceAccess implements
             if (hint != null) {
                 accessNode.setProperty(NodeConstants.Info.IS_OPTIONAL, hint);
             }
-            
+
             Object modelId = null;
             if (sourceNode.getGroups().size() == 1) {
-            	GroupSymbol gs = sourceNode.getGroups().iterator().next();
-            	modelId = gs.getModelMetadataId();
-            	if (modelId != null) {
-            		accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
-            	}
+                GroupSymbol gs = sourceNode.getGroups().iterator().next();
+                modelId = gs.getModelMetadataId();
+                if (modelId != null) {
+                    accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
+                }
             }
             if (req instanceof Create || req instanceof Drop) {
-            	modelId = TempMetadataAdapter.TEMP_MODEL;
+                modelId = TempMetadataAdapter.TEMP_MODEL;
             } else {
-            	modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+                modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
             }
             if (modelId != null) {
-	            boolean multiSource = metadata.isMultiSource(modelId);
-	            if (multiSource) {
-	            	accessNode.setProperty(Info.IS_MULTI_SOURCE, multiSource);
-	            }
-	            accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
+                boolean multiSource = metadata.isMultiSource(modelId);
+                if (multiSource) {
+                    accessNode.setProperty(Info.IS_MULTI_SOURCE, multiSource);
+                }
+                accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
-            
+
             if (req == null && modelId != null) {
-            	//add "conformed" sources if they exist
-            	GroupSymbol group = sourceNode.getGroups().iterator().next();
-            	Object gid = group.getMetadataID();
-            	String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false); 
-            	if (sources != null) {
-            		Set<Object> conformed = new LinkedHashSet<Object>();
-            		conformed.add(modelId);
-            		for (String source : StringUtil.split(sources, ",")) { //$NON-NLS-1$
-            			Object mid = metadata.getModelID(source.trim());
-            			if (metadata.isVirtualModel(mid)) {
-            				//TODO: could validate this up-front
-            				throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31148, metadata.getName(mid), group));
-            			}
-            			conformed.add(mid);
-            		}
-            		accessNode.setProperty(Info.CONFORMED_SOURCES, conformed);
-            	}
+                //add "conformed" sources if they exist
+                GroupSymbol group = sourceNode.getGroups().iterator().next();
+                Object gid = group.getMetadataID();
+                String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false);
+                if (sources != null) {
+                    Set<Object> conformed = new LinkedHashSet<Object>();
+                    conformed.add(modelId);
+                    for (String source : StringUtil.split(sources, ",")) { //$NON-NLS-1$
+                        Object mid = metadata.getModelID(source.trim());
+                        if (metadata.isVirtualModel(mid)) {
+                            //TODO: could validate this up-front
+                            throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31148, metadata.getName(mid), group));
+                        }
+                        conformed.add(mid);
+                    }
+                    accessNode.setProperty(Info.CONFORMED_SOURCES, conformed);
+                }
             }
-            
+
             // Insert
             sourceNode.addAsParent(accessNode);
 
             apNode = accessNode;
-            
+
             // set additional information
-    		for (GroupSymbol group : accessNode.getGroups()) {
-    		    if (group.getCheckMatViewStatus() != null) {
-    		        LinkedHashSet<Object> viewsToCheck = new LinkedHashSet<Object>();
-    		        viewsToCheck.add(group.getCheckMatViewStatus());
-    		        accessNode.setProperty(Info.CHECK_MAT_VIEW, viewsToCheck);
-    		    }
+            for (GroupSymbol group : accessNode.getGroups()) {
+                if (group.getCheckMatViewStatus() != null) {
+                    LinkedHashSet<Object> viewsToCheck = new LinkedHashSet<Object>();
+                    viewsToCheck.add(group.getCheckMatViewStatus());
+                    accessNode.setProperty(Info.CHECK_MAT_VIEW, viewsToCheck);
+                }
                 Object modelID = metadata.getModelID(group.getMetadataID());
                 if (CapabilitiesUtil.requiresCriteria(modelID, metadata, finder)) {
-                	additionalRules[1] = true;
+                    additionalRules[1] = true;
                 }
             }
         }
@@ -208,7 +206,7 @@ public final class RulePlaceAccess implements
 
     /**
      * Ensures that the group is uniquely named within the current optimizer run
-     * 
+     *
      * @param sourceNode
      * @param groups
      * @param metadata
@@ -241,8 +239,8 @@ public final class RulePlaceAccess implements
         GroupSymbol group = sourceNode.getGroups().iterator().next();
 
         if (groups.add(group.getName())) {
-        	if (group.getDefinition() != null) {
-            	cc.getAliasMapping().put(group.getName(), group.getName());
+            if (group.getDefinition() != null) {
+                cc.getAliasMapping().put(group.getName(), group.getName());
             }
             return; // this is the first instance of the group
         }
@@ -257,7 +255,7 @@ public final class RulePlaceAccess implements
         GroupSymbol newGroup = recontextSymbol(group, groups);
 
         if (group.getDefinition() != null) {
-        	cc.getAliasMapping().put(newGroup.getName(), group.getName());
+            cc.getAliasMapping().put(newGroup.getName(), group.getName());
         }
 
         //the expressions in the map will all be element symbols
@@ -280,7 +278,7 @@ public final class RulePlaceAccess implements
 
     /**
      * Creates a uniquely named group symbol given the old symbol
-     * 
+     *
      * @param oldSymbol
      * @param names a case insensitive set of all known groups
      * @return
@@ -356,14 +354,14 @@ public final class RulePlaceAccess implements
     /**
      * This method checks for access patterns and attaches those patterns as a property of the PlanNode. (The property will be a
      * Collection of Collections - each inner Collection will be the ElementSymbols comprising a single access pattern.)
-     * 
+     *
      * @param node
      *            PlanNode
      * @param metadata
      *            source of metadata
      * @throws QueryMetadataException
      *             if there is an exception accessing metadata
-     * @throws QueryResolverException
+     * @throws QueryMetadataException
      *             if the GroupSymbol of an atomic command cannot be resolved
      * @throws TeiidComponentException
      *             indicating some unexpected non-business exception
@@ -389,7 +387,7 @@ public final class RulePlaceAccess implements
 
     /**
      * Return rule name
-     * 
+     *
      * @return Rule name
      */
     public String toString() {

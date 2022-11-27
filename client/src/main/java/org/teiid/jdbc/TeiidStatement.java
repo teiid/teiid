@@ -28,8 +28,8 @@ import org.teiid.client.plan.PlanNode;
 
 
 /**
- * This interface provides methods in 
- * addition to the standard JDBC methods. 
+ * This interface provides methods in
+ * addition to the standard JDBC methods.
  */
 public interface TeiidStatement extends java.sql.Statement {
 
@@ -44,68 +44,68 @@ public interface TeiidStatement extends java.sql.Statement {
     /**
      * Set the execution property value.
      * @param name Execution property name
-     * @param value Execution property value 
+     * @param value Execution property value
      * @deprecated use set statement
      */
     void setExecutionProperty(String name, String value);
 
     /**
-     * Obtain the query plan object representation from the last 
-     * command executed on this Statement, if a query plan was 
-     * requested in the command.  If no plan was requested, this 
+     * Obtain the query plan object representation from the last
+     * command executed on this Statement, if a query plan was
+     * requested in the command.  If no plan was requested, this
      * method will return null.
      * @return PlanNode representing the root of the query plan
      */
     PlanNode getPlanDescription();
-    
+
     /**
-     * Obtain the query planner debug log from the last command 
+     * Obtain the query planner debug log from the last command
      * executed on this Statement, if it was requested with
-     * SHOWPLAN DEBUG.  If no debug output was requested, this 
-     * method will return null. 
+     * SHOWPLAN DEBUG.  If no debug output was requested, this
+     * method will return null.
      * @return Debug log or null if no log exists
      * @deprecated use show statement
      */
     String getDebugLog();
-    
+
     /**
      * Get collection of annotations from the query planner from
-     * the last command executed on the Statement  
+     * the last command executed on the Statement
      * @return Collection of {@link Annotation}s, may return null
      * @deprecated use show statement
      */
     Collection<Annotation> getAnnotations();
-     
+
     /**
      * Get ID for last execution which can be used for matching up executions
      * on the client side with executions in the server logs.
      * @return String identifier for the last execution
      */
     String getRequestIdentifier();
-    
+
     /**
-     * Set the per-statement security payload.  This optional payload will 
+     * Set the per-statement security payload.  This optional payload will
      * accompany each request to the data source(s) so that the connector
      * will have access to it.
-     * 
+     *
      * <p>To remove an existing payload from a statement, call this method
-     * with a <code>null</code> argument.</p>
-     *   
+     * with a <code>null</code> argument.
+     *
      * @param payload The payload that is to accompany requests executed
      * from this statement.
      * @since 4.2
      */
     void setPayload(Serializable payload);
-    
+
     /**
      * Execute the given statement using a non-blocking callback.
      * This method is only valid for use with embedded connections.
-     * 
+     *
      * Note that a single Statement may only have 1 asynch query executing at a time.
-     * 
+     *
      * @param callback
      * @param options
-     * @throws SQLException 
+     * @throws SQLException
      */
     void submitExecute(String sql, StatementCallback callback, RequestOptions options) throws SQLException;
 }

@@ -54,7 +54,7 @@ public class Select implements LanguageObject {
      * Constructs a default instance of this class.
      */
     public Select() {
-        
+
     }
 
     /**
@@ -77,29 +77,28 @@ public class Select implements LanguageObject {
         return symbols.size();
     }
     /**
-	 * Checks for a Select * clause
-	 * @return True if Select * is used
-	 */
+     * Checks for a Select * clause
+     * @return True if Select * is used
+     */
     public boolean isStar() {
-		return (symbols.size() == 1 && symbols.get(0) instanceof MultipleElementSymbol && ((MultipleElementSymbol)symbols.get(0)).getGroup() == null);
+        return (symbols.size() == 1 && symbols.get(0) instanceof MultipleElementSymbol && ((MultipleElementSymbol)symbols.get(0)).getGroup() == null);
     }
 
     /**
      * Returns an ordered list of the symbols in the select.
-     * @param Get list of SelectSymbol in SELECT
      */
     public List<Expression> getSymbols() {
         return symbols;
     }
-    
+
     /**
      * Sets an ordered list of the symbols in the select.  Reuses the current symbol list.
      * @param symbols list of SelectSymbol in SELECT
      */
     public void setSymbols(Collection<? extends Expression> symbols) {
-    	this.symbols.clear();
-    	this.addSymbols(symbols);
-    }    
+        this.symbols.clear();
+        this.addSymbols(symbols);
+    }
 
     /**
      * Returns the select symbol at the specified index.
@@ -114,25 +113,25 @@ public class Select implements LanguageObject {
      * @param symbol New symbol
      */
     public void addSymbol( Expression symbol ) {
-    	if (!(symbol instanceof Symbol) && !(symbol instanceof MultipleElementSymbol)) {
-    		symbol = new ExpressionSymbol("expr" + (this.symbols.size() + 1), symbol); //$NON-NLS-1$
-    	}
-    	this.symbols.add(symbol);
+        if (!(symbol instanceof Symbol) && !(symbol instanceof MultipleElementSymbol)) {
+            symbol = new ExpressionSymbol("expr" + (this.symbols.size() + 1), symbol); //$NON-NLS-1$
+        }
+        this.symbols.add(symbol);
     }
-    
+
     public void addSymbols( Collection<? extends Expression> toAdd) {
-    	if (toAdd != null) {
-    		for (Expression expression : toAdd) {
-    			this.addSymbol(expression);
-			}
-    	}
+        if (toAdd != null) {
+            for (Expression expression : toAdd) {
+                this.addSymbol(expression);
+            }
+        }
     }
-    
+
     /**
      * Remove all current symbols
      */
     public void clearSymbols() {
-    	symbols.clear();
+        symbols.clear();
     }
 
     /**
@@ -144,100 +143,100 @@ public class Select implements LanguageObject {
         return symbols.contains(symbol);
     }
 
-	/**
-	 * Set whether select is distinct.
-	 * @param isDistinct True if SELECT is distinct
-	 */
-	public void setDistinct(boolean isDistinct) {
-		this.distinct = isDistinct;
-	}
+    /**
+     * Set whether select is distinct.
+     * @param isDistinct True if SELECT is distinct
+     */
+    public void setDistinct(boolean isDistinct) {
+        this.distinct = isDistinct;
+    }
 
-	/**
-	 * Checks whether the select is distinct
-	 * @return True if select is distinct
-	 */
-	public boolean isDistinct() {
-		return this.distinct;
-	}
+    /**
+     * Checks whether the select is distinct
+     * @return True if select is distinct
+     */
+    public boolean isDistinct() {
+        return this.distinct;
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
-	/**
-	 * Get the ordered list of all elements returned by this select.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public List<Expression> getProjectedSymbols() { 
-		ArrayList<Expression> projectedSymbols = new ArrayList<Expression>();
-		for (Expression symbol : symbols) {
-			if(symbol instanceof MultipleElementSymbol) { 
-			    List<ElementSymbol> multiSymbols = ((MultipleElementSymbol)symbol).getElementSymbols();
-			    if(multiSymbols != null) { 
-			        projectedSymbols.addAll(multiSymbols);
-			    }
-			} else {
-				projectedSymbols.add(symbol);
-			}
-		}		
-		return projectedSymbols;
-	}
-	
+
+    /**
+     * Get the ordered list of all elements returned by this select.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public List<Expression> getProjectedSymbols() {
+        ArrayList<Expression> projectedSymbols = new ArrayList<Expression>();
+        for (Expression symbol : symbols) {
+            if(symbol instanceof MultipleElementSymbol) {
+                List<ElementSymbol> multiSymbols = ((MultipleElementSymbol)symbol).getElementSymbols();
+                if(multiSymbols != null) {
+                    projectedSymbols.addAll(multiSymbols);
+                }
+            } else {
+                projectedSymbols.add(symbol);
+            }
+        }
+        return projectedSymbols;
+    }
+
     // =========================================================================
     //          O V E R R I D D E N     O B J E C T     M E T H O D S
     // =========================================================================
 
-	/**
-	 * Return a deep copy of this Select.
-	 * @return Deep clone
-	 */
-	public Select clone() {
-		Select copy = new Select(LanguageObject.Util.deepClone(this.symbols, Expression.class));
-		copy.setDistinct( isDistinct() );
-		return copy;
-	}
+    /**
+     * Return a deep copy of this Select.
+     * @return Deep clone
+     */
+    public Select clone() {
+        Select copy = new Select(LanguageObject.Util.deepClone(this.symbols, Expression.class));
+        copy.setDistinct( isDistinct() );
+        return copy;
+    }
 
-	/**
-	 * Compare two Selects for equality.  Order is important in the select (for
-	 * determining the order of the returned columns), so this is a compare
-	 * with order, not just a set comparison.
-	 * @param obj Other object
-	 * @return True if equal
-	 */
-	public boolean equals(Object obj) {
-		if(obj == this) {
-			return true;
-		}
+    /**
+     * Compare two Selects for equality.  Order is important in the select (for
+     * determining the order of the returned columns), so this is a compare
+     * with order, not just a set comparison.
+     * @param obj Other object
+     * @return True if equal
+     */
+    public boolean equals(Object obj) {
+        if(obj == this) {
+            return true;
+        }
 
-		if(!(obj instanceof Select)) {
-			return false;
-		}
+        if(!(obj instanceof Select)) {
+            return false;
+        }
 
-		Select other = (Select) obj;
-        
+        Select other = (Select) obj;
+
         return other.isDistinct() == isDistinct() &&
                EquivalenceUtil.areEqual(getSymbols(), other.getSymbols());
-	}
+    }
 
-	/**
-	 * Get hashcode for Select.  WARNING: The hash code relies on the variables
-	 * in the select, so changing the variables will change the hash code, causing
-	 * a select to be lost in a hash structure.  Do not hash a Select if you plan
-	 * to change it.
-	 * @return Hash code
-	 */
-	public int hashCode() {
-		return HashCodeUtil.hashCode(0, getSymbols());
-	}
+    /**
+     * Get hashcode for Select.  WARNING: The hash code relies on the variables
+     * in the select, so changing the variables will change the hash code, causing
+     * a select to be lost in a hash structure.  Do not hash a Select if you plan
+     * to change it.
+     * @return Hash code
+     */
+    public int hashCode() {
+        return HashCodeUtil.hashCode(0, getSymbols());
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
-        
+
 }  // END CLASS

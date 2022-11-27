@@ -55,22 +55,22 @@ import org.teiid.query.util.CommandContext;
  * Handles object table processing.
  */
 public class ObjectTableNode extends SubqueryAwareRelationalNode {
-    
+
     private static class ReflectiveArrayIterator implements Iterator<Object> {
         private int index;
         private Object array;
         private int length;
-        
+
         ReflectiveArrayIterator(Object array) {
             this.array = array;
             length = java.lang.reflect.Array.getLength(this.array);
         }
-        
+
         @Override
         public boolean hasNext() {
             return index < length;
         }
-        
+
         @Override
         public Object next() {
             if (index >= length) {
@@ -78,179 +78,179 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
             }
             return java.lang.reflect.Array.get(array, index++);
         }
-        
+
     }
 
-	private static final String TEIID_ROW_NUMBER = "teiid_row_number"; //$NON-NLS-1$
-	private static final String TEIID_ROW = "teiid_row"; //$NON-NLS-1$
-	private static final String TEIID_CONTEXT = "teiid_context"; //$NON-NLS-1$
-	
-	private ObjectTable table;
-	private List<ObjectColumn> projectedColumns;
-	
-	//processing state
-	private int rowCount = 0;
-	private Object item;
-	private Iterator<?> result;
-	private SimpleScriptContext scriptContext;
-	
-	public ObjectTableNode(int nodeID) {
-		super(nodeID);
-	}
-	
-	@Override
-	public void initialize(CommandContext context, BufferManager bufferManager,
-			ProcessorDataManager dataMgr) {
-		super.initialize(context, bufferManager, dataMgr);
-		this.scriptContext = new SimpleScriptContext();
-	}
-	
-	@Override
-	public void open() throws TeiidComponentException, TeiidProcessingException {
-		super.open();
-		if (table.getScriptEngine() == null) {
-			table.setScriptEngine(getContext().getMetadata().getScriptEngine(table.getScriptingLanguage()));
-		}
-		this.scriptContext.setAttribute(TEIID_CONTEXT, this.getContext(), ScriptContext.ENGINE_SCOPE);
-	}
-	
-	@Override
-	public synchronized void closeDirect() {
-		if (this.scriptContext != null) {
-			try {
-				this.scriptContext.getErrorWriter().flush();
-			} catch (IOException e) {
-			}
-			try {
-				this.scriptContext.getWriter().flush();
-			} catch (IOException e) {
-			}
-		}
-		super.closeDirect();
-		reset();
-	}
-	
-	@Override
-	public void reset() {
-		super.reset();
-		item = null;
-		result = null;
-		rowCount = 0;
-		if (this.scriptContext != null) {
-			this.scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).clear();
-		}
-	}
-	
-	public void setTable(ObjectTable table) {
-		this.table = table;
-	}
-	
-	public void setProjectedColumns(List<ObjectColumn> projectedColumns) {
-		this.projectedColumns = projectedColumns;
-	}
-	
-	@Override
-	public ObjectTableNode clone() {
-		ObjectTableNode clone = new ObjectTableNode(getID());
-		this.copyTo(clone);
-		clone.setTable(table);
-		clone.setProjectedColumns(projectedColumns);
-		return clone;
-	}
+    private static final String TEIID_ROW_NUMBER = "teiid_row_number"; //$NON-NLS-1$
+    private static final String TEIID_ROW = "teiid_row"; //$NON-NLS-1$
+    private static final String TEIID_CONTEXT = "teiid_context"; //$NON-NLS-1$
 
-	@Override
-	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
-			TeiidComponentException, TeiidProcessingException {
-		
-		evaluate();
-		
-		while (!isBatchFull() && result.hasNext()) {
-			if (item == null) {
-				item = result.next();
-				if (item == null) {
-					continue;
-				}
-				rowCount++;
-			}
-			addBatchRow(processRow());
-		}
-		if (!result.hasNext()) {
-			terminateBatches();
-		}
-		return pullBatch();
-	}
+    private ObjectTable table;
+    private List<ObjectColumn> projectedColumns;
 
-	private void evaluate() throws TeiidComponentException,
-			ExpressionEvaluationException, BlockedException,
-			TeiidProcessingException {
-		if (result != null) {
-			return;
-		}
-		setReferenceValues(this.table);
-		Evaluator eval = getEvaluator(Collections.emptyMap());
-		eval.evaluateParameters(this.table.getPassing(), null, scriptContext.getBindings(ScriptContext.ENGINE_SCOPE));
+    //processing state
+    private int rowCount = 0;
+    private Object item;
+    private Iterator<?> result;
+    private SimpleScriptContext scriptContext;
 
-		Object value = evalScript(this.table.getCompiledScript(), this.table.getRowScript());
-		if (value instanceof Iterable<?>) {
-			result = ((Iterable<?>)value).iterator();
-		} else if (value instanceof Iterator<?>) {
-			result = (Iterator<?>)value;
-		} else if (value != null && value.getClass().isArray()){
-		    result = new ReflectiveArrayIterator(value);
-		} else if (value instanceof Array) {
-		    try {
+    public ObjectTableNode(int nodeID) {
+        super(nodeID);
+    }
+
+    @Override
+    public void initialize(CommandContext context, BufferManager bufferManager,
+            ProcessorDataManager dataMgr) {
+        super.initialize(context, bufferManager, dataMgr);
+        this.scriptContext = new SimpleScriptContext();
+    }
+
+    @Override
+    public void open() throws TeiidComponentException, TeiidProcessingException {
+        super.open();
+        if (table.getScriptEngine() == null) {
+            table.setScriptEngine(getContext().getMetadata().getScriptEngine(table.getScriptingLanguage()));
+        }
+        this.scriptContext.setAttribute(TEIID_CONTEXT, this.getContext(), ScriptContext.ENGINE_SCOPE);
+    }
+
+    @Override
+    public synchronized void closeDirect() {
+        if (this.scriptContext != null) {
+            try {
+                this.scriptContext.getErrorWriter().flush();
+            } catch (IOException e) {
+            }
+            try {
+                this.scriptContext.getWriter().flush();
+            } catch (IOException e) {
+            }
+        }
+        super.closeDirect();
+        reset();
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        item = null;
+        result = null;
+        rowCount = 0;
+        if (this.scriptContext != null) {
+            this.scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).clear();
+        }
+    }
+
+    public void setTable(ObjectTable table) {
+        this.table = table;
+    }
+
+    public void setProjectedColumns(List<ObjectColumn> projectedColumns) {
+        this.projectedColumns = projectedColumns;
+    }
+
+    @Override
+    public ObjectTableNode clone() {
+        ObjectTableNode clone = new ObjectTableNode(getID());
+        this.copyTo(clone);
+        clone.setTable(table);
+        clone.setProjectedColumns(projectedColumns);
+        return clone;
+    }
+
+    @Override
+    protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
+            TeiidComponentException, TeiidProcessingException {
+
+        evaluate();
+
+        while (!isBatchFull() && result.hasNext()) {
+            if (item == null) {
+                item = result.next();
+                if (item == null) {
+                    continue;
+                }
+                rowCount++;
+            }
+            addBatchRow(processRow());
+        }
+        if (!result.hasNext()) {
+            terminateBatches();
+        }
+        return pullBatch();
+    }
+
+    private void evaluate() throws TeiidComponentException,
+            ExpressionEvaluationException, BlockedException,
+            TeiidProcessingException {
+        if (result != null) {
+            return;
+        }
+        setReferenceValues(this.table);
+        Evaluator eval = getEvaluator(Collections.emptyMap());
+        eval.evaluateParameters(this.table.getPassing(), null, scriptContext.getBindings(ScriptContext.ENGINE_SCOPE));
+
+        Object value = evalScript(this.table.getCompiledScript(), this.table.getRowScript());
+        if (value instanceof Iterable<?>) {
+            result = ((Iterable<?>)value).iterator();
+        } else if (value instanceof Iterator<?>) {
+            result = (Iterator<?>)value;
+        } else if (value != null && value.getClass().isArray()){
+            result = new ReflectiveArrayIterator(value);
+        } else if (value instanceof Array) {
+            try {
                 result = new ReflectiveArrayIterator(((Array)value).getArray());
             } catch (SQLException e) {
                 throw new TeiidProcessingException(e);
             }
-		} else {
-			result = Arrays.asList(value).iterator();
-		}
-	}
+        } else {
+            result = Arrays.asList(value).iterator();
+        }
+    }
 
-	private Object evalScript(CompiledScript compiledScript, String script) throws TeiidProcessingException {
-		try {
-			if (compiledScript != null) {
-				return compiledScript.eval(this.scriptContext);
-			}
-			return this.table.getScriptEngine().eval(script, this.scriptContext);
-		} catch (ScriptException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31110, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31110, script, e.getMessage()));
-		}
-	}
+    private Object evalScript(CompiledScript compiledScript, String script) throws TeiidProcessingException {
+        try {
+            if (compiledScript != null) {
+                return compiledScript.eval(this.scriptContext);
+            }
+            return this.table.getScriptEngine().eval(script, this.scriptContext);
+        } catch (ScriptException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID31110, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31110, script, e.getMessage()));
+        }
+    }
 
-	private List<?> processRow() throws ExpressionEvaluationException,
-			TeiidComponentException, TeiidProcessingException {
-		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
-		this.scriptContext.setAttribute(TEIID_ROW, this.item, ScriptContext.ENGINE_SCOPE);
-		this.scriptContext.setAttribute(TEIID_ROW_NUMBER, this.rowCount, ScriptContext.ENGINE_SCOPE);
-		for (ObjectColumn proColumn : projectedColumns) {
-			Object value = evalScript(proColumn.getCompiledScript(), proColumn.getPath());
-			if (value == null) {
-				if (proColumn.getDefaultExpression() != null) {
-					tuple.add(getEvaluator(Collections.emptyMap()).evaluate(proColumn.getDefaultExpression(), null));
-				} else {
-					tuple.add(null);
-				}
-				continue;
-			}
-			value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType(), getContext());
-			tuple.add(value);
-		}
-		item = null;
-		return tuple;
-	}
+    private List<?> processRow() throws ExpressionEvaluationException,
+            TeiidComponentException, TeiidProcessingException {
+        List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
+        this.scriptContext.setAttribute(TEIID_ROW, this.item, ScriptContext.ENGINE_SCOPE);
+        this.scriptContext.setAttribute(TEIID_ROW_NUMBER, this.rowCount, ScriptContext.ENGINE_SCOPE);
+        for (ObjectColumn proColumn : projectedColumns) {
+            Object value = evalScript(proColumn.getCompiledScript(), proColumn.getPath());
+            if (value == null) {
+                if (proColumn.getDefaultExpression() != null) {
+                    tuple.add(getEvaluator(Collections.emptyMap()).evaluate(proColumn.getDefaultExpression(), null));
+                } else {
+                    tuple.add(null);
+                }
+                continue;
+            }
+            value = FunctionDescriptor.importValue(value, proColumn.getSymbol().getType(), getContext());
+            tuple.add(value);
+        }
+        item = null;
+        return tuple;
+    }
 
-	@Override
-	public Collection<? extends LanguageObject> getObjects() {
-		return this.table.getPassing();
-	}
-	
-	@Override
-	public PlanNode getDescriptionProperties() {
-		PlanNode props = super.getDescriptionProperties();
+    @Override
+    public Collection<? extends LanguageObject> getObjects() {
+        return this.table.getPassing();
+    }
+
+    @Override
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = super.getDescriptionProperties();
         AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
         return props;
-	}
+    }
 
 }

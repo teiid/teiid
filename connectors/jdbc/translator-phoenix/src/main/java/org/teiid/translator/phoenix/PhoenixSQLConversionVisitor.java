@@ -29,63 +29,63 @@ import org.teiid.metadata.KeyRecord;
 
 
 public class PhoenixSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConversionVisitor {
-    
+
     private PhoenixExecutionFactory executionFactory ;
-    
+
     public PhoenixSQLConversionVisitor(PhoenixExecutionFactory ef) {
         super(ef);
         this.executionFactory = ef;
     }
-    
+
     @Override
     protected String getInsertKeyword() {
-    	return "UPSERT"; //$NON-NLS-1$
+        return "UPSERT"; //$NON-NLS-1$
     }
-    
+
     @Override
     public void visit(Like obj) {
-    	obj.setEscapeCharacter(null); //not supported - capabilities ensure only \ is pushed
-    	super.visit(obj);
+        obj.setEscapeCharacter(null); //not supported - capabilities ensure only \ is pushed
+        super.visit(obj);
     }
-    
+
     @Override
     public void visit(Update update) {
-    	//use an upsert
-		List<ColumnReference> cols = new ArrayList<ColumnReference>();
-		List<Expression> vals = new ArrayList<Expression>();
-		for (SetClause set : update.getChanges()) {
-			cols.add(set.getSymbol());
-			vals.add(set.getValue());
-		}
-		Insert insert = null;
-		if (update.getWhere() == null) {
-			insert = new Insert(update.getTable(), cols, new ExpressionValueSource(vals));
-		} else {
-			List<DerivedColumn> select = new ArrayList<DerivedColumn>();
-			Set<Column> columns = new HashSet<Column>();
-			for (ColumnReference col : cols) {
-				columns.add(col.getMetadataObject());
-			}
-			for (Expression val : vals) {
-				select.add(new DerivedColumn(null, val));
-			}
-			
-			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
-			if(pk != null) {
-				for (Column c : pk.getColumns()) {
-					if (!columns.contains(c)) {
-						ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
-						select.add(new DerivedColumn(null, cr));
-						cols.add(cr);
-					}
-				}
-			}
-			
-			Select query = new Select(select, false, Arrays.asList((TableReference)update.getTable()), update.getWhere(), null, null, null);
-			insert = new Insert(update.getTable(), cols, query);
-			
-		}
-		append(insert);
+        //use an upsert
+        List<ColumnReference> cols = new ArrayList<ColumnReference>();
+        List<Expression> vals = new ArrayList<Expression>();
+        for (SetClause set : update.getChanges()) {
+            cols.add(set.getSymbol());
+            vals.add(set.getValue());
+        }
+        Insert insert = null;
+        if (update.getWhere() == null) {
+            insert = new Insert(update.getTable(), cols, new ExpressionValueSource(vals));
+        } else {
+            List<DerivedColumn> select = new ArrayList<DerivedColumn>();
+            Set<Column> columns = new HashSet<Column>();
+            for (ColumnReference col : cols) {
+                columns.add(col.getMetadataObject());
+            }
+            for (Expression val : vals) {
+                select.add(new DerivedColumn(null, val));
+            }
+
+            KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
+            if(pk != null) {
+                for (Column c : pk.getColumns()) {
+                    if (!columns.contains(c)) {
+                        ColumnReference cr = new ColumnReference(update.getTable(), c.getName(), c, c.getJavaType());
+                        select.add(new DerivedColumn(null, cr));
+                        cols.add(cr);
+                    }
+                }
+            }
+
+            Select query = new Select(select, false, Arrays.asList((TableReference)update.getTable()), update.getWhere(), null, null, null);
+            insert = new Insert(update.getTable(), cols, query);
+
+        }
+        append(insert);
     }
 
     public String getSQL(){

@@ -42,7 +42,7 @@ public class TestResultsMessage extends TestCase {
         super(name);
     }
 
-	public static ResultsMessage example() {
+    public static ResultsMessage example() {
         ResultsMessage message = new ResultsMessage();
         message.setColumnNames(new String[] {"A", "B", "C", "D"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         message.setDataTypes(new String[] {DataTypeManager.DefaultDataTypes.BIG_INTEGER,
@@ -76,29 +76,29 @@ public class TestResultsMessage extends TestCase {
         return message;
     }
 
-	public void testSerialize() throws Exception {
+    public void testSerialize() throws Exception {
         ResultsMessage message = example();
-        
+
         ResultsMessage copy = UnitTestUtil.helpSerialize(message);
-        
+
         assertNotNull(copy.getColumnNames());
         assertEquals(4, copy.getColumnNames().length);
         assertEquals("A", copy.getColumnNames()[0]); //$NON-NLS-1$
         assertEquals("B", copy.getColumnNames()[1]); //$NON-NLS-1$
         assertEquals("C", copy.getColumnNames()[2]); //$NON-NLS-1$
         assertEquals("D", copy.getColumnNames()[3]); //$NON-NLS-1$
-        
+
         assertNotNull(copy.getDataTypes());
         assertEquals(4, copy.getDataTypes().length);
         assertEquals(DataTypeManager.DefaultDataTypes.BIG_INTEGER, copy.getDataTypes()[0]);
         assertEquals(DataTypeManager.DefaultDataTypes.BIG_INTEGER, copy.getDataTypes()[1]);
         assertEquals(DataTypeManager.DefaultDataTypes.BIG_INTEGER, copy.getDataTypes()[2]);
         assertEquals(DataTypeManager.DefaultDataTypes.BIG_INTEGER, copy.getDataTypes()[3]);
-        
+
         assertEquals(200, copy.getFinalRow());
         assertEquals(1, copy.getFirstRow());
         assertEquals(100, copy.getLastRow());
-        
+
         assertNotNull(copy.getParameters());
         assertEquals(2, copy.getParameters().size());
         ParameterInfo info1 = (ParameterInfo) copy.getParameters().get(0);
@@ -107,7 +107,7 @@ public class TestResultsMessage extends TestCase {
         ParameterInfo info2 = (ParameterInfo) copy.getParameters().get(1);
         assertEquals(ParameterInfo.RESULT_SET, info2.getType());
         assertEquals(5, info2.getNumColumns());
-        
+
         assertNotNull(copy.getPlanDescription());
         assertEquals(4, copy.getPlanDescription().getProperties().size());
         List<? extends List<?>> results = copy.getResultsList();
@@ -119,7 +119,7 @@ public class TestResultsMessage extends TestCase {
         assertEquals(new BigInteger("200"), copy.getResultsList().get(0).get(1)); //$NON-NLS-1$
         assertEquals(new BigInteger("300"), copy.getResultsList().get(0).get(2)); //$NON-NLS-1$
         assertEquals(new BigInteger("400"), copy.getResultsList().get(0).get(3)); //$NON-NLS-1$
-        
+
         assertNotNull(copy.getWarnings());
         assertEquals(2, copy.getWarnings().size());
         assertEquals(Exception.class, copy.getWarnings().get(0).getClass());
@@ -127,12 +127,12 @@ public class TestResultsMessage extends TestCase {
         assertEquals(Exception.class, copy.getWarnings().get(1).getClass());
         assertEquals("warning2", ((Exception)copy.getWarnings().get(1)).getMessage()); //$NON-NLS-1$
     }
-	
+
     public void testDelayedDeserialization() throws Exception {
         ResultsMessage message = example();
         message.setDelayDeserialization(true);
         ResultsMessage copy = UnitTestUtil.helpSerialize(message);
-        
+
         assertNull(copy.getResultsList());
         copy.processResults();
         assertNotNull(copy.getResultsList());

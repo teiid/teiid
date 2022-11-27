@@ -23,11 +23,11 @@ import java.util.ResourceBundle;
 import org.teiid.core.BundleUtil;
 
 
-public class PrestoDBPlugin { 
+public class PrestoDBPlugin {
     public static final String PLUGIN_ID = "org.teiid.translator.prestodb" ; //$NON-NLS-1$
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
-	
-	public static enum Event implements BundleUtil.Event{
-	    TEIID26000
-	}
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+
+    public static enum Event implements BundleUtil.Event{
+        TEIID26000
+    }
 }

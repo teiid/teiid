@@ -49,18 +49,18 @@ public class TestConnectorCapabilitiesFinder {
     @Test public void testFind() throws Exception {
         String modelName = "model"; //$NON-NLS-1$
         String functionName = "fakeFunction"; //$NON-NLS-1$
-        
+
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setFunctionSupport("fakeFunction", true); //$NON-NLS-1$
-       
+
         ArrayList<String> bindings = new ArrayList<String>();
         bindings.add(modelName);
-        
-        VDBMetaData vdb = Mockito.mock(VDBMetaData.class); 
-        ModelMetaData model = Mockito.mock(ModelMetaData.class); 
+
+        VDBMetaData vdb = Mockito.mock(VDBMetaData.class);
+        ModelMetaData model = Mockito.mock(ModelMetaData.class);
         Mockito.stub(vdb.getModel(modelName)).toReturn(model);
         Mockito.stub(model.getSourceNames()).toReturn(bindings);
-        
+
         BasicSourceCapabilities basicSourceCapabilities = new BasicSourceCapabilities();
         basicSourceCapabilities.setFunctionSupport(functionName, true);
 
@@ -68,27 +68,27 @@ public class TestConnectorCapabilitiesFinder {
         ConnectorManager cm = Mockito.mock(ConnectorManager.class);
         Mockito.stub(cm.getCapabilities()).toReturn(basicSourceCapabilities);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(cm);
-        
+
         CachedFinder finder = new CachedFinder(repo, vdb);
-        
+
         // Test
         SourceCapabilities actual = finder.findCapabilities(modelName);
         assertEquals("Did not get expected capabilities", true, actual.supportsFunction(functionName)); //$NON-NLS-1$
-        assertTrue(finder.isValid(modelName)); 
+        assertTrue(finder.isValid(modelName));
     }
-    
+
     @Test public void testFindRequiresSource() throws Exception {
         String modelName = "model"; //$NON-NLS-1$
         String functionName = "fakeFunction"; //$NON-NLS-1$
-        
+
         ArrayList<String> bindings = new ArrayList<String>();
         bindings.add(modelName);
-        
-        VDBMetaData vdb = Mockito.mock(VDBMetaData.class); 
-        ModelMetaData model = Mockito.mock(ModelMetaData.class); 
+
+        VDBMetaData vdb = Mockito.mock(VDBMetaData.class);
+        ModelMetaData model = Mockito.mock(ModelMetaData.class);
         Mockito.stub(vdb.getModel(modelName)).toReturn(model);
         Mockito.stub(model.getSourceNames()).toReturn(bindings);
-        
+
         BasicSourceCapabilities basicSourceCapabilities = new BasicSourceCapabilities();
         basicSourceCapabilities.setFunctionSupport(functionName, true);
 
@@ -96,46 +96,46 @@ public class TestConnectorCapabilitiesFinder {
         ConnectorManager cm = Mockito.mock(ConnectorManager.class);
         Mockito.stub(cm.getCapabilities()).toThrow(new TranslatorException());
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(cm);
-        
+
         CachedFinder finder = new CachedFinder(repo, vdb);
-        
+
         // Test
         SourceCapabilities actual = finder.findCapabilities(modelName);
         assertNotNull(actual); //$NON-NLS-1$
-        assertFalse(finder.isValid(modelName)); 
+        assertFalse(finder.isValid(modelName));
     }
-    
+
     @Test public void testPushdownFunctionSupport() throws Exception {
-    	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
-    		
-    		@Override
-    		public void start() throws TranslatorException {
-    			super.start();
-    			addPushDownFunction("ns", "func", DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING);
-    		}
-    	};
-    	ef.start();
-    	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+
+            @Override
+            public void start() throws TranslatorException {
+                super.start();
+                addPushDownFunction("ns", "func", DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING);
+            }
+        };
+        ef.start();
+        BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertTrue("Did not get expected capabilities", bsc.supportsFunction("ns.func")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testConverts() throws Exception {
-    	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
-    		@Override
-    		public boolean supportsConvert(int fromType, int toType) {
-    			return false;
-    		}
-    		@Override
-    		public List<String> getSupportedFunctions() {
-    			return Arrays.asList("convert");
-    		}
-    	};
-    	ef.start();
-    	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
-        assertTrue(bsc.supportsFunction("convert")); //$NON-NLS-1$ 
+        ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+            @Override
+            public boolean supportsConvert(int fromType, int toType) {
+                return false;
+            }
+            @Override
+            public List<String> getSupportedFunctions() {
+                return Arrays.asList("convert");
+            }
+        };
+        ef.start();
+        BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        assertTrue(bsc.supportsFunction("convert")); //$NON-NLS-1$
         assertFalse(bsc.supportsConvert(TypeFacility.RUNTIME_CODES.BIG_DECIMAL, TypeFacility.RUNTIME_CODES.BIG_INTEGER));
     }
-    
+
     @Test public void testCTESupport() throws Exception {
         final AtomicBoolean bool = new AtomicBoolean(false);
         ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
@@ -151,7 +151,7 @@ public class TestConnectorCapabilitiesFinder {
         ef.start();
         BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertFalse(bsc.supportsCapability(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS));
-        
+
         bool.set(true);
         bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertTrue(bsc.supportsCapability(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS));

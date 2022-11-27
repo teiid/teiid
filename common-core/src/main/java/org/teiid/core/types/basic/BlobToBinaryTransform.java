@@ -42,31 +42,31 @@ public class BlobToBinaryTransform extends Transform {
      */
     public Object transformDirect(Object value) throws TransformationException {
         BlobType source = (BlobType)value;
-        
+
         try {
-        	byte[] bytes = ObjectConverterUtil.convertToByteArray(source.getBinaryStream(), DataTypeManager.MAX_VARBINARY_BYTES, true);
-            return new BinaryType(bytes);         
+            byte[] bytes = ObjectConverterUtil.convertToByteArray(source.getBinaryStream(), DataTypeManager.MAX_VARBINARY_BYTES, true);
+            return new BinaryType(bytes);
         } catch (SQLException e) {
               throw new TransformationException(CorePlugin.Event.TEIID10080, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10080, new Object[] {getSourceType().getName(), getTargetType().getName()}));
         } catch(IOException e) {
               throw new TransformationException(CorePlugin.Event.TEIID10080, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10080, new Object[] {getSourceType().getName(), getTargetType().getName()}));
-        } 
+        }
     }
 
-    /** 
+    /**
      * @see org.teiid.core.types.Transform#isExplicit()
      */
     public boolean isExplicit() {
         return true;
     }
 
-	@Override
-	public Class<?> getSourceType() {
-		return DataTypeManager.DefaultDataClasses.BLOB;
-	}
+    @Override
+    public Class<?> getSourceType() {
+        return DataTypeManager.DefaultDataClasses.BLOB;
+    }
 
-	@Override
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.VARBINARY;
-	}
+    @Override
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.VARBINARY;
+    }
 }

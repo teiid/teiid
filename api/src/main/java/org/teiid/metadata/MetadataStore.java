@@ -29,71 +29,69 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
-import org.teiid.metadata.Grant.Permission;
 
 /**
  * Simple holder for metadata.
  */
 public class MetadataStore implements Serializable {
 
-	private static final long serialVersionUID = -3130247626435324312L;
-	protected NavigableMap<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
-	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
-	protected NavigableMap<String, Datatype> datatypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
-	protected NavigableMap<String, Datatype> unmondifiableDatatypes = Collections.unmodifiableNavigableMap(datatypes);
-	private Map<String, Grant> grants = new TreeMap<String, Grant>(String.CASE_INSENSITIVE_ORDER);
-	protected LinkedHashMap<String, Role> roles = new LinkedHashMap<String, Role>();
-	
-	public NavigableMap<String, Schema> getSchemas() {
-		return schemas;
-	}
-	
-	public Schema getSchema(String name) {
-		return this.schemas.get(name);
-	}
-	
-	public void addSchema(Schema schema) {
-		if (this.schemas.put(schema.getName(), schema) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60012, DataPlugin.Util.gs(DataPlugin.Event.TEIID60012, schema.getName()));
-		}		
-		this.schemaList.add(schema);
-	}
-	
-	public List<Schema> getSchemaList() {
-		return schemaList;
-	}
-	
-	public Schema removeSchema(String schemaName) {
-	    Schema s = this.schemas.remove(schemaName);
+    private static final long serialVersionUID = -3130247626435324312L;
+    protected NavigableMap<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
+    protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
+    protected NavigableMap<String, Datatype> datatypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
+    protected NavigableMap<String, Datatype> unmondifiableDatatypes = Collections.unmodifiableNavigableMap(datatypes);
+    protected LinkedHashMap<String, Role> roles = new LinkedHashMap<String, Role>();
+
+    public NavigableMap<String, Schema> getSchemas() {
+        return schemas;
+    }
+
+    public Schema getSchema(String name) {
+        return this.schemas.get(name);
+    }
+
+    public void addSchema(Schema schema) {
+        if (this.schemas.put(schema.getName(), schema) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60012, DataPlugin.Util.gs(DataPlugin.Event.TEIID60012, schema.getName()));
+        }
+        this.schemaList.add(schema);
+    }
+
+    public List<Schema> getSchemaList() {
+        return schemaList;
+    }
+
+    public Schema removeSchema(String schemaName) {
+        Schema s = this.schemas.remove(schemaName);
         if ( s != null) {
             this.schemaList.remove(s);
-        }       
+        }
         return s;
-	}
-	
-	public void addDataTypes(Map<String, Datatype> typeMap) {
-		if (typeMap != null){
-			for (Map.Entry<String, Datatype> entry:typeMap.entrySet()) {
-				addDatatype(entry.getKey(), entry.getValue());
-			}
-		}
-	}
-	
-	public void addDatatype(String name, Datatype datatype) {
-		if (!this.datatypes.containsKey(name)) {
-			this.datatypes.put(name, datatype);
-		}
-	}
-		
-	public NavigableMap<String, Datatype> getDatatypes() {
-		return unmondifiableDatatypes;
-	}
-	
-	/**
-	 * Get the type information excluding aliases and case sensitive by name
-	 * @return
-	 */
-	public NavigableMap<String, Datatype> getDatatypesExcludingAliases() {
+    }
+
+    public void addDataTypes(Map<String, Datatype> typeMap) {
+        if (typeMap != null){
+            for (Map.Entry<String, Datatype> entry:typeMap.entrySet()) {
+                addDatatype(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    public void addDatatype(String name, Datatype datatype) {
+        if (!this.datatypes.containsKey(name)) {
+            this.datatypes.put(name, datatype);
+        }
+    }
+
+    public NavigableMap<String, Datatype> getDatatypes() {
+        return unmondifiableDatatypes;
+    }
+
+    /**
+     * Get the type information excluding aliases and case sensitive by name
+     * @return
+     */
+    public NavigableMap<String, Datatype> getDatatypesExcludingAliases() {
         TreeMap<String, Datatype> result = new TreeMap<String, Datatype>();
         for (Map.Entry<String, Datatype> entry : this.datatypes.entrySet()) {
             if (entry.getKey().equals(entry.getValue().getName())) {
@@ -102,142 +100,41 @@ public class MetadataStore implements Serializable {
         }
         return result;
     }
-	
-	public void merge(MetadataStore store) {
-		if (store != null) {
-			for (Schema s:store.getSchemaList()) {
-				addSchema(s);
-			}
-			addDataTypes(store.getDatatypes());
-			addGrants(store.grants.values());
-			roles.putAll(store.roles);
-		}
-	}
 
-	void addGrants(Collection<Grant> grants) {
-		if (grants == null) {
-			return;
-		}
-		for (Grant g:grants) {
-		    addGrant(g);
-		}
-	}
+    public void merge(MetadataStore store) {
+        if (store != null) {
+            for (Schema s:store.getSchemaList()) {
+                addSchema(s);
+            }
+            addDataTypes(store.getDatatypes());
+            mergeRoles(store.getRoles());
+        }
+    }
 
-	void addGrant(Grant grant) {
-	    if (grant == null) {
-	        return;
-	    }
-	    Grant previous = this.grants.get(grant.getRole());
-	    if (previous == null) {
-	        this.grants.put(grant.getRole(), grant);
-	    } else {
-	        for (Permission addPermission : grant.getPermissions()) {
-	            boolean found = false;
-	            for (Permission currentPermission : new ArrayList<Permission>(previous.getPermissions())) {
-                    if (currentPermission.resourceMatches(addPermission)) {
-                        found = true;
-                        if (addPermission.getMask() != null) {
-                            if (currentPermission.getMask() != null) {
-                                throw new MetadataException(DataPlugin.Event.TEIID60035, DataPlugin.Util.gs(DataPlugin.Event.TEIID60035, addPermission.getMask(), currentPermission.getMask()));
-                            }
-                            currentPermission.setMask(addPermission.getMask());
-                            currentPermission.setMaskOrder(addPermission.getMaskOrder());
-                        }
-                        if (addPermission.getCondition() != null) {
-                            if (currentPermission.getCondition() != null) {
-                                throw new MetadataException(DataPlugin.Event.TEIID60036, DataPlugin.Util.gs(DataPlugin.Event.TEIID60036, addPermission.getMask(), currentPermission.getMask()));
-                            }
-                            currentPermission.setCondition(addPermission.getCondition(), addPermission.isConditionAConstraint());
-                        }
-                        currentPermission.appendPrivileges(addPermission.getPrivileges());
-                    }
-                    if (currentPermission.getPrivileges().isEmpty() 
-                            && currentPermission.getRevokePrivileges().isEmpty()
-                            && currentPermission.getCondition() == null
-                            && currentPermission.getMask() == null) {
-                        previous.removePermission(currentPermission);
-                    }
-                    if (found) {
-                        break;
-                    }
-                }
-	            if (!found) {
-	                previous.addPermission(addPermission);
-	            }
+    public void mergeRoles(Collection<Role> toMerge) {
+        for (Role r : toMerge) {
+            Role existing = this.getRole(r.getName());
+            if (existing != null) {
+                r.mergeInto(existing);
+            } else {
+                this.addRole(r);
             }
-            if (previous.getPermissions().isEmpty()) {
-                this.grants.remove(grant.getRole());
-            }
-	    }
-	}
-	
-	public void removeGrant(Grant toRemoveGrant) {
-	    if (toRemoveGrant == null) {
-	        return;
-	    }
-	    Grant previous = this.grants.get(toRemoveGrant.getRole());
-	    if (previous == null) {
-	        this.grants.put(toRemoveGrant.getRole(), toRemoveGrant);
-	    } else {
-	        for (Permission revokePermission : toRemoveGrant.getPermissions()) {
-                boolean found = false;
-                for (Permission currentPermission : new ArrayList<Permission>(previous.getPermissions())) {
-                    if (currentPermission.resourceMatches(revokePermission)) {
-                        found = true;
-                        if (revokePermission.getMask() != null) {
-                            if (currentPermission.getMask() != null) {
-                                currentPermission.setMask(null);
-                                currentPermission.setMaskOrder(null);
-                            } else {
-                                //TODO: could be exception
-                            }
-                        }
-                        if (revokePermission.getCondition() != null) {
-                            if (currentPermission.getCondition() != null) {
-                                currentPermission.setCondition(null, null);
-                            } else {
-                                //TODO: could be exception
-                            }
-                        }
-                        currentPermission.removePrivileges(revokePermission.getRevokePrivileges());
-                    }
-                    if (currentPermission.getPrivileges().isEmpty() 
-                            && currentPermission.getRevokePrivileges().isEmpty()
-                            && currentPermission.getCondition() == null
-                            && currentPermission.getMask() == null) {
-                        previous.removePermission(currentPermission);
-                    }
-                    if (found) {
-                        break;
-                    }
-                }
-                if (!found) {
-                    previous.addPermission(revokePermission);
-                }
-            }
-            if (previous.getPermissions().isEmpty()) {
-                this.grants.remove(toRemoveGrant.getRole());
-            }	        
-	    }
-	}	
-	
-	public Collection<Grant> getGrants() {
-	    return this.grants.values();
-	}
-    
+        }
+    }
+
     void addRole(Role role) {
         this.roles.put(role.getName(), role);
     }
-    
+
     Role getRole(String roleName) {
         return this.roles.get(roleName);
     }
 
-    Collection<Role> getRoles() {
+    public Collection<Role> getRoles() {
         return this.roles.values();
     }
-    
+
     Role removeRole(String roleName) {
         return this.roles.remove(roleName);
-    }    
+    }
 }

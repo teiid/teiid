@@ -33,7 +33,7 @@ import org.teiid.client.xa.XidImpl;
 /**
  */
 public interface TransactionService {
-    
+
     // processor level methods
     void begin(TransactionContext context) throws XATransactionException;
 
@@ -42,9 +42,9 @@ public interface TransactionService {
     void rollback(TransactionContext context) throws XATransactionException;
 
     TransactionContext getOrCreateTransactionContext(String threadId);
-    
+
     void suspend(TransactionContext context) throws XATransactionException;
-    
+
     void resume(TransactionContext context) throws XATransactionException;
 
     // local transaction methods
@@ -59,20 +59,20 @@ public interface TransactionService {
     // global transaction methods
     int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 
-	void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException;
-	
-	void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
-	
-	Xid[] recover(int flag, boolean singleTM) throws XATransactionException;
-	
-	void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
-	
-	void start(final String threadId, XidImpl xid, int flags, int timeout, boolean singleTM) throws XATransactionException;
-	
-	void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException;
-        
-	// management methods
+    void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException;
+
+    void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
+
+    Xid[] recover(int flag, boolean singleTM) throws XATransactionException;
+
+    void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
+
+    void start(final String threadId, XidImpl xid, int flags, int timeout, boolean singleTM) throws XATransactionException;
+
+    void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException;
+
+    // management methods
     Collection<TransactionMetadata> getTransactions();
-    
-    void terminateTransaction(String transactionId) throws AdminException;
+
+    void terminateTransaction(String threadId) throws AdminException;
 }

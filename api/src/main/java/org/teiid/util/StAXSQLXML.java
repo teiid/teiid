@@ -42,81 +42,81 @@ import org.teiid.core.types.Streamable;
  */
 public class StAXSQLXML extends SQLXMLImpl {
 
-	public interface StAXSourceProvider {
-		StAXSource getStaxSource() throws SQLException;
-	}
+    public interface StAXSourceProvider {
+        StAXSource getStaxSource() throws SQLException;
+    }
 
-	private static final class SingleUseStAXSourceProvider implements
-			StAXSourceProvider {
-		private StAXSource source;
-		
-		public SingleUseStAXSourceProvider(StAXSource source) {
-			this.source = source;
-		}
+    private static final class SingleUseStAXSourceProvider implements
+            StAXSourceProvider {
+        private StAXSource source;
 
-		@Override
-		public StAXSource getStaxSource() throws SQLException {
-			if (source == null) {
-				throw new SQLException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60019));
-			}
-			StAXSource result = source;
-			source = null;
-			return result;
-		}
-	}
+        public SingleUseStAXSourceProvider(StAXSource source) {
+            this.source = source;
+        }
 
-	private StAXSourceProvider sourceProvider;
+        @Override
+        public StAXSource getStaxSource() throws SQLException {
+            if (source == null) {
+                throw new SQLException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60019));
+            }
+            StAXSource result = source;
+            source = null;
+            return result;
+        }
+    }
 
-	public StAXSQLXML(StAXSource source) {
-		this(new SingleUseStAXSourceProvider(source), Streamable.CHARSET);
-	}
-	
-	public StAXSQLXML(StAXSourceProvider provider, Charset charSet) {
-		this.sourceProvider = provider;
-		this.setCharset(charSet);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
-		if (sourceClass == null || sourceClass == StAXSource.class) {
-			return (T) sourceProvider.getStaxSource();
-		}
-		return super.getSource(sourceClass);
-	}
-	
-	@Override
-	public String getString() throws SQLException {
-		StringWriter sw = new StringWriter();
-		try {
-			new StandardXMLTranslator(getSource(StAXSource.class)).translate(sw);
-		} catch (TransformerException e) {
-			throw new SQLException(e);
-		} catch (IOException e) {
-			throw new SQLException(e);
-		}
-		return sw.toString();
-	}
-	
-	@Override
-	public InputStream getBinaryStream() throws SQLException {
-		try {
-			return new XMLInputStream(getSource(StAXSource.class), XMLOutputFactory.newFactory(), getCharset().name());
-		} catch (XMLStreamException e) {
-			throw new SQLException(e);
-		} catch (FactoryConfigurationError e) {
-			throw new SQLException(e);
-		}
-	}
-	
-	@Override
-	public Reader getCharacterStream() throws SQLException {
-		try {
-			return new XMLReader(getSource(StAXSource.class), XMLOutputFactory.newFactory());
-		} catch (XMLStreamException e) {
-			throw new SQLException(e);
-		} catch (FactoryConfigurationError e) {
-			throw new SQLException(e);
-		}
-	}
-	
+    private StAXSourceProvider sourceProvider;
+
+    public StAXSQLXML(StAXSource source) {
+        this(new SingleUseStAXSourceProvider(source), Streamable.CHARSET);
+    }
+
+    public StAXSQLXML(StAXSourceProvider provider, Charset charSet) {
+        this.sourceProvider = provider;
+        this.setCharset(charSet);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
+        if (sourceClass == null || sourceClass == StAXSource.class) {
+            return (T) sourceProvider.getStaxSource();
+        }
+        return super.getSource(sourceClass);
+    }
+
+    @Override
+    public String getString() throws SQLException {
+        StringWriter sw = new StringWriter();
+        try {
+            new StandardXMLTranslator(getSource(StAXSource.class)).translate(sw);
+        } catch (TransformerException e) {
+            throw new SQLException(e);
+        } catch (IOException e) {
+            throw new SQLException(e);
+        }
+        return sw.toString();
+    }
+
+    @Override
+    public InputStream getBinaryStream() throws SQLException {
+        try {
+            return new XMLInputStream(getSource(StAXSource.class), XMLOutputFactory.newFactory(), getCharset().name());
+        } catch (XMLStreamException e) {
+            throw new SQLException(e);
+        } catch (FactoryConfigurationError e) {
+            throw new SQLException(e);
+        }
+    }
+
+    @Override
+    public Reader getCharacterStream() throws SQLException {
+        try {
+            return new XMLReader(getSource(StAXSource.class), XMLOutputFactory.newFactory());
+        } catch (XMLStreamException e) {
+            throw new SQLException(e);
+        } catch (FactoryConfigurationError e) {
+            throw new SQLException(e);
+        }
+    }
+
 }

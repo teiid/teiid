@@ -32,6 +32,7 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.SubquerySetCriteria;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -41,30 +42,30 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 
 /**
- * <p> 
+ * <p>
  * Utility methods for query planning related to joins.
- * </p><p>
+ * <p>
  * In some cases, a query plan can be made more optimal via a few possible
  * criteria/join optimizations.
- * </p>
+ *
  */
 public class JoinUtil {
 
-    /** 
+    /**
      * Can't instantiate
      */
     private JoinUtil() {
         super();
     }
-    
+
     /**
      * Will attempt to optimize the join type based upon the criteria provided.
-     * 
+     *
      * Returns the new join type if one is found, otherwise null
-     * 
+     *
      * An outer join can be optimized if criteria that is not dependent upon null values
-     * is applied on the inner side of the join. 
-     *  
+     * is applied on the inner side of the join.
+     *
      * @param critNode
      * @param joinNode
      * @return
@@ -79,61 +80,61 @@ public class JoinUtil {
         if (!joinType.isOuter()) {
             return null;
         }
-        
+
         PlanNode left = joinNode.getFirstChild();
         left = FrameUtil.findJoinSourceNode(left);
         PlanNode right = joinNode.getLastChild();
         right = FrameUtil.findJoinSourceNode(right);
-        
+
         Collection<GroupSymbol> outerGroups = left.getGroups();
         Collection<GroupSymbol> innerGroups = right.getGroups();
         if (joinType == JoinType.JOIN_RIGHT_OUTER) {
             outerGroups = innerGroups;
-            innerGroups = left.getGroups(); 
+            innerGroups = left.getGroups();
         }
-        
+
         //sanity check
-        if ((joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_RIGHT_OUTER) 
+        if ((joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_RIGHT_OUTER)
                         && outerGroups.containsAll(critNode.getGroups())) {
             return null;
         }
-        
+
         Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
 
         boolean isNullDepdendent = isNullDependent(metadata, innerGroups, crit);
-        
+
         JoinType result = JoinType.JOIN_INNER;
-        
+
         if (joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_RIGHT_OUTER) {
             if (isNullDepdendent) {
                 return null;
-            } 
+            }
         } else {
             boolean isNullDepdendentOther = isNullDependent(metadata, outerGroups, crit);
-            
+
             if (isNullDepdendent && isNullDepdendentOther) {
                 return null;
             }
-            
+
             if (isNullDepdendent && !isNullDepdendentOther) {
                 result =  JoinType.JOIN_LEFT_OUTER;
             } else if (!isNullDepdendent && isNullDepdendentOther) {
-            	if (modifyJoin) {
-	                JoinUtil.swapJoinChildren(joinNode);
-	                result = JoinType.JOIN_LEFT_OUTER;
-            	}
+                if (modifyJoin) {
+                    JoinUtil.swapJoinChildren(joinNode);
+                    result = JoinType.JOIN_LEFT_OUTER;
+                }
             }
         }
-        
+
         if (modifyJoin) {
-        	joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, result);
+            joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, result);
         }
-        
+
         return result;
     }
 
     /**
-     *  Returns true if the given criteria can be anything other than false (or unknown) 
+     *  Returns true if the given criteria can be anything other than false (or unknown)
      *  given all null values for elements in the inner groups
      */
     public static boolean isNullDependent(QueryMetadataInterface metadata,
@@ -146,9 +147,21 @@ public class JoinUtil {
             //log the exception
             return true;
         }
-        return !(simplifiedCrit.equals(QueryRewriter.FALSE_CRITERIA) || simplifiedCrit.equals(QueryRewriter.UNKNOWN_CRITERIA));
+        if (simplifiedCrit.equals(QueryRewriter.FALSE_CRITERIA) || simplifiedCrit.equals(QueryRewriter.UNKNOWN_CRITERIA)) {
+            return false;
+        }
+        //this is a narrow check added for test consistency with TEIID-5933
+        //the query rewriter based logic can't catch this and similar cases as it's possible
+        //to be either false or unknown, so it can't fully rewrite
+        if (simplifiedCrit instanceof SubquerySetCriteria) {
+            SubquerySetCriteria setCriteria = (SubquerySetCriteria)simplifiedCrit;
+            if (!setCriteria.isNegated() && QueryRewriter.isNull(setCriteria.getExpression())) {
+                return false;
+            }
+        }
+        return true;
     }
-    
+
     public static boolean isNullDependent(QueryMetadataInterface metadata,
                                           final Collection<GroupSymbol> innerGroups,
                                           Expression expr) {
@@ -165,22 +178,22 @@ public class JoinUtil {
     private static LanguageObject replaceWithNullValues(final Collection<GroupSymbol> innerGroups,
                                                         LanguageObject obj) {
         ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-            
+
             public Expression replaceExpression(Expression element) {
                 if (!(element instanceof ElementSymbol)) {
                     return element;
                 }
-                
+
                 ElementSymbol symbol = (ElementSymbol)element;
-                
+
                 if (innerGroups.contains(symbol.getGroupSymbol())) {
                     return new Constant(null, symbol.getType());
                 }
-                
+
                 return element;
             }
         };
-        
+
         if (obj instanceof ElementSymbol) {
             return emv.replaceExpression((ElementSymbol)obj);
         }
@@ -191,7 +204,7 @@ public class JoinUtil {
 
     static JoinType getJoinTypePreventingCriteriaOptimization(PlanNode joinNode, PlanNode critNode) {
         Set<GroupSymbol> groups = critNode.getGroups();
-        
+
         //special case for 0 group criteria
         if (groups.size() == 0) {
             critNode = FrameUtil.findOriginatingNode(critNode, groups);
@@ -211,23 +224,23 @@ public class JoinUtil {
         if(!joinType.isOuter()) {
             return null;
         }
-        
+
         if(joinType.equals(JoinType.JOIN_FULL_OUTER)) {
             return joinType;
-        } 
-        
+        }
+
         Set<GroupSymbol> innerGroups = getInnerSideJoinNodes(joinNode)[0].getGroups();
         for (GroupSymbol group : groups) {
             if (innerGroups.contains(group)) {
                 return joinType;
-            }            
+            }
         }
-        
+
         return null;
     }
-            
+
     /**
-     * Can be called after join planning on a join node to get the inner sides of the join 
+     * Can be called after join planning on a join node to get the inner sides of the join
      * @param joinNode
      * @return
      */
@@ -247,8 +260,8 @@ public class JoinUtil {
         //must be full outer, so there is no inner side
         return new PlanNode[] {};
     }
-    
-    /** 
+
+    /**
      * @param joinNode
      */
     static void swapJoinChildren(PlanNode joinNode) {
@@ -262,5 +275,5 @@ public class JoinUtil {
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, jt.getReverseType());
     }
-    
+
 }

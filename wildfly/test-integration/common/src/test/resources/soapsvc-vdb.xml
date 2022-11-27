@@ -1,0 +1,40 @@
+<vdb name="WSMSG" version="1">
+    <model name="test">
+        <source name="src" connection-jndi-name="java:/web-ds" translator-name="ws1"/>
+    </model>
+    
+    <model name="AddressingService" type="VIRTUAL">
+        <metadata type = "DDL"><![CDATA[        
+            CREATE VIRTUAL PROCEDURE sayHello(IN sayHello string NOT NULL, IN MessageID string NOT NULL, IN "To" string NOT NULL, IN ReplyTo string NOT NULL, IN Action string NOT NULL) RETURNS  TABLE (sayHelloResponse string)
+            AS
+            BEGIN
+                SELECT t.* FROM TABLE(EXEC AddressingService.sayHello_request(AddressingService.sayHello.sayHello, AddressingService.sayHello.MessageID, AddressingService.sayHello."To", AddressingService.sayHello.ReplyTo, AddressingService.sayHello.Action)) AS request, TABLE(EXEC test.invoke(binding => 'SOAP11', action => '', request => request.xml_out, endpoint => 'http://localhost:8080/jboss-jaxws-addressing/AddressingService', stream => TRUE)) AS response, TABLE(EXEC AddressingService.sayHello_response(response.result)) AS t;
+            END;
+            
+            CREATE VIRTUAL PROCEDURE sayHello_request(IN sayHello string NOT NULL, IN MessageID string NOT NULL, IN "To" string NOT NULL, IN ReplyTo string NOT NULL, IN Action string NOT NULL) RETURNS TABLE (xml_out xml)
+            AS
+            BEGIN
+                SELECT XMLELEMENT(NAME "soap:Envelope", XMLNAMESPACES('http://schemas.xmlsoap.org/soap/envelope/' AS soap, 'http://www.jboss.org/jbossws/ws-extensions/wsaddressing' AS tns, 'http://www.w3.org/2005/08/addressing' AS wsa), 
+                XMLELEMENT(NAME "soap:Header", XMLELEMENT(NAME "wsa:MessageID", AddressingService.sayHello_request.MessageID), XMLELEMENT(NAME "wsa:To", AddressingService.sayHello_request."To"), 
+                XMLELEMENT(NAME "wsa:ReplyTo", XMLELEMENT(NAME "wsa:Address", AddressingService.sayHello_request.ReplyTo)), 
+                XMLELEMENT(NAME "wsa:Action", AddressingService.sayHello_request.Action)), XMLELEMENT(NAME "soap:Body", XMLELEMENT(NAME "tns:sayHello", AddressingService.sayHello_request.sayHello))) AS xml_out;
+            END;
+            
+            CREATE VIRTUAL PROCEDURE sayHello_response(IN xml_in xml NOT NULL) RETURNS TABLE (sayHelloResponse string) 
+            AS
+            BEGIN
+                EXECUTE logMsg(context=>'org.teiid', level=>'ERROR', msg=>XMLSERIALIZE(sayHello_response.xml_in AS string));
+                SELECT t.* FROM XMLTABLE(XMLNAMESPACES('http://www.jboss.org/jbossws/ws-extensions/wsaddressing' AS tns, 
+                    'http://schemas.xmlsoap.org/soap/envelope/' AS soap), 
+                    'soap:Envelope/soap:Body' PASSING AddressingService.sayHello_response.xml_in 
+                    COLUMNS sayHelloResponse string PATH 'tns:sayHelloResponse/return') AS t;
+            END;        
+        ]]>
+       </metadata>        
+    </model>
+
+    <translator name="ws1" type="ws">
+        <property name="DefaultBinding" value="SOAP12"/>
+        <property name="DefaultServiceMode" value="MESSAGE"/>
+    </translator>
+</vdb>

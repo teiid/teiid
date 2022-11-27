@@ -28,17 +28,17 @@ import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 
 
-/** 
+/**
  * Resolver for BatchedUpdateCommands
  * @since 4.2
  */
 public class BatchedUpdateResolver implements CommandResolver {
-    
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
+
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand) command;
-        
+
         for (Command subCommand : batchedUpdateCommand.getUpdateCommands()) {
             QueryResolver.setChildMetadata(subCommand, command);
             QueryResolver.resolveCommand(subCommand, metadata.getMetadata());

@@ -38,15 +38,15 @@ public class ConnectorHost {
     private TranslationUtility util;
     private ExecutionContext executionContext;
     private Object connectionFactory;
-    
-    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, String vdbFileName) throws TranslatorException {  
+
+    public ConnectorHost(ExecutionFactory connector, Object connectionFactory, String vdbFileName) throws TranslatorException {
         initialize(connector, connectionFactory, new TranslationUtility(VDBMetadataFactory.getVDBMetadata(vdbFileName)));
     }
-    
+
     public ConnectorHost(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws TranslatorException{
         initialize(connector, connectionFactory, util);
     }
-    
+
     private void initialize(ExecutionFactory connector, Object connectionFactory, TranslationUtility util) throws TranslatorException {
         this.connector = connector;
         this.util = util;
@@ -55,23 +55,23 @@ public class ConnectorHost {
     }
 
     public void setExecutionContext(ExecutionContext context) {
-    	this.executionContext = context;
+        this.executionContext = context;
     }
-    
+
     public List executeCommand(String query) throws TranslatorException {
         Command command = getCommand(query);
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
 
         return executeCommand(command, runtimeMetadata, true);
     }
-    
+
     public List executeCommand(String query, boolean close) throws TranslatorException {
         Command command = getCommand(query);
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
 
         return executeCommand(command, runtimeMetadata, close);
     }
-    
+
     public List executeCommand(Command command) throws TranslatorException {
         RuntimeMetadata runtimeMetadata = getRuntimeMetadata();
         return executeCommand(command, runtimeMetadata, true);
@@ -84,7 +84,7 @@ public class ConnectorHost {
         exec.execute();
         List results = readResultsFromExecution(exec);
         if (close) {
-        	exec.close();
+            exec.close();
         }
         return results;
     }
@@ -98,45 +98,45 @@ public class ConnectorHost {
 
         return executeBatchedUpdates(commands, runtimeMetadata);
     }
-    
+
     public int[] executeBatchedUpdates(Command[] commands, RuntimeMetadata runtimeMetadata) throws TranslatorException {
-    	List<List> result = executeCommand(new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata, true);
-    	int[] counts = new int[result.size()];
-    	for (int i = 0; i < counts.length; i++) {
-    		counts[i] = ((Integer)result.get(i).get(0)).intValue();
-    	}
-    	return counts;
+        List<List> result = executeCommand(new BatchedUpdates(Arrays.asList(commands)), runtimeMetadata, true);
+        int[] counts = new int[result.size()];
+        for (int i = 0; i < counts.length; i++) {
+            counts[i] = ((Integer)result.get(i).get(0)).intValue();
+        }
+        return counts;
     }
-    
+
     private List<List> readResultsFromExecution(Execution execution) throws TranslatorException {
-    	List<List> results = new ArrayList<List>();
-    	while (true) {
-	    	try {
-		    	if (execution instanceof ResultSetExecution) {
-		    		ResultSetExecution rs = (ResultSetExecution)execution;
-		    		List result = null;
-		    		while ((result = rs.next()) != null) {
-		    			results.add(result);
-		    		}
-		    		break;
-		    	} 
-		    	UpdateExecution rs = (UpdateExecution)execution;
-	    		int[] result = rs.getUpdateCounts();
-	    		for (int i = 0; i < result.length; i++) {
-	    			results.add(Arrays.asList(result[i]));
-	    		}
-	    		break;
-	    	} catch (DataNotAvailableException e) {
-	    		if (e.getRetryDelay() > 0) {
-		    		try {
-						Thread.sleep(e.getRetryDelay());
-					} catch (InterruptedException e1) {
-						throw new TranslatorException(e1);
-					}
-	    		}
-	    	}
-    	}
-    	return results;
+        List<List> results = new ArrayList<List>();
+        while (true) {
+            try {
+                if (execution instanceof ResultSetExecution) {
+                    ResultSetExecution rs = (ResultSetExecution)execution;
+                    List result = null;
+                    while ((result = rs.next()) != null) {
+                        results.add(result);
+                    }
+                    break;
+                }
+                UpdateExecution rs = (UpdateExecution)execution;
+                int[] result = rs.getUpdateCounts();
+                for (int i = 0; i < result.length; i++) {
+                    results.add(Arrays.asList(result[i]));
+                }
+                break;
+            } catch (DataNotAvailableException e) {
+                if (e.getRetryDelay() > 0) {
+                    try {
+                        Thread.sleep(e.getRetryDelay());
+                    } catch (InterruptedException e1) {
+                        throw new TranslatorException(e1);
+                    }
+                }
+            }
+        }
+        return results;
     }
 
     private RuntimeMetadata getRuntimeMetadata() {
@@ -144,6 +144,6 @@ public class ConnectorHost {
     }
 
     public Command getCommand(String query) {
-    	return util.parseCommand(query);
+        return util.parseCommand(query);
     }
 }

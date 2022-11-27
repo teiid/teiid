@@ -23,12 +23,12 @@ package org.teiid;
  */
 public interface PreParser {
 
-	/**
-	 * Return a rewritten form of the incoming command 
-	 * @param command
-	 * @param context
-	 * @return
-	 */
-	String preParse(String command, CommandContext context);
+    /**
+     * Return a rewritten form of the incoming command
+     * @param command
+     * @param context
+     * @return
+     */
+    String preParse(String command, CommandContext context);
 
 }

@@ -18,7 +18,11 @@
 
 package org.teiid.logging;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Constants that define the level of the messages that are to be recorded
@@ -82,8 +86,8 @@ public final class MessageLevel {
         public static final String CRITICAL     = "CRITICAL"; //$NON-NLS-1$
         public static final String ERROR        = "ERROR"; //$NON-NLS-1$
         public static final String WARNING      = "WARNING"; //$NON-NLS-1$
-	    public static final String INFO         = "INFO"; //$NON-NLS-1$
-	    public static final String DETAIL       = "DETAIL"; //$NON-NLS-1$
+        public static final String INFO         = "INFO"; //$NON-NLS-1$
+        public static final String DETAIL       = "DETAIL"; //$NON-NLS-1$
         public static final String TRACE        = "TRACE"; //$NON-NLS-1$
         public static final String NONE         = "NONE"; //$NON-NLS-1$
         static final String UNKNOWN   = "UNKNOWN"; //$NON-NLS-1$
@@ -97,8 +101,8 @@ public final class MessageLevel {
         public static final String CRITICAL     = "Critical"; //$NON-NLS-1$
         public static final String ERROR        = "Error"; //$NON-NLS-1$
         public static final String WARNING      = "Warning"; //$NON-NLS-1$
-	    public static final String INFO         = "Information"; //$NON-NLS-1$
-	    public static final String DETAIL       = "Detail"; //$NON-NLS-1$
+        public static final String INFO         = "Information"; //$NON-NLS-1$
+        public static final String DETAIL       = "Detail"; //$NON-NLS-1$
         public static final String TRACE        = "Trace"; //$NON-NLS-1$
         public static final String NONE         = "None"; //$NON-NLS-1$
     }
@@ -150,31 +154,31 @@ public final class MessageLevel {
      *    <code>MessageLevel.WARNING</code>,
      *    <code>MessageLevel.INFO</code>,
      *    <code>MessageLevel.DETAIL</code>, or
-     *    <code>MessageLevel.TRACE.
+     *    <code>MessageLevel.TRACE</code>.
      * @throws IllegalArgumentException if the level is out of range.
      */
     public static boolean isMessageLevelValid( int newMessageLevel ) {
         return !( newMessageLevel < MessageLevel.NONE || newMessageLevel > MessageLevel.TRACE );
     }
-    
+
     /**
      * Utility method for knowing what is the lower boundary for
      * a valid message level.
      * @return int message level
-     * @see #validUpperMessageLevel
+     * @see #NONE
      */
     public static int getValidLowerMessageLevel() {
-    	return MessageLevel.NONE;
+        return MessageLevel.NONE;
     }
-    
+
     /**
      * Utility method for knowing what is the upper boundary for
      * a valid message level.
      * @return int message level
-     * @see #validLowerMessageLevel
+     * @see #TRACE
      */
     public static int getValidUpperMessageLevel() {
-    	return MessageLevel.TRACE;
+        return MessageLevel.TRACE;
     }
 
     public static String getLabelForLevel( int level ) {
@@ -209,7 +213,7 @@ public final class MessageLevel {
     public static Collection getDisplayNames() {
         return DISPLAYS;
     }
-    
+
 
     /**
      * Utility method to get the labels for the levels, starting with the lowest
@@ -220,7 +224,7 @@ public final class MessageLevel {
         return LABELS;
     }
 
-  
+
 
 }
 

@@ -17,8 +17,6 @@
  */
 package org.teiid.translator.couchbase;
 
-import javax.resource.ResourceException;
-
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
@@ -32,7 +30,7 @@ import org.teiid.translator.UpdateExecution;
 import com.couchbase.client.java.query.N1qlQueryResult;
 
 public class CouchbaseUpdateExecution extends CouchbaseExecution implements UpdateExecution {
-    
+
     private Command command;
     private N1QLUpdateVisitor visitor;
     private int[] returns = new int[] {0};
@@ -46,7 +44,7 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
     public void execute() throws TranslatorException {
         this.visitor = this.executionFactory.getN1QLUpdateVisitor();
         this.visitor.append(this.command);
-        
+
         N1qlQueryResult results;
         int count = 0;
         if(visitor.getBulkCommands() != null) {
@@ -56,35 +54,31 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
                     count += results.info().mutationCount();
                 }
             }
-            
+
         } else {
             results = executeDirect(visitor.toString());
             if(results != null) {
                 count = results.info().mutationCount();
             }
-        } 
-        
+        }
+
         if(count > 0) {
             this.returns = new int[1];
             this.returns[0] = count;
         }
     }
-    
+
     private N1qlQueryResult executeDirect(String n1ql) throws TranslatorException {
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, n1ql));        
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, n1ql));
         executionContext.logCommand(n1ql);
-        try {
-            return this.connection.execute(n1ql);
-        } catch (ResourceException e) {
-            throw new TranslatorException(e);
-        }
+        return this.connection.execute(n1ql);
     }
 
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
         return this.returns;
     }
-    
+
     @Override
     public void close() {
     }

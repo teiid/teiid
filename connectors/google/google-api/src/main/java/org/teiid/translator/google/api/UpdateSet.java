@@ -21,30 +21,30 @@ package org.teiid.translator.google.api;
 
 public class UpdateSet {
 
-	String columnID;
-	String value;
-	
-	public UpdateSet(String columnID, String value){
-		this.columnID = columnID;
-		this.value = value;
-	}
+    String columnID;
+    String value;
 
-	public String getColumnID() {
-		return columnID;
-	}
+    public UpdateSet(String columnID, String value){
+        this.columnID = columnID;
+        this.value = value;
+    }
 
-	public void setColumnID(String columnID) {
-		this.columnID = columnID;
-	}
+    public String getColumnID() {
+        return columnID;
+    }
 
-	public String getValue() {
-		return value;
-	}
+    public void setColumnID(String columnID) {
+        this.columnID = columnID;
+    }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
-	
-	
-	
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+
+
 }

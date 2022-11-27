@@ -39,11 +39,11 @@ import org.teiid.query.sql.symbol.SearchedCaseExpression;
 public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
 
     private Collection<LanguageObject> unresolvedSymbols;
-    
-	public CheckSymbolsAreResolvedVisitor() { 
-        unresolvedSymbols = new ArrayList<LanguageObject>();    
+
+    public CheckSymbolsAreResolvedVisitor() {
+        unresolvedSymbols = new ArrayList<LanguageObject>();
     }
-    
+
     /**
      * Get the Collection of any unresolved symbols
      * @return Collection of any unresolved Symbols; may
@@ -52,13 +52,13 @@ public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
     public Collection<LanguageObject> getUnresolvedSymbols(){
         return this.unresolvedSymbols;
     }
-    
+
     public void visit(CaseExpression obj) {
         if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
-    
+
     public void visit(ElementSymbol obj) {
         if (obj.getMetadataID() == null){
             this.unresolvedSymbols.add(obj);
@@ -76,19 +76,19 @@ public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
             this.unresolvedSymbols.add(obj);
         }
     }
-    
+
     public void visit(ScalarSubquery obj) {
         if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
-    
+
     public void visit(Function obj) {
         if (obj.getFunctionDescriptor() == null){
             this.unresolvedSymbols.add(obj);
         }
     }
-    
+
     public void visit(Reference obj) {
         if (obj.getType() == null){
             this.unresolvedSymbols.add(obj);

@@ -19,9 +19,9 @@
 package org.teiid.client.util;
 
 public interface ResultsReceiver<T> {
-	
-	void receiveResults(T results);
-	
-	void exceptionOccurred(Throwable e);
-	
+
+    void receiveResults(T results);
+
+    void exceptionOccurred(Throwable e);
+
 }

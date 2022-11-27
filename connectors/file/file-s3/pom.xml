@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+      <groupId>org.teiid.connectors</groupId>
+      <artifactId>file</artifactId>
+      <version>17.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>file-s3</artifactId>
+    <name>file-s3</name>
+    <description>S3 file support</description>
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+        </dependency>   
+        <dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-core</artifactId>
+        </dependency>
+    </dependencies>
+    
+</project>

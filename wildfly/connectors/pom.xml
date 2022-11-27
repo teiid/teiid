@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>wildfly-parent</artifactId>
+    <groupId>org.teiid.wildfly</groupId>
+    <version>17.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>connectors</artifactId>
+  <packaging>pom</packaging>
+  <name>Connectors</name>
+  <description>This project is aggregator for all the supported connectors.</description>
+  <dependencies>
+          
+    <!--  Internal Test Dependencies -->
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-api</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
+      <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.teiid</groupId>
+      <artifactId>teiid-metadata</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>        
+
+    <dependency>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-vfs</artifactId>
+        <scope>test</scope>
+    </dependency> 
+    <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
+        <scope>test</scope>        
+    </dependency>
+    
+  </dependencies>
+  
+  <modules>
+    <module>accumulo</module>
+    <module>cassandra</module>
+    <module>file</module> 
+    <module>google</module>
+    <module>ldap</module>
+    <module>jdbc</module>
+    <module>mongodb</module>
+    <module>couchbase</module>
+    <module>amazon</module>
+    <module>webservice</module>
+    <module>salesforce</module>
+    <module>solr</module>
+    <module>odata</module>
+    <module>openapi</module>
+    <module>infinispan</module>
+    <module>misc</module>
+  </modules>
+</project>

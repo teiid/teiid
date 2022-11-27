@@ -32,136 +32,136 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 /**
  * <p> This class represents an assignment statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a <code>Block</code>.  This
- * statement holds references to the variable and it's value which could be an 
- * <code>Expression</code> or a <code>Command</code>.</p>
+ * statement holds references to the variable and it's value which could be an
+ * <code>Expression</code> or a <code>Command</code>.
  */
 public class AssignmentStatement extends Statement implements ExpressionStatement {
 
-	// the variable to which a value is assigned
-	private ElementSymbol variable;
+    // the variable to which a value is assigned
+    private ElementSymbol variable;
     private Expression value;
     private Command command;
 
-	/**
-	 * Constructor for AssignmentStatement.
-	 */
-	public AssignmentStatement() {
-		super();
-	}
-	
-	public AssignmentStatement(ElementSymbol variable, QueryCommand value) {
-        this.variable = variable;
-        this.value = new ScalarSubquery(value);        
+    /**
+     * Constructor for AssignmentStatement.
+     */
+    public AssignmentStatement() {
+        super();
     }
-	
-	@Deprecated
-	public AssignmentStatement(ElementSymbol variable, Command value) {
+
+    public AssignmentStatement(ElementSymbol variable, QueryCommand value) {
+        this.variable = variable;
+        this.value = new ScalarSubquery(value);
+    }
+
+    @Deprecated
+    public AssignmentStatement(ElementSymbol variable, Command value) {
         this.variable = variable;
         if (value instanceof QueryCommand) {
-        	this.value = new ScalarSubquery((QueryCommand)value);
+            this.value = new ScalarSubquery((QueryCommand)value);
         } else {
-        	this.command = value;
+            this.command = value;
         }
     }
-	
+
     public AssignmentStatement(ElementSymbol variable, Expression value) {
         this.variable = variable;
-        this.value = value;        
+        this.value = value;
     }
-    
+
     @Deprecated
     public Command getCommand() {
-    	if (command != null) {
-    		return command;
-    	}
-    	if (value instanceof ScalarSubquery && ((ScalarSubquery)value).getCommand() instanceof Query) {
-    		Query query = (Query)((ScalarSubquery)value).getCommand();
-    		if (query.getInto() != null) {
-    			return query;
-    		}
-    	}
-    	return null;
-	}
-    
-    public void setCommand(Command command) {
-		this.command = command;
-	}
- 
-    public Expression getExpression() {
-    	return this.value;
+        if (command != null) {
+            return command;
+        }
+        if (value instanceof ScalarSubquery && ((ScalarSubquery)value).getCommand() instanceof Query) {
+            Query query = (Query)((ScalarSubquery)value).getCommand();
+            if (query.getInto() != null) {
+                return query;
+            }
+        }
+        return null;
     }
-    
+
+    public void setCommand(Command command) {
+        this.command = command;
+    }
+
+    public Expression getExpression() {
+        return this.value;
+    }
+
     public void setExpression(Expression expression) {
         this.value = expression;
     }
-    
-	/**
-	 * Get the expression giving the value that is assigned to the variable.
-	 * @return An <code>Expression</code> with the value
-	 */
-	public ElementSymbol getVariable() {
-		return this.variable;
-	}
-	
-	/**
-	 * Set the variable that is assigned to the value
-	 * @param<code>ElementSymbol</code> that is being assigned
-	 */
-	public void setVariable(ElementSymbol variable) {
-		this.variable = variable;
-	}	
-	
-	/**
-	 * Return the type for this statement, this is one of the types
-	 * defined on the statement object.
-	 * @return The type of this statement
-	 */
-	public int getType() {
-		return Statement.TYPE_ASSIGNMENT;
-	}	
+
+    /**
+     * Get the expression giving the value that is assigned to the variable.
+     * @return An <code>Expression</code> with the value
+     */
+    public ElementSymbol getVariable() {
+        return this.variable;
+    }
+
+    /**
+     * Set the variable that is assigned to the value
+     * @param variable <code>ElementSymbol</code> that is being assigned
+     */
+    public void setVariable(ElementSymbol variable) {
+        this.variable = variable;
+    }
+
+    /**
+     * Return the type for this statement, this is one of the types
+     * defined on the statement object.
+     * @return The type of this statement
+     */
+    public int getType() {
+        return Statement.TYPE_ASSIGNMENT;
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
-	 */
-	public Object clone() {
-		AssignmentStatement clone = new AssignmentStatement(this.variable.clone(), (Expression) this.value.clone());
-		return clone;
-	}
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public Object clone() {
+        AssignmentStatement clone = new AssignmentStatement(this.variable.clone(), (Expression) this.value.clone());
+        return clone;
+    }
 
     /**
      * Compare two AssignmentStatements for equality.  They will only evaluate to equal if
-     * they are IDENTICAL: variable and its value which could be a command or an expression 
+     * they are IDENTICAL: variable and its value which could be a command or an expression
      * objects are equal.
      * @param obj Other object
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests		
-    	if(!(obj instanceof AssignmentStatement)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof AssignmentStatement)) {
+            return false;
+        }
 
-		AssignmentStatement other = (AssignmentStatement) obj;
-		
-        return 
-    		// Compare the variables
-    		EquivalenceUtil.areEqual(this.getVariable(), other.getVariable()) &&
+        AssignmentStatement other = (AssignmentStatement) obj;
+
+        return
+            // Compare the variables
+            EquivalenceUtil.areEqual(this.getVariable(), other.getVariable()) &&
             // Compare the values
-    		EquivalenceUtil.areEqual(this.getExpression(), other.getExpression());
+            EquivalenceUtil.areEqual(this.getExpression(), other.getExpression());
             // Compare the values
     }
 
@@ -171,21 +171,21 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
      * @return Hash code
      */
     public int hashCode() {
-    	// This hash code relies on the variable and its value for this statement
-    	// and criteria clauses, not on the from, order by, or option clauses
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.getVariable());
-    	myHash = HashCodeUtil.hashCode(myHash, this.getExpression());
-		return myHash;
-	}
-    
+        // This hash code relies on the variable and its value for this statement
+        // and criteria clauses, not on the from, order by, or option clauses
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.getVariable());
+        myHash = HashCodeUtil.hashCode(myHash, this.getExpression());
+        return myHash;
+    }
+
     @Override
     public Class<?> getExpectedType() {
-    	if (this.variable == null) {
-    		return null;
-    	}
-    	return this.variable.getType();
+        if (this.variable == null) {
+            return null;
+        }
+        return this.variable.getType();
     }
-    
-      
+
+
 } // END CLASS

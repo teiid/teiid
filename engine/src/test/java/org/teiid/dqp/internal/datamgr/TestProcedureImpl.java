@@ -40,10 +40,10 @@ public class TestProcedureImpl extends TestCase {
     public static Call example() throws Exception {
         String sql = "EXEC pm1.sq3('x', 1)"; //$NON-NLS-1$
         Command command = new QueryParser().parseCommand(sql);
-        QueryResolver.resolveCommand(command, TstLanguageBridgeFactory.metadata);                
+        QueryResolver.resolveCommand(command, TstLanguageBridgeFactory.metadata);
         return TstLanguageBridgeFactory.factory.translate((StoredProcedure)command);
     }
-    
+
     public void testGetProcedureName() throws Exception {
         assertEquals("sq3", example().getProcedureName()); //$NON-NLS-1$
     }
@@ -53,5 +53,5 @@ public class TestProcedureImpl extends TestCase {
         assertNotNull(exec.getArguments());
         assertEquals(2, exec.getArguments().size());
     }
-    
+
 }

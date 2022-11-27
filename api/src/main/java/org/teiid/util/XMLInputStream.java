@@ -36,58 +36,58 @@ import org.teiid.core.util.AccessibleByteArrayOutputStream;
  * Provides an {@link InputStream} adapter for StAX
  */
 public class XMLInputStream extends InputStream {
-	private static final int BUFFER_SIZE = 1<<13;
-	private int pos = 0;
-	private AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(BUFFER_SIZE);
-	private XMLEventReader reader;
-	private XMLEventWriter writer;
+    private static final int BUFFER_SIZE = 1<<13;
+    private int pos = 0;
+    private AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(BUFFER_SIZE);
+    private XMLEventReader reader;
+    private XMLEventWriter writer;
 
-	/**
-	 * Return a UTF-8 {@link InputStream} of the XML
-	 * @param source
-	 * @param outFactory
-	 * @throws XMLStreamException
-	 */
-	public XMLInputStream(StAXSource source, XMLOutputFactory outFactory) throws XMLStreamException {
-		this(source, outFactory, Streamable.ENCODING);
-	}
-	
-	public XMLInputStream(StAXSource source, XMLOutputFactory outFactory, String encoding) throws XMLStreamException {
-		reader = source.getXMLEventReader();
-		if (reader == null) {
-			this.reader = XMLType.getXmlInputFactory().createXMLEventReader(source.getXMLStreamReader());
-		}
-		this.writer = outFactory.createXMLEventWriter(baos, encoding);
-	}
-	
-	@Override
-	public int read() throws IOException {
-		while (pos >= baos.getCount()) {
-			if (!reader.hasNext()) {
-				return -1;
-			}
-			if (baos.getCount() > BUFFER_SIZE) {
-				baos.setCount(0);
-				pos = 0;
-			}
-			try {
-				XMLEvent event = reader.nextEvent();
-				writer.add(event);
-				writer.flush();
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
-			}
-		}
-		return 0xff & baos.getBuffer()[pos++];
-	}
-	
-	@Override
-	public void close() throws IOException {
-		try {
-			reader.close();
-		} catch (XMLStreamException e) {
-			throw new IOException(e);
-		}
-	}
+    /**
+     * Return a UTF-8 {@link InputStream} of the XML
+     * @param source
+     * @param outFactory
+     * @throws XMLStreamException
+     */
+    public XMLInputStream(StAXSource source, XMLOutputFactory outFactory) throws XMLStreamException {
+        this(source, outFactory, Streamable.ENCODING);
+    }
+
+    public XMLInputStream(StAXSource source, XMLOutputFactory outFactory, String encoding) throws XMLStreamException {
+        reader = source.getXMLEventReader();
+        if (reader == null) {
+            this.reader = XMLType.getXmlInputFactory().createXMLEventReader(source.getXMLStreamReader());
+        }
+        this.writer = outFactory.createXMLEventWriter(baos, encoding);
+    }
+
+    @Override
+    public int read() throws IOException {
+        while (pos >= baos.getCount()) {
+            if (!reader.hasNext()) {
+                return -1;
+            }
+            if (baos.getCount() > BUFFER_SIZE) {
+                baos.setCount(0);
+                pos = 0;
+            }
+            try {
+                XMLEvent event = reader.nextEvent();
+                writer.add(event);
+                writer.flush();
+            } catch (XMLStreamException e) {
+                throw new IOException(e);
+            }
+        }
+        return 0xff & baos.getBuffer()[pos++];
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            reader.close();
+        } catch (XMLStreamException e) {
+            throw new IOException(e);
+        }
+    }
 
 }

@@ -28,98 +28,98 @@ import org.teiid.query.sql.visitor.EvaluatableVisitor;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class RelationalNodeUtil {
-    
+
     private RelationalNodeUtil() {
     }
-    
+
     /**
      * Decides whether a command needs to be executed.
-     * <br/><b>NOTE: This method has a side-effect.</b> If the criteria of this command always evaluate to true,
+     * <br><b>NOTE: This method has a side-effect.</b> If the criteria of this command always evaluate to true,
      * and the simplifyCriteria flag is true, then the command criteria are set to null.
      * @param command
      * @param simplifyCriteria whether to simplify the criteria of the command if they always evaluate to true
      * @return true if this command should be executed by the connector; false otherwise.
      * @throws TeiidComponentException
-     * @throws ExpressionEvaluationException 
+     * @throws ExpressionEvaluationException
      * @since 4.2
      */
     public static boolean shouldExecute(Command command, boolean simplifyCriteria) throws TeiidComponentException, ExpressionEvaluationException {
-    	return shouldExecute(command, simplifyCriteria, false);
+        return shouldExecute(command, simplifyCriteria, false);
     }
-    
+
     public static boolean shouldExecute(Command command, boolean simplifyCriteria, boolean duringPlanning) throws TeiidComponentException, ExpressionEvaluationException {
         int cmdType = command.getType();
         Criteria criteria = null;
         switch(cmdType) {
             case Command.TYPE_QUERY:
-                
+
                 QueryCommand queryCommand = (QueryCommand) command;
-                
+
                 Limit limit = queryCommand.getLimit();
-                
+
                 if (limit != null && limit.getRowLimit() instanceof Constant) {
                     Constant rowLimit = (Constant)limit.getRowLimit();
                     if (Integer.valueOf(0).equals(rowLimit.getValue())) {
                         return false;
                     }
                 }
-            
+
                 if(queryCommand instanceof SetQuery) {
                     SetQuery union = (SetQuery) queryCommand;
                     boolean shouldExecute = false;
                     for (QueryCommand innerQuery : union.getQueryCommands()) {
                         boolean shouldInner = shouldExecute(innerQuery, simplifyCriteria, duringPlanning);
                         if(shouldInner) {
-                        	shouldExecute = true;
-                            break;                            
-                        }                        
+                            shouldExecute = true;
+                            break;
+                        }
                     }
                     return shouldExecute;
-                } 
+                }
 
                 // Else this is a query
-                Query query = (Query) queryCommand;                
+                Query query = (Query) queryCommand;
                 criteria = query.getCriteria();
 
                 boolean shouldEvaluate = shouldEvaluate(simplifyCriteria, duringPlanning, criteria, query, false);
-                
+
                 if (shouldEvaluate) {
                     //check for false having as well
                     shouldEvaluate = shouldEvaluate(simplifyCriteria, duringPlanning, query.getHaving(), query, true);
                 }
-                
+
                 if (shouldEvaluate) {
                     return true;
                 }
-                
+
                 if (query.hasAggregates() && query.getGroupBy() == null) {
-                	return true;
+                    return true;
                 }
 
                 break;
             case Command.TYPE_INSERT:
-            	Insert insert = (Insert) command;
-            	QueryCommand expr = insert.getQueryExpression();
-            	if (expr != null) {
-            		return shouldExecute(expr, simplifyCriteria);
-            	}
-            	return true;
+                Insert insert = (Insert) command;
+                QueryCommand expr = insert.getQueryExpression();
+                if (expr != null) {
+                    return shouldExecute(expr, simplifyCriteria);
+                }
+                return true;
             case Command.TYPE_UPDATE:
                 Update update = (Update) command;
-                
+
                 if (update.getChangeList().isEmpty()) {
                     return false;
                 }
-                
+
                 criteria = update.getCriteria();
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
                 if (criteria == null) {
-                	return true;
+                    return true;
                 }
                 if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     return true;
@@ -136,7 +136,7 @@ public class RelationalNodeUtil {
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
                 if (criteria == null) {
-                	return true;
+                    return true;
                 }
                 if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     return true;
@@ -175,7 +175,7 @@ public class RelationalNodeUtil {
         }
         return false;
     }
-    
+
     /**
      * Returns whether the relational command is an update.
      * @param command
@@ -189,13 +189,13 @@ public class RelationalNodeUtil {
                commandType == Command.TYPE_DELETE;
     }
 
-	public static boolean hasOutputParams(Command command) {
-		boolean hasOutParams = false;
+    public static boolean hasOutputParams(Command command) {
+        boolean hasOutParams = false;
         if (command instanceof StoredProcedure) {
-        	StoredProcedure sp = (StoredProcedure)command;
-        	hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
+            StoredProcedure sp = (StoredProcedure)command;
+            hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
         }
-		return hasOutParams;
-	}
+        return hasOutParams;
+    }
 
 }

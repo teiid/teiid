@@ -13,18 +13,18 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
-/** 
+/**
  * Capabilities compatible with MM 5.5.x
  */
 @Translator(name="metamatrix", description="A translator for MetaMatrix 5.5 or later")
 public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		addPushDownFunction("mm", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-    
+
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        addPushDownFunction("mm", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
@@ -111,13 +111,13 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("DECODESTRING"); //$NON-NLS-1$
         supportedFunctions.add("DECODEINTEGER"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
-        supportedFunctions.add("NVL");      //$NON-NLS-1$ 
+        supportedFunctions.add("NVL");      //$NON-NLS-1$
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("USER"); //$NON-NLS-1$
         return supportedFunctions;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
@@ -126,25 +126,25 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsRowLimit() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowOffset() {
         return true;
     }
-    
+
     @Override
     public NullOrder getDefaultNullOrder() {
-    	return NullOrder.UNKNOWN;
+        return NullOrder.UNKNOWN;
     }
-    
+
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
 }

@@ -26,12 +26,12 @@ import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class TestSalesForce41ExecutionFactory {
-	
+
     @Test public void testCreateResults() {
         SalesForce41ExecutionFactory ef = new SalesForce41ExecutionFactory();
         QueryResult qr = ef.buildQueryResult(new SObject[1]);
         assertTrue(qr.isDone());
         assertEquals(1, qr.getSize());
     }
-    
+
 }

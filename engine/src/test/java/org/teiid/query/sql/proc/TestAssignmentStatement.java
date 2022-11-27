@@ -41,62 +41,62 @@ import junit.framework.TestCase;
  */
 public class TestAssignmentStatement  extends TestCase {
 
-	/**
-	 * Constructor for TestAssignmentStatement.
-	 */
-	public TestAssignmentStatement(String name) { 
-		super(name);
-	}
-	
-	// ################################## TEST HELPERS ################################	
+    /**
+     * Constructor for TestAssignmentStatement.
+     */
+    public TestAssignmentStatement(String name) {
+        super(name);
+    }
 
-	public static final AssignmentStatement sample1() { 
-		return new AssignmentStatement(new ElementSymbol("a"), new Constant("1")); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	public static final AssignmentStatement sample2() {
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new ElementSymbol("x")))); //$NON-NLS-1$
-    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("y"))))); //$NON-NLS-1$
-    	return new AssignmentStatement(new ElementSymbol("b"), query); //$NON-NLS-1$
-	}
-	
-	// ################################## ACTUAL TESTS ################################	
-	
-	public void testGetVariable() {
-		AssignmentStatement s1 = sample1();
-		assertEquals("Didn't get the same parts ", s1.getVariable(), new ElementSymbol("a"));		 //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	public void testGetExpression() {
-		AssignmentStatement s1 = sample1();
-		assertEquals("Didn't get the same parts ", s1.getExpression(), new Constant("1")); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	public void testGetCommand() throws Exception {
-		AssignmentStatement s2 = sample2();
-		Query query = (Query) QueryParser.getQueryParser().parseCommand("Select x from y"); //$NON-NLS-1$
-		assertEquals("Didn't get the same parts ", ((ScalarSubquery)s2.getExpression()).getCommand(), query); //$NON-NLS-1$
-	}
-	
-	public void testSelfEquivalence(){
-		AssignmentStatement s1 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s1);
-	}
+    // ################################## TEST HELPERS ################################
 
-	public void testEquivalence(){
-		AssignmentStatement s1 = sample1();
-		AssignmentStatement s1a = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
-	}
-	
-	public void testNonEquivalence(){
-		AssignmentStatement s1 = sample1();
-		AssignmentStatement s2 = sample2();
-		int equals = -1;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s2);
-	}
+    public static final AssignmentStatement sample1() {
+        return new AssignmentStatement(new ElementSymbol("a"), new Constant("1")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public static final AssignmentStatement sample2() {
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new ElementSymbol("x")))); //$NON-NLS-1$
+        query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("y"))))); //$NON-NLS-1$
+        return new AssignmentStatement(new ElementSymbol("b"), query); //$NON-NLS-1$
+    }
+
+    // ################################## ACTUAL TESTS ################################
+
+    public void testGetVariable() {
+        AssignmentStatement s1 = sample1();
+        assertEquals("Didn't get the same parts ", s1.getVariable(), new ElementSymbol("a"));         //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testGetExpression() {
+        AssignmentStatement s1 = sample1();
+        assertEquals("Didn't get the same parts ", s1.getExpression(), new Constant("1")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    public void testGetCommand() throws Exception {
+        AssignmentStatement s2 = sample2();
+        Query query = (Query) QueryParser.getQueryParser().parseCommand("Select x from y"); //$NON-NLS-1$
+        assertEquals("Didn't get the same parts ", ((ScalarSubquery)s2.getExpression()).getCommand(), query); //$NON-NLS-1$
+    }
+
+    public void testSelfEquivalence(){
+        AssignmentStatement s1 = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1);
+    }
+
+    public void testEquivalence(){
+        AssignmentStatement s1 = sample1();
+        AssignmentStatement s1a = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
+    }
+
+    public void testNonEquivalence(){
+        AssignmentStatement s1 = sample1();
+        AssignmentStatement s2 = sample2();
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s2);
+    }
 
 }

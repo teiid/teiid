@@ -39,17 +39,17 @@ import org.teiid.core.util.SqlUtil;
  * objects.
  */
 public class BlobImpl extends BaseLob implements Blob, StreamProvider {
-    
-	public BlobImpl() {
-		
-	}
-	
+
+    public BlobImpl() {
+
+    }
+
     /**
      * Creates a MMBlob object with the <code>valueID</code>.
-     * @param valueID reference to value chunk in data source.
+     * @param streamFactory reference to value chunk in data source.
      */
     public BlobImpl(InputStreamFactory streamFactory) {
-    	super(streamFactory);
+        super(streamFactory);
     }
 
     /**
@@ -70,16 +70,16 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
      */
     public byte[] getBytes(long pos, int length) throws SQLException {
         if (pos < 1) {
-            Object[] params = new Object[] {new Long(pos)};
+            Object[] params = new Object[] {pos};
             throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.2", params)); //$NON-NLS-1$
         }
         else if (length == 0 || pos > length()) {
             return new byte[0];
         }
         pos = pos - 1;
-        
+
         if (length < 0) {
-            Object[] params = new Object[] {new Integer( length)};
+            Object[] params = new Object[] {length};
             throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.3", params)); //$NON-NLS-1$
         }
         else if (pos + length > length()) {
@@ -87,19 +87,19 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         }
         InputStream in = getBinaryStream();
         try {
-        	long skipped = 0;
-        	while (pos > 0) {
-        		skipped = in.skip(pos);
-        		pos -= skipped;
-        	}
-        	return ObjectConverterUtil.convertToByteArray(in, length);
+            long skipped = 0;
+            while (pos > 0) {
+                skipped = in.skip(pos);
+                pos -= skipped;
+            }
+            return ObjectConverterUtil.convertToByteArray(in, length);
         } catch (IOException e) {
-        	throw new SQLException(e);
+            throw new SQLException(e);
         } finally {
-        	try {
-				in.close();
-			} catch (IOException e) {
-			}
+            try {
+                in.close();
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -120,14 +120,14 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         if (pattern == null) {
             return -1;
         }
-        
+
         return LobSearchUtil.position(new LobSearchUtil.StreamProvider() {
-        	public InputStream getBinaryStream() throws SQLException {
-        		return pattern.getBinaryStream();
-        	}
+            public InputStream getBinaryStream() throws SQLException {
+                return pattern.getBinaryStream();
+            }
         }, pattern.length(), this, this.length(), start, 1);
     }
-    
+
     /**
      * Determines the byte position at which the specified byte
      * <code>pattern</code> begins within the <code>BLOB</code>
@@ -142,43 +142,71 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
      * <code>BLOB</code>
      */
     public long position(byte[] pattern, long start) throws SQLException {
-    	if (pattern == null) {
-    		return -1;
-    	}
+        if (pattern == null) {
+            return -1;
+        }
         return position(new SerialBlob(pattern), start);
     }
-        
-	public InputStream getBinaryStream(long arg0, long arg1)
-			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+
+    public InputStream getBinaryStream(long arg0, long arg1)
+            throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
 
-	/**
-	 * @see java.sql.Blob#setBytes(long, byte[])
-	 */
-	public int setBytes(long pos, byte[] bytes) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#setBytes(long, byte[])
+     */
+    public int setBytes(long pos, byte[] bytes) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	/**
-	 * @see java.sql.Blob#setBytes(long, byte[], int, int)
-	 */
-	public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#setBytes(long, byte[], int, int)
+     */
+    public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	/**
-	 * @see java.sql.Blob#setBinaryStream(long)
-	 */
-	public OutputStream setBinaryStream(long pos) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#setBinaryStream(long)
+     */
+    public OutputStream setBinaryStream(long pos) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	/**
-	 * @see java.sql.Blob#truncate(long)
-	 */
-	public void truncate(long len) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#truncate(long)
+     */
+    public void truncate(long len) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
+
+    /**
+     * For a given blob try to determine the length without fully reading an inputstream
+     * @return the length or -1 if it cannot be determined
+     */
+    public static long quickLength(Blob b) {
+        if (b instanceof BlobType) {
+            BlobType blob = (BlobType)b;
+            long length = blob.getLength();
+            if (length != -1) {
+                return length;
+            }
+            return quickLength(blob.getReference());
+        }
+        if (b instanceof BlobImpl) {
+            BlobImpl blob = (BlobImpl)b;
+            try {
+                return blob.getStreamFactory().getLength();
+            } catch (SQLException e) {
+                return -1;
+            }
+        }
+        try {
+            return b.length();
+        } catch (SQLException e) {
+            return -1;
+        }
+    }
 }

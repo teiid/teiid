@@ -17,21 +17,27 @@
  */
 package org.teiid.olingo.service;
 
+import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
-import org.teiid.odata.api.QueryResponse;
+import org.apache.olingo.server.api.ODataResponse;
+import org.apache.olingo.server.api.ServiceMetadata;
+import org.apache.olingo.server.api.serializer.SerializerException;
+import org.teiid.odata.api.ComplexResponse;
 import org.teiid.olingo.ComplexReturnType;
+import org.teiid.olingo.TeiidODataJsonSerializer;
 
-public class CrossJoinResult implements QueryResponse {
+public class CrossJoinResult implements ComplexResponse {
     private String nextToken;
     private CrossJoinNode documentNode;
     private List<List<ComplexReturnType>> out = new ArrayList<List<ComplexReturnType>>();
     private String baseURL;
-    
+
     public CrossJoinResult(String baseURL, CrossJoinNode context) {
         this.baseURL = baseURL;
         this.documentNode = context;
@@ -41,25 +47,25 @@ public class CrossJoinResult implements QueryResponse {
     public void addRow(ResultSet rs) throws SQLException {
 
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
-        
+
         Entity entity = EntityCollectionResponse.createEntity(rs,
                 this.documentNode, this.baseURL, null);
-        
+
         row.add(new ComplexReturnType(this.documentNode.getName(),
-                this.documentNode.getEdmEntityType(), entity, this.documentNode
+                this.documentNode.getEdmStructuredType(), entity, this.documentNode
                         .hasExpand()));
-        
-        for (DocumentNode node : this.documentNode.getSibilings()) {
+
+        for (DocumentNode node : this.documentNode.getSiblings()) {
             Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
                     this.baseURL, null);
-            
+
             row.add(new ComplexReturnType(node.getName(),
-                    this.documentNode.getEdmEntityType(), sibiling,
+                    node.getEdmStructuredType(), sibiling,
                     ((CrossJoinNode) node).hasExpand()));
         }
         this.out.add(row);
     }
-    
+
     public CrossJoinNode getResource() {
         return this.documentNode;
     }
@@ -85,5 +91,14 @@ public class CrossJoinResult implements QueryResponse {
     @Override
     public String getNextToken() {
         return this.nextToken;
+    }
+
+    @Override
+    public void serialize(ODataResponse response,
+            TeiidODataJsonSerializer serializer, ServiceMetadata metadata,
+            ContextURL contextURL, URI next) throws SerializerException {
+        response.setContent(serializer.complexCollection(metadata,
+                getResults(), contextURL, next)
+                .getContent());
     }
 }

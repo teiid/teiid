@@ -55,7 +55,7 @@ public class TestCreateDrop {
         create.setCommitAction(CommitAction.PRESERVE_ROWS);
         helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte) on commit preserve rows", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte) ON COMMIT PRESERVE ROWS", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testCreateTempTable2() {
         Create create = new Create();
         create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
@@ -70,24 +70,24 @@ public class TestCreateDrop {
         create.getColumns().get(0).setNullType(NullType.No_Nulls);
         helpTest("Create local TEMPORARY table tempTable(c1 boolean not null, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean NOT NULL, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testCreateTempTable3() throws QueryParserException {
-    	String sql = "Create TEMPORARY table tempTable (c1 boolean, c2 byte)"; 
-        assertEquals("CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", QueryParser.getQueryParser().parseCommand(sql).toString()); //$NON-NLS-1$ 
+        String sql = "Create TEMPORARY table tempTable (c1 boolean, c2 byte)";
+        assertEquals("CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", QueryParser.getQueryParser().parseCommand(sql).toString()); //$NON-NLS-1$
     }
-    
+
     @Test public void testCreateTempTable4() {
-        helpException("Create table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
+        helpException("Create table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$
     }
-    
+
     @Test public void testCreateTempTable5() {
-        helpException("Create  local TEMPORARY table tempTable (c1 boolean primary, c2 byte)"); //$NON-NLS-1$ 
+        helpException("Create  local TEMPORARY table tempTable (c1 boolean primary, c2 byte)"); //$NON-NLS-1$
     }
-        
+
     @Test public void testCreateTempTable7() {
-        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Encountered \"table tempTable ([*]c1.x[*] boolean,\" at line 1, column 41.\nInvalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Encountered \"table tempTable ([*]c1.x[*] boolean,\" at line 1, column 41.\nInvalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testCreateTempTableWithPrimaryKey() {
         Create create = new Create();
         create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
@@ -102,13 +102,13 @@ public class TestCreateDrop {
         create.getPrimaryKey().add(column);
         helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte, primary key (c2))", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte, PRIMARY KEY(c2))", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testDropTable() {
         Drop drop = new Drop();
         drop.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
         helpTest("DROP table tempTable", "DROP TABLE tempTable", drop); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testForeignTemp() {
         Create create = new Create();
         create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
@@ -132,7 +132,7 @@ public class TestCreateDrop {
         create.setTableMetadata(t);
         helpTest("create foreign temporary table tempTable (x string, y decimal) options (cardinality 10000) on source", "CREATE FOREIGN TEMPORARY TABLE tempTable (\n	x string,\n	y bigdecimal\n) OPTIONS (CARDINALITY 10000) ON 'source'", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testBadCreate() {
         helpException("create insert"); //$NON-NLS-1$
     }
@@ -157,7 +157,7 @@ public class TestCreateDrop {
         column.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
         columns.add(column);
         create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", create); //$NON-NLS-1$ 
+        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", create); //$NON-NLS-1$
     }
-	
+
 }

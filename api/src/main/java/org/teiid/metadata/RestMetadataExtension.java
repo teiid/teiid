@@ -22,7 +22,7 @@ public class RestMetadataExtension {
     public enum ParameterType {
         PATH,QUERY,FORM,FORMDATA,BODY,HEADER;
     }
-    
+
     public final static String URI = "teiid_rest:URI";
     public final static String METHOD = "teiid_rest:METHOD";
     public final static String SCHEME = "teiid_rest:SCHEME";

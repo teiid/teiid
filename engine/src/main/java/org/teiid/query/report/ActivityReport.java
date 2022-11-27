@@ -31,63 +31,63 @@ import org.teiid.core.util.Assertion;
  */
 public class ActivityReport<R extends ReportItem> implements Serializable {
 
-	/**
-	 * Type of report
-	 */
-	private String reportType;
+    /**
+     * Type of report
+     */
+    private String reportType;
 
-	/**
-	 * Holder for report items.  Holds collection of {@link ReportItem}s.
-	 */
-	private Collection<R> items = new ArrayList<R>();
+    /**
+     * Holder for report items.  Holds collection of {@link ReportItem}s.
+     */
+    private Collection<R> items = new ArrayList<R>();
 
     /**
      * Construct new report of given type
      * @param reportType Type of report
      */
-	public ActivityReport(String reportType) {
-		this.reportType = reportType;
-	}
+    public ActivityReport(String reportType) {
+        this.reportType = reportType;
+    }
 
-	/**
-	 * Get type of report.
-	 * @return Type of report
-	 */
-	public String getReportType() {
-	    return this.reportType;
-	}
+    /**
+     * Get type of report.
+     * @return Type of report
+     */
+    public String getReportType() {
+        return this.reportType;
+    }
 
-	/**
-	 * Add a new item to the report.
-	 * @param item Item being added
-	 */
-	public void addItem(R item) {
-		Assertion.isNotNull(item);
-	    this.items.add(item);
-	}
+    /**
+     * Add a new item to the report.
+     * @param item Item being added
+     */
+    public void addItem(R item) {
+        Assertion.isNotNull(item);
+        this.items.add(item);
+    }
 
     /**
      * Add a new collection of items to the report.
      * @param items Items being added
      */
     public void addItems(Collection<R> items) {
-    	Assertion.isNotNull(items);
-    	for (R r : items) {
+        Assertion.isNotNull(items);
+        for (R r : items) {
             addItem(r);
         }
     }
 
-	public boolean hasItems() {
-	    return (this.items.size() > 0);
-	}
-	
-	public Collection<R> getItems() {
-		return items;
-	}
-	
-	@Override
-	public String toString() {
-		return reportType + " " + getItems(); //$NON-NLS-1$
-	}
+    public boolean hasItems() {
+        return (this.items.size() > 0);
+    }
+
+    public Collection<R> getItems() {
+        return items;
+    }
+
+    @Override
+    public String toString() {
+        return reportType + " " + getItems(); //$NON-NLS-1$
+    }
 
 }

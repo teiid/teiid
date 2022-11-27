@@ -29,13 +29,13 @@ import org.teiid.query.sql.proc.TriggerAction;
 @SuppressWarnings("nls")
 public class TestIsDistinctCriteria {
 
-	@Test public void testParseClone() throws QueryParserException {
-		TriggerAction ta = (TriggerAction)QueryParser.getQueryParser().parseProcedure("for each row begin atomic if (\"new\" is not distinct from \"old\") raise sqlexception ''; end", true);
-		assertEquals("FOR EACH ROW\nBEGIN ATOMIC\nIF(\"new\" IS NOT DISTINCT FROM \"old\")\nBEGIN\nRAISE SQLEXCEPTION '';\nEND\nEND", ta.toString());
-		QueryParser.getQueryParser().parseProcedure(ta.toString(), true);
-		TriggerAction clone = ta.clone();
-		assertEquals(ta.toString(), clone.toString());
-		UnitTestUtil.helpTestEquivalence(0, ta, ta.clone());
-	}
+    @Test public void testParseClone() throws QueryParserException {
+        TriggerAction ta = (TriggerAction)QueryParser.getQueryParser().parseProcedure("for each row begin atomic if (\"new\" is not distinct from \"old\") raise sqlexception ''; end", true);
+        assertEquals("FOR EACH ROW\nBEGIN ATOMIC\nIF(\"new\" IS NOT DISTINCT FROM \"old\")\nBEGIN\nRAISE SQLEXCEPTION '';\nEND\nEND", ta.toString());
+        QueryParser.getQueryParser().parseProcedure(ta.toString(), true);
+        TriggerAction clone = ta.clone();
+        assertEquals(ta.toString(), clone.toString());
+        UnitTestUtil.helpTestEquivalence(0, ta, ta.clone());
+    }
 
 }

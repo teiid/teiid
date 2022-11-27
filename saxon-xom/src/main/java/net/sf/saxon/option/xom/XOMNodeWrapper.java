@@ -34,7 +34,7 @@ import nu.xom.*;
 /**
  * A node in the XML parse tree representing an XML element, character content,
  * or attribute.
- * <p/>
+ * <p>
  * This is the implementation of the NodeInfo interface used as a wrapper for
  * XOM nodes.
  *
@@ -199,8 +199,8 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements SiblingCounti
     /**
      * Get the type annotation of this node, if any. The type annotation is represented as
      * SchemaType object.
-     * <p/>
-     * <p>Types derived from a DTD are not reflected in the result of this method.</p>
+     * <p>
+     * <p>Types derived from a DTD are not reflected in the result of this method.
      *
      * @return For element and attribute nodes: the type annotation derived from schema
      *         validation (defaulting to xs:untyped and xs:untypedAtomic in the absence of schema
@@ -220,7 +220,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements SiblingCounti
 
 
     /**
-     * Determine whether this is the same node as another node. <br />
+     * Determine whether this is the same node as another node. <br>
      * Note: a.isSameNode(b) if and only if generateId(a)==generateId(b)
      *
      * @return true if this Node object and the supplied Node object represent
@@ -422,7 +422,7 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements SiblingCounti
      * Determine the relative position of this node and another node, in document order,
      * distinguishing whether the first node is a preceding, following, descendant, ancestor,
      * or the same node as the second.
-     * <p/>
+     * <p>
      * The other node must always be in the same tree; the effect of calling this method
      * when the two nodes are in different trees is undefined. If either node is a namespace
      * or attribute node, the method should throw UnsupportedOperationException.
@@ -756,8 +756,8 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements SiblingCounti
     }
 
     /**
-     * Determine whether the node has any children. <br />
-     * Note: the result is equivalent to <br />
+     * Determine whether the node has any children. <br>
+     * Note: the result is equivalent to <br>
      * getEnumeration(Axis.CHILD, AnyNodeTest.getInstance()).hasNext()
      */
 
@@ -798,8 +798,8 @@ public class XOMNodeWrapper extends AbstractNodeWrapper implements SiblingCounti
      *         If the bottom half is zero, then this is a namespace undeclaration rather than a declaration.
      *         The XML namespace is never included in the list. If the supplied array is larger than required,
      *         then the first unused entry will be set to -1.
-     *         <p/>
-     *         <p>For a node other than an element, the method returns null.</p>
+     *         <p>
+     *         <p>For a node other than an element, the method returns null.
      */
 
     public NamespaceBinding[] getDeclaredNamespaces(NamespaceBinding[] buffer) {

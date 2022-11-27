@@ -17,7 +17,6 @@
  */
 package org.teiid.metadatastore;
 
-import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,69 +35,69 @@ import org.teiid.runtime.RuntimePlugin;
 
 public class DeploymentBasedDatabaseStore extends DatabaseStore {
     private VDBRepository vdbRepo;
-    
+
     private ArrayList<VDBImportMetadata> importedVDBs = new ArrayList<VDBImportMetadata>();
-    
+
     public DeploymentBasedDatabaseStore(VDBRepository vdbRepo) {
-    	this.vdbRepo = vdbRepo;
+        this.vdbRepo = vdbRepo;
     }
-    
+
     @Override
     public Map<String, Datatype> getRuntimeTypes() {
         return vdbRepo.getSystemStore().getDatatypes();
-    } 
+    }
 
     protected boolean shouldValidateDatabaseBeforeDeploy() {
-    	return false;
+        return false;
     }
-    
+
     public VDBMetaData getVDBMetadata(String contents) {
-    	StringReader reader = new StringReader(contents);
-    	try {
+        StringReader reader = new StringReader(contents);
+        try {
             startEditing(false);
             this.setMode(Mode.DATABASE_STRUCTURE);
-            QueryParser.getQueryParser().parseDDL(this, new BufferedReader(reader));
+            QueryParser.getQueryParser().parseDDL(this, reader);
         } finally {
-        	reader.close();
+            reader.close();
             stopEditing();
         }
-        
+
         Database database = getDatabases().get(0);
         VDBMetaData vdb = DatabaseUtil.convert(database);
-        
+
         for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
             model.addSourceMetadata("DDL", null); //$NON-NLS-1$
-        }  
-        
-        for (VDBImportMetadata vid : this.importedVDBs) {
-        	vdb.getVDBImports().add(vid);
         }
-        
+
+        for (VDBImportMetadata vid : this.importedVDBs) {
+            vdb.getVDBImports().add(vid);
+        }
+
         vdb.addProperty(VDBMetaData.TEIID_DDL, contents);
-                
+
         return vdb;
     }
-    
-	@Override
+
+    @Override
     public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
             List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
-	    if (getSchema(schemaName) == null) {
-	        throw new AssertionError(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40167, schemaName));
-	    }
-	    if (!assertInEditMode(Mode.SCHEMA)) {
+        if (getSchema(schemaName) == null) {
+            throw new AssertionError(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40167, schemaName));
+        }
+        if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-	}
-	
-	@Override
-	public void importDatabase(String dbName, String version, boolean importPolicies) {
-	    if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
-	        return;
-	    }
-		VDBImportMetadata db = new VDBImportMetadata();
-		db.setName(dbName);
-		db.setVersion(version);
-		db.setImportDataPolicies(importPolicies);
-		this.importedVDBs.add(db);
-	}
+    }
+
+    @Override
+    public void importDatabase(String dbName, String version, boolean importPolicies) {
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
+        VDBImportMetadata db = new VDBImportMetadata();
+        db.setName(dbName);
+        db.setVersion(version);
+        db.setImportDataPolicies(importPolicies);
+        this.importedVDBs.add(db);
+    }
 }

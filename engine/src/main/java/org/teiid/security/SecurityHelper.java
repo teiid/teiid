@@ -23,58 +23,50 @@ import javax.security.auth.login.LoginException;
 
 public interface SecurityHelper {
 
-	/**
-	 * Associate the given context and return the old context
-	 * @param context
-	 * @return
-	 */
-	Object associateSecurityContext(Object context);
-	
-	/**
-	 * Clear any security context associated with the thread 
-	 */
-	void clearSecurityContext();
-	
-	/**
-	 * Get the current security context associated with the thread
-	 * @return
-	 */
-	Object getSecurityContext();
-	
-	/**
-	 * Get the subject associated with the security context.
-	 * The security context must currently be associated with the thread.
-	 * @param securityDomain
-	 * @return
-	 */
-	Subject getSubjectInContext(String securityDomain);
-	
-	/**
-	 * Get the subject associated with the security context.
-	 * @param context
-	 * @return
-	 */
-	Subject getSubjectInContext(Object context);
-	
-	/**
-	 * Authenticate the user and return the security context
-	 * @param securityDomain
-	 * @param baseUserName without the security domain suffix
-	 * @param credentials
-	 * @param applicationName
-	 * @return
-	 * @throws LoginException
-	 */
-	Object authenticate(String securityDomain, String baseUserName, Credentials credentials, String applicationName)
+    /**
+     * Associate the given context and return the old context
+     * @param context
+     * @return
+     */
+    Object associateSecurityContext(Object context);
+
+    /**
+     * Clear any security context associated with the thread
+     */
+    void clearSecurityContext();
+
+    /**
+     * Get the current security context associated with the thread
+     * @return
+     */
+    Object getSecurityContext(String securityDomain);
+
+    /**
+     * Get the subject associated with the security context.
+     * @param context
+     * @return
+     */
+    Subject getSubjectInContext(Object context);
+
+    /**
+     * Authenticate the user and return the security context
+     * @param securityDomain
+     * @param baseUserName without the security domain suffix
+     * @param credentials
+     * @param applicationName
+     * @return a non-null context object
+     * @throws LoginException
+     */
+    Object authenticate(String securityDomain, String baseUserName, Credentials credentials, String applicationName)
             throws LoginException;
-    
-	/**
-	 * Negotiate the GSS login
-	 * @param securityDomain
-	 * @param serviceTicket
-	 * @return
-	 * @throws LoginException
-	 */
-	GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
-	
+
+    /**
+     * Negotiate the GSS login
+     * @param securityDomain
+     * @param serviceTicket
+     * @return
+     * @throws LoginException
+     */
+    GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
+
 }

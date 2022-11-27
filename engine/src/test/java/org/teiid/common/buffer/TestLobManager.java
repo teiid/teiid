@@ -44,92 +44,92 @@ import org.teiid.core.util.ReaderInputStream;
 @SuppressWarnings("nls")
 public class TestLobManager {
 
-	@Test
-	public void testLobPeristence() throws Exception{
-		
-		BufferManager buffMgr = BufferManagerFactory.getStandaloneBufferManager();
-		FileStore fs = buffMgr.createFileStore("temp");
-		
-		ClobType clob = new ClobType(new ClobImpl(new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ReaderInputStream(new StringReader("Clob contents One"),  Charset.forName(Streamable.ENCODING)); 
-			}
-			
-		}, -1));
-		
-		BlobType blob = new BlobType(new BlobImpl(new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ReaderInputStream(new StringReader("Blob contents Two"),  Charset.forName(Streamable.ENCODING));
-			}
-			
-		}));
-		
-		BlobType blobEmpty = new BlobType(new BlobImpl(new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ByteArrayInputStream(new byte[0]);
-			}
-			
-		}));
-		
-		FileStore fs1 = buffMgr.createFileStore("blob");
-		FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs1, Streamable.ENCODING);
-		FileStoreOutputStream fsos = fsisf.getOuputStream();
-		byte[] b = new byte[DataTypeManager.MAX_LOB_MEMORY_BYTES + 1];
-		fsos.write(b);
-		fsos.close();
-		BlobType blob1 = new BlobType(new BlobImpl(fsisf));		
-		
-		assertNotNull(blob1.getReferenceStreamId());
-		
-		LobManager lobManager = new LobManager(new int[] {0, 1, 2, 3}, fs);
-		lobManager.setMaxMemoryBytes(4);
-		List<?> tuple = Arrays.asList(clob, blob, blob1, blobEmpty);
-		lobManager.updateReferences(tuple, ReferenceMode.CREATE);
-		
-		assertNotNull(blob1.getReferenceStreamId());
-		
-		lobManager.persist();
-		
-		Streamable<?>lob = lobManager.getLobReference(clob.getReferenceStreamId());
-		assertTrue(lob.getClass().isAssignableFrom(ClobType.class));
-		ClobType clobRead = (ClobType)lob;
-		assertEquals(ClobType.getString(clob), ClobType.getString(clobRead));
-		assertTrue(clobRead.length() != -1);
-		
-		lob = lobManager.getLobReference(blob.getReferenceStreamId());
-		assertTrue(lob.getClass().isAssignableFrom(BlobType.class));
-		BlobType blobRead = (BlobType)lob;
-		assertTrue(Arrays.equals(ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()), ObjectConverterUtil.convertToByteArray(blobRead.getBinaryStream())));
-		
-		lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
-		
-		assertEquals(0, lobManager.getLobCount());
-		
-	}
-	
-	@Test public void testInlining() throws Exception{
-		
-		BufferManager buffMgr = BufferManagerFactory.getStandaloneBufferManager();
-		FileStore fs = buffMgr.createFileStore("temp");
-		
-		ClobType clob = new ClobType(new ClobImpl(new InputStreamFactory() {
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ReaderInputStream(new StringReader("small"),  Charset.forName(Streamable.ENCODING)); 
-			}
-			
-		}, 5));
-		
-		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
-		
-		LobManager lobManager = new LobManager(new int[] {0}, fs);
-		
-		lobManager.updateReferences(Arrays.asList(clob), ReferenceMode.CREATE);
-		
-		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
-	}
-	
+    @Test
+    public void testLobPeristence() throws Exception{
+
+        BufferManager buffMgr = BufferManagerFactory.getStandaloneBufferManager();
+        FileStore fs = buffMgr.createFileStore("temp");
+
+        ClobType clob = new ClobType(new ClobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ReaderInputStream(new StringReader("Clob contents One"),  Charset.forName(Streamable.ENCODING));
+            }
+
+        }, -1));
+
+        BlobType blob = new BlobType(new BlobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ReaderInputStream(new StringReader("Blob contents Two"),  Charset.forName(Streamable.ENCODING));
+            }
+
+        }));
+
+        BlobType blobEmpty = new BlobType(new BlobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(new byte[0]);
+            }
+
+        }));
+
+        FileStore fs1 = buffMgr.createFileStore("blob");
+        FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs1, Streamable.ENCODING);
+        FileStoreOutputStream fsos = fsisf.getOuputStream();
+        byte[] b = new byte[DataTypeManager.MAX_LOB_MEMORY_BYTES + 1];
+        fsos.write(b);
+        fsos.close();
+        BlobType blob1 = new BlobType(new BlobImpl(fsisf));
+
+        assertNotNull(blob1.getReferenceStreamId());
+
+        LobManager lobManager = new LobManager(new int[] {0, 1, 2, 3}, fs);
+        lobManager.setMaxMemoryBytes(4);
+        List<?> tuple = Arrays.asList(clob, blob, blob1, blobEmpty);
+        lobManager.updateReferences(tuple, ReferenceMode.CREATE);
+
+        assertNotNull(blob1.getReferenceStreamId());
+
+        lobManager.persist();
+
+        Streamable<?>lob = lobManager.getLobReference(clob.getReferenceStreamId());
+        assertTrue(lob.getClass().isAssignableFrom(ClobType.class));
+        ClobType clobRead = (ClobType)lob;
+        assertEquals(ClobType.getString(clob), ClobType.getString(clobRead));
+        assertTrue(clobRead.length() != -1);
+
+        lob = lobManager.getLobReference(blob.getReferenceStreamId());
+        assertTrue(lob.getClass().isAssignableFrom(BlobType.class));
+        BlobType blobRead = (BlobType)lob;
+        assertTrue(Arrays.equals(ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()), ObjectConverterUtil.convertToByteArray(blobRead.getBinaryStream())));
+
+        lobManager.updateReferences(tuple, ReferenceMode.REMOVE);
+
+        assertEquals(0, lobManager.getLobCount());
+
+    }
+
+    @Test public void testInlining() throws Exception{
+
+        BufferManager buffMgr = BufferManagerFactory.getStandaloneBufferManager();
+        FileStore fs = buffMgr.createFileStore("temp");
+
+        ClobType clob = new ClobType(new ClobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ReaderInputStream(new StringReader("small"),  Charset.forName(Streamable.ENCODING));
+            }
+
+        }, 5));
+
+        assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
+
+        LobManager lobManager = new LobManager(new int[] {0}, fs);
+
+        lobManager.updateReferences(Arrays.asList(clob), ReferenceMode.CREATE);
+
+        assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
+    }
+
 }

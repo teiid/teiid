@@ -29,15 +29,15 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestHandshake {
 
-	@Test public void testCompatibility() throws Exception {
-		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("handshake.ser")));
-		Handshake hs = (Handshake)ois.readObject();
-		assertEquals(AuthenticationType.USERPASSWORD, hs.getAuthType());
-	}
-	
-	@Test public void testVersionNormalization() throws Exception {
-		Handshake hs = new Handshake("11.2.3.a");
-		assertEquals("11.02.03.a", hs.getVersion());
-	}
-	
+    @Test public void testCompatibility() throws Exception {
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("handshake.ser")));
+        Handshake hs = (Handshake)ois.readObject();
+        assertEquals(AuthenticationType.USERPASSWORD, hs.getAuthType());
+    }
+
+    @Test public void testVersionNormalization() throws Exception {
+        Handshake hs = new Handshake("11.2.3.a");
+        assertEquals("11.02.03.a", hs.getVersion());
+    }
+
 }

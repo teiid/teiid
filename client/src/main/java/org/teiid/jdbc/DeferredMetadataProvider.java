@@ -43,10 +43,10 @@ public class DeferredMetadataProvider extends MetadataProvider {
         this.statement = statement;
         this.requestID = requestID;
     }
-    
+
     static Map<Integer, String>[] loadPartialMetadata(String[] columnNames, String[] columnTypes) {
-    	if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
-            Object[] params = new Object[] { 
+        if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
+            Object[] params = new Object[] {
                 StringUtil.toString(columnNames), StringUtil.toString(columnTypes)
             };
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("DeferredMetadataProvider.Invalid_data", params)); //$NON-NLS-1$
@@ -61,14 +61,14 @@ public class DeferredMetadataProvider extends MetadataProvider {
     }
 
     private void loadFullMetadata() throws SQLException {
-    	MetadataResult results;
-		try {
-			results = this.statement.getDQP().getMetadata(this.requestID);
-		} catch (TeiidComponentException e) {
-			throw TeiidSQLException.create(e);
-		} catch (TeiidProcessingException e) {
-			throw TeiidSQLException.create(e);
-		}
+        MetadataResult results;
+        try {
+            results = this.statement.getDQP().getMetadata(this.requestID);
+        } catch (TeiidComponentException e) {
+            throw TeiidSQLException.create(e);
+        } catch (TeiidProcessingException e) {
+            throw TeiidSQLException.create(e);
+        }
         this.metadata = results.getColumnMetadata();
     }
 
@@ -79,7 +79,7 @@ public class DeferredMetadataProvider extends MetadataProvider {
             loaded = true;
         }
 
-        return super.getValue(columnIndex, metadataPropertyKey);          
+        return super.getValue(columnIndex, metadataPropertyKey);
     }
 
 }

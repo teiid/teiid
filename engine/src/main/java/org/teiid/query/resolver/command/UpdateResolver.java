@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -53,10 +53,10 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  */
 public class UpdateResolver extends ProcedureContainerResolver implements VariableResolver {
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         //Cast to known type
@@ -66,13 +66,13 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(update.getGroup());
         for (SetClause clause : update.getChangeList().getClauses()) {
-        	ResolverVisitor.resolveLanguageObject(clause.getSymbol(), groups, null, metadata);
-		}
+            ResolverVisitor.resolveLanguageObject(clause.getSymbol(), groups, null, metadata);
+        }
         QueryResolver.resolveSubqueries(command, metadata, groups);
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
     }
-    
-    /** 
+
+    /**
      * @param metadata
      * @param group
      * @return
@@ -85,30 +85,28 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         return metadata.getUpdatePlan(group.getMetadataID());
     }
 
-    /** 
-     * @see org.teiid.query.resolver.VariableResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
-     */
+    @Override
     public Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException,
                                                                  TeiidComponentException {
         Map<ElementSymbol, Expression> result = new HashMap<ElementSymbol, Expression>();
-        
+
         Update update = (Update) command;
-        
+
         Map<ElementSymbol, Expression> changing = update.getChangeList().getClauseMap();
-        
+
         for (Entry<ElementSymbol, Expression> entry : changing.entrySet()) {
-        	ElementSymbol leftSymbol = entry.getKey().clone();
+            ElementSymbol leftSymbol = entry.getKey().clone();
             leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
             leftSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(leftSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-            	leftSymbol = entry.getKey().clone();
-            	leftSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
-            	result.put(leftSymbol, entry.getValue());
+                leftSymbol = entry.getKey().clone();
+                leftSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
+                result.put(leftSymbol, entry.getValue());
             }
         }
-        
+
         Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(update.getGroup(), metadata);
 
         insertElmnts.removeAll(changing.keySet());
@@ -120,7 +118,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
             varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.FALSE));
         }
-        
+
         return result;
     }
 

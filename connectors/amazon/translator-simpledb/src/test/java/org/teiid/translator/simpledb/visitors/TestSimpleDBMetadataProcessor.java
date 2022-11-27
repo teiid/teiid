@@ -46,7 +46,7 @@ public class TestSimpleDBMetadataProcessor {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
 
-        MetadataFactory mf = new MetadataFactory("vdb", 1, "people", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);        
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "people", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         SimpleDBConnection connection = Mockito.mock(SimpleDBConnection.class);
 
         Mockito.stub(connection.getDomains()).toReturn(Arrays.asList("G1", "G2"));
@@ -67,32 +67,32 @@ public class TestSimpleDBMetadataProcessor {
         ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
         if (report.hasItems()) {
             throw new RuntimeException(report.getFailureMessage());
-        }       
+        }
 
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         return ddl;
-    }   
+    }
 
 
     @Test
     public void testSchema() throws Exception {
         Properties props = new Properties();
-        String ddl = getDDL(props); 
+        String ddl = getDDL(props);
 
-        String expectedDDL = "CREATE FOREIGN TABLE G1 (\n" + 
-                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" + 
-                "\te1 string OPTIONS (NAMEINSOURCE '`e1`'),\n" + 
-                "\te2 string OPTIONS (NAMEINSOURCE '`e2`'),\n" + 
-                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" + 
-                ") OPTIONS (NAMEINSOURCE '`G1`', UPDATABLE TRUE);\n" + 
-                "\n" + 
-                "CREATE FOREIGN TABLE G2 (\n" + 
-                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" + 
-                "\te1 string OPTIONS (NAMEINSOURCE '`e1`'),\n" + 
-                "\te2 string[] OPTIONS (NAMEINSOURCE '`e2`'),\n" + 
-                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" + 
-                ") OPTIONS (NAMEINSOURCE '`G2`', UPDATABLE TRUE);";
+        String expectedDDL = "CREATE FOREIGN TABLE G1 (\n" +
+                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" +
+                "\te1 string,\n" +
+                "\te2 string,\n" +
+                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" +
+                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE G2 (\n" +
+                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" +
+                "\te1 string,\n" +
+                "\te2 string[],\n" +
+                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" +
+                ") OPTIONS (UPDATABLE TRUE);";
 
         assertEquals(expectedDDL, ddl);
-    }    
+    }
 }

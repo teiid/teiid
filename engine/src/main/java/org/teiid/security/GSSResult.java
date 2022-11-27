@@ -25,53 +25,53 @@ import org.ietf.jgss.GSSCredential;
 public class GSSResult {
     private static String NULL_TOKEN = "Auth validated with no further peer token ";
     private static AtomicLong COUNT = new AtomicLong(0);
-    
+
     private byte[] serviceToken;
-	private boolean authenticated;
-	private Object securityContext;
-	private String userName;
-	private GSSCredential delegationCredential;
-	
-	public GSSResult(byte[] token, boolean authenticated, GSSCredential cred) {
-		this.serviceToken = token;
-		this.authenticated = authenticated;
-		this.delegationCredential = cred;
-	}
-	
-	public GSSResult(boolean authenticated, GSSCredential cred) {
+    private boolean authenticated;
+    private Object securityContext;
+    private String userName;
+    private GSSCredential delegationCredential;
+
+    public GSSResult(byte[] token, boolean authenticated, GSSCredential cred) {
+        this.serviceToken = token;
+        this.authenticated = authenticated;
+        this.delegationCredential = cred;
+    }
+
+    public GSSResult(boolean authenticated, GSSCredential cred) {
         this.serviceToken = (NULL_TOKEN + COUNT.getAndIncrement()).getBytes();
         this.authenticated = authenticated;
         this.delegationCredential = cred;
-	}
-	
-	public boolean isNullContinuationToken() {
-	    String token = new String(this.serviceToken);
-	    return token.startsWith(NULL_TOKEN);
-	}
-	
-	public boolean isAuthenticated() {
-		return this.authenticated;
-	}
-	
-	public byte[] getServiceToken() {
-		return this.serviceToken;
-	}
-	
-	public void setSecurityContext(Object sc) {
-		this.securityContext = sc;
-	}
-	
-	public Object getSecurityContext() {
-		return this.securityContext;
-	}
+    }
 
-	public String getUserName() {
-		return userName;
-	}
-	
-	public void setUserName(String name) {
-		this.userName = name;
-	}
+    public boolean isNullContinuationToken() {
+        String token = new String(this.serviceToken);
+        return token.startsWith(NULL_TOKEN);
+    }
+
+    public boolean isAuthenticated() {
+        return this.authenticated;
+    }
+
+    public byte[] getServiceToken() {
+        return this.serviceToken;
+    }
+
+    public void setSecurityContext(Object sc) {
+        this.securityContext = sc;
+    }
+
+    public Object getSecurityContext() {
+        return this.securityContext;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String name) {
+        this.userName = name;
+    }
 
     public GSSCredential getDelegationCredential() {
         return delegationCredential;
@@ -79,5 +79,5 @@ public class GSSResult {
 
     public void setDelegationCredential(GSSCredential delegationCredentail) {
         this.delegationCredential = delegationCredentail;
-    }	
+    }
 }

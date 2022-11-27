@@ -31,35 +31,35 @@ import org.teiid.query.QueryPlugin.Event;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class DDLFileMetadataRepository extends MetadataRepository {
-	
-	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
-		String ddlFile = factory.getModelProperties().getProperty("ddl-file");
-		if (ddlFile != null) {
-			text = ddlFile;
-		}
-		if (text != null) {
-			VDBResource resource = factory.getVDBResources().get(text);
-			if (resource == null) {
-				throw new MetadataException(Event.TEIID31137, QueryPlugin.Util.gs(Event.TEIID31137, text));
-			}
-			InputStream is;
-			try {
-				is = resource.openStream();
-			} catch (IOException e1) {
-				throw new MetadataException(e1);
-			}
-			try {
-				//TODO: could allow for a property driven encoding
-				factory.parse(new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
-			} finally {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-			}
-		}
-	}	
+public class DDLFileMetadataRepository implements MetadataRepository {
+
+    @Override
+    public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
+        String ddlFile = factory.getModelProperties().getProperty("ddl-file");
+        if (ddlFile != null) {
+            text = ddlFile;
+        }
+        if (text != null) {
+            VDBResource resource = factory.getVDBResources().get(text);
+            if (resource == null) {
+                throw new MetadataException(Event.TEIID31137, QueryPlugin.Util.gs(Event.TEIID31137, text));
+            }
+            InputStream is;
+            try {
+                is = resource.openStream();
+            } catch (IOException e1) {
+                throw new MetadataException(e1);
+            }
+            try {
+                //TODO: could allow for a property driven encoding
+                factory.parse(new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+            } finally {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
 
 }

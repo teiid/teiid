@@ -27,61 +27,61 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
 public class AutoCleanupUtil {
-	
-	public interface Removable {
-		public void remove();
-	}
-	
-	static final class PhantomCleanupReference extends PhantomReference<Object> {
-		
-		private Removable removable;
-		
-		public PhantomCleanupReference(Object referent, Removable removable) {
-			super(referent, QUEUE);
-			this.removable = removable;
-		}
-		
-		public void cleanup() {
-			try {
-				this.removable.remove();
-			} finally {
-				this.removable = null;
-				this.clear();
-			}
-		}
-	}
 
-	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
-	private static final Set<PhantomReference<Object>> REFERENCES = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<PhantomReference<Object>, Boolean>()));
+    public interface Removable {
+        public void remove();
+    }
 
-	public static PhantomReference<Object> setCleanupReference(Object o, Removable r) {
-		PhantomCleanupReference ref = new PhantomCleanupReference(o, r);
-		REFERENCES.add(ref);
-		doCleanup(true);
-		return ref;
-	}
-	
-	public static void removeCleanupReference(PhantomReference<Object> ref) {
-		if (ref == null) {
-			return;
-		}
-		REFERENCES.remove(ref);
-		ref.clear();
-	}
+    static final class PhantomCleanupReference extends PhantomReference<Object> {
 
-	public static void doCleanup(boolean quick) {
-		int max = quick?10:Integer.MAX_VALUE;
-		for (int i = 0; i < max; i++) {
-			PhantomCleanupReference ref = (PhantomCleanupReference)QUEUE.poll();
-			if (ref == null) {
-				break;
-			}
-			try {
-				ref.cleanup();
-			} catch (Throwable e) {
-				LogManager.logWarning(LogConstants.CTX_DQP, e, "Error cleaning up."); //$NON-NLS-1$
-			}
-			REFERENCES.remove(ref);
-		}
-	}
+        private Removable removable;
+
+        public PhantomCleanupReference(Object referent, Removable removable) {
+            super(referent, QUEUE);
+            this.removable = removable;
+        }
+
+        public void cleanup() {
+            try {
+                this.removable.remove();
+            } finally {
+                this.removable = null;
+                this.clear();
+            }
+        }
+    }
+
+    private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
+    private static final Set<PhantomReference<Object>> REFERENCES = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<PhantomReference<Object>, Boolean>()));
+
+    public static PhantomReference<Object> setCleanupReference(Object o, Removable r) {
+        PhantomCleanupReference ref = new PhantomCleanupReference(o, r);
+        REFERENCES.add(ref);
+        doCleanup(true);
+        return ref;
+    }
+
+    public static void removeCleanupReference(PhantomReference<Object> ref) {
+        if (ref == null) {
+            return;
+        }
+        REFERENCES.remove(ref);
+        ref.clear();
+    }
+
+    public static void doCleanup(boolean quick) {
+        int max = quick?10:Integer.MAX_VALUE;
+        for (int i = 0; i < max; i++) {
+            PhantomCleanupReference ref = (PhantomCleanupReference)QUEUE.poll();
+            if (ref == null) {
+                break;
+            }
+            try {
+                ref.cleanup();
+            } catch (Throwable e) {
+                LogManager.logWarning(LogConstants.CTX_DQP, e, "Error cleaning up."); //$NON-NLS-1$
+            }
+            REFERENCES.remove(ref);
+        }
+    }
 }

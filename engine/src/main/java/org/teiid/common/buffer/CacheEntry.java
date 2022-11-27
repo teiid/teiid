@@ -21,60 +21,60 @@ package org.teiid.common.buffer;
 import java.lang.ref.WeakReference;
 
 public class CacheEntry extends BaseCacheEntry {
-	private boolean persistent;
-	private Object object;
-	private final int sizeEstimate;
-	private WeakReference<? extends Serializer<?>> serializer;
-	
-	public CacheEntry(Long oid) {
-		this(new CacheKey(oid, 0, 0), 0, null, null, false);
-	}
-	
-	public CacheEntry(CacheKey key, int sizeEstimate, Object object, WeakReference<? extends Serializer<?>> serializer, boolean persistent) {
-		super(key);
-		this.sizeEstimate = sizeEstimate;
-		this.object = object;
-		this.serializer = serializer;
-		this.persistent = persistent;
-	}
-	
-	public void setObject(Object object) {
-		this.object = object;
-	}
-	
-	public int getSizeEstimate() {
-		return sizeEstimate;
-	}
-	
-	public Object nullOut() {
-		Object result = getObject();
-		this.object = null;
-		this.serializer = null;
-		return result;
-	}
+    private boolean persistent;
+    private Object object;
+    private final int sizeEstimate;
+    private WeakReference<? extends Serializer<?>> serializer;
 
-	public Object getObject() {
-		return object;
-	}
+    public CacheEntry(Long oid) {
+        this(new CacheKey(oid, 0, 0), 0, null, null, false);
+    }
 
-	public void setPersistent(boolean persistent) {
-		this.persistent = persistent;
-	}
+    public CacheEntry(CacheKey key, int sizeEstimate, Object object, WeakReference<? extends Serializer<?>> serializer, boolean persistent) {
+        super(key);
+        this.sizeEstimate = sizeEstimate;
+        this.object = object;
+        this.serializer = serializer;
+        this.persistent = persistent;
+    }
 
-	public boolean isPersistent() {
-		return persistent;
-	}
+    public void setObject(Object object) {
+        this.object = object;
+    }
 
-	public void setSerializer(WeakReference<? extends Serializer<?>> serializer) {
-		this.serializer = serializer;
-	}
+    public int getSizeEstimate() {
+        return sizeEstimate;
+    }
 
-	public Serializer<?> getSerializer() {
-		WeakReference<? extends Serializer<?>> ref = this.serializer;
-		if (ref == null) {
-			return null;
-		}
-		return ref.get();
-	}
+    public Object nullOut() {
+        Object result = getObject();
+        this.object = null;
+        this.serializer = null;
+        return result;
+    }
+
+    public Object getObject() {
+        return object;
+    }
+
+    public void setPersistent(boolean persistent) {
+        this.persistent = persistent;
+    }
+
+    public boolean isPersistent() {
+        return persistent;
+    }
+
+    public void setSerializer(WeakReference<? extends Serializer<?>> serializer) {
+        this.serializer = serializer;
+    }
+
+    public Serializer<?> getSerializer() {
+        WeakReference<? extends Serializer<?>> ref = this.serializer;
+        if (ref == null) {
+            return null;
+        }
+        return ref.get();
+    }
 
 }

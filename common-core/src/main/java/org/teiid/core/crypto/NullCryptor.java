@@ -21,29 +21,29 @@ package org.teiid.core.crypto;
 
 public class NullCryptor implements Cryptor {
 
-	public byte[] encrypt(byte[] cleartext) throws CryptoException {
-		return cleartext;
-	}
+    public byte[] encrypt(byte[] cleartext) throws CryptoException {
+        return cleartext;
+    }
 
-	public String encrypt(String cleartext) throws CryptoException {
-		return cleartext;
-	}
+    public String encrypt(String cleartext) throws CryptoException {
+        return cleartext;
+    }
 
-	public Object sealObject(Object object) throws CryptoException {
-		return object;
-	}
+    public Object sealObject(Object object) throws CryptoException {
+        return object;
+    }
 
-	public byte[] decrypt(byte[] ciphertext) throws CryptoException {
-		return ciphertext;
-	}
+    public byte[] decrypt(byte[] ciphertext) throws CryptoException {
+        return ciphertext;
+    }
 
-	public String decrypt(String ciphertext) throws CryptoException {
-		return ciphertext;
-	}
+    public String decrypt(String ciphertext) throws CryptoException {
+        return ciphertext;
+    }
 
-	public Object unsealObject(Object object)
-			throws CryptoException {
-		return object;
-	}
-    
+    public Object unsealObject(Object object)
+            throws CryptoException {
+        return object;
+    }
+
 }

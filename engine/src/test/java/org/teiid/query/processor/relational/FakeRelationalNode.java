@@ -37,14 +37,14 @@ public class FakeRelationalNode extends RelationalNode {
 
     // For raw data mode
     private List[] data;
-    
+
     // For tuple source mode
     private TupleSource source;
     private int batchSize;
-    
-    // State    
+
+    // State
     private int currentRow;
-    
+
     private boolean useBuffer;
 
     /**
@@ -56,11 +56,11 @@ public class FakeRelationalNode extends RelationalNode {
         this.data = data;
         this.currentRow = 0;
     }
-    
+
     @Override
     public void reset() {
-    	super.reset();
-    	this.currentRow = 0;
+        super.reset();
+        this.currentRow = 0;
     }
 
     public FakeRelationalNode(int nodeID, List[] data, int batchSize) {
@@ -76,68 +76,64 @@ public class FakeRelationalNode extends RelationalNode {
         this.batchSize = batchSize;
     }
 
-    /**
-     * @throws TeiidProcessingException 
-     * @see com.metamatrix.query.processor.relational.x.RelationalNode#nextBatch()
-     */
     public TupleBatch nextBatchDirect() throws BlockedException, TeiidComponentException, TeiidProcessingException {
         if(data != null) {
             if(currentRow < data.length) {
-                int endRow = Math.min(data.length, currentRow+getBatchSize());            
+                int endRow = Math.min(data.length, currentRow+getBatchSize());
                 List batchRows = new ArrayList();
                 for(int i=currentRow; i<endRow; i++) {
-                    batchRows.add(data[i]);    
+                    batchRows.add(data[i]);
                 }
-                
+
                 TupleBatch batch = new TupleBatch(currentRow+1, batchRows);
                 currentRow += batch.getRowCount();
-                
+
                 if(currentRow >= data.length) {
                     batch.setTerminationFlag(true);
                 }
                 return batch;
-    
+
             }
             TupleBatch batch = new TupleBatch(currentRow+1, Collections.EMPTY_LIST);
             batch.setTerminationFlag(true);
-            return batch;    
+            return batch;
         }
-        boolean last = false; 
+        boolean last = false;
         List rows = new ArrayList(batchSize);
-        for(int i=0; i<batchSize; i++) { 
-            List tuple = source.nextTuple();    
-            if(tuple == null) { 
+        for(int i=0; i<batchSize; i++) {
+            List tuple = source.nextTuple();
+            if(tuple == null) {
                 last = true;
                 break;
             }
-            rows.add(tuple);    
+            rows.add(tuple);
         }
-        
+
         TupleBatch batch = new TupleBatch(currentRow+1, rows);
         if(last) {
             batch.setTerminationFlag(true);
         } else {
             currentRow += rows.size();
-        }                        
-        
-        return batch;
-    }        
+        }
 
-    
+        return batch;
+    }
+
+
     @Override
     public boolean hasBuffer() {
-    	return useBuffer;
+        return useBuffer;
     }
-    
+
     @Override
     protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
-    		TeiidComponentException, TeiidProcessingException {
-    	TupleBuffer tb = Mockito.mock(TupleBuffer.class);
-    	Mockito.stub(tb.getRowCount()).toReturn((long)(maxRows != -1 ? Math.min(maxRows, data.length) : data.length));
-    	return tb;
+            TeiidComponentException, TeiidProcessingException {
+        TupleBuffer tb = Mockito.mock(TupleBuffer.class);
+        Mockito.stub(tb.getRowCount()).toReturn((long)(maxRows != -1 ? Math.min(maxRows, data.length) : data.length));
+        return tb;
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.relational.RelationalNode#getBatchSize()
      * @since 4.2
      */
@@ -147,12 +143,12 @@ public class FakeRelationalNode extends RelationalNode {
         }
         return super.getBatchSize();
     }
-    
-	public Object clone(){
-		throw new UnsupportedOperationException();
-	}
-	
-	public void setUseBuffer(boolean useBuffer) {
-		this.useBuffer = useBuffer;
-	}
+
+    public Object clone(){
+        throw new UnsupportedOperationException();
+    }
+
+    public void setUseBuffer(boolean useBuffer) {
+        this.useBuffer = useBuffer;
+    }
 }

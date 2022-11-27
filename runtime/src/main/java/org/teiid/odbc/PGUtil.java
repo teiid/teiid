@@ -21,39 +21,45 @@ import java.sql.Types;
 
 public class PGUtil {
 
-	public static final int PG_TYPE_UNSPECIFIED = 0;
-	
-	public static final int PG_TYPE_VARCHAR = 1043;
-	
-	public static final int PG_TYPE_BOOL = 16;
-	public static final int PG_TYPE_BYTEA = 17;
-	public static final int PG_TYPE_CHAR = 18;
-	public static final int PG_TYPE_BPCHAR = 1042;
-	public static final int PG_TYPE_INT8 = 20;
-	public static final int PG_TYPE_INT2 = 21;
-	public static final int PG_TYPE_INT4 = 23;
-	public static final int PG_TYPE_TEXT = 25;
-	public static final int PG_TYPE_XML = 142;
+    public static final int PG_TYPE_UNSPECIFIED = 0;
+
+    public static final int PG_TYPE_VARCHAR = 1043;
+
+    public static final int PG_TYPE_BOOL = 16;
+    public static final int PG_TYPE_BYTEA = 17;
+    public static final int PG_TYPE_CHAR = 18;
+    public static final int PG_TYPE_BPCHAR = 1042;
+    public static final int PG_TYPE_INT8 = 20;
+    public static final int PG_TYPE_INT2 = 21;
+    public static final int PG_TYPE_INT4 = 23;
+    public static final int PG_TYPE_TEXT = 25;
+    public static final int PG_TYPE_XML = 142;
     //private static final int PG_TYPE_OID = 26;
-	public static final int PG_TYPE_FLOAT4 = 700;
-	public static final int PG_TYPE_FLOAT8 = 701;
-	public static final int PG_TYPE_UNKNOWN = 705;
-	
-	public static final int PG_TYPE_GEOMETRY = 32816;
-	public static final int PG_TYPE_GEOMETRYARRAY = 32824;
-    
-	public static final int PG_TYPE_OIDVECTOR = 30;
-	public static final int PG_TYPE_INT2VECTOR = 22;
+    public static final int PG_TYPE_FLOAT4 = 700;
+    public static final int PG_TYPE_FLOAT8 = 701;
+    public static final int PG_TYPE_UNKNOWN = 705;
+
+    public static final int PG_TYPE_GEOMETRY = 32816;
+    public static final int PG_TYPE_GEOMETRYARRAY = 32824;
+
+    public static final int PG_TYPE_GEOGRAPHY = 33454;
+    public static final int PG_TYPE_GEOGRAPHYARRAY = 33462;
+
+    public static final int PG_TYPE_JSON = 3803;
+    public static final int PG_TYPE_JSONARRAY = 3811;
+
+    public static final int PG_TYPE_OIDVECTOR = 30;
+    public static final int PG_TYPE_INT2VECTOR = 22;
     public static final int PG_TYPE_OIDARRAY = 1028;
     public static final int PG_TYPE_CHARARRAY = 1002;
     public static final int PG_TYPE_TEXTARRAY = 1009;
-    
-	public static final int PG_TYPE_DATE = 1082;
-	public static final int PG_TYPE_TIME = 1083;
-	public static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
-	public static final int PG_TYPE_NUMERIC = 1700;
-	
-	public static final int PG_TYPE_BOOLARRAY = 1000;
+
+    public static final int PG_TYPE_DATE = 1082;
+    public static final int PG_TYPE_TIME = 1083;
+    public static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
+    public static final int PG_TYPE_NUMERIC = 1700;
+
+    public static final int PG_TYPE_BOOLARRAY = 1000;
     public static final int PG_TYPE_BYTEAARRAY = 1001;
     public static final int PG_TYPE_INT8ARRAY = 1026;
     public static final int PG_TYPE_INT2ARRAY = 1005;
@@ -65,32 +71,31 @@ public class PGUtil {
     public static final int PG_TYPE_TIMESTAMP_NO_TMZONEARRAY = 1115;
     public static final int PG_TYPE_NUMERICARRAY = 1031;
     public static final int PG_TYPE_XMLARRAY = 143;
-    //private static final int PG_TYPE_LO = 14939;
-    
-	public static class PgColInfo {
-		public String name;
-		public int reloid;
-		public short attnum;
-		public int type;
-		public int precision;
-		public int mod = -1;
-	}
-	
-	/**
-	 * Types.ARRAY is not supported
-	 */
-	public static int convertType(final int type, final String typeName) {
+
+    public static class PgColInfo {
+        public String name;
+        public int reloid;
+        public short attnum;
+        public int type;
+        public int precision;
+        public int mod = -1;
+    }
+
+    /**
+     * Types.ARRAY is not supported
+     */
+    public static int convertType(final int type, final String typeName) {
         switch (type) {
         case Types.BIT:
         case Types.BOOLEAN:
             return PG_TYPE_BOOL;
         case Types.VARCHAR:
-            return PG_TYPE_VARCHAR;        
+            return PG_TYPE_VARCHAR;
         case Types.CHAR:
             return PG_TYPE_BPCHAR;
         case Types.TINYINT:
         case Types.SMALLINT:
-        	return PG_TYPE_INT2;
+            return PG_TYPE_INT2;
         case Types.INTEGER:
             return PG_TYPE_INT4;
         case Types.BIGINT:
@@ -109,23 +114,29 @@ public class PGUtil {
             return PG_TYPE_DATE;
         case Types.TIMESTAMP:
             return PG_TYPE_TIMESTAMP_NO_TMZONE;
-            
-        case Types.BLOB:            
+
+        case Types.BLOB:
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
-            if (typeName.equals("geometry")) { //$NON-NLS-1$
+            if (typeName.equalsIgnoreCase("geometry")) { //$NON-NLS-1$
                 return PG_TYPE_GEOMETRY;
             }
-        	return PG_TYPE_BYTEA;
+            if (typeName.equalsIgnoreCase("geography")) { //$NON-NLS-1$
+                return PG_TYPE_GEOGRAPHY;
+            }
+            return PG_TYPE_BYTEA;
 
         case Types.SQLXML:
             return PG_TYPE_XML;
-        	
+
         case Types.LONGVARCHAR:
-        case Types.CLOB:            
+        case Types.CLOB:
+            if (typeName.equalsIgnoreCase("json")) { //$NON-NLS-1$
+                return PG_TYPE_JSON;
+            }
             return PG_TYPE_TEXT;
-            
+
         case Types.ARRAY:
             switch (typeName) {
             case "boolean[]": //$NON-NLS-1$
@@ -152,14 +163,18 @@ public class PGUtil {
                 return PG_TYPE_TIMESTAMP_NO_TMZONEARRAY;
             case "geometry[]": //$NON-NLS-1$
                 return PG_TYPE_GEOMETRYARRAY;
+            case "geography[]": //$NON-NLS-1$
+                return PG_TYPE_GEOGRAPHYARRAY;
             case "xml[]": //$NON-NLS-1$
                 return PG_TYPE_XMLARRAY;
+            case "json[]": //$NON-NLS-1$
+                return PG_TYPE_JSONARRAY;
             default:
                 return PG_TYPE_TEXTARRAY;
             }
-        	
+
         default:
             return PG_TYPE_UNKNOWN;
         }
-	}	
+    }
 }

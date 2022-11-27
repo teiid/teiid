@@ -45,15 +45,15 @@ public class TestMonthOrDayNameFunctionModifier extends TestCase {
     }
 
     public void helpTestMod(Literal c, String format, String expectedStr) throws Exception {
-        Function func = LANG_FACTORY.createFunction(format.toLowerCase()+"name",  // "monthname" //$NON-NLS-1$ 
+        Function func = LANG_FACTORY.createFunction(format.toLowerCase()+"name",  // "monthname" //$NON-NLS-1$
             Arrays.asList( c ),
             String.class);
-        
+
         OracleExecutionFactory trans = new OracleExecutionFactory();
         trans.start();
-        
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(func);  
+
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+        sqlVisitor.append(func);
         assertEquals(expectedStr, sqlVisitor.toString());
     }
 
@@ -68,7 +68,7 @@ public class TestMonthOrDayNameFunctionModifier extends TestCase {
         helpTestMod(arg1, "Month", //$NON-NLS-1$
             "rtrim(TO_CHAR({d '2004-01-21'}, 'Month'))"); //$NON-NLS-1$
     }
-    
+
     public void test3() throws Exception {
         Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
         helpTestMod(arg1, "Day",  //$NON-NLS-1$

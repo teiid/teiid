@@ -18,15 +18,15 @@
 package org.teiid.olingo;
 
 import org.apache.olingo.commons.api.data.Entity;
-import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmStructuredType;
 
 public class ComplexReturnType {
     private Entity entity;
     private String name;
     private boolean expand;
-    private EdmEntityType type;
-    
-    public ComplexReturnType(String name, EdmEntityType type, Entity entity, boolean expand) {
+    private EdmStructuredType type;
+
+    public ComplexReturnType(String name, EdmStructuredType type, Entity entity, boolean expand) {
         this.name = name;
         this.type = type;
         this.entity = entity;
@@ -45,7 +45,7 @@ public class ComplexReturnType {
         return expand;
     }
 
-    public EdmEntityType getEdmEntityType() {
+    public EdmStructuredType getEdmStructuredType() {
         return type;
     }
 }

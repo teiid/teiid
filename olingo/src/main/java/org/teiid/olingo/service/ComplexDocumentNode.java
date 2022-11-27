@@ -25,14 +25,10 @@ import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
-import org.apache.olingo.server.api.OData;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
-import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.SPParameter;
@@ -46,31 +42,29 @@ import org.teiid.query.sql.symbol.Reference;
 public class ComplexDocumentNode extends DocumentNode {
     private ProcedureReturn procedureReturn;
     private Procedure procedure;
-    
+
     public static ComplexDocumentNode buildComplexDocumentNode(
-            EdmOperation edmOperation, 
-            MetadataStore metadata, OData odata,
-            UniqueNameGenerator nameGenerator, boolean useAlias,
-            UriInfo uriInfo, URLParseService parseService)
-            throws TeiidProcessingException {
-        
+            EdmOperation edmOperation,
+            MetadataStore metadata,
+            UniqueNameGenerator nameGenerator) {
+
         ComplexDocumentNode resource = new ComplexDocumentNode();
-        
+
         FullQualifiedName fqn = edmOperation.getFullQualifiedName();
         String withoutVDB = fqn.getNamespace().substring(fqn.getNamespace().lastIndexOf('.')+1);
         Schema schema = metadata.getSchema(withoutVDB);
 
         Procedure procedure =  schema.getProcedure(edmOperation.getName());
-        
+
         StoredProcedure storedQuery = new StoredProcedure();
-        storedQuery.setProcedureName(procedure.getFullName()); //$NON-NLS-1$
+        storedQuery.setProcedureName(procedure.getFullName());
         for (int i = 0; i < procedure.getParameters().size(); i++) {
             storedQuery.setParameter(new SPParameter(i+1, new Reference(i)));
         }
-        
+
         String group = nameGenerator.getNextGroup();
-        SubqueryFromClause sfc = new SubqueryFromClause(group, storedQuery); //$NON-NLS-1$
-                
+        SubqueryFromClause sfc = new SubqueryFromClause(group, storedQuery);
+
         resource.setGroupSymbol(new GroupSymbol(group));
         resource.setFromClause(sfc);
         resource.procedure = procedure;
@@ -81,7 +75,7 @@ public class ComplexDocumentNode extends DocumentNode {
     public List<String> getKeyColumnNames(){
         return new ArrayList<String>();
     }
-    
+
     public void setProcedureReturn(ProcedureReturn pp) {
         this.procedureReturn = pp;
     }
@@ -89,7 +83,7 @@ public class ComplexDocumentNode extends DocumentNode {
     public ProcedureReturn getProcedureReturn() {
         return procedureReturn;
     }
-    
+
     @Override
     protected void addAllColumns(boolean onlyPK) {
         for (final Column column : procedure.getResultSet().getColumns()) {
@@ -99,9 +93,9 @@ public class ComplexDocumentNode extends DocumentNode {
                 EdmPropertyImpl edmProperty = (EdmPropertyImpl)complexType.getProperty(column.getName());
                 addProjectedColumn(new ElementSymbol(column.getName(), getGroupSymbol()), edmProperty.getType(), edmProperty, edmProperty.isCollection());
             }
-        }        
+        }
     }
-    
+
     @Override
     protected void addProjectedColumn(final String columnName,
             final Expression expr) {
@@ -110,16 +104,16 @@ public class ComplexDocumentNode extends DocumentNode {
         EdmPropertyImpl edmProperty = (EdmPropertyImpl)complexType.getProperty(columnName);
         addProjectedColumn(expr, edmProperty.getType(), edmProperty, edmProperty.isCollection());
     }
-    
-    
+
+
     public String getName() {
         return procedure.getName();
     }
-    
-    public Column getColumnByName(String name) {
+
+    public ContextColumn getColumnByName(String name) {
         for (final Column column : procedure.getResultSet().getColumns()) {
             if (column.getName().equals(name)) {
-                return column;
+                return new TableContextColumn(column);
             }
         }
         return null;
@@ -127,5 +121,5 @@ public class ComplexDocumentNode extends DocumentNode {
 
     public String getFullName() {
         return procedure.getFullName();
-    }    
+    }
 }

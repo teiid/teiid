@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.resource.cci.ConnectionFactory;
+import org.teiid.resource.api.ConnectionFactory;
 
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -50,33 +50,33 @@ import com.couchbase.client.java.document.json.JsonValue;
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
-        
+
     private static final String COUCHBASE = "couchbase"; //$NON-NLS-1$
-    
+
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-    
+
     private int maxBulkInsertSize = 100;
     private boolean useDouble;
-    
-	public CouchbaseExecutionFactory() {
-	    setSupportsSelectDistinct(true);
-		setSourceRequiredForMetadata(false);
-		setTransactionSupport(TransactionSupport.NONE);
-		setSourceRequiredForMetadata(true);
-		// Couchbase subquery returns an array every time, Join relate with use-keys-clause
-	}
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
-		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("RANDOM"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, new FunctionModifier(){
+    public CouchbaseExecutionFactory() {
+        setSupportsSelectDistinct(true);
+        setSourceRequiredForMetadata(false);
+        setTransactionSupport(TransactionSupport.NONE);
+        setSourceRequiredForMetadata(true);
+        // Couchbase subquery returns an array every time, Join relate with use-keys-clause
+    }
+
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("RANDOM"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new FunctionModifier(){
             @Override
             public List<?> translate(Function function) {
                 Expression param = function.getParameters().get(0);
@@ -85,97 +85,97 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
                     if ((Number.class.isAssignableFrom(param.getType()))) {
                         return Arrays.asList(param);
                     }
-                    return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$
                 } else if(targetCode == STRING || targetCode == CHAR) {
-                    return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$
                 } else if(targetCode == BOOLEAN) {
-                    return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$
                 } else {
-                    return Arrays.asList(param); 
+                    return Arrays.asList(param);
                 }
             }});
-		
-		addPushDownFunction(COUCHBASE, "CONTAINS", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "TITLE", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "LTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-				
-		addPushDownFunction(COUCHBASE, "CLOCK_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_ADD_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_ADD_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_DIFF_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_DIFF_STR", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_PART_MILLIS", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_PART_STR", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "NOW_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "NOW_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-	}
 
-	@Override
+        addPushDownFunction(COUCHBASE, "CONTAINS", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "TITLE", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "LTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+
+        addPushDownFunction(COUCHBASE, "CLOCK_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_ADD_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_ADD_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_DIFF_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_DIFF_STR", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_PART_MILLIS", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_PART_STR", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "NOW_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "NOW_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+    }
+
+    @Override
     public List<String> getSupportedFunctions() {
-	    
-	    List<String> supportedFunctions = new ArrayList<String>();
-	    
-	    // Numeric
-	    supportedFunctions.addAll(getDefaultSupportedFunctions());
-	    supportedFunctions.add(SourceSystemFunctions.ABS);
-	    supportedFunctions.add(SourceSystemFunctions.ACOS);
-	    supportedFunctions.add(SourceSystemFunctions.ASIN);
-	    supportedFunctions.add(SourceSystemFunctions.ATAN);
-	    supportedFunctions.add(SourceSystemFunctions.ATAN2);
-	    supportedFunctions.add(SourceSystemFunctions.CEILING);
-	    supportedFunctions.add(SourceSystemFunctions.COS);
-	    supportedFunctions.add(SourceSystemFunctions.DEGREES);
-	    supportedFunctions.add(SourceSystemFunctions.EXP);
-	    supportedFunctions.add(SourceSystemFunctions.FLOOR);
-	    supportedFunctions.add(SourceSystemFunctions.LOG);
-	    supportedFunctions.add(SourceSystemFunctions.LOG10);
-	    supportedFunctions.add(SourceSystemFunctions.PI);
-	    supportedFunctions.add(SourceSystemFunctions.POWER);
-	    supportedFunctions.add(SourceSystemFunctions.RADIANS);
-	    supportedFunctions.add(SourceSystemFunctions.RAND);
-	    supportedFunctions.add(SourceSystemFunctions.ROUND);
-	    supportedFunctions.add(SourceSystemFunctions.SIGN);
-	    supportedFunctions.add(SourceSystemFunctions.SIN);
-	    supportedFunctions.add(SourceSystemFunctions.SQRT);
-	    supportedFunctions.add(SourceSystemFunctions.TAN);
-	    
-	    //String
-	    supportedFunctions.add(SourceSystemFunctions.TAN);
-	    supportedFunctions.add(SourceSystemFunctions.INITCAP);
-	    supportedFunctions.add(SourceSystemFunctions.LENGTH);
-	    supportedFunctions.add(SourceSystemFunctions.LCASE);
-	    supportedFunctions.add(SourceSystemFunctions.REPEAT);
-	    supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
-	    supportedFunctions.add(SourceSystemFunctions.UCASE);
-	    supportedFunctions.add(SourceSystemFunctions.REPLACE);
-	    
-	    //conversion
-	    supportedFunctions.add(SourceSystemFunctions.CONVERT);
-	    
+
+        List<String> supportedFunctions = new ArrayList<String>();
+
+        // Numeric
+        supportedFunctions.addAll(getDefaultSupportedFunctions());
+        supportedFunctions.add(SourceSystemFunctions.ABS);
+        supportedFunctions.add(SourceSystemFunctions.ACOS);
+        supportedFunctions.add(SourceSystemFunctions.ASIN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN2);
+        supportedFunctions.add(SourceSystemFunctions.CEILING);
+        supportedFunctions.add(SourceSystemFunctions.COS);
+        supportedFunctions.add(SourceSystemFunctions.DEGREES);
+        supportedFunctions.add(SourceSystemFunctions.EXP);
+        supportedFunctions.add(SourceSystemFunctions.FLOOR);
+        supportedFunctions.add(SourceSystemFunctions.LOG);
+        supportedFunctions.add(SourceSystemFunctions.LOG10);
+        supportedFunctions.add(SourceSystemFunctions.PI);
+        supportedFunctions.add(SourceSystemFunctions.POWER);
+        supportedFunctions.add(SourceSystemFunctions.RADIANS);
+        supportedFunctions.add(SourceSystemFunctions.RAND);
+        supportedFunctions.add(SourceSystemFunctions.ROUND);
+        supportedFunctions.add(SourceSystemFunctions.SIGN);
+        supportedFunctions.add(SourceSystemFunctions.SIN);
+        supportedFunctions.add(SourceSystemFunctions.SQRT);
+        supportedFunctions.add(SourceSystemFunctions.TAN);
+
+        //String
+        supportedFunctions.add(SourceSystemFunctions.TAN);
+        supportedFunctions.add(SourceSystemFunctions.INITCAP);
+        supportedFunctions.add(SourceSystemFunctions.LENGTH);
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
+        supportedFunctions.add(SourceSystemFunctions.REPEAT);
+        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.UCASE);
+        supportedFunctions.add(SourceSystemFunctions.REPLACE);
+
+        //conversion
+        supportedFunctions.add(SourceSystemFunctions.CONVERT);
+
         return supportedFunctions;
     }
-	
-	public void registerFunctionModifier(String name, FunctionModifier modifier) {
+
+    public void registerFunctionModifier(String name, FunctionModifier modifier) {
         this.functionModifiers.put(name, modifier);
     }
 
     public Map<String, FunctionModifier> getFunctionModifiers() {
         return this.functionModifiers;
     }
-	
-	public List<String> getDefaultSupportedFunctions(){
+
+    public List<String> getDefaultSupportedFunctions(){
         return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     @Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
-		return new CouchbaseQueryExecution(this, command, executionContext, metadata, connection);
-	}
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
+        return new CouchbaseQueryExecution(this, command, executionContext, metadata, connection);
+    }
 
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
@@ -238,7 +238,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     public boolean supportsArrayAgg() {
         return true;
     }
-    
+
     @Override
     public boolean supportsSelectExpression() {
         return true;
@@ -307,13 +307,13 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     public N1QLVisitor getN1QLVisitor() {
         return new N1QLVisitor(this);
     }
-    
+
     public N1QLUpdateVisitor getN1QLUpdateVisitor() {
         return new N1QLUpdateVisitor(this);
     }
 
     public Object retrieveValue(Class<?> columnType, Object value) throws TranslatorException {
-        
+
         if (value == null) {
             return null;
         }
@@ -321,7 +321,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         if (value.getClass().equals(columnType)) {
             return value;
         }
-        
+
         if(columnType.equals(ClobType.class)) {
             boolean json = false;
             if (value instanceof JsonValue) {
@@ -332,14 +332,14 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             result.setType(json?Type.JSON:Type.TEXT);
             return result;
         }
-        
+
         if (columnType.equals(BigInteger.class)) {
             if (value instanceof BigDecimal) {
                 return ((BigDecimal)value).toBigInteger();
             }
             return BigInteger.valueOf(((Number)value).longValue());
         }
-        
+
         if (columnType.equals(BigDecimal.class)) {
             if (value instanceof BigInteger) {
                 value = new BigDecimal((BigInteger)value);
@@ -347,12 +347,12 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
                 value = BigDecimal.valueOf(((Number)value).doubleValue());
             }
         }
-        
+
         return value;
     }
-    
+
     public void setValue(JsonObject json, String attr, Class<?> type, Object attrValue) {
-                
+
         if(type.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
             json.put(attr, (String)attrValue);
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.INTEGER)) {
@@ -373,9 +373,9 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             json.put(attr, attrValue);
         }
     }
-    
+
     public void setValue(JsonArray array, Class<?> type, Object attrValue) {
-                
+
         if(type.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
             array.add((String)attrValue);
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.INTEGER)) {
@@ -425,35 +425,35 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     @Override
     public boolean supportsConvert(int fromType, int toType) {
         //support only the known types
-        if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER 
-            || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.OBJECT 
+        if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER
+            || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.OBJECT
             || !useDouble && (toType == FunctionModifier.LONG || toType == FunctionModifier.BIGINTEGER
                 || toType == FunctionModifier.BIGDECIMAL)) {
             return super.supportsConvert(fromType, toType);
         }
         return false;
     }
-    
+
     @Override
     public NullOrder getDefaultNullOrder() {
         return NullOrder.LOW;
     }
-    
+
     @Override
     public boolean supportsSearchedCaseExpressions() {
         return true;
     }
-    
+
     @Override
     public boolean returnsSingleUpdateCount() {
         return true;
     }
-    
+
     @TranslatorProperty(display="Use Double", description="Use double rather than allowing for more precise types, such as long, bigdecimal, and biginteger", advanced=true)
     public boolean isUseDouble() {
         return useDouble;
     }
-    
+
     public void setUseDouble(boolean useDouble) {
         this.useDouble = useDouble;
     }

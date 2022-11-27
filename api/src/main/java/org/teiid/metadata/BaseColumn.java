@@ -25,34 +25,34 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.translator.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
-	
-	public static final String DEFAULT_HANDLING = AbstractMetadataRecord.RELATIONAL_URI + "default_handling"; //$NON-NLS-1$
-	public static final String EXPRESSION_DEFAULT = "expression"; //$NON-NLS-1$
-	public static final String OMIT_DEFAULT = "omit"; //$NON-NLS-1$
-	
-	public static final String SPATIAL_SRID = MetadataFactory.SPATIAL_URI + "srid"; //$NON-NLS-1$
-	public static final String SPATIAL_TYPE = MetadataFactory.SPATIAL_URI + "type"; //$NON-NLS-1$
-	public static final String SPATIAL_COORD_DIMENSION = MetadataFactory.SPATIAL_URI + "coord_dimension"; //$NON-NLS-1$
-	
-	//the defaults are safe for odbc/jdbc metadata
+
+    public static final String DEFAULT_HANDLING = AbstractMetadataRecord.RELATIONAL_PREFIX + "default_handling"; //$NON-NLS-1$
+    public static final String EXPRESSION_DEFAULT = "expression"; //$NON-NLS-1$
+    public static final String OMIT_DEFAULT = "omit"; //$NON-NLS-1$
+
+    public static final String SPATIAL_SRID = MetadataFactory.SPATIAL_PREFIX + "srid"; //$NON-NLS-1$
+    public static final String SPATIAL_TYPE = MetadataFactory.SPATIAL_PREFIX + "type"; //$NON-NLS-1$
+    public static final String SPATIAL_COORD_DIMENSION = MetadataFactory.SPATIAL_PREFIX + "coord_dimension"; //$NON-NLS-1$
+
+    //the defaults are safe for odbc/jdbc metadata
     public static final int DEFAULT_PRECISION = Short.MAX_VALUE;
     //similar to postgresql behavior, we default to a non-zero
     public static final int DEFAULT_SCALE = Short.MAX_VALUE/2;
-	
-	private static final long serialVersionUID = 6382258617714856616L;
 
-	public enum NullType {
-		No_Nulls {
-			@Override
-			public String toString() {
-				return "No Nulls"; //$NON-NLS-1$
-			}
-		},
-		Nullable,
-		Unknown		
-	}
-	
-	private String datatypeUUID;
+    private static final long serialVersionUID = 6382258617714856616L;
+
+    public enum NullType {
+        No_Nulls {
+            @Override
+            public String toString() {
+                return "No Nulls"; //$NON-NLS-1$
+            }
+        },
+        Nullable,
+        Unknown
+    }
+
+    private String datatypeUUID;
     private String runtimeType;
     private String defaultValue;
     private int length;
@@ -76,9 +76,9 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     public String getRuntimeType() {
         return runtimeType;
     }
-    
+
     public Class<?> getJavaType() {
-    	return TypeFacility.getDataTypeClass(runtimeType);
+        return TypeFacility.getDataTypeClass(runtimeType);
     }
 
     public int getLength() {
@@ -91,7 +91,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
         }
         return precision;
     }
-    
+
     public int getScale() {
         if (this.getDatatype() != null && getDatatype().getName().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
             if (precision == 0 && scale == 0) {
@@ -104,7 +104,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
         }
         return scale;
     }
-    
+
     public boolean isDefaultPrecisionScale() {
         return precision == 0 && scale == 0;
     }
@@ -122,65 +122,65 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     }
 
     public NullType getNullType() {
-    	if (nullType == null) {
-    		return NullType.Unknown;
-    	}
+        if (nullType == null) {
+            return NullType.Unknown;
+        }
         return nullType;
     }
 
-	public void setLength(int i) {
-		length = i;
-	}
+    public void setLength(int i) {
+        length = i;
+    }
 
-	public void setPrecision(int i) {
-		precision = i;
-	}
+    public void setPrecision(int i) {
+        precision = i;
+    }
 
-	public void setScale(int i) {
-		scale = i;
-	}
+    public void setScale(int i) {
+        scale = i;
+    }
 
-	public void setRadix(int i) {
-		radix = i;
-	}
+    public void setRadix(int i) {
+        radix = i;
+    }
 
     public void setNullType(NullType i) {
         nullType = i;
     }
 
-	public void setPosition(int i) {
-		position = i;
-	}
+    public void setPosition(int i) {
+        position = i;
+    }
 
-	public void setRuntimeType(String string) {
-		runtimeType = DataTypeManager.getCanonicalString(string);
-	}
+    public void setRuntimeType(String string) {
+        runtimeType = DataTypeManager.getCanonicalString(string);
+    }
 
-	public void setDatatypeUUID(String string) {
-		datatypeUUID = DataTypeManager.getCanonicalString(string);
-	}
+    public void setDatatypeUUID(String string) {
+        datatypeUUID = DataTypeManager.getCanonicalString(string);
+    }
 
-	public void setDefaultValue(String object) {
-		defaultValue = DataTypeManager.getCanonicalString(object);
-	}
+    public void setDefaultValue(String object) {
+        defaultValue = DataTypeManager.getCanonicalString(object);
+    }
 
-	/**
-	 * Get the type.  Represents the component type if {@link #getArrayDimensions()} > 0 
-	 * @return
-	 */
+    /**
+     * Get the type.  Represents the component type if {@link #getArrayDimensions()} &gt; 0
+     * @return
+     */
     public Datatype getDatatype() {
-		return datatype;
-	}
-    
+        return datatype;
+    }
+
     /**
      * Set the datatype without copying any of the datatype attributes and assumes a non-array type
      * @see #setDatatype(Datatype, boolean, int) for more control over the type info
      * @param datatype
      */
     public void setDatatype(Datatype datatype) {
-    	setDatatype(datatype, false, 0);
+        setDatatype(datatype, false, 0);
     }
-    
+
     /**
      * Set the datatype and assumes a non-array type
      * @see #setDatatype(Datatype, boolean, int) for more control over the type info
@@ -188,42 +188,42 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
      * @param copyAttributes
      */
     public void setDatatype(Datatype datatype, boolean copyAttributes) {
-    	setDatatype(datatype, copyAttributes, 0);
+        setDatatype(datatype, copyAttributes, 0);
     }
-    
+
     public void setDatatype(Datatype datatype, boolean copyAttributes, int arrayDimensions) {
-		this.datatype = datatype;
-		this.arrayDimensions = arrayDimensions;
-		if (datatype != null) {
-			this.datatypeUUID = this.datatype.getUUID();
-			this.runtimeType = this.datatype.getRuntimeTypeName();
-			if (arrayDimensions > 0) {
-				this.runtimeType += StringUtil.join(Collections.nCopies(arrayDimensions, "[]"), ""); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			if (copyAttributes) {
-				this.radix = this.datatype.getRadix();
-				this.length = this.datatype.getLength();
-				if (!datatype.getName().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
-				    this.precision = this.datatype.getPrecision();
-	                this.scale = this.datatype.getScale();
-				}
-				this.nullType = this.datatype.getNullType();
-			}
-		}
-	}
-    
+        this.datatype = datatype;
+        this.arrayDimensions = arrayDimensions;
+        if (datatype != null) {
+            this.datatypeUUID = this.datatype.getUUID();
+            this.runtimeType = this.datatype.getRuntimeTypeName();
+            if (arrayDimensions > 0) {
+                this.runtimeType += StringUtil.join(Collections.nCopies(arrayDimensions, "[]"), ""); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            if (copyAttributes) {
+                this.radix = this.datatype.getRadix();
+                this.length = this.datatype.getLength();
+                if (!datatype.getName().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+                    this.precision = this.datatype.getPrecision();
+                    this.scale = this.datatype.getScale();
+                }
+                this.nullType = this.datatype.getNullType();
+            }
+        }
+    }
+
     /**
      * Get the array dimensions.
      * @return
      */
     public int getArrayDimensions() {
-		return arrayDimensions;
-	}
-    
+        return arrayDimensions;
+    }
+
     public String getNativeType() {
         return nativeType;
     }
-    
+
     /**
      * @param nativeType The nativeType to set.
      * @since 4.2
@@ -231,5 +231,5 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     public void setNativeType(String nativeType) {
         this.nativeType = DataTypeManager.getCanonicalString(nativeType);
     }
-    
+
 }

@@ -43,136 +43,136 @@ import org.teiid.query.tempdata.BaseIndexInfo;
 import org.teiid.query.util.CommandContext;
 
 abstract class BaseExtractionTable<T> {
-	
-	static final class ExtractionTupleSource<T> implements TupleSource {
-		private final Criteria condition;
-		private final SimpleIterator<T> iter;
-		private final CommandContext cc;
-		private final VDBMetaData vdb;
-		private final TransformationMetadata metadata;
-		private ArrayList<Object> rowBuffer;
-		private BaseExtractionTable<T> extraction;
 
-		ExtractionTupleSource(Criteria condition,
-				SimpleIterator<T> iter, CommandContext cc, VDBMetaData vdb,
-				TransformationMetadata metadata, BaseExtractionTable<T> extraction) {
-			this.condition = condition;
-			this.iter = iter;
-			this.cc = cc;
-			this.vdb = vdb;
-			this.metadata = metadata;
-			this.extraction = extraction;
-		}
+    static final class ExtractionTupleSource<T> implements TupleSource {
+        private final Criteria condition;
+        private final SimpleIterator<T> iter;
+        private final CommandContext cc;
+        private final VDBMetaData vdb;
+        private final TransformationMetadata metadata;
+        private ArrayList<Object> rowBuffer;
+        private BaseExtractionTable<T> extraction;
 
-		@Override
-		public List<?> nextTuple() throws TeiidComponentException,
-				TeiidProcessingException {
-			while (true) {
-				T val = iter.next();
-				if (val == null) {
-					return null;
-				}
-				if (rowBuffer == null) {
-					rowBuffer = new ArrayList<Object>(extraction.cols);
-				} else {
-					rowBuffer.clear();
-				}
-				extraction.fillRow(rowBuffer, val, vdb, metadata, cc, iter);
-				if (condition == null || extraction.eval.evaluate(condition, rowBuffer)) {
-					List<?> result = rowBuffer;
-					rowBuffer = null;
-					return result;
-				}
-			
-			}
-		}
+        ExtractionTupleSource(Criteria condition,
+                SimpleIterator<T> iter, CommandContext cc, VDBMetaData vdb,
+                TransformationMetadata metadata, BaseExtractionTable<T> extraction) {
+            this.condition = condition;
+            this.iter = iter;
+            this.cc = cc;
+            this.vdb = vdb;
+            this.metadata = metadata;
+            this.extraction = extraction;
+        }
 
-		@Override
-		public void closeSource() {
-			
-		}
-	}
+        @Override
+        public List<?> nextTuple() throws TeiidComponentException,
+                TeiidProcessingException {
+            while (true) {
+                T val = iter.next();
+                if (val == null) {
+                    return null;
+                }
+                if (rowBuffer == null) {
+                    rowBuffer = new ArrayList<Object>(extraction.cols);
+                } else {
+                    rowBuffer.clear();
+                }
+                extraction.fillRow(rowBuffer, val, vdb, metadata, cc, iter);
+                if (condition == null || extraction.eval.evaluate(condition, rowBuffer)) {
+                    List<?> result = rowBuffer;
+                    rowBuffer = null;
+                    return result;
+                }
 
-	private Evaluator eval;
-	private int cols;
-	
-	public BaseExtractionTable(List<ElementSymbol> columns) {
-		Map<Expression, Integer> map = RelationalNode.createLookupMap(columns);
-		this.eval = new Evaluator(map, null, null);
-		this.cols = columns.size();
-	}
-	
-	public TupleSource processQuery(Query query, final VDBMetaData vdb, final TransformationMetadata metadata, final CommandContext cc) throws QueryMetadataException, TeiidComponentException {
-		return new ExtractionTupleSource(query.getCriteria(), createIterator(vdb, metadata, cc), cc, vdb, metadata, this);
-	}
-	
-	protected SimpleIterator<T> createIterator(final VDBMetaData vdb, final TransformationMetadata metadata, final CommandContext cc) throws QueryMetadataException, TeiidComponentException {
-		return null;
-	}
+            }
+        }
 
-	protected abstract void fillRow(List<Object> row, T record, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<T> iter);
-	
+        @Override
+        public void closeSource() {
+
+        }
+    }
+
+    private Evaluator eval;
+    private int cols;
+
+    public BaseExtractionTable(List<ElementSymbol> columns) {
+        Map<Expression, Integer> map = RelationalNode.createLookupMap(columns);
+        this.eval = new Evaluator(map, null, null);
+        this.cols = columns.size();
+    }
+
+    public TupleSource processQuery(Query query, final VDBMetaData vdb, final TransformationMetadata metadata, final CommandContext cc) throws QueryMetadataException, TeiidComponentException {
+        return new ExtractionTupleSource(query.getCriteria(), createIterator(vdb, metadata, cc), cc, vdb, metadata, this);
+    }
+
+    protected SimpleIterator<T> createIterator(final VDBMetaData vdb, final TransformationMetadata metadata, final CommandContext cc) throws QueryMetadataException, TeiidComponentException {
+        return null;
+    }
+
+    protected abstract void fillRow(List<Object> row, T record, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<T> iter);
+
 }
 
 abstract class RecordExtractionTable<T extends AbstractMetadataRecord> extends BaseExtractionTable<T> {
-	private RecordTable<T> baseTable;
+    private RecordTable<T> baseTable;
 
-	public RecordExtractionTable(RecordTable<T> baseTable, List<ElementSymbol> columns) {
-		super(columns);
-		this.baseTable = baseTable;
-	}
-	
-	@Override
-	public TupleSource processQuery(Query query, VDBMetaData vdb,
-			TransformationMetadata metadata, CommandContext cc) {
-		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
-		final SimpleIterator<T> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
-		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), iter, cc, vdb, metadata, this);
-	}
-	
+    public RecordExtractionTable(RecordTable<T> baseTable, List<ElementSymbol> columns) {
+        super(columns);
+        this.baseTable = baseTable;
+    }
+
+    @Override
+    public TupleSource processQuery(Query query, VDBMetaData vdb,
+            TransformationMetadata metadata, CommandContext cc) {
+        BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
+        final SimpleIterator<T> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
+        return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), iter, cc, vdb, metadata, this);
+    }
+
 }
 
 abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> extends BaseExtractionTable<T> {
-	private RecordTable<P> baseTable;
+    private RecordTable<P> baseTable;
 
-	public ChildRecordExtractionTable(RecordTable<P> baseTable, List<ElementSymbol> columns) {
-		super(columns);
-		this.baseTable = baseTable;
-	}
-	
-	protected boolean isValid(T result, CommandContext cc) {
-		return !(result instanceof AbstractMetadataRecord) || cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible((AbstractMetadataRecord)result, cc);
-	}
-	
-	@Override
-	public TupleSource processQuery(Query query, VDBMetaData vdb,
-			final TransformationMetadata metadata, final CommandContext cc) {
-		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
-		final SimpleIterator<P> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
-		while (ii.next != null) {
-			ii = ii.next;
-		}
-		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), new ExpandingSimpleIterator<P, T>(iter) {
-			
-			SimpleIteratorWrapper<T> wrapper = new SimpleIteratorWrapper<T>(null) {
-				@Override
-				protected boolean isValid(T result) {
-					return ChildRecordExtractionTable.this.isValid(result, cc);
-				}
-			};
-			
-			protected RecordTable.SimpleIterator<T> getChildIterator(P parent) {
-				Collection<? extends T> children = getChildren(parent, cc);
-				if (children.isEmpty()) {
-					return RecordTable.emptyIterator();
-				}
-				wrapper.setIterator(children.iterator());
-				return wrapper;
-			}
-			
-		}, cc, vdb, metadata, this);
-	}
-	
-	protected abstract Collection<? extends T> getChildren(P parent, CommandContext cc);
-	
+    public ChildRecordExtractionTable(RecordTable<P> baseTable, List<ElementSymbol> columns) {
+        super(columns);
+        this.baseTable = baseTable;
+    }
+
+    protected boolean isValid(T result, CommandContext cc) {
+        return !(result instanceof AbstractMetadataRecord) || cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible((AbstractMetadataRecord)result, cc);
+    }
+
+    @Override
+    public TupleSource processQuery(Query query, VDBMetaData vdb,
+            final TransformationMetadata metadata, final CommandContext cc) {
+        BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
+        final SimpleIterator<P> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
+        while (ii.next != null) {
+            ii = ii.next;
+        }
+        return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), new ExpandingSimpleIterator<P, T>(iter) {
+
+            SimpleIteratorWrapper<T> wrapper = new SimpleIteratorWrapper<T>(null) {
+                @Override
+                protected boolean isValid(T result) {
+                    return ChildRecordExtractionTable.this.isValid(result, cc);
+                }
+            };
+
+            protected RecordTable.SimpleIterator<T> getChildIterator(P parent) {
+                Collection<? extends T> children = getChildren(parent, cc);
+                if (children.isEmpty()) {
+                    return RecordTable.emptyIterator();
+                }
+                wrapper.setIterator(children.iterator());
+                return wrapper;
+            }
+
+        }, cc, vdb, metadata, this);
+    }
+
+    protected abstract Collection<? extends T> getChildren(P parent, CommandContext cc);
+
 }

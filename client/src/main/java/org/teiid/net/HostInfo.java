@@ -28,10 +28,10 @@ import org.teiid.core.util.HashCodeUtil;
 
 /**
  * Defines the hostname/port or {@link InetAddress} to connect to a host.
- * 
+ *
  * Similar to an {@link InetSocketAddress} except that it can be constructed
  * fully resolved, with an {@link InetAddress} and a hostname.
- * 
+ *
  * @since 4.2
  */
 public class HostInfo {
@@ -40,18 +40,18 @@ public class HostInfo {
     private int portNumber = 0;
     private InetAddress inetAddress;
     private boolean ssl;
-    
+
     /**
      * Construct a fully resolved {@link HostInfo}.
      * @param hostName
      * @param addr
      */
     public HostInfo(String hostName, InetSocketAddress addr) {
-    	this.hostName = hostName;
-    	this.portNumber = addr.getPort();
-    	this.inetAddress = addr.getAddress();
+        this.hostName = hostName;
+        this.portNumber = addr.getPort();
+        this.inetAddress = addr.getAddress();
     }
-    
+
     /**
      * Construct a {@link HostInfo} that can resolve each
      * time an {@link InetAddress} is asked for.
@@ -59,23 +59,23 @@ public class HostInfo {
      * @param port
      */
     public HostInfo (String host, int port) {
-    	ArgCheck.isNotNull(host);
-		this.hostName = host.toLowerCase();
-    	this.portNumber = port;
+        ArgCheck.isNotNull(host);
+        this.hostName = host.toLowerCase();
+        this.portNumber = port;
     }
-    
+
     public InetAddress getInetAddress() throws UnknownHostException {
-    	if (inetAddress != null) {
-    		return inetAddress;
-    	}
-    	//only cache inetaddresses if they represent the ip. 
-		InetAddress addr = InetAddress.getByName(this.hostName);
-		if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
-			this.inetAddress = addr;
-		}
-		return addr;
+        if (inetAddress != null) {
+            return inetAddress;
+        }
+        //only cache inetaddresses if they represent the ip.
+        InetAddress addr = InetAddress.getByName(this.hostName);
+        if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
+            this.inetAddress = addr;
+        }
+        return addr;
     }
-    
+
     public String getHostName() {
         return hostName;
     }
@@ -83,38 +83,38 @@ public class HostInfo {
     public int getPortNumber() {
         return portNumber;
     }
-    
-	public String toString() {
+
+    public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append(hostName).append(":").append(portNumber); //$NON-NLS-1$
         return sb.toString();
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#equals(java.lang.Object)
      * @since 4.2
      */
     public boolean equals(Object obj) {
-    	if (obj == this) {
-    		return true;
-    	}
-    	if (!(obj instanceof HostInfo)) {
-    		return false;
-    	}
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof HostInfo)) {
+            return false;
+        }
         HostInfo hostInfo = (HostInfo) obj;
         if (portNumber != hostInfo.getPortNumber()) {
-        	return false;
+            return false;
         }
         if (ssl != hostInfo.ssl) {
-        	return false;
+            return false;
         }
         if (inetAddress != null && hostInfo.inetAddress != null) {
-        	return inetAddress.equals(hostInfo.inetAddress);
+            return inetAddress.equals(hostInfo.inetAddress);
         }
         return hostName.equals(hostInfo.getHostName());
     }
 
-    /** 
+    /**
      * @see java.lang.Object#hashCode()
      * @since 4.2
      */
@@ -122,17 +122,17 @@ public class HostInfo {
         int hc = HashCodeUtil.hashCode(0, hostName);
         return HashCodeUtil.hashCode(hc, portNumber);
     }
-    
+
     public boolean isResolved() {
-    	return this.inetAddress != null;
+        return this.inetAddress != null;
     }
-    
+
     public boolean isSsl() {
-		return ssl;
-	}
-    
+        return ssl;
+    }
+
     public void setSsl(boolean ssl) {
-		this.ssl = ssl;
-	}
+        this.ssl = ssl;
+    }
 
 }

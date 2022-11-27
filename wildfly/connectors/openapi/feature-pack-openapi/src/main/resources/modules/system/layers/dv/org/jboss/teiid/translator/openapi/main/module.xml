@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.translator.openapi">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.teiid.connectors:translator-openapi}"/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.xml.ws.api"/>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />
+        <!--
+        <module name="org.jboss.teiid" />
+         -->
+        <module name="io.swagger.core"/>
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="org.jboss.teiid.translator.ws"/>
+        <module name="org.jboss.teiid.translator.document.api"/>
+    </dependencies>
+</module>

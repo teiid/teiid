@@ -37,16 +37,7 @@ import java.util.HashMap;
 
 import org.infinispan.protostream.descriptors.Type;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.GeometryType;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.basic.ObjectToAnyTransform;
 import org.teiid.core.util.ObjectConverterUtil;
 
@@ -138,11 +129,11 @@ public class ProtobufDataManager {
                 return new Time(rawContents);
             }
         } else if (contents instanceof String) {
-	        if (expectedType.isAssignableFrom(BigInteger.class)) {
-	            return new BigInteger((String)contents);
-	        } else if (expectedType.isAssignableFrom(BigDecimal.class)) {
-	            return new BigDecimal((String)contents);
-	        }
+            if (expectedType.isAssignableFrom(BigInteger.class)) {
+                return new BigInteger((String)contents);
+            } else if (expectedType.isAssignableFrom(BigDecimal.class)) {
+                return new BigDecimal((String)contents);
+            }
         } else if (contents instanceof byte[]) {
             byte[] rawContents = (byte[]) contents;
             if (expectedType.isAssignableFrom(String.class)) {
@@ -167,7 +158,7 @@ public class ProtobufDataManager {
                 });
             } else if (expectedType.isAssignableFrom(XMLType.class)) {
                 return new SQLXMLImpl(rawContents);
-            } else if (expectedType.isAssignableFrom(GeometryType.class)) {
+            } else if (expectedType.isAssignableFrom(AbstractGeospatialType.class)) {
                 return new GeometryType(new BlobImpl(new InputStreamFactory() {
                     @Override
                     public InputStream getInputStream() throws IOException {
@@ -191,14 +182,14 @@ public class ProtobufDataManager {
         }
 
         if (contents instanceof Short && expectedType.isAssignableFrom(Integer.class)) {
-        	return expectedType.cast(((Short)contents).intValue());
+            return expectedType.cast(((Short)contents).intValue());
         }
         else if (contents instanceof Byte && expectedType.isAssignableFrom(Integer.class)) {
-        	return expectedType.cast(((Byte)contents).intValue());
+            return expectedType.cast(((Byte)contents).intValue());
         }
         else if (contents instanceof Character && expectedType.isAssignableFrom(String.class)) {
-        	return expectedType.cast(((Character)contents).toString());
-        }        
+            return expectedType.cast(((Character)contents).toString());
+        }
         // date/time
         else if (contents instanceof Date && expectedType.isAssignableFrom(Long.class)) {
             return expectedType.cast(((Date) contents).getTime());
@@ -233,11 +224,11 @@ public class ProtobufDataManager {
         } else if (contents instanceof BigDecimal && expectedType.isAssignableFrom(String.class)) {
             return expectedType.cast(((BigDecimal) contents).toString());
         } else if (contents instanceof Serializable && expectedType.isAssignableFrom(byte[].class)) {
-        	ByteArrayOutputStream out = new ByteArrayOutputStream();
-        	ObjectOutputStream oos = new ObjectOutputStream(out);
-        	oos.writeObject(contents);
-        	oos.flush();
-        	return expectedType.cast(out.toByteArray());
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(contents);
+            oos.flush();
+            return expectedType.cast(out.toByteArray());
         }
         throw new IOException("unknown type to write:" + contents.getClass());
     }
@@ -280,14 +271,14 @@ public class ProtobufDataManager {
     }
 
     public static Type getCompatibleProtobufType(Class<?> type) {
-		if (String.class.isAssignableFrom(type) || Character.class.isAssignableFrom(type)
-				|| BigInteger.class.isAssignableFrom(type) || BigDecimal.class.isAssignableFrom(type)) {
+        if (String.class.isAssignableFrom(type) || Character.class.isAssignableFrom(type)
+                || BigInteger.class.isAssignableFrom(type) || BigDecimal.class.isAssignableFrom(type)) {
             return Type.STRING;
         } else if (Integer.class.isAssignableFrom(type) || Short.class.isAssignableFrom(type)
                 || Byte.class.isAssignableFrom(type)) {
             return Type.INT32;
-		} else if (Long.class.isAssignableFrom(type) || Time.class.isAssignableFrom(type)
-				|| Date.class.isAssignableFrom(type) || Timestamp.class.isAssignableFrom(type)) {
+        } else if (Long.class.isAssignableFrom(type) || Time.class.isAssignableFrom(type)
+                || Date.class.isAssignableFrom(type) || Timestamp.class.isAssignableFrom(type)) {
             return Type.INT64;
         } else if (Boolean.class.isAssignableFrom(type)) {
             return Type.BOOL;
@@ -298,33 +289,33 @@ public class ProtobufDataManager {
         }
         return Type.BYTES;
     }
-    
+
     public static boolean shouldPreserveType(String ispnType, String teiidType) {
-    	if (teiidType.endsWith("[]")) {
-    		teiidType = teiidType.substring(0, teiidType.length()-2);
-    	}
-		if (ispnType.equalsIgnoreCase(Type.STRING.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)) {
-    		return false;
-    	} else if (ispnType.equalsIgnoreCase(Type.INT32.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.INTEGER)) {
-    		return false;
-    	} else if (ispnType.equalsIgnoreCase(Type.INT64.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.LONG)) {
-    		return false;
-    	} else if (ispnType.equalsIgnoreCase(Type.BOOL.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BOOLEAN)) {
-    		return false;
-    	} else if (ispnType.equalsIgnoreCase(Type.FLOAT.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.FLOAT)) {
-    		return false;
-    	} else if (ispnType.equalsIgnoreCase(Type.DOUBLE.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.DOUBLE)) {
-    		return false;
-    	} else if (ispnType.equalsIgnoreCase(Type.BYTES.name())
-				&& teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.VARBINARY)) {
-    		return false;
-    	}
+        if (teiidType.endsWith("[]")) {
+            teiidType = teiidType.substring(0, teiidType.length()-2);
+        }
+        if (ispnType.equalsIgnoreCase(Type.STRING.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)) {
+            return false;
+        } else if (ispnType.equalsIgnoreCase(Type.INT32.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.INTEGER)) {
+            return false;
+        } else if (ispnType.equalsIgnoreCase(Type.INT64.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.LONG)) {
+            return false;
+        } else if (ispnType.equalsIgnoreCase(Type.BOOL.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.BOOLEAN)) {
+            return false;
+        } else if (ispnType.equalsIgnoreCase(Type.FLOAT.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.FLOAT)) {
+            return false;
+        } else if (ispnType.equalsIgnoreCase(Type.DOUBLE.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.DOUBLE)) {
+            return false;
+        } else if (ispnType.equalsIgnoreCase(Type.BYTES.name())
+                && teiidType.equalsIgnoreCase(DataTypeManager.DefaultDataTypes.VARBINARY)) {
+            return false;
+        }
         return true;
-    }    
+    }
 }

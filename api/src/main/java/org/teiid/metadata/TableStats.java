@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.metadata;
 
 import java.io.Serializable;
 
 public class TableStats implements Serializable {
-	
-	private static final long serialVersionUID = 4316568283357485330L;
-	
-	private Number cardinality;
-	
-	public Number getCardinality() {
-		return cardinality;
-	}
-	
-	public void setCardinality(Number cardinality) {
-		this.cardinality = cardinality;
-	}
+
+    private static final long serialVersionUID = 4316568283357485330L;
+
+    private Number cardinality;
+
+    public Number getCardinality() {
+        return cardinality;
+    }
+
+    public void setCardinality(Number cardinality) {
+        this.cardinality = cardinality;
+    }
 
 }

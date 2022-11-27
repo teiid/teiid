@@ -66,5 +66,5 @@ public class AtomErrorFormatParser extends XmlFormatParser implements FormatPars
     if (code == null && message == null && innerError == null)
       throw new RuntimeException("Bad error response: Unknown elements");
     return OErrors.error(code, message, innerError);
-  }  
+  }
 }

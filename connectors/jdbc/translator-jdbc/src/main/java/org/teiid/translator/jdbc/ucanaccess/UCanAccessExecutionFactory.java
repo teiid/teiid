@@ -26,30 +26,30 @@ import org.teiid.translator.jdbc.hsql.HsqlExecutionFactory;
 
 @Translator(name="ucanaccess", description="A translator for read/write Microsoft Access Database")
 public class UCanAccessExecutionFactory extends HsqlExecutionFactory {
-	
-	public static final String UCANACCESS = "ucanaccess"; //$NON-NLS-1$
-	
-	public UCanAccessExecutionFactory() {
-		setSupportsOrderBy(true);
-		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentInPredicates(10);
-	}
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		
-		addPushDownFunction(UCANACCESS, "DCount", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(UCANACCESS, "DSum", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(UCANACCESS, "DMax", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(UCANACCESS, "DMin", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(UCANACCESS, "DAvg", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(UCANACCESS, "DFirst", TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(UCANACCESS, "DLast", TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-	}
-	
+    public static final String UCANACCESS = "ucanaccess"; //$NON-NLS-1$
+
+    public UCanAccessExecutionFactory() {
+        setSupportsOrderBy(true);
+        setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
+        setMaxDependentInPredicates(10);
+    }
+
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+
+        addPushDownFunction(UCANACCESS, "DCount", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(UCANACCESS, "DSum", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(UCANACCESS, "DMax", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(UCANACCESS, "DMin", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(UCANACCESS, "DAvg", TypeFacility.RUNTIME_NAMES.BIG_INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(UCANACCESS, "DFirst", TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(UCANACCESS, "DLast", TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+    }
+
     @Override
     public boolean supportsDependentJoins() {
-    	return false;
+        return false;
     }
 }

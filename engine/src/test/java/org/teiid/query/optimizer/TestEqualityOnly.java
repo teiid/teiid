@@ -25,13 +25,13 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class TestEqualityOnly {
 
-	@Test public void testPushdown() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string options (searchable 'equality_only'))", "x", "y");
-		//should push
-		TestOptimizer.helpPlan("select x from t where x = 'a'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0 WHERE g_0.x = 'a'"});
-		//should not push
-		TestOptimizer.helpPlan("select x from t where x > 'b'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
-		TestOptimizer.helpPlan("select x from t where x like 'c%'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
-	}
-	
+    @Test public void testPushdown() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string options (searchable 'equality_only'))", "x", "y");
+        //should push
+        TestOptimizer.helpPlan("select x from t where x = 'a'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0 WHERE g_0.x = 'a'"});
+        //should not push
+        TestOptimizer.helpPlan("select x from t where x > 'b'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
+        TestOptimizer.helpPlan("select x from t where x like 'c%'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
+    }
+
 }

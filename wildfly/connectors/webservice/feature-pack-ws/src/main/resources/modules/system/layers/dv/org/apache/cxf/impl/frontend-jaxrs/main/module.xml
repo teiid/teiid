@@ -1,0 +1,28 @@
+<module xmlns="urn:jboss:module:1.3" name="org.apache.cxf.impl.frontend-jaxrs">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <artifact name="${org.apache.cxf:cxf-rt-frontend-jaxrs}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-rs-client}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-transports-http-hc}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-rs-security-oauth}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-rs-security-oauth2}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-rs-json-basic}"/>
+        <artifact name="${org.apache.cxf:cxf-rt-rs-security-oauth2-saml}"/>
+        <resource-root path="."/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.activation.api"/>
+        <module name="javax.annotation.api"/>
+        <module name="javax.xml.bind.api"/>
+        <module name="org.apache.cxf"/>
+        <module name="org.apache.cxf.impl"/>
+        <module name="javax.ws.rs.api" services="export" export="true"/>
+        <module name="net.oauth.core"/>
+        <module name="org.apache.httpcomponents"/>
+    </dependencies>
+</module>

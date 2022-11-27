@@ -38,15 +38,13 @@ public class Min extends SingleArgumentAggregateFunction {
     public void reset() {
         minValue = null;
     }
-    
+
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
-    	this.outputType = inputType;
+        this.outputType = inputType;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object value, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
@@ -70,18 +68,18 @@ public class Min extends SingleArgumentAggregateFunction {
 
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	return Arrays.asList(outputType);
+        return Arrays.asList(outputType);
     }
-    
+
     @Override
     public void getState(List<Object> state) {
-    	state.add(minValue);
+        state.add(minValue);
     }
-    
+
     @Override
     public int setState(List<?> state, int index) {
-    	this.minValue = state.get(index);
-    	return index++;
+        this.minValue = state.get(index);
+        return index++;
     }
 
 }

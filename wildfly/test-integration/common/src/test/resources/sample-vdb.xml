@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="sample" version="1">
+    <property name="cache-metadata" value="true" />
+    <property name="{http://teiid.org/rest}auto-generate" value="true"/>
+    <property name="{http://teiid.org/rest}security-type" value="none"/>
+    <property name="{http://teiid.org/rest}security-domain" value="teiid-security"/>
+    <property name="{http://teiid.org/rest}security-role" value="example-role"/>
+    
+    <model name="Txns">
+        <source name="text-connector" translator-name="loopback" />
+         <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE G1 (e1 string, e2 integer);
+                CREATE FOREIGN TABLE G2 (e1 string, e2 integer);
+        ]]> </metadata>
+    </model>
+    <model name="View" type ="VIRTUAL">
+         <property name="{http://teiid.org/rest}sqlquery" value="true"/>
+         <metadata type="DDL"><![CDATA[
+            CREATE VIRTUAL PROCEDURE g1Table(IN p1 integer, IN p2 string) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'g1/{p1}')
+            AS
+            BEGIN
+                SELECT XMLELEMENT(NAME "rows", XMLATTRIBUTES (g1Table.p1 as p1, g1Table.p2 as p2), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;
+            END        
+            CREATE VIRTUAL PROCEDURE g2Table() RETURNS TABLE (xml_out string) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'g2')
+            AS
+            BEGIN
+                SELECT '{ "age":100, "name":test,messages:["msg1","msg2","msg3"]}' as xml_out;
+            END
+            CREATE VIRTUAL PROCEDURE producesAny(IN p1 integer) RETURNS TABLE (out_value string) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'any/{p1}', "teiid_rest:PRODUCES" '*/*')
+            AS
+            BEGIN
+                SELECT cast(p1 as string);
+            END     
+            CREATE VIRTUAL PROCEDURE g1TablePost(IN p1 integer, IN p2 integer default '1', IN p3 string, IN p4 xml) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'POST', "teiid_rest:URI" 'g1post')
+            AS
+            BEGIN
+                declare string VARIABLES.myvar = (select * from xmltable('/root' PASSING view.g1TablePost.p4 COLUMNS id string PATH 'p4') as x);
+                SELECT XMLELEMENT(NAME "rows", XMLATTRIBUTES (g1TablePost.p1 as p1, g1TablePost.p2 as p2, g1TablePost.p3 as p3, VARIABLES.myvar as p4), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;
+            END
+            CREATE VIRTUAL PROCEDURE g1SimplePost(IN p1 integer, IN p2 integer default '1', IN p3 string) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'POST', "teiid_rest:URI" 'g1simplepost')
+            AS
+            BEGIN
+                SELECT XMLELEMENT(NAME "rows", XMLATTRIBUTES (g1SimplePost.p1 as p1, g1SimplePost.p2 as p2, g1SimplePost.p3 as p3), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;
+            END
+            CREATE VIRTUAL PROCEDURE largedoc() RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'largedoc')
+            AS
+            BEGIN
+                WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(name "row", xmlforest(n, n)))) FROM t;
+            END
+            
+            CREATE VIRTUAL PROCEDURE blobPost(IN p1 blob) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'POST', "teiid_rest:URI" 'blobpost')
+            AS
+            BEGIN
+                SELECT xmlparse(document p1);
+            END
+            
+            CREATE VIRTUAL PROCEDURE clobPost(IN p1 clob) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'POST', "teiid_rest:URI" 'clobpost')
+            AS
+            BEGIN
+                SELECT xmlparse(document p1);
+            END
+            
+            CREATE VIRTUAL PROCEDURE binaryPost(IN p1 varbinary) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'POST', "teiid_rest:URI" 'binarypost')
+            AS
+            BEGIN
+                SELECT xmlparse(document p1);
+            END
+            
+            ]]> </metadata>
+    </model>
+
+</vdb>

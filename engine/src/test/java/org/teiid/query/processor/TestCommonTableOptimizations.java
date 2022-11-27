@@ -30,9 +30,9 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestCommonTableOptimizations {
-	
-	@Test public void testDuplicateSourceQuery() {
-		String sql = "SELECT e1 FROM pm1.g1 union all select e1 from pm1.g1"; //$NON-NLS-1$
+
+    @Test public void testDuplicateSourceQuery() {
+        String sql = "SELECT e1 FROM pm1.g1 union all select e1 from pm1.g1"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
             Arrays.asList("a"), //$NON-NLS-1$
@@ -43,16 +43,16 @@ public class TestCommonTableOptimizations {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList("a"), Arrays.asList("b")});
-        
+
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         helpProcess(plan, dataManager, expected);
         assertEquals(3, dataManager.getCommandHistory().size());
-	}
-	
-	@Ignore
-	@Test public void testDuplicateSimpleQuery() {
-		String sql = "SELECT e1 FROM pm1.g1 union all select e2 from pm1.g1"; //$NON-NLS-1$
+    }
+
+    @Ignore
+    @Test public void testDuplicateSimpleQuery() {
+        String sql = "SELECT e1 FROM pm1.g1 union all select e2 from pm1.g1"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
             Arrays.asList("a"), //$NON-NLS-1$
@@ -63,11 +63,11 @@ public class TestCommonTableOptimizations {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List<?>[] {Arrays.asList("a"), Arrays.asList("b")});
-        
+
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         helpProcess(plan, dataManager, expected);
         assertEquals(3, dataManager.getCommandHistory().size());
-	}
+    }
 
 }

@@ -30,22 +30,22 @@ public class TestBreakStatement  extends TestCase{
     /**
      * Constructor for TestAssignmentStatement.
      */
-    public TestBreakStatement(String name) { 
+    public TestBreakStatement(String name) {
         super(name);
     }
-    
-    // ################################## TEST HELPERS ################################ 
 
-    public static final BranchingStatement sample1() { 
+    // ################################## TEST HELPERS ################################
+
+    public static final BranchingStatement sample1() {
         return new BranchingStatement();
     }
-    
-    public static final BranchingStatement sample2() { 
+
+    public static final BranchingStatement sample2() {
         return new BranchingStatement();
     }
-    
-    // ################################## ACTUAL TESTS ################################ 
-    
+
+    // ################################## ACTUAL TESTS ################################
+
     public void testSelfEquivalence(){
         BranchingStatement s1 = sample1();
         int equals = 0;
@@ -58,7 +58,7 @@ public class TestBreakStatement  extends TestCase{
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
     }
-    
+
     public void testNonEquivalence(){
         BranchingStatement s1 = sample1();
         int equals = -1;

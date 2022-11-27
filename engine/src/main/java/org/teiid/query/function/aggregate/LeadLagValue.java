@@ -25,16 +25,18 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 /**
  * We store up to three values related to the lead/lag per row
  */
 public class LeadLagValue extends AggregateFunction {
-    
+
     private Object[] vals = null;
     private int partition = 0;
-    
+
     @Override
     public void addInputDirect(List<?> tuple, CommandContext commandContext)
             throws TeiidComponentException, TeiidProcessingException {
@@ -44,23 +46,28 @@ public class LeadLagValue extends AggregateFunction {
         }
         vals[argIndexes.length] = partition;
     }
-    
+
     @Override
     public Object getResult(CommandContext commandContext)
             throws FunctionExecutionException, ExpressionEvaluationException,
             TeiidComponentException, TeiidProcessingException {
         return new ArrayImpl(vals);
     }
-    
+
     @Override
     public void reset() {
         vals = null;
         partition++;
     }
-    
+
     @Override
     public boolean respectsNull() {
         return true;
+    }
+
+    @Override
+    public Class<?> getOutputType(AggregateSymbol function) {
+        return DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
     }
 
 }

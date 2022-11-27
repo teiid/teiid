@@ -26,121 +26,121 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
- * A FROM subpart that represents a single group.  For example, the FROM clause: 
- * "FROM a, b" will have two UnaryFromClause objects, each holding a reference to 
+ * A FROM subpart that represents a single group.  For example, the FROM clause:
+ * "FROM a, b" will have two UnaryFromClause objects, each holding a reference to
  * a GroupSymbol (for a and b).
  */
 public class UnaryFromClause extends FromClause {
 
-	private GroupSymbol group;
-    
+    private GroupSymbol group;
+
     private Command expandedCommand;
-	
-	/**
-	 * Construct default object
-	 */
-	public UnaryFromClause() {
-	}
-	
-	/**
-	 * Construct object with specified group
-	 * @param group Group being held
-	 */
-	public UnaryFromClause(GroupSymbol group) {
-		this.group = group;
-	}
-	
-	/**
-	 * Set the group held by the clause
-	 * @param group Group to hold
-	 */
-	public void setGroup(GroupSymbol group) {
-		this.group = group;
-	} 
-	
-	/**
-	 * Get group held by clause
-	 * @return Group held by clause
-	 */
-	public GroupSymbol getGroup() {
-		return this.group;
-	}
-    
+
+    /**
+     * Construct default object
+     */
+    public UnaryFromClause() {
+    }
+
+    /**
+     * Construct object with specified group
+     * @param group Group being held
+     */
+    public UnaryFromClause(GroupSymbol group) {
+        this.group = group;
+    }
+
+    /**
+     * Set the group held by the clause
+     * @param group Group to hold
+     */
+    public void setGroup(GroupSymbol group) {
+        this.group = group;
+    }
+
+    /**
+     * Get group held by clause
+     * @return Group held by clause
+     */
+    public GroupSymbol getGroup() {
+        return this.group;
+    }
+
     /**
      * Collect all GroupSymbols for this from clause.
      * @param groups Groups to add to
      */
     public void collectGroups(Collection<GroupSymbol> groups) {
-        groups.add(this.group);    
+        groups.add(this.group);
     }
-	
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
-	/**
-	 * Check whether objects are equal
-	 * @param obj Other object
-	 * @return True if equal
-	 */
-	public boolean equals(Object obj) {
+    /**
+     * Check whether objects are equal
+     * @param obj Other object
+     * @return True if equal
+     */
+    public boolean equals(Object obj) {
         if (!super.equals(obj)) {
             return false;
         }
-		
-		if(! (obj instanceof UnaryFromClause)) { 
-			return false;
-		}		
-        
+
+        if(! (obj instanceof UnaryFromClause)) {
+            return false;
+        }
+
         UnaryFromClause other = (UnaryFromClause)obj;
-        
+
         if( EquivalenceUtil.areEqual(group.getDefinition(), other.getGroup().getDefinition()) ) {
-        	return EquivalenceUtil.areEqual(getGroup().getNonCorrelationName(), other.getGroup().getNonCorrelationName()) &&
+            return EquivalenceUtil.areEqual(getGroup().getNonCorrelationName(), other.getGroup().getNonCorrelationName()) &&
             other.isOptional() == this.isOptional() &&
-            EquivalenceUtil.areEqual(expandedCommand, other.expandedCommand);	
+            EquivalenceUtil.areEqual(expandedCommand, other.expandedCommand);
         }
         return false;
-	}
-	
-	/**
-	 * Get hash code of object
-	 * @return Hash code
-	 */
-	public int hashCode() {
-		if(this.group == null) { 
-			return 0;
-		}
-		return this.group.hashCode();
-	}
-	
-	/**
-	 * Get deep clone of object
-	 * @return Deep copy of the object
-	 */
-	public FromClause cloneDirect() {
-	    GroupSymbol copyGroup = null;
-	    if(this.group != null) { 
-	        copyGroup = this.group.clone();
-	    }
+    }
+
+    /**
+     * Get hash code of object
+     * @return Hash code
+     */
+    public int hashCode() {
+        if(this.group == null) {
+            return 0;
+        }
+        return this.group.hashCode();
+    }
+
+    /**
+     * Get deep clone of object
+     * @return Deep copy of the object
+     */
+    public FromClause cloneDirect() {
+        GroupSymbol copyGroup = null;
+        if(this.group != null) {
+            copyGroup = this.group.clone();
+        }
         UnaryFromClause clonedUnaryFromClause = new UnaryFromClause(copyGroup);
         if (this.expandedCommand != null) {
-        	clonedUnaryFromClause.setExpandedCommand((Command)this.expandedCommand.clone());
+            clonedUnaryFromClause.setExpandedCommand((Command)this.expandedCommand.clone());
         }
-		return clonedUnaryFromClause;	
-	}
+        return clonedUnaryFromClause;
+    }
 
-    /** 
+    /**
      * @return Returns the expandedCommand.
      */
     public Command getExpandedCommand() {
         return this.expandedCommand;
     }
-    
-    /** 
+
+    /**
      * @param expandedCommand The expandedCommand to set.
      */
     public void setExpandedCommand(Command expandedCommand) {
         this.expandedCommand = expandedCommand;
     }
-		
+
 }

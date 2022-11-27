@@ -25,9 +25,9 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 public class In extends BaseInCondition {
 
     private List<Expression> rightExpressions;
-    
+
     public In(Expression left, List<Expression> right, boolean negated) {
-    	super(left, negated);
+        super(left, negated);
         rightExpressions = right;
     }
 
@@ -42,7 +42,7 @@ public class In extends BaseInCondition {
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public void setRightExpressions(List<Expression> expressions) {
         this.rightExpressions = expressions;
     }

@@ -3,30 +3,18 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.teiid</groupId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-common-core</artifactId>
 	<name>Common Core</name>
 	<description>Core shared library</description>
+	<properties>
+	   <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
+       <project.build.targetJdk>8</project.build.targetJdk>
+	</properties>
 	<build>
 		<plugins>
-		    <!-- Specify the compiler options and settings -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.compiler.plugin}</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <showDeprecation>false</showDeprecation>
-                    <showWarnings>false</showWarnings>
-                    <compilerArguments>
-                        <source>1.6</source>
-                        <target>1.6</target>
-                    </compilerArguments>
-                </configuration>
-            </plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
@@ -46,27 +34,6 @@
 					</execution>
 				</executions>
 			</plugin>
-            <plugin>
-              <artifactId>maven-jar-plugin</artifactId>
-              <configuration>
-                <archive>  
-                  <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                </archive> 
-              </configuration>
-            </plugin>  
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <executions>
-                <execution>
-                  <id>bundle-manifest</id>
-                  <phase>process-classes</phase>
-                  <goals>    
-                    <goal>manifest</goal>
-                  </goals>   
-                </execution>
-              </executions>
-            </plugin>            
 		</plugins>
 		<resources>
           <resource>
@@ -85,4 +52,10 @@
           </resource>
 		</resources>
 	</build>
+	<dependencies>
+		<dependency>
+			<groupId>jakarta.activation</groupId>
+			<artifactId>jakarta.activation-api</artifactId>
+		</dependency>
+	</dependencies>
 </project>

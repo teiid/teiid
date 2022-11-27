@@ -21,22 +21,22 @@ package org.teiid.runtime;
 import java.sql.ResultSet;
 
 public class EmbeddedRequestOptions {
-	private int resultSetType = ResultSet.TYPE_FORWARD_ONLY;
+    private int resultSetType = ResultSet.TYPE_FORWARD_ONLY;
 
-	public EmbeddedRequestOptions() {
-	}
-	
-	public int getResultSetType() {
-		return resultSetType;
-	}
-	
-	public void setResultSetType(int resultSetType) {
-		this.resultSetType = resultSetType;
-	}
-	
-	public EmbeddedRequestOptions resultSetType(int r) {
-		this.resultSetType = r;
-		return this;
-	}
-	
+    public EmbeddedRequestOptions() {
+    }
+
+    public int getResultSetType() {
+        return resultSetType;
+    }
+
+    public void setResultSetType(int resultSetType) {
+        this.resultSetType = resultSetType;
+    }
+
+    public EmbeddedRequestOptions resultSetType(int r) {
+        this.resultSetType = r;
+        return this;
+    }
+
 }

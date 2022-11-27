@@ -21,15 +21,15 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
- * Represents an IN criteria that uses a subquery on the right side rather than a 
- * list of values.  
+ * Represents an IN criteria that uses a subquery on the right side rather than a
+ * list of values.
  */
 public class SubqueryIn extends BaseInCondition implements SubqueryContainer {
 
     private QueryExpression rightQuery;
 
     public SubqueryIn(Expression leftExpr, boolean isNegated, QueryExpression rightQuery) {
-    	super(leftExpr, isNegated);
+        super(leftExpr, isNegated);
         this.rightQuery = rightQuery;
     }
 

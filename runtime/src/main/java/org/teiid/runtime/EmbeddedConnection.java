@@ -33,9 +33,9 @@ import org.teiid.query.sql.lang.Command;
  * {@link CallableStatement} parameter assignments.
  */
 public interface EmbeddedConnection extends TeiidConnection {
-	
-	CallableStatement prepareCall(Command command, EmbeddedRequestOptions options) throws SQLException;
 
-	TeiidPreparedStatement prepareStatement(Command command, EmbeddedRequestOptions options) throws SQLException;
+    CallableStatement prepareCall(Command command, EmbeddedRequestOptions options) throws SQLException;
+
+    TeiidPreparedStatement prepareStatement(Command command, EmbeddedRequestOptions options) throws SQLException;
 
 }

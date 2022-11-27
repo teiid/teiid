@@ -20,32 +20,32 @@ package org.teiid.common.buffer;
 
 public class BaseCacheEntry {
 
-	private CacheKey key;
+    private CacheKey key;
 
-	public BaseCacheEntry(CacheKey key) {
-		this.key = key;
-	}
-	
-	public Long getId() {
-		return key.getId();
-	}
+    public BaseCacheEntry(CacheKey key) {
+        this.key = key;
+    }
 
-	@Override
-	public int hashCode() {
-		return key.hashCode();
-	}
-	
-	@Override
-	public String toString() {
-		return key.toString();
-	}
+    public Long getId() {
+        return key.getId();
+    }
 
-	public void setKey(CacheKey key) {
-		this.key = key;
-	}
-	
-	public CacheKey getKey() {
-		return key;
-	}
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return key.toString();
+    }
+
+    public void setKey(CacheKey key) {
+        this.key = key;
+    }
+
+    public CacheKey getKey() {
+        return key;
+    }
 
 }

@@ -31,42 +31,42 @@ public class ProcedureReservedWords {
 
     public static final String ROWCOUNT = "ROWCOUNT"; //$NON-NLS-1$
 
-	public static final String CHANGING = "CHANGING"; //$NON-NLS-1$
+    public static final String CHANGING = "CHANGING"; //$NON-NLS-1$
 
     public static final String VARIABLES = "VARIABLES"; //$NON-NLS-1$
-    
+
     public static final String DVARS = "DVARS"; //$NON-NLS-1$
-    
+
     /**
- 	 * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
- 	 */
+      * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
+      */
     private static final Set<String> RESERVED_WORDS = new HashSet<String>();
 
     // Initialize RESERVED_WORDS set - This is a poor man's enum.  To much legacy code expects the constants to be Strings.
- 	static {
- 		Field[] fields = SQLConstants.class.getDeclaredFields();
- 		for (Field field : fields) {
- 			if (field.getType() == String.class) {
- 				try {
-					RESERVED_WORDS.add((String)field.get(null));
-				} catch (Exception e) {
-				}
- 			}
- 		}
- 	}
+     static {
+         Field[] fields = SQLConstants.class.getDeclaredFields();
+         for (Field field : fields) {
+             if (field.getType() == String.class) {
+                 try {
+                    RESERVED_WORDS.add((String)field.get(null));
+                } catch (Exception e) {
+                }
+             }
+         }
+     }
 
     /** Can't construct */
     private ProcedureReservedWords() {}
 
     /**
-     * Check whether a string is a procedure reserved word.  
+     * Check whether a string is a procedure reserved word.
      * @param str String to check
      * @return True if procedure reserved word, false if not or null
      */
     public static final boolean isProcedureReservedWord(String str) {
-        if (str == null) { 
-            return false;    
+        if (str == null) {
+            return false;
         }
-        return RESERVED_WORDS.contains(str.toUpperCase());    
+        return RESERVED_WORDS.contains(str.toUpperCase());
     }
 }

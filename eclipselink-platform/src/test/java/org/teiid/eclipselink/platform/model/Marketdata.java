@@ -28,30 +28,30 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "Marketdata")
 public class Marketdata implements Serializable {
-	
 
-	private static final long serialVersionUID = 1783712327461134953L;
 
-	@Id
-	private String symbol;
+    private static final long serialVersionUID = 1783712327461134953L;
 
-	@Column
-	private BigDecimal price;
+    @Id
+    private String symbol;
 
-	public String getSymbol() {
-		return symbol;
-	}
+    @Column
+    private BigDecimal price;
 
-	public void setSymbol(String symbol) {
-		this.symbol = symbol;
-	}
+    public String getSymbol() {
+        return symbol;
+    }
 
-	public BigDecimal getPrice() {
-		return price;
-	}
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
 
-	public void setPrice(BigDecimal price) {
-		this.price = price;
-	}
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
 
 }

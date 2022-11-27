@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.teiid.wildfly</groupId>
+		<artifactId>connectors</artifactId>
+		<version>17.0.0-SNAPSHOT</version>
+	</parent>
+    <groupId>org.teiid.wildfly.connectors</groupId>
+	<artifactId>salesforce</artifactId>
+	<packaging>pom</packaging>
+	<name>Salesforce Extensions</name>
+	<description />
+
+	<modules>
+		<module>connector-salesforce</module>
+		<module>connector-salesforce-34</module>
+		<module>connector-salesforce-41</module>
+		<module>feature-pack-salesforce</module>
+        <module>feature-pack-salesforce-34</module>
+        <module>feature-pack-salesforce-41</module>
+	</modules>
+
+</project>

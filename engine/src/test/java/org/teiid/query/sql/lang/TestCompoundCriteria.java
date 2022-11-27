@@ -30,7 +30,7 @@ import junit.framework.*;
 /**
  * @author amiller
  *
- * To change this generated comment go to 
+ * To change this generated comment go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
 public class TestCompoundCriteria extends TestCase {
@@ -49,16 +49,16 @@ public class TestCompoundCriteria extends TestCase {
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         CompareCriteria ccrit2 = new CompareCriteria(e2, CompareCriteria.EQ, new Constant("xyz")); //$NON-NLS-1$
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.AND, ccrit1, ccrit2);
-        
-        UnitTestUtil.helpTestEquivalence(0, comp, comp.clone());        
+
+        UnitTestUtil.helpTestEquivalence(0, comp, comp.clone());
     }
-    
+
     public void testClone2() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         CompareCriteria ccrit1 = new CompareCriteria(e1, CompareCriteria.EQ, new Constant("abc")); //$NON-NLS-1$
         CompoundCriteria comp = new CompoundCriteria(CompoundCriteria.AND, ccrit1, null);
-        
-        UnitTestUtil.helpTestEquivalence(0, comp, comp.clone());        
+
+        UnitTestUtil.helpTestEquivalence(0, comp, comp.clone());
     }
-    
+
 }

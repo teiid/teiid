@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.api">
+    <properties>
+        <property name="jboss.api" value="public"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.teiid:teiid-api}"/>
+        <artifact name="${org.teiid.wildfly:teiid-resource-spi}"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>    
+        <module name="org.jboss.teiid.client"/>
+    </dependencies>
+</module>

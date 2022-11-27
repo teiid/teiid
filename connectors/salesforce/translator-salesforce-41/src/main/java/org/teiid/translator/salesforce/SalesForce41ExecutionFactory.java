@@ -22,5 +22,5 @@ import org.teiid.translator.Translator;
 
 @Translator(name="salesforce-41", description="A translator for Salesforce With API version 41")
 public class SalesForce41ExecutionFactory extends SalesForceExecutionFactory {
-    
+
 }

@@ -20,35 +20,38 @@ package org.teiid.query.sql.lang;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageVisitor;
 
 
 /**
- * A logical criteria that takes the logical NOT of the contained criteria.  
- * That is, if the contained criteria returns true, this criteria returns 
+ * A logical criteria that takes the logical NOT of the contained criteria.
+ * That is, if the contained criteria returns true, this criteria returns
  * false.  For example:  "NOT (element = 5)"
  */
-public class NotCriteria extends AtomicCriteria {
+public class NotCriteria extends LogicalCriteria {
 
-	/**
-	 * Constructs a default instance of this class.
-	 */
-	public NotCriteria() {
-	}
+    /** The single sub criteria */
+    private Criteria criteria;
 
-	/**
-	 * Constructs an instance of this class with sub-criteria.
-	 * @param crit Contained criteria
-	 */
-	public NotCriteria(Criteria crit) {
-		super(crit);
-	}
+    /**
+     * Constructs a default instance of this class.
+     */
+    public NotCriteria() {
+    }
+
+    /**
+     * Constructs an instance of this class with sub-criteria.
+     * @param crit Contained criteria
+     */
+    public NotCriteria(Criteria crit) {
+        setCriteria(crit);
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
-    
+
+
     /**
      * Compare equality of two AtomicCriteria.
      * @param obj Other object
@@ -62,7 +65,7 @@ public class NotCriteria extends AtomicCriteria {
         if(!(obj instanceof NotCriteria)) {
             return false;
         }
-        
+
         return EquivalenceUtil.areEqual(getCriteria(), ((NotCriteria)obj).getCriteria());
     }
 
@@ -73,13 +76,29 @@ public class NotCriteria extends AtomicCriteria {
     public int hashCode() {
         return HashCodeUtil.hashCode(0, getCriteria());
     }
-	
-	/**
-	 * Deep copy of object
-	 * @return Deep copy of object
-	 */
-	public Object clone() {
-		return new NotCriteria( (Criteria) getCriteria().clone() );  
-	}
-	
+
+    /**
+     * Deep copy of object
+     * @return Deep copy of object
+     */
+    public Object clone() {
+        return new NotCriteria( (Criteria) getCriteria().clone() );
+    }
+
+    /**
+     * Get sub criteria
+     * @return Sub criteria
+     */
+    public Criteria getCriteria() {
+        return criteria;
+    }
+
+    /**
+     * Set sub criteria
+     * @param criteria Sub criteria
+     */
+    public void setCriteria(Criteria criteria) {
+        this.criteria = criteria;
+    }
+
 }

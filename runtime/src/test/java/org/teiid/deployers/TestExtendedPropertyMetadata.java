@@ -26,66 +26,66 @@ import org.junit.Test;
 @SuppressWarnings("nls")
 public class TestExtendedPropertyMetadata {
 
-	@Test
-	public void testDefault() {
-		ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String", "some-name", null);
-		
-		Assert.assertEquals("some-name", metadata.display());
-		Assert.assertEquals(null, metadata.description());
-		Assert.assertEquals(false, metadata.advanced());
-		Assert.assertEquals(false, metadata.required());
-		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(false , metadata.readOnly());
-	}
-	
-	@Test
-	public void testFormatted() {
-		ArrayList<String> allowed =  new ArrayList<String>();
-		allowed.add("get");
-		allowed.add("post");
-		
-		ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String", "{$display:\"Is Immutable\",$description:\"True if the source never changes.\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}", null);
-		
-		Assert.assertEquals("Is Immutable", metadata.display());
-		Assert.assertEquals("True if the source never changes.", metadata.description());
-		Assert.assertEquals(true, metadata.advanced());
-		Assert.assertEquals(true, metadata.required());
-		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(false , metadata.readOnly());		
-		Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
-	}
-	
-	@Test
-	public void testFormattedExtraCommasAndColons() {
-		ArrayList<String> allowed =  new ArrayList<String>();
-		allowed.add("get");
-		allowed.add("post");
-		
-		ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String","{$display:\"Is Immu:table\",$description:\"True if the, source never changes.\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}", null);
-		
-		Assert.assertEquals("Is Immu:table", metadata.display());
-		Assert.assertEquals("True if the, source never changes.", metadata.description());
-		Assert.assertEquals(true, metadata.advanced());
-		Assert.assertEquals(true, metadata.required());
-		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(false , metadata.readOnly());		
-		Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
-	}	
-	
-	@Test
-	public void testBlankProperties() {
-		ArrayList<String> allowed =  new ArrayList<String>();
-		allowed.add("get");
-		allowed.add("post");
-		
-		ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String","{$display:\"Is Immutable\",$description:\"\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}", null);
-		
-		Assert.assertEquals("Is Immutable", metadata.display());
-		Assert.assertEquals("", metadata.description());
-		Assert.assertEquals(true, metadata.advanced());
-		Assert.assertEquals(true, metadata.required());
-		Assert.assertEquals(false, metadata.masked());
-		Assert.assertEquals(false , metadata.readOnly());		
-		Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
-	}	
+    @Test
+    public void testDefault() {
+        ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String", "some-name", null);
+
+        Assert.assertEquals("some-name", metadata.display());
+        Assert.assertEquals(null, metadata.description());
+        Assert.assertEquals(false, metadata.advanced());
+        Assert.assertEquals(false, metadata.required());
+        Assert.assertEquals(false, metadata.masked());
+        Assert.assertEquals(false , metadata.readOnly());
+    }
+
+    @Test
+    public void testFormatted() {
+        ArrayList<String> allowed =  new ArrayList<String>();
+        allowed.add("get");
+        allowed.add("post");
+
+        ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String", "{$display:\"Is Immutable\",$description:\"True if the source never changes.\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}", null);
+
+        Assert.assertEquals("Is Immutable", metadata.display());
+        Assert.assertEquals("True if the source never changes.", metadata.description());
+        Assert.assertEquals(true, metadata.advanced());
+        Assert.assertEquals(true, metadata.required());
+        Assert.assertEquals(false, metadata.masked());
+        Assert.assertEquals(false , metadata.readOnly());
+        Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
+    }
+
+    @Test
+    public void testFormattedExtraCommasAndColons() {
+        ArrayList<String> allowed =  new ArrayList<String>();
+        allowed.add("get");
+        allowed.add("post");
+
+        ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String","{$display:\"Is Immu:table\",$description:\"True if the, source never changes.\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}", null);
+
+        Assert.assertEquals("Is Immu:table", metadata.display());
+        Assert.assertEquals("True if the, source never changes.", metadata.description());
+        Assert.assertEquals(true, metadata.advanced());
+        Assert.assertEquals(true, metadata.required());
+        Assert.assertEquals(false, metadata.masked());
+        Assert.assertEquals(false , metadata.readOnly());
+        Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
+    }
+
+    @Test
+    public void testBlankProperties() {
+        ArrayList<String> allowed =  new ArrayList<String>();
+        allowed.add("get");
+        allowed.add("post");
+
+        ExtendedPropertyMetadata metadata = new ExtendedPropertyMetadata("x", "java.lang.String","{$display:\"Is Immutable\",$description:\"\",$allowed:[\"get\",\"post\"], $required:\"true\",$advanced:\"true\"}", null);
+
+        Assert.assertEquals("Is Immutable", metadata.display());
+        Assert.assertEquals("", metadata.description());
+        Assert.assertEquals(true, metadata.advanced());
+        Assert.assertEquals(true, metadata.required());
+        Assert.assertEquals(false, metadata.masked());
+        Assert.assertEquals(false , metadata.readOnly());
+        Assert.assertEquals(allowed , Arrays.asList(metadata.allowed()));
+    }
 }

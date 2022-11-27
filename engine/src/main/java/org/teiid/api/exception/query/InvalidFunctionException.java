@@ -25,15 +25,15 @@ import org.teiid.core.BundleUtil;
  */
 public class InvalidFunctionException extends ExpressionEvaluationException {
 
-	private static final long serialVersionUID = -1743553921704505430L;
+    private static final long serialVersionUID = -1743553921704505430L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public InvalidFunctionException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -52,21 +52,21 @@ public class InvalidFunctionException extends ExpressionEvaluationException {
     public InvalidFunctionException( Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public InvalidFunctionException(BundleUtil.Event event) {
         super();
         setCode(event.toString());
-    } 
-    
+    }
+
     public InvalidFunctionException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public InvalidFunctionException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public InvalidFunctionException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    } 
+    }
 }

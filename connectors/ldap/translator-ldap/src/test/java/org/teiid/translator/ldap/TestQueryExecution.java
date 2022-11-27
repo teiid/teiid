@@ -48,42 +48,42 @@ import org.teiid.translator.ExecutionContext;
 
 @SuppressWarnings("nls")
 public class TestQueryExecution {
-	
-	private static final class SimpleNamingEnumeration<T> implements
-			NamingEnumeration<T> {
-		private final Iterator<T> iter;
 
-		private SimpleNamingEnumeration(Iterator<T> iter) {
-			this.iter = iter;
-		}
+    private static final class SimpleNamingEnumeration<T> implements
+            NamingEnumeration<T> {
+        private final Iterator<T> iter;
 
-		@Override
-		public boolean hasMoreElements() {
-			return iter.hasNext();
-		}
+        private SimpleNamingEnumeration(Iterator<T> iter) {
+            this.iter = iter;
+        }
 
-		@Override
-		public T nextElement() {
-			return iter.next();
-		}
+        @Override
+        public boolean hasMoreElements() {
+            return iter.hasNext();
+        }
 
-		@Override
-		public void close() throws NamingException {
-			
-		}
+        @Override
+        public T nextElement() {
+            return iter.next();
+        }
 
-		@Override
-		public boolean hasMore() throws NamingException {
-			return hasMoreElements();
-		}
+        @Override
+        public void close() throws NamingException {
 
-		@Override
-		public T next() throws NamingException {
-			return nextElement();
-		}
-	}
+        }
 
-	@Test public void testUnwrap() throws Exception {
+        @Override
+        public boolean hasMore() throws NamingException {
+            return hasMoreElements();
+        }
+
+        @Override
+        public T next() throws NamingException {
+            return nextElement();
+        }
+    }
+
+    @Test public void testUnwrap() throws Exception {
         TranslationUtility util = new TranslationUtility(RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE GROUP_PEOPLE (objectClass string options (\"teiid_ldap:unwrap\" true)) OPTIONS(nameinsource 'ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU', updatable true);", "x", "y"));
         Command command = util.parseCommand("select * from group_people");
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
@@ -94,22 +94,22 @@ public class TestQueryExecution {
         Attributes attribs = Mockito.mock(Attributes.class);
         Attribute attrib = Mockito.mock(Attribute.class);
         Mockito.stub(attrib.size()).toReturn(2);
-        
+
         NamingEnumeration attribValues = new SimpleNamingEnumeration(Arrays.asList("foo", "bar").iterator());
-        
+
         Mockito.stub(attrib.getAll()).toReturn(attribValues);
-        
+
         Mockito.stub(attribs.get("objectClass")).toReturn(attrib);
-        
+
         final SearchResult sr = new SearchResult("x", null, attribs);
-        
+
         NamingEnumeration<SearchResult> enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
-        
+
         Mockito.stub(ctx.search((String)Mockito.any(), (String)Mockito.any(), (SearchControls)Mockito.any())).toReturn(enumeration);
-        
+
         LDAPExecutionFactory lef = new LDAPExecutionFactory();
         lef.start();
-        
+
         LDAPSyncQueryExecution execution = (LDAPSyncQueryExecution)lef.createExecution(command, ec, rm, connection);
         execution.execute();
         List<?> result = execution.next();
@@ -117,7 +117,7 @@ public class TestQueryExecution {
         result = execution.next();
         assertEquals(Arrays.asList("bar"), result);
         assertNull(execution.next());
-        
+
         //missing attribute handling
         Mockito.stub(attribs.get("objectClass")).toReturn(null);
         enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
@@ -128,7 +128,7 @@ public class TestQueryExecution {
         result = execution.next();
         assertEquals(Collections.singletonList(null), result);
         assertNull(execution.next());
-        
+
         //empty attribute handling
         attribValues = new SimpleNamingEnumeration(new ArrayList<Object>().iterator());
         Mockito.stub(attrib.size()).toReturn(0);
@@ -142,9 +142,9 @@ public class TestQueryExecution {
         result = execution.next();
         assertEquals(Collections.singletonList(null), result);
         assertNull(execution.next());
-	}
-	
-	@Test public void testUnwrapExtract() throws Exception {
+    }
+
+    @Test public void testUnwrapExtract() throws Exception {
         TranslationUtility util = new TranslationUtility(RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE GROUP_PEOPLE (\"member\" string options (\"teiid_ldap:unwrap\" true, \"teiid_ldap:rdn_type\" 'uid', \"teiid_ldap:dn_prefix\" 'ou=users')) OPTIONS(nameinsource 'ou=Infrastructure,ou=Support,o=DEMOCORP,c=AU', updatable true);", "x", "y"));
         Command command = util.parseCommand("select * from group_people");
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
@@ -158,29 +158,29 @@ public class TestQueryExecution {
         attrib.add("uid=foo,ou=users");
         attrib.add("user=bar,ou=users"); //does not match rdn type
         attrib.add("uid=bar"); //does not dn prefix
-        
+
         final SearchResult sr = new SearchResult("x", null, attributes);
-        
+
         NamingEnumeration<SearchResult> enumeration = new SimpleNamingEnumeration(Arrays.asList(sr).iterator());
-        
+
         Mockito.stub(ctx.search((String)Mockito.any(), (String)Mockito.any(), (SearchControls)Mockito.any())).toReturn(enumeration);
-        
+
         LDAPExecutionFactory lef = new LDAPExecutionFactory();
         lef.start();
-        
+
         LDAPSyncQueryExecution execution = (LDAPSyncQueryExecution)lef.createExecution(command, ec, rm, connection);
         execution.execute();
         List<?> result = execution.next();
         assertEquals(Arrays.asList("foo"), result);
         assertNull(execution.next());
-	}
-	
-	@Test public void testMultiAttribute() throws NamingException {
-		Column c = new Column();
-		c.setDefaultValue(LDAPQueryExecution.MULTIVALUED_CONCAT);
-		Attribute a = LDAPUpdateExecution.createBasicAttribute("x", new Literal("a?b?c", String.class), c);
-		assertEquals(3, a.size());
-		assertEquals("b", Collections.list(a.getAll()).get(1));
-	}
-	
+    }
+
+    @Test public void testMultiAttribute() throws NamingException {
+        Column c = new Column();
+        c.setDefaultValue(LDAPQueryExecution.MULTIVALUED_CONCAT);
+        Attribute a = LDAPUpdateExecution.createBasicAttribute("x", new Literal("a?b?c", String.class), c);
+        assertEquals(3, a.size());
+        assertEquals("b", Collections.list(a.getAll()).get(1));
+    }
+
 }

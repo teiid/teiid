@@ -30,42 +30,42 @@ import junit.framework.*;
  */
 public class TestRaiseErrorStatement  extends TestCase {
 
-	/**
-	 * Constructor for TestAssignmentStatement.
-	 */
-	public TestRaiseErrorStatement(String name) { 
-		super(name);
-	}
-	
-	// ################################## TEST HELPERS ################################	
+    /**
+     * Constructor for TestAssignmentStatement.
+     */
+    public TestRaiseErrorStatement(String name) {
+        super(name);
+    }
 
-	public static final RaiseStatement sample1() { 
-		return new RaiseStatement(new Constant("a")); //$NON-NLS-1$
-	}
-	
-	public static final RaiseStatement sample2() {
-		return new RaiseStatement(new Constant("b")); //$NON-NLS-1$
-	}
-	
-	// ################################## ACTUAL TESTS ################################	
-	
-	public void testSelfEquivalence(){
-		RaiseStatement s1 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s1);
-	}
+    // ################################## TEST HELPERS ################################
 
-	public void testEquivalence(){
-		RaiseStatement s1 = sample1();
-		RaiseStatement s1a = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
-	}
-	
-	public void testNonEquivalence(){
-		RaiseStatement s1 = sample1();
-		RaiseStatement s2 = sample2();
-		int equals = -1;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s2);
-	}
+    public static final RaiseStatement sample1() {
+        return new RaiseStatement(new Constant("a")); //$NON-NLS-1$
+    }
+
+    public static final RaiseStatement sample2() {
+        return new RaiseStatement(new Constant("b")); //$NON-NLS-1$
+    }
+
+    // ################################## ACTUAL TESTS ################################
+
+    public void testSelfEquivalence(){
+        RaiseStatement s1 = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1);
+    }
+
+    public void testEquivalence(){
+        RaiseStatement s1 = sample1();
+        RaiseStatement s1a = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
+    }
+
+    public void testNonEquivalence(){
+        RaiseStatement s1 = sample1();
+        RaiseStatement s2 = sample2();
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s2);
+    }
 }

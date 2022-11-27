@@ -30,30 +30,30 @@ import org.teiid.translator.jdbc.TranslatedCommand;
 
 
 
-/** 
+/**
  * @since 4.3
  */
 public class TestAccessSQLTranslator extends TestCase {
 
-    private static JDBCExecutionFactory TRANSLATOR; 
+    private static JDBCExecutionFactory TRANSLATOR;
 
     static {
         try {
-            TRANSLATOR = new AccessExecutionFactory();        
+            TRANSLATOR = new AccessExecutionFactory();
             TRANSLATOR.start();
         } catch(TranslatorException e) {
-            e.printStackTrace();    
+            e.printStackTrace();
         }
     }
-    
+
     public void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
         // Convert from sql to objects
         Command obj = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(input);
-        
+
         TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), TRANSLATOR);
         tc.translateCommand(obj);
-        
-        
+
+
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
     }
@@ -63,17 +63,17 @@ public class TestAccessSQLTranslator extends TestCase {
         String output = "SELECT TOP 100 SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(
-            input, 
+            input,
             output);
 
     }
-    
+
     public void testRowLimit1() throws Exception {
         String input = "select distinct intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
         String output = "SELECT DISTINCT TOP 100 SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(
-            input, 
+            input,
             output);
 
     }

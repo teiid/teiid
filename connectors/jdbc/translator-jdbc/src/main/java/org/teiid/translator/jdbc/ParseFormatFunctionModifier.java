@@ -26,32 +26,32 @@ import org.teiid.language.Function;
 import org.teiid.language.Literal;
 
 public abstract class ParseFormatFunctionModifier extends FunctionModifier {
-	
-	protected String prefix;
-	
-	public ParseFormatFunctionModifier(String prefix) {
-		this.prefix = prefix;
-	}
-	
-	@Override
-	public List<?> translate(Function function) {
-		if (!(function.getParameters().get(1) instanceof Literal)) {
-			return null; //shouldn't happen
-		}
-		Literal l = (Literal)function.getParameters().get(1);
-		List<Object> result = new ArrayList<Object>();
-		result.add(prefix);
-		translateFormat(result, function.getParameters().get(0), (String)l.getValue());
-		result.add(")"); //$NON-NLS-1$
-		return result; 
-	}
 
-	protected void translateFormat(List<Object> result, Expression expression,
-			String value) {
-		result.add(expression);
-		result.add(", "); //$NON-NLS-1$
-		result.add(translateFormat(value));
-	}
+    protected String prefix;
 
-	abstract protected Object translateFormat(String format);
+    public ParseFormatFunctionModifier(String prefix) {
+        this.prefix = prefix;
+    }
+
+    @Override
+    public List<?> translate(Function function) {
+        if (!(function.getParameters().get(1) instanceof Literal)) {
+            return null; //shouldn't happen
+        }
+        Literal l = (Literal)function.getParameters().get(1);
+        List<Object> result = new ArrayList<Object>();
+        result.add(prefix);
+        translateFormat(result, function.getParameters().get(0), (String)l.getValue());
+        result.add(")"); //$NON-NLS-1$
+        return result;
+    }
+
+    protected void translateFormat(List<Object> result, Expression expression,
+            String value) {
+        result.add(expression);
+        result.add(", "); //$NON-NLS-1$
+        result.add(translateFormat(value));
+    }
+
+    abstract protected Object translateFormat(String format);
 }

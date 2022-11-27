@@ -29,8 +29,8 @@ import org.teiid.core.BundleUtil;
  */
 public class QueryResolverException extends QueryProcessingException {
 
-	private static final long serialVersionUID = 752912934870580744L;
-	private transient List<UnresolvedSymbolDescription> problems;
+    private static final long serialVersionUID = 752912934870580744L;
+    private transient List<UnresolvedSymbolDescription> problems;
 
     /**
      * No-arg constructor required by Externalizable semantics.
@@ -38,7 +38,7 @@ public class QueryResolverException extends QueryProcessingException {
     public QueryResolverException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -51,7 +51,7 @@ public class QueryResolverException extends QueryProcessingException {
     public QueryResolverException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -64,40 +64,40 @@ public class QueryResolverException extends QueryProcessingException {
 
     public QueryResolverException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public QueryResolverException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public QueryResolverException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }	
-    
-	/**
-	 * Set the list of unresolved symbols during QueryResolution
-	 * @param unresolvedSymbols List of <UnresolvedSymbolDescription> objects
-	 */
-	public void setUnresolvedSymbols(List<UnresolvedSymbolDescription> unresolvedSymbols) {
-		this.problems = unresolvedSymbols;
-	}
+    }
+
+    /**
+     * Set the list of unresolved symbols during QueryResolution
+     * @param unresolvedSymbols List of &lt;UnresolvedSymbolDescription&gt; objects
+     */
+    public void setUnresolvedSymbols(List<UnresolvedSymbolDescription> unresolvedSymbols) {
+        this.problems = unresolvedSymbols;
+    }
 
     /**
      * Add an UnresolvedSymbolDescription to the list of unresolved symbols
-     * @param symbolDesc Single description 
+     * @param symbolDesc Single description
      */
-    public void addUnresolvedSymbol(UnresolvedSymbolDescription symbolDesc) { 
-        if(this.problems == null) { 
+    public void addUnresolvedSymbol(UnresolvedSymbolDescription symbolDesc) {
+        if(this.problems == null) {
             this.problems = new ArrayList<UnresolvedSymbolDescription>();
         }
         this.problems.add(symbolDesc);
     }
-        
-	/**
-	 * Set the list of unresolved symbols during QueryResolution
-	 * @return List of {@link UnresolvedSymbolDescription} objects
-	 */
-	public List<UnresolvedSymbolDescription> getUnresolvedSymbols() {
-		return this.problems;
-	}
+
+    /**
+     * Set the list of unresolved symbols during QueryResolution
+     * @return List of {@link UnresolvedSymbolDescription} objects
+     */
+    public List<UnresolvedSymbolDescription> getUnresolvedSymbols() {
+        return this.problems;
+    }
 }

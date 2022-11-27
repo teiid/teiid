@@ -49,11 +49,11 @@ public class TestUnionAllNode {
             union.addChild(children[i]);
             children[i].initialize(context, mgr, fdm);
         }
-        
+
         union.initialize(context, mgr, fdm);
-        
+
         union.open();
-        
+
         int currentRow = 1;
         while(true) {
             try {
@@ -63,8 +63,8 @@ public class TestUnionAllNode {
                     //System.out.println(tuple);
                     assertEquals("Rows don't match at " + row, expected[row-1], tuple); //$NON-NLS-1$
                 }
-                
-                currentRow += batch.getRowCount();    
+
+                currentRow += batch.getRowCount();
 
                 if(batch.getTerminationFlag()) {
                     break;
@@ -73,12 +73,12 @@ public class TestUnionAllNode {
                 // ignore and retry
             }
         }
-        
+
         union.close();
-        
+
         assertEquals("Didn't match expected counts", expected.length, currentRow-1); //$NON-NLS-1$
     }
-    
+
     @Test public void testNoRows() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -95,14 +95,14 @@ public class TestUnionAllNode {
         rightElements.add(es2);
         RelationalNode rightNode = new FakeRelationalNode(2, new List[0]);
         rightNode.setElements(rightElements);
-        
+
         List unionElements = new ArrayList();
         unionElements.add(es1);
 
         UnionAllNode union = new UnionAllNode(3);
         union.setElements(unionElements);
-        
-        helpTestUnion(new RelationalNode[] {leftNode, rightNode}, union, new List[0]);        
+
+        helpTestUnion(new RelationalNode[] {leftNode, rightNode}, union, new List[0]);
     }
 
     public void helpTestUnionConfigs(int sources, int blockModIndex, int rowsPerSource, int batchSize, List[] expected) throws TeiidComponentException, TeiidProcessingException {
@@ -116,55 +116,55 @@ public class TestUnionAllNode {
         for(int i=0; i<nodes.length; i++) {
             List childElements = new ArrayList();
             childElements.add(es1);
-            
+
             // Build source data
             List[] tuples = new List[rowsPerSource];
             for(int r = 0; r<rowsPerSource; r++) {
                 tuples[r] = Arrays.asList(new Object[] { new Integer(i) });
             }
-            
+
             if(blockModIndex >= 0 && (i % blockModIndex == 0)) {
                 nodes[i] = new BlockingFakeRelationalNode(i, tuples, batchSize);
-            } else {                
+            } else {
                 nodes[i] = new FakeRelationalNode(i, tuples, batchSize);
             }
-            nodes[i].setElements(childElements);           
+            nodes[i].setElements(childElements);
         }
-        
+
         List unionElements = new ArrayList();
         unionElements.add(es1);
 
         UnionAllNode union = new UnionAllNode(nodes.length);
         union.setElements(unionElements);
-        
-        helpTestUnion(nodes, union, expected);           
+
+        helpTestUnion(nodes, union, expected);
     }
-    
+
     @Test public void testBasicUnion() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
             Arrays.asList(new Object[] { new Integer(1) }),
             Arrays.asList(new Object[] { new Integer(1) })
-          
+
         };
 
         helpTestUnionConfigs(2, -1, 2, 50, expected);
-        
+
     }
 
     @Test public void testBasicUnionMultipleSources() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
             Arrays.asList(new Object[] { new Integer(1) }),
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
             Arrays.asList(new Object[] { new Integer(3) }),
-            Arrays.asList(new Object[] { new Integer(3) }),    
-            Arrays.asList(new Object[] { new Integer(4) }),    
-            Arrays.asList(new Object[] { new Integer(4) })          
+            Arrays.asList(new Object[] { new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(4) }),
+            Arrays.asList(new Object[] { new Integer(4) })
         };
 
         helpTestUnionConfigs(5, -1, 2, 50, expected);
@@ -172,53 +172,53 @@ public class TestUnionAllNode {
 
     @Test public void testMultipleSourcesHalfBlockingNodes() throws TeiidComponentException, TeiidProcessingException  {
         List expected[] = new List[] {
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(3) }),    
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(3) }),
             Arrays.asList(new Object[] { new Integer(2) }),
-            Arrays.asList(new Object[] { new Integer(4) })          
+            Arrays.asList(new Object[] { new Integer(4) })
         };
 
         helpTestUnionConfigs(5, 2, 1, 50, expected);
     }
-    
+
     @Test public void testMultipleSourcesAllBlockingNodes() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
             Arrays.asList(new Object[] { new Integer(3) }),
-            Arrays.asList(new Object[] { new Integer(4) })          
+            Arrays.asList(new Object[] { new Integer(4) })
         };
 
-        helpTestUnionConfigs(5, 1, 1, 50, expected);       
-    }    
-    
+        helpTestUnionConfigs(5, 1, 1, 50, expected);
+    }
+
     @Test public void testMultipleSourceMultiBatchAllBlocking() throws TeiidComponentException, TeiidProcessingException {
         List expected[] = new List[] {
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(1) }),
 
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(0) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(1) }),
 
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2) })          
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(2) })
         };
 
-        helpTestUnionConfigs(3, 1, 6, 1, expected);       
-    }    
+        helpTestUnionConfigs(3, 1, 6, 1, expected);
+    }
 
 }

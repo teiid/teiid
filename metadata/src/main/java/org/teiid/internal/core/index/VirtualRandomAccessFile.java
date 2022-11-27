@@ -18,20 +18,20 @@ import org.teiid.metadata.VDBResource;
 
 
 public class VirtualRandomAccessFile {
-	File indexFile;
-	String mode;
-	
-	public VirtualRandomAccessFile(VDBResource file, String mode) throws IOException{
-		this.indexFile = File.createTempFile(file.getName(), null);
-		ObjectConverterUtil.write(file.openStream(), indexFile);
-		this.mode = mode;
-	}
-	
-	public SafeRandomAccessFile getSafeRandomAccessFile() throws IOException {
-		return new SafeRandomAccessFile(indexFile, mode);
-	}
-	
-	public void close() {
-		indexFile.delete();
-	}
+    File indexFile;
+    String mode;
+
+    public VirtualRandomAccessFile(VDBResource file, String mode) throws IOException{
+        this.indexFile = File.createTempFile(file.getName(), null);
+        ObjectConverterUtil.write(file.openStream(), indexFile);
+        this.mode = mode;
+    }
+
+    public SafeRandomAccessFile getSafeRandomAccessFile() throws IOException {
+        return new SafeRandomAccessFile(indexFile, mode);
+    }
+
+    public void close() {
+        indexFile.delete();
+    }
 }

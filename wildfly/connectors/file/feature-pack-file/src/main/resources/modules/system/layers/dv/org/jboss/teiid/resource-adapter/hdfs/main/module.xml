@@ -1,0 +1,24 @@
+<module xmlns="urn:jboss:module:1.8" name="org.jboss.teiid.resource-adapter.hdfs">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <artifact name="${org.teiid.wildfly.connectors:connector-hdfs}"/>
+        <artifact name="${org.teiid.connectors:file-hdfs}"/>
+        <resource-root path="."/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid.translator.file.api"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.commons.logging"/>
+        <module name="sun.jdk" />
+        <module name="org.apache.hadoop.client" services="import"/>
+    </dependencies>
+</module>

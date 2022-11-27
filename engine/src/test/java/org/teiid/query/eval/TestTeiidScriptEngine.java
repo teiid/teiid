@@ -32,19 +32,19 @@ import org.junit.Test;
 @SuppressWarnings("nls")
 public class TestTeiidScriptEngine {
 
-	@Test public void testGetMethods() throws ScriptException {
-		TeiidScriptEngine tse = new TeiidScriptEngine();
-		Map<String, Method> map = tse.getMethodMap(Object.class);
-		assertEquals(map, tse.getMethodMap(Object.class));
-		assertEquals(4, map.size());
-	}
-	
-	@Test public void testArraySyntax() throws Exception {
-		TeiidScriptEngine tse = new TeiidScriptEngine();
-		CompiledScript cs = tse.compile("root.1.2");
-		SimpleScriptContext ssc = new SimpleScriptContext();
-		ssc.setAttribute("root", new Object[] {new Object[] {"x", "y"}}, SimpleScriptContext.ENGINE_SCOPE);
-		assertEquals("y", cs.eval(ssc));
-	}
-	
+    @Test public void testGetMethods() throws ScriptException {
+        TeiidScriptEngine tse = new TeiidScriptEngine();
+        Map<String, Method> map = tse.getMethodMap(Object.class);
+        assertEquals(map, tse.getMethodMap(Object.class));
+        assertEquals(4, map.size());
+    }
+
+    @Test public void testArraySyntax() throws Exception {
+        TeiidScriptEngine tse = new TeiidScriptEngine();
+        CompiledScript cs = tse.compile("root.1.2");
+        SimpleScriptContext ssc = new SimpleScriptContext();
+        ssc.setAttribute("root", new Object[] {new Object[] {"x", "y"}}, SimpleScriptContext.ENGINE_SCOPE);
+        assertEquals("y", cs.eval(ssc));
+    }
+
 }

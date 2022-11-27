@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.teiid.wildfly.connectors</groupId>
+        <artifactId>cassandra</artifactId>
+        <version>17.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>connector-cassandra</artifactId>
+    <name>Cassandra Resource Adapter</name>
+    <description>Cassandra Resource Adapter</description>
+    
+	<dependencies>
+		<dependency>
+			<groupId>org.teiid</groupId>
+			<artifactId>teiid-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+		</dependency>
+		<dependency>
+            <groupId>org.teiid.wildfly</groupId>
+            <artifactId>teiid-resource-spi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.resource</groupId>
+            <artifactId>jboss-connector-api_1.7_spec</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>com.datastax.cassandra</groupId>
+			<artifactId>cassandra-driver-core</artifactId>
+		</dependency> 
+		<dependency>
+            <groupId>org.teiid.connectors</groupId>
+            <artifactId>translator-cassandra</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

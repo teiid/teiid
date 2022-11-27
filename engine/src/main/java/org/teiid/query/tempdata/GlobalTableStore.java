@@ -31,35 +31,35 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 
 public interface GlobalTableStore {
-	
-	TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws TeiidComponentException, TeiidProcessingException;
-	
-	TempMetadataID getGlobalTempTableMetadataId(String matTableName);
-	
-	TempMetadataID getCodeTableMetadataId(String codeTableName,
-			String returnElementName, String keyElementName,
-			String matTableName) throws TeiidComponentException,
-			QueryMetadataException;
 
-	MatTableInfo getMatTableInfo(String matTableName);
-	
-	TempTable getTempTable(String matTableName);
+    TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws TeiidComponentException, TeiidProcessingException;
 
-	Serializable getAddress();
-	
-	List<?> updateMatViewRow(String matTableName, List<?> tuple, boolean delete) throws TeiidComponentException;
+    TempMetadataID getGlobalTempTableMetadataId(String matTableName);
 
-	TempTable createMatTable(String tableName, GroupSymbol group)
-	throws TeiidComponentException, QueryMetadataException, TeiidProcessingException;
-	
-	@Replicated
-	void failedLoad(String matTableName);
-	
-	@Replicated(asynch=false, timeout=5000)
-	boolean needsLoading(String matTableName, Serializable loadingAddress,
-			boolean firstPass, boolean refresh, boolean invalidate);
-	
-	@Replicated(replicateState=ReplicationMode.PUSH)
-	void loaded(String matTableName, TempTable table);
+    TempMetadataID getCodeTableMetadataId(String codeTableName,
+            String returnElementName, String keyElementName,
+            String matTableName) throws TeiidComponentException,
+            QueryMetadataException;
+
+    MatTableInfo getMatTableInfo(String matTableName);
+
+    TempTable getTempTable(String matTableName);
+
+    Serializable getAddress();
+
+    List<?> updateMatViewRow(String matTableName, List<?> tuple, boolean delete) throws TeiidComponentException;
+
+    TempTable createMatTable(String tableName, GroupSymbol group)
+    throws TeiidComponentException, QueryMetadataException, TeiidProcessingException;
+
+    @Replicated
+    void failedLoad(String matTableName);
+
+    @Replicated(asynch=false, timeout=5000)
+    boolean needsLoading(String matTableName, Serializable loadingAddress,
+            boolean firstPass, boolean refresh, boolean invalidate);
+
+    @Replicated(replicateState=ReplicationMode.PUSH)
+    void loaded(String matTableName, TempTable table);
 
 }

@@ -22,8 +22,8 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 import org.teiid.metadata.Column;
 
 /**
- * Represents an element in the language.  An example of an element 
- * would be a column reference in a SELECT clause. 
+ * Represents an element in the language.  An example of an element
+ * would be a column reference in a SELECT clause.
  */
 public class ColumnReference extends BaseLanguageObject implements MetadataReference<Column>, Expression {
 
@@ -31,14 +31,14 @@ public class ColumnReference extends BaseLanguageObject implements MetadataRefer
     private String name;
     private Column metadataObject;
     private Class<?> type;
-    
+
     public ColumnReference(NamedTable group, String name, Column metadataObject, Class<?> type) {
         this.table = group;
         this.name = name;
         this.metadataObject = metadataObject;
         this.type = type;
     }
-    
+
     /**
      * Gets the name of the element.
      * @return the name of the element
@@ -57,18 +57,18 @@ public class ColumnReference extends BaseLanguageObject implements MetadataRefer
 
     @Override
     public Column getMetadataObject() {
-    	return this.metadataObject;
+        return this.metadataObject;
     }
-    
+
     public void setMetadataObject(Column metadataObject) {
-		this.metadataObject = metadataObject;
-	}
-    
+        this.metadataObject = metadataObject;
+    }
+
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
 
-    
+
     public void setTable(NamedTable group) {
         this.table = group;
     }

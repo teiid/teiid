@@ -29,11 +29,11 @@ import org.teiid.UserDefinedAggregate;
  * @param <T>
  */
 public interface ExposedStateUserDefinedAggregate<T> extends UserDefinedAggregate<T> {
-	
-	List<? extends Class<?>> getStateTypes();
-    
+
+    List<? extends Class<?>> getStateTypes();
+
     void getState(List<Object> state);
-    
+
     int setState(List<?> state, int index);
 
 }

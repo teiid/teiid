@@ -23,58 +23,58 @@ import java.util.List;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class WithItem extends BaseLanguageObject implements SubqueryContainer {
-	
-	private NamedTable table;
-	private List<ColumnReference> columns;
-	private QueryExpression queryExpression;
-	private List<? extends List<?>> dependentValues;
-	private boolean recusive;
 
-	public NamedTable getTable() {
-		return table;
-	}
-	
-	public void setTable(NamedTable table) {
-		this.table = table;
-	}
-	
-	public List<ColumnReference> getColumns() {
-		return columns;
-	}
-	
-	public void setColumns(List<ColumnReference> columns) {
-		this.columns = columns;
-	}
-	
-	@Override
-	public QueryExpression getSubquery() {
-		return queryExpression;
-	}
+    private NamedTable table;
+    private List<ColumnReference> columns;
+    private QueryExpression queryExpression;
+    private List<? extends List<?>> dependentValues;
+    private boolean recusive;
 
-	@Override
-	public void setSubquery(QueryExpression query) {
-		this.queryExpression = query;
-	}
+    public NamedTable getTable() {
+        return table;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    public void setTable(NamedTable table) {
+        this.table = table;
+    }
 
-	public void setDependentValues(List<? extends List<?>> tupleBufferList) {
-		this.dependentValues = tupleBufferList;
-	}
-	
-	public List<? extends List<?>> getDependentValues() {
-		return dependentValues;
-	}
-	
-	public boolean isRecusive() {
-		return recusive;
-	}
-	
-	public void setRecusive(boolean recusive) {
-		this.recusive = recusive;
-	}
-	
+    public List<ColumnReference> getColumns() {
+        return columns;
+    }
+
+    public void setColumns(List<ColumnReference> columns) {
+        this.columns = columns;
+    }
+
+    @Override
+    public QueryExpression getSubquery() {
+        return queryExpression;
+    }
+
+    @Override
+    public void setSubquery(QueryExpression query) {
+        this.queryExpression = query;
+    }
+
+    @Override
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public void setDependentValues(List<? extends List<?>> tupleBufferList) {
+        this.dependentValues = tupleBufferList;
+    }
+
+    public List<? extends List<?>> getDependentValues() {
+        return dependentValues;
+    }
+
+    public boolean isRecusive() {
+        return recusive;
+    }
+
+    public void setRecusive(boolean recusive) {
+        this.recusive = recusive;
+    }
+
 }

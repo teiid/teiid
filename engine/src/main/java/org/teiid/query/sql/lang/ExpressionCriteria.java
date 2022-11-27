@@ -21,46 +21,46 @@ package org.teiid.query.sql.lang;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.Expression;
 
-public class ExpressionCriteria extends Criteria {
+public class ExpressionCriteria extends PredicateCriteria {
 
-	private Expression expression;
-	
-	public ExpressionCriteria(Expression expression) {
-		this.expression = expression;
-	}
-	
-	public Object clone() {
-		return new ExpressionCriteria((Expression) expression.clone());
-	}
+    private Expression expression;
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
+    public ExpressionCriteria(Expression expression) {
+        this.expression = expression;
+    }
 
-	@Override
-	public int hashCode() {
-		return expression.hashCode();
-	}
+    public Object clone() {
+        return new ExpressionCriteria((Expression) expression.clone());
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof ExpressionCriteria)) {
-			return false;
-		}
-		ExpressionCriteria other = (ExpressionCriteria) obj;
-		return expression.equals(other.expression);
-	}
-	
-	public Expression getExpression() {
-		return expression;
-	}
-	
-	public void setExpression(Expression expression) {
-		this.expression = expression;
-	}
-	
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return expression.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ExpressionCriteria)) {
+            return false;
+        }
+        ExpressionCriteria other = (ExpressionCriteria) obj;
+        return expression.equals(other.expression);
+    }
+
+    public Expression getExpression() {
+        return expression;
+    }
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
+
 }

@@ -39,9 +39,10 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
 import org.teiid.translator.document.DocumentNode;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
+import org.teiid.translator.ws.WSConnection;
+import org.teiid.util.WSUtil;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
     private Object returnValue;
@@ -57,11 +58,11 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         this.command = command;
         this.expectedColumnTypes = command.getResultSetColumnTypes();
     }
-    
+
     private boolean isFunction(Procedure proc) {
         ODataType type = ODataType.valueOf(proc.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
         return type == ODataType.FUNCTION;
-    }   
+    }
 
     private ProcedureParameter getReturnParameter() {
         for (ProcedureParameter pp : this.command.getMetadataObject().getParameters()) {
@@ -71,7 +72,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
         return null;
     }
-    
+
     static String getQueryParameters(Call obj) throws EdmPrimitiveTypeException {
         StringBuilder sb = new StringBuilder();
         final List<Argument> params = obj.getArguments();
@@ -83,9 +84,9 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
                     if (i != 0) {
                         sb.append("&"); //$NON-NLS-1$
                     }
-                    sb.append(WSConnection.Util.httpURLEncode(param.getMetadataObject().getName()));
+                    sb.append(WSUtil.httpURLEncode(param.getMetadataObject().getName()));
                     sb.append(Tokens.EQ);
-                    sb.append(WSConnection.Util.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(), 
+                    sb.append(WSUtil.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(),
                             ODataTypeManager.odataType(param.getType()).getFullQualifiedName()
                             .getFullQualifiedNameAsString())));
                 }
@@ -93,7 +94,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
         return sb.toString();
     }
-    
+
     private String buildFunctionURL(Call obj, String parameters) {
         StringBuilder sb = new StringBuilder();
         sb.append(obj.getProcedureName());
@@ -103,12 +104,12 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
         return sb.toString();
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         try {
-        	String  parameters = getQueryParameters(this.command); 
-                
+            String  parameters = getQueryParameters(this.command);
+
             InputStream response = null;
             Procedure procedure = this.command.getMetadataObject();
             if (isFunction(procedure)) {
@@ -123,8 +124,8 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         } catch (ODataDeserializerException e) {
             throw new TranslatorException(e);
         } catch (EdmPrimitiveTypeException e) {
-        	throw new TranslatorException(e);
-		}
+            throw new TranslatorException(e);
+        }
     }
 
     private void handleResponse(final Procedure procedure, final String baseUri, final InputStream payload)
@@ -146,7 +147,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
             if (property.isCollection()) {
                 this.returnValue = property.asCollection();
             } else {
-                this.returnValue = property.asPrimitive();    
+                this.returnValue = property.asPrimitive();
             }
         }
     }
@@ -157,8 +158,8 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         if (this.response != null) {
             Map<String, Object> row = this.response.getNext();
             if (row != null) {
-                return buildRow(procedure.getResultSet(), 
-                        procedure.getResultSet().getColumns(), 
+                return buildRow(procedure.getResultSet(),
+                        procedure.getResultSet().getColumns(),
                         this.expectedColumnTypes, row);
             }
         }

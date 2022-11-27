@@ -21,27 +21,27 @@ package org.teiid.translator;
 import org.teiid.language.BatchedUpdates;
 
 /**
- * An exception the connector writer can return in case of an 
+ * An exception the connector writer can return in case of an
  * error while executing {@link BatchedUpdates}
  */
 public class TranslatorBatchException extends TranslatorException {
 
-	private static final long serialVersionUID = 1981353880269174140L;
-	private int[] updateCounts;
+    private static final long serialVersionUID = 1981353880269174140L;
+    private int[] updateCounts;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public TranslatorBatchException() {
         super();
     }
-    
+
     public TranslatorBatchException( Throwable e, int[] updateCounts ) {
         super(e);
         this.updateCounts = updateCounts;
-    }  
-    
+    }
+
     public int[] getUpdateCounts() {
-		return updateCounts;
-	}
+        return updateCounts;
+    }
 }

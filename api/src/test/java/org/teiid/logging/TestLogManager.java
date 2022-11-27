@@ -33,8 +33,8 @@ import junit.framework.TestCase;
  */
 public class TestLogManager extends TestCase {
 
-	private static final String CONTEXT = "SomeContext"; //$NON-NLS-1$
-	
+    private static final String CONTEXT = "SomeContext"; //$NON-NLS-1$
+
     /**
      * Constructor for TestLogManager.
      * @param name
@@ -42,14 +42,14 @@ public class TestLogManager extends TestCase {
     public TestLogManager(String name) {
         super(name);
     }
-    
-	@Override
-	protected void setUp() throws Exception {
-    	ListLogger logger = new ListLogger();
-    	logger.setLogLevel(CONTEXT, MessageLevel.DETAIL);
-    	LogManager.logListener = logger;
-	}    
-    
+
+    @Override
+    protected void setUp() throws Exception {
+        ListLogger logger = new ListLogger();
+        logger.setLogLevel(CONTEXT, MessageLevel.DETAIL);
+        LogManager.logListener = logger;
+    }
+
     // =========================================================================
     //                         T E S T     C A S E S
     // =========================================================================
@@ -58,9 +58,9 @@ public class TestLogManager extends TestCase {
      * Test for boolean isMessageToBeRecorded(String, int)
      */
     public void testIsMessageToBeRecordedString() {
-    	assertTrue(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) ); 
-    	
-    	ListLogger cfg = (ListLogger)LogManager.logListener;
+        assertTrue(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) );
+
+        ListLogger cfg = (ListLogger)LogManager.logListener;
         cfg.setLogLevel(CONTEXT, MessageLevel.NONE);
         assertFalse(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) );
     }
@@ -69,7 +69,7 @@ public class TestLogManager extends TestCase {
      * Test that all msgs logged are equal and output in same order.
      */
     public void testLogMessage() throws Exception {
-    	ListLogger cfg = (ListLogger)LogManager.logListener;
+        ListLogger cfg = (ListLogger)LogManager.logListener;
         cfg.setLogLevel(CONTEXT, MessageLevel.INFO );
 
         List<String> sentMsgList = new ArrayList<String>();
@@ -82,14 +82,14 @@ public class TestLogManager extends TestCase {
 
         for (Iterator<String> iter = sentMsgList.iterator(); iter.hasNext();) {
             String msg = iter.next();
-            LogManager.logInfo(CONTEXT, msg); 
+            LogManager.logInfo(CONTEXT, msg);
         }
-        
+
         List<String> recevedMsgList = cfg.getLoggedMessages();
         assertEquals(sentMsgList.size(), recevedMsgList.size());
         assertEquals(sentMsgList, recevedMsgList);
     }
-    
+
     /**
      *
      * A log listener that saves messages (IStatus)s in a
@@ -98,18 +98,18 @@ public class TestLogManager extends TestCase {
     class ListLogger implements Logger {
         private List<String> messages = new ArrayList<String>();
         private Map<String, Integer> contextMap = new HashMap<String, Integer>();
-    	private int defaultLevel;
+        private int defaultLevel;
 
         public ListLogger() {
         }
-        
+
         public void log(int level, String context, Object... msg){
             this.messages.add(msg[0].toString());
         }
-        
-		public void log(int level, String context, Throwable t, Object... msg) {
+
+        public void log(int level, String context, Throwable t, Object... msg) {
             this.messages.add(msg[0].toString());
-		}        
+        }
 
         public void shutdown() {
             messages.clear();
@@ -124,38 +124,38 @@ public class TestLogManager extends TestCase {
         public List<String> getLoggedMessages() {
             return this.messages;
         }
-    	
-    	public Set<String> getContexts() {
-    		return this.contextMap.keySet();
-    	}
 
-    	public int getLogLevel(String context) {				
-    		Integer level = this.contextMap.get(context);
-    		if (level != null) {
-    			return level;
-    		}
-    		return defaultLevel;
-    	}
+        public Set<String> getContexts() {
+            return this.contextMap.keySet();
+        }
 
-    	public void setLogLevel(String context, int logLevel) {
-    		this.contextMap.put(context, logLevel);
-    	}
+        public int getLogLevel(String context) {
+            Integer level = this.contextMap.get(context);
+            if (level != null) {
+                return level;
+            }
+            return defaultLevel;
+        }
 
-    	@Override
-    	public boolean isEnabled(String context, int msgLevel) {
-    		int level = getLogLevel(context);
-    		return level >= msgLevel;
-    	}
+        public void setLogLevel(String context, int logLevel) {
+            this.contextMap.put(context, logLevel);
+        }
 
-		@Override
-		public void putMdc(String key, String val) {
+        @Override
+        public boolean isEnabled(String context, int msgLevel) {
+            int level = getLogLevel(context);
+            return level >= msgLevel;
+        }
 
-		}
+        @Override
+        public void putMdc(String key, String val) {
 
-		@Override
-		public void removeMdc(String key) {
-			
-		}
+        }
+
+        @Override
+        public void removeMdc(String key) {
+
+        }
     }
 
 }

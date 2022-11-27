@@ -49,43 +49,43 @@ public class JDBCDirectQueryExecution extends JDBCQueryExecution implements Proc
         super(command, connection, context, env);
         this.arguments = arguments;
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
-    	String sourceSQL = (String) this.arguments.get(0).getArgumentValue().getValue();
-    	List<Argument> parameters = this.arguments.subList(1, this.arguments.size());
-    			
+        String sourceSQL = (String) this.arguments.get(0).getArgumentValue().getValue();
+        List<Argument> parameters = this.arguments.subList(1, this.arguments.size());
+
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-specific command: ", sourceSQL); //$NON-NLS-1$
         context.logCommand(sourceSQL);
         int paramCount = parameters.size();
-        
+
         try {
-        	Statement stmt;
-        	boolean hasResults = false;
-    	
-        	if(paramCount > 0) {
-            	PreparedStatement pstatement = getPreparedStatement(sourceSQL);
-            	for (int i = 0; i < paramCount; i++) {
-            		Argument arg = parameters.get(i);
-            		//TODO: if ParameterMetadata is supported we could use that type
-            		this.executionFactory.bindValue(pstatement, arg.getArgumentValue().getValue(), arg.getArgumentValue().getType(), i + 1);
-            	}
+            Statement stmt;
+            boolean hasResults = false;
+
+            if(paramCount > 0) {
+                PreparedStatement pstatement = getPreparedStatement(sourceSQL);
+                for (int i = 0; i < paramCount; i++) {
+                    Argument arg = parameters.get(i);
+                    //TODO: if ParameterMetadata is supported we could use that type
+                    this.executionFactory.bindValue(pstatement, arg.getArgumentValue().getValue(), arg.getArgumentValue().getType(), i + 1);
+                }
                 stmt = pstatement;
                 hasResults = pstatement.execute();
             }
-        	else {
-        		//TODO: when array support becomes more robust calling like "exec native('sql', ARRAY[]) could still be prepared
-        		stmt = getStatement();
-        		hasResults = stmt.execute(sourceSQL);
-        	}
-    		
-        	if (hasResults) {
-    			this.results = stmt.getResultSet();
-    			this.columnCount = this.results.getMetaData().getColumnCount();
-    		}
-    		else {
-    			this.updateCount = stmt.getUpdateCount();
-    		}
+            else {
+                //TODO: when array support becomes more robust calling like "exec native('sql', ARRAY[]) could still be prepared
+                stmt = getStatement();
+                hasResults = stmt.execute(sourceSQL);
+            }
+
+            if (hasResults) {
+                this.results = stmt.getResultSet();
+                this.columnCount = this.results.getMetaData().getColumnCount();
+            }
+            else {
+                this.updateCount = stmt.getUpdateCount();
+            }
             addStatementWarnings();
         } catch (SQLException e) {
              throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11008, e, sourceSQL);
@@ -95,37 +95,37 @@ public class JDBCDirectQueryExecution extends JDBCQueryExecution implements Proc
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         try {
-        	ArrayList<Object[]> row = new ArrayList<Object[]>(1);
-        	
-        	if (this.results != null) {
-	            if (this.results.next()) {
-	                // New row for result set
-	                List<Object> vals = new ArrayList<Object>(this.columnCount);
-	
-	                for (int i = 0; i < this.columnCount; i++) {
-	                    // Convert from 0-based to 1-based
-	                    Object value = this.executionFactory.retrieveValue(this.results, i+1, TypeFacility.RUNTIME_TYPES.OBJECT);
-	                    vals.add(value); 
-	                }
-	                row.add(vals.toArray(new Object[vals.size()]));
-	                return row;
-	            } 
-        	}
-        	else if (this.updateCount != -1) {
-        		List<Object> vals = new ArrayList<Object>(1);
-        		vals.add(new Integer(this.updateCount));
-        		this.updateCount = -1;
+            ArrayList<Object[]> row = new ArrayList<Object[]>(1);
+
+            if (this.results != null) {
+                if (this.results.next()) {
+                    // New row for result set
+                    List<Object> vals = new ArrayList<Object>(this.columnCount);
+
+                    for (int i = 0; i < this.columnCount; i++) {
+                        // Convert from 0-based to 1-based
+                        Object value = this.executionFactory.retrieveValue(this.results, i+1, TypeFacility.RUNTIME_TYPES.OBJECT);
+                        vals.add(value);
+                    }
+                    row.add(vals.toArray(new Object[vals.size()]));
+                    return row;
+                }
+            }
+            else if (this.updateCount != -1) {
+                List<Object> vals = new ArrayList<Object>(1);
+                vals.add(new Integer(this.updateCount));
+                this.updateCount = -1;
                 row.add(vals.toArray(new Object[vals.size()]));
                 return row;
-        	}
+            }
         } catch (SQLException e) {
             throw new TranslatorException(e,JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
         }
         return null;
     }
-    
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;  //could support as an array of output values via given that the native procedure returns an array value
-	}
+
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return null;  //could support as an array of output values via given that the native procedure returns an array value
+    }
 }

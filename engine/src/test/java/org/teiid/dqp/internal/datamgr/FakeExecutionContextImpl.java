@@ -26,28 +26,28 @@ import org.teiid.translator.ExecutionContext;
  */
 public class FakeExecutionContextImpl extends ExecutionContextImpl {
 
-	private final static AtomicInteger COUNT = new AtomicInteger(0);
+    private final static AtomicInteger COUNT = new AtomicInteger(0);
 
-	public FakeExecutionContextImpl() {
-		this(COUNT.getAndIncrement());
-	}
+    public FakeExecutionContextImpl() {
+        this(COUNT.getAndIncrement());
+    }
 
-	public FakeExecutionContextImpl(int unique) {
-		super("VDB" + unique, //$NON-NLS-1$
-				unique, 
-				"ExecutionPayload" + unique, //$NON-NLS-1$            
-				"ConnectionID" + unique, //$NON-NLS-1$
-				"ConnectorID" + unique, //$NON-NLS-1$
-				unique,
-				"PartID" + unique, //$NON-NLS-1$
-				"ExecCount" + unique); //$NON-NLS-1$
-	}
+    public FakeExecutionContextImpl(int unique) {
+        super("VDB" + unique, //$NON-NLS-1$
+                unique,
+                "ExecutionPayload" + unique, //$NON-NLS-1$
+                "ConnectionID" + unique, //$NON-NLS-1$
+                "ConnectorID" + unique, //$NON-NLS-1$
+                unique,
+                "PartID" + unique, //$NON-NLS-1$
+                "ExecCount" + unique); //$NON-NLS-1$
+    }
 
-	public FakeExecutionContextImpl(ExecutionContext c) {
-		super(c.getVdbName(), c.getVdbVersion(), c.getCommandPayload(), c
-				.getConnectionId(), c.getConnectorIdentifier(), Long.valueOf(c
-				.getRequestId()), c.getPartIdentifier(), c
-				.getExecutionCountIdentifier());
-	}
+    public FakeExecutionContextImpl(ExecutionContext c) {
+        super(c.getVdbName(), c.getVdbVersion(), c.getCommandPayload(), c
+                .getConnectionId(), c.getConnectorIdentifier(), Long.valueOf(c
+                .getRequestId()), c.getPartIdentifier(), c
+                .getExecutionCountIdentifier());
+    }
 
 }

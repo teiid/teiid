@@ -33,13 +33,13 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class Into implements LanguageObject {
     private GroupSymbol group;
-    
+
     /**
      * Construct default object
      */
     public Into() {
     }
-        
+
     /**
      * Construct object with specified group
      * @param group Group being held
@@ -47,15 +47,15 @@ public class Into implements LanguageObject {
     public Into(GroupSymbol group) {
         this.group = group;
     }
-        
+
     /**
      * Set the group held by the clause
      * @param group Group to hold
      */
     public void setGroup(GroupSymbol group) {
         this.group = group;
-    } 
-        
+    }
+
     /**
      * Get group held by clause
      * @return Group held by clause
@@ -63,7 +63,7 @@ public class Into implements LanguageObject {
     public GroupSymbol getGroup() {
         return this.group;
     }
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -76,39 +76,39 @@ public class Into implements LanguageObject {
     public boolean equals(Object obj) {
         if(obj == this) {
             return true;
-        } 
-            
-        if(! (obj instanceof Into)) { 
+        }
+
+        if(! (obj instanceof Into)) {
             return false;
-        }       
-        
+        }
+
         return EquivalenceUtil.areEqual(getGroup(), ((Into)obj).getGroup());
     }
-        
+
     /**
      * Get hash code of object
      * @return Hash code
      */
     public int hashCode() {
-        if(this.group == null) { 
+        if(this.group == null) {
             return 0;
         }
         return this.group.hashCode();
     }
-        
+
     /**
      * Get deep clone of object
      * @return Deep copy of the object
      */
     public Object clone() {
         GroupSymbol copyGroup = null;
-        if(this.group != null) { 
+        if(this.group != null) {
             copyGroup = (GroupSymbol) this.group.clone();
         }
-        return new Into(copyGroup);  
+        return new Into(copyGroup);
     }
-    
-    
+
+
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
@@ -116,5 +116,5 @@ public class Into implements LanguageObject {
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-            
+
 }

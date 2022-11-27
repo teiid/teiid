@@ -35,19 +35,19 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 
 public class TestSizeUtility {
-	
-	private static class SomeObject implements Serializable {
-		private String state;
-		public SomeObject(String state) {
-			this.state = state;
-		}
-	}
+
+    private static class SomeObject implements Serializable {
+        private String state;
+        public SomeObject(String state) {
+            this.state = state;
+        }
+    }
 
     public void helpTestGetStaticSize(Object obj, long expectedSize) {
         helpTestGetSize(obj, expectedSize);
     }
 
-    public void helpTestGetSize(Object obj, long expectedSize) {  
+    public void helpTestGetSize(Object obj, long expectedSize) {
         long actualSize = SizeUtility.getSize(obj, false);
         assertEquals("Got unexpected size: ", expectedSize, actualSize); //$NON-NLS-1$
     }
@@ -73,9 +73,9 @@ public class TestSizeUtility {
     }
 
     @Test public void testGetSizeLong() {
-        helpTestGetStaticSize(new Long(0l), 16);
+        helpTestGetStaticSize(new Long(0L), 16);
     }
-    
+
     @Test public void testGetSizeFloat() {
         helpTestGetStaticSize(new Float(0), 12);
     }
@@ -103,7 +103,7 @@ public class TestSizeUtility {
     @Test public void testGetSizeShortString() {
         helpTestGetSize("abcdefghij", 64); //$NON-NLS-1$
     }
-    
+
     @Test public void testGetSizeObject() {
         helpTestGetStaticSize(new SomeObject(null), 16);
         helpTestGetStaticSize(new SomeObject("Hello world"), 56);  //$NON-NLS-1$
@@ -114,7 +114,7 @@ public class TestSizeUtility {
         row.add(new Integer(0));
         helpTestGetStaticSize(row, 36);
     }
-    
+
     @Test public void testGetSizeRow2() {
         List<Object> row = new ArrayList<Object>(4);
         row.add(new Integer(0));
@@ -123,7 +123,7 @@ public class TestSizeUtility {
         row.add(new Double(1091203.00));
         helpTestGetStaticSize(row, 89);
     }
-    
+
     @Test public void testGetSizeRows1() {
         helpTestGetStaticSize(new List[] { }, 16);
     }
@@ -139,26 +139,26 @@ public class TestSizeUtility {
 
         helpTestGetStaticSize(new List[] { row1, row2 }, 144);
     }
-   
+
     @Test public void testGetSizeBigInteger() {
         BigInteger b = BigInteger.ONE;
-                
+
         helpTestGetStaticSize(b, 48);
-    }    
-    
+    }
+
     @Test public void testGetSizeBigDecimal() {
         BigDecimal bd = new BigDecimal("1.0"); //$NON-NLS-1$
-        
+
         helpTestGetStaticSize(bd, 96);
     }
-    
+
     @Test public void testGetSizeByteArray() {
         byte[] bytes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         helpTestGetSize(new BinaryType(bytes), 32);
     }
-    
+
     @Test public void testResultSet() {
-        List<?>[] expected = new List[] { 
+        List<?>[] expected = new List[] {
                 Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0),    "a",    new Integer(0) }), //$NON-NLS-1$ //$NON-NLS-2$
                 Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0),    "a",    new Integer(0) }), //$NON-NLS-1$ //$NON-NLS-2$
                 Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0),    "a",    new Integer(0) }), //$NON-NLS-1$ //$NON-NLS-2$
@@ -170,17 +170,17 @@ public class TestSizeUtility {
                 Arrays.asList(new Object[] { "a",   new Integer(3),     Boolean.TRUE,   new Double(7.0),    "a",    new Integer(3) }), //$NON-NLS-1$ //$NON-NLS-2$
                 Arrays.asList(new Object[] { "b",   new Integer(2),     Boolean.FALSE,  new Double(0.0),    "b",    new Integer(2) }), //$NON-NLS-1$ //$NON-NLS-2$
                 Arrays.asList(new Object[] { "c",   new Integer(1),     Boolean.FALSE,  new Double(0.0),    "c",    new Integer(1) })  //$NON-NLS-1$ //$NON-NLS-2$
-           };     
-        
+           };
+
         Class<?>[] types = {DataTypeManager.DefaultDataClasses.STRING,
-        		DataTypeManager.DefaultDataClasses.INTEGER,
-        		DataTypeManager.DefaultDataClasses.BOOLEAN,
-        		DataTypeManager.DefaultDataClasses.DOUBLE,
-        		DataTypeManager.DefaultDataClasses.STRING,
-        		DataTypeManager.DefaultDataClasses.INTEGER};
+                DataTypeManager.DefaultDataClasses.INTEGER,
+                DataTypeManager.DefaultDataClasses.BOOLEAN,
+                DataTypeManager.DefaultDataClasses.DOUBLE,
+                DataTypeManager.DefaultDataClasses.STRING,
+                DataTypeManager.DefaultDataClasses.INTEGER};
 
         long actualSize = new SizeUtility(types).getBatchSize(false, Arrays.asList(expected));
-        assertEquals("Got unexpected size: ", 2667, actualSize); //$NON-NLS-1$        
+        assertEquals("Got unexpected size: ", 2667, actualSize); //$NON-NLS-1$
     }
-    
+
 }

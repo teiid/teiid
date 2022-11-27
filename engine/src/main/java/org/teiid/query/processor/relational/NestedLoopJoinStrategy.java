@@ -26,26 +26,26 @@ import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 
 
 /**
- * Nested loop is currently implemented as a degenerate case of merge join. 
- * 
+ * Nested loop is currently implemented as a degenerate case of merge join.
+ *
  * Only for use with Full, Left, Inner, and Cross joins
- * 
+ *
  */
 public class NestedLoopJoinStrategy extends MergeJoinStrategy {
 
     public NestedLoopJoinStrategy() {
         super(SortOption.ALREADY_SORTED, SortOption.ALREADY_SORTED, false);
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.relational.MergeJoinStrategy#clone()
      */
     @Override
     public NestedLoopJoinStrategy clone() {
         return new NestedLoopJoinStrategy();
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.relational.MergeJoinStrategy#compare(java.util.List, java.util.List, int[], int[])
      */
     @Override
@@ -55,19 +55,19 @@ public class NestedLoopJoinStrategy extends MergeJoinStrategy {
                           int[] rightExpressionIndecies) {
         return 0; // there are no expressions in nested loop joins, comparison is meaningless
     }
-    
+
     @Override
     protected void loadRight() throws TeiidComponentException,
-    		TeiidProcessingException {
-    	this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
+            TeiidProcessingException {
+        this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.relational.MergeJoinStrategy#toString()
      */
     @Override
     public String toString() {
         return "NESTED LOOP JOIN"; //$NON-NLS-1$
     }
-    
+
 }

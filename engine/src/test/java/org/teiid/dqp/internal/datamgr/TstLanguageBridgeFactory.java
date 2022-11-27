@@ -25,7 +25,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 
 public class TstLanguageBridgeFactory {
-    
+
     public static final QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
     public static final RuntimeMetadataImpl metadataFactory = new RuntimeMetadataImpl(metadata);
     public static final LanguageBridgeFactory factory = new LanguageBridgeFactory(metadata);

@@ -27,14 +27,14 @@ import junit.framework.TestCase;
 
 
 public class TestSocketUtil extends TestCase {
-	
+
     public void testNoPassword() throws Exception {
         SocketUtil.loadKeyStore(UnitTestUtil.getTestDataFile("metamatrix.keystore").getAbsolutePath(), null, "JKS"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public void testMissingKeyStore() throws Exception {
         try {
-        	SocketUtil.loadKeyStore("metamatrix.keystorefoo", null, "JKS"); //$NON-NLS-1$ //$NON-NLS-2$
+            SocketUtil.loadKeyStore("metamatrix.keystorefoo", null, "JKS"); //$NON-NLS-1$ //$NON-NLS-2$
             fail("expected exception"); //$NON-NLS-1$
         } catch (IOException ex) {
             assertEquals("Key store 'metamatrix.keystorefoo' was not found.", ex.getMessage()); //$NON-NLS-1$

@@ -26,22 +26,21 @@ import org.teiid.query.sql.lang.Command;
 
 
 /**
- * This is the interface that is implemented for each type of command, telling how 
- * to resolve that command.  
+ * This is the interface that is implemented for each type of command, telling how
+ * to resolve that command.
  */
 public interface CommandResolver {
 
     /**
-     * Resolve the command using the metadata.  
+     * Resolve the command using the metadata.
      * @param command The command to resolve
      * @param metadata Metadata
-     * @param resolveNullLiterals true if the resolver should consider replacing null literals with more appropriate types 
-     * @return the TempMetadataStore containing the metadata defined by this command
+     * @param resolveNullLiterals true if the resolver should consider replacing null literals with more appropriate types
      * @throws QueryMetadataException If there is a metadata problem
      * @throws QueryResolverException If the query cannot be resolved
-     * @throws TeiidComponentException If there is an internal error     
-     */        
+     * @throws TeiidComponentException If there is an internal error
+     */
     void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException;
-    
+
 }

@@ -45,51 +45,51 @@ import org.teiid.query.util.CommandContext;
  * Substitutes column references for expressions
  */
 public class RuleSubstituteExpressions implements OptimizerRule {
-	
-	@Override
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata,
-			CapabilitiesFinder capabilitiesFinder, RuleStack rules,
-			AnalysisRecord analysisRecord, CommandContext context)
-			throws QueryPlannerException, QueryMetadataException,
-			TeiidComponentException {
-		boolean substitued = false;
-		
+
+    @Override
+    public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata,
+            CapabilitiesFinder capabilitiesFinder, RuleStack rules,
+            AnalysisRecord analysisRecord, CommandContext context)
+            throws QueryPlannerException, QueryMetadataException,
+            TeiidComponentException {
+        boolean substitued = false;
+
         for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
-        	if (accessNode.getParent() == null) {
-        		continue;
-        	}
+            if (accessNode.getParent() == null) {
+                continue;
+            }
             for (GroupSymbol gs : accessNode.getGroups()) {
-            	Map<Expression, Integer> fbis = metadata.getFunctionBasedExpressions(gs.getMetadataID());
-            	if (fbis == null) {
-            		continue;
-            	}
-        		substitued = true;
-        		Map<Expression, ElementSymbol> replacements = new HashMap<Expression, ElementSymbol>();
-        		GroupSymbol gsOrig = new GroupSymbol(gs.getNonCorrelationName());
-        		gsOrig.setMetadataID(gs.getMetadataID());
-        		List<ElementSymbol> curremtElems = ResolverUtil.resolveElementsInGroup(gs, metadata);
-        		List<ElementSymbol> origElems = ResolverUtil.resolveElementsInGroup(gsOrig, metadata);
-        		boolean nameMatches = gs.getNonCorrelationName().equals(gs.getName());
-        		SymbolMap map = SymbolMap.createSymbolMap(origElems, curremtElems);
-        		for (Map.Entry<Expression, Integer> entry : fbis.entrySet()) {
-        			Expression ex = entry.getKey();
-        			if (!nameMatches) {
-        				ex = (Expression)ex.clone();
-        				ExpressionMappingVisitor.mapExpressions(ex, map.asMap());
-        			}
-        			replacements.put(ex, curremtElems.get(entry.getValue()-1));
-				}
-        		FrameUtil.convertFrame(accessNode.getParent(), gs, null, replacements, metadata);
+                Map<Expression, Integer> fbis = metadata.getFunctionBasedExpressions(gs.getMetadataID());
+                if (fbis == null) {
+                    continue;
+                }
+                substitued = true;
+                Map<Expression, ElementSymbol> replacements = new HashMap<Expression, ElementSymbol>();
+                GroupSymbol gsOrig = new GroupSymbol(gs.getNonCorrelationName());
+                gsOrig.setMetadataID(gs.getMetadataID());
+                List<ElementSymbol> curremtElems = ResolverUtil.resolveElementsInGroup(gs, metadata);
+                List<ElementSymbol> origElems = ResolverUtil.resolveElementsInGroup(gsOrig, metadata);
+                boolean nameMatches = gs.getNonCorrelationName().equals(gs.getName());
+                SymbolMap map = SymbolMap.createSymbolMap(origElems, curremtElems);
+                for (Map.Entry<Expression, Integer> entry : fbis.entrySet()) {
+                    Expression ex = entry.getKey();
+                    if (!nameMatches) {
+                        ex = (Expression)ex.clone();
+                        ExpressionMappingVisitor.mapExpressions(ex, map.asMap());
+                    }
+                    replacements.put(ex, curremtElems.get(entry.getValue()-1));
+                }
+                FrameUtil.convertFrame(accessNode.getParent(), gs, null, replacements, metadata);
             }
         }
         if (substitued) {
-        	rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
+            rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
         return plan;
-	}
-	
-	@Override
-	public String toString() {
-		return "Substitue Expressions"; //$NON-NLS-1$
-	}
+    }
+
+    @Override
+    public String toString() {
+        return "Substitue Expressions"; //$NON-NLS-1$
+    }
 }

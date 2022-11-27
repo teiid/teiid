@@ -49,13 +49,13 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
             null, capFinder,
             new String[] { "SELECT v_0.c_0, COUNT(*) FROM (SELECT convert(g_0.TimestampValue, date) AS c_0 FROM bqt1.smalla AS g_0) AS v_0 GROUP BY v_0.c_0" },  //$NON-NLS-1$
             true);
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);         
-    }   
-    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+
     // Merge across multiple virtual groups - should be same outcome as testCase1565
     @Test public void testCase1565_2() throws Exception {
         // Create query
@@ -73,18 +73,18 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
             null, capFinder,
             new String[] { "SELECT v_0.c_0, COUNT(*) FROM (SELECT convert(g_0.TimestampValue, date) AS c_0 FROM bqt1.smalla AS g_0) AS v_0 GROUP BY v_0.c_0" },  //$NON-NLS-1$
             true);
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);         
-    }   
-    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+
     // Merge across multiple virtual groups above the physical
     @Test public void testCase1565_3() throws Exception {
         String sql = "SELECT x, COUNT(*) FROM (SELECT convert(TimestampValue, date) AS x FROM (SELECT TimestampValue from bqt1.smalla) as z) as y GROUP BY x"; //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
             null, TestOptimizer.getGenericFinder(),
             new String[] { "SELECT TimestampValue FROM bqt1.smalla" },  //$NON-NLS-1$
             true);
@@ -103,9 +103,9 @@ public class TestExpressionsInGroupBy {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });         
-             
-    }           
+        });
+
+    }
 
     // Test what happens when not all the functions in the virtual SELECT can be pushed
     @Test public void testCase1565_4() throws Exception {
@@ -122,7 +122,7 @@ public class TestExpressionsInGroupBy {
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
             null, capFinder,
             new String[] { "SELECT TimestampValue, stringkey FROM bqt1.smalla" },  //$NON-NLS-1$
             true);
@@ -141,10 +141,10 @@ public class TestExpressionsInGroupBy {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });         
-             
-    }       
-    
+        });
+
+    }
+
     // Test nested functions
     @Test public void testCase1565_5() throws Exception {
         // Create query
@@ -160,7 +160,7 @@ public class TestExpressionsInGroupBy {
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
             null, capFinder,
             new String[] { "SELECT intkey FROM bqt1.smalla" },  //$NON-NLS-1$
             true);
@@ -179,10 +179,10 @@ public class TestExpressionsInGroupBy {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });         
-             
-    }     
-    
+        });
+
+    }
+
     // SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g
     @Test public void testAggregateNoGroupByWithNestedFunction() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT SUM(x) FROM (SELECT IntKey+1 AS x FROM BQT1.SmallA) AS g", RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
@@ -203,9 +203,9 @@ public class TestExpressionsInGroupBy {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });                                    
-    }     
-    
+        });
+    }
+
     /**
      * Without inline view support or functions in group by the agg is not pushed down
      */
@@ -225,10 +225,10 @@ public class TestExpressionsInGroupBy {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END, BQT1.SmallA.IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END, BQT1.SmallA.IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -246,9 +246,9 @@ public class TestExpressionsInGroupBy {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });        
+        });
     }
-    
+
     @Test public void testFunctionInGroupBy1() {
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end"; //$NON-NLS-1$
@@ -266,15 +266,15 @@ public class TestExpressionsInGroupBy {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT SUM(BQT1.SmallA.IntKey), CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END FROM BQT1.SmallA GROUP BY CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT SUM(BQT1.SmallA.IntKey), CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END FROM BQT1.SmallA GROUP BY CASE WHEN BQT1.SmallA.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
-    
+
     @Test public void testFunctionInGroupBy2() {
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end"; //$NON-NLS-1$
@@ -293,13 +293,13 @@ public class TestExpressionsInGroupBy {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT SUM(v_0.c_1), v_0.c_0 FROM (SELECT CASE WHEN g_0.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0 GROUP BY v_0.c_0"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT SUM(v_0.c_1), v_0.c_0 FROM (SELECT CASE WHEN g_0.IntKey >= 5000 THEN '5000 +' ELSE '0-999' END AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0 GROUP BY v_0.c_0"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
     @Test public void testFunctionInGroupByWithSameName() {
@@ -319,19 +319,19 @@ public class TestExpressionsInGroupBy {
         caps.setFunctionSupport(SourceSystemFunctions.ADD_OP, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT SUM(v_0.c_3), v_0.c_1, v_0.c_2, v_0.c_0 FROM (SELECT (g_0.IntKey + g_1.IntKey) AS c_0, g_0.IntKey AS c_1, g_1.IntKey AS c_2, g_0.FloatNum AS c_3 FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE g_0.StringKey = g_1.StringKey) AS v_0 GROUP BY v_0.c_0, v_0.c_1, v_0.c_2"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT SUM(v_0.c_3), v_0.c_1, v_0.c_2, v_0.c_0 FROM (SELECT (g_0.IntKey + g_1.IntKey) AS c_0, g_0.IntKey AS c_1, g_1.IntKey AS c_2, g_0.FloatNum AS c_3 FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE g_0.StringKey = g_1.StringKey) AS v_0 GROUP BY v_0.c_0, v_0.c_1, v_0.c_2"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
-    
+
     /**
-     * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but 
-     * does not have CASE capability.  Should not be able to push down GROUP BY.  
-     * 
+     * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but
+     * does not have CASE capability.  Should not be able to push down GROUP BY.
+     *
      * @since 4.2
      */
     @Test public void testFunctionInGroupByCantPush() {
@@ -348,10 +348,10 @@ public class TestExpressionsInGroupBy {
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -369,13 +369,13 @@ public class TestExpressionsInGroupBy {
                                         0,      // Select
                                         0,      // Sort
                                         0       // UnionAll
-                                    });        
+                                    });
     }
 
     /**
-     * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but 
-     * does not have CASE capability.  Should not be able to push down GROUP BY.  
-     * 
+     * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but
+     * does not have CASE capability.  Should not be able to push down GROUP BY.
+     *
      * @since 4.2
      */
     @Test public void testFunctionInGroupByHavingCantPush() {
@@ -393,10 +393,10 @@ public class TestExpressionsInGroupBy {
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -414,12 +414,12 @@ public class TestExpressionsInGroupBy {
                                         1,      // Select
                                         0,      // Sort
                                         0       // UnionAll
-                                    });        
+                                    });
     }
     /**
-     * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but 
-     * does not have CASE capability.  Should not be able to push down GROUP BY.  
-     * 
+     * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but
+     * does not have CASE capability.  Should not be able to push down GROUP BY.
+     *
      * @since 4.2
      */
     @Test public void testFunctionInGroupByCantPushRewritten() {
@@ -435,10 +435,10 @@ public class TestExpressionsInGroupBy {
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT IntKey FROM BQT1.SmallA"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -456,9 +456,9 @@ public class TestExpressionsInGroupBy {
                                         0,      // Select
                                         0,      // Sort
                                         0       // UnionAll
-                                    });        
+                                    });
     }
-    
+
     @Test public void testFunctionOfAggregateCantPush2() {
         String sql = "SELECT SUM(length(StringKey || 'x')) + 1 AS x FROM BQT1.SmallA GROUP BY StringKey || 'x' HAVING space(MAX(length((StringKey || 'x') || 'y'))) = '   '"; //$NON-NLS-1$
 
@@ -467,10 +467,10 @@ public class TestExpressionsInGroupBy {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT StringKey FROM BQT1.SmallA"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT StringKey FROM BQT1.SmallA"}, //$NON-NLS-1$
                                       TestOptimizer.SHOULD_SUCCEED );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -488,23 +488,23 @@ public class TestExpressionsInGroupBy {
                                         1,      // Select
                                         0,      // Sort
                                         0       // UnionAll
-                                    });        
+                                    });
     }
-    
-    
+
+
     @Test public void testDontPushGroupByUnsupportedFunction() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-         
+
         ProcessorPlan plan = TestOptimizer.helpPlan(
             "SELECT e2 as x FROM pm1.g1 GROUP BY upper(e1), e2",  //$NON-NLS-1$
             RealMetadataFactory.example1Cached(),
             null, capFinder,
             new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, //$NON-NLS-1$
             ComparisonMode.EXACT_COMMAND_STRING );
-    
+
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
@@ -520,8 +520,8 @@ public class TestExpressionsInGroupBy {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });                                    
-                               
+        });
+
     }
-        
+
 }

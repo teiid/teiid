@@ -58,7 +58,7 @@ public abstract class JDBCBaseExecution implements Execution  {
 
     // Set during execution
     protected volatile Statement statement;
-	private volatile boolean canceled;
+    private volatile boolean canceled;
 
     // ===========================================================================================================================
     // Constructors
@@ -67,45 +67,51 @@ public abstract class JDBCBaseExecution implements Execution  {
     protected JDBCBaseExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory jef) {
         this.connection = connection;
         this.context = context;
-
+        try {
+            if (this.connection.getTransactionIsolation() != context.getTransactionIsolation()) {
+                this.connection.setTransactionIsolation(context.getTransactionIsolation());
+            }
+        } catch (Exception e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not set transaction isolation level"); //$NON-NLS-1$
+        }
         this.executionFactory = jef;
-        
+
         trimString = jef.isTrimStrings();
         fetchSize = context.getBatchSize();
         this.command = command;
     }
-    
+
     /**
      * Bind the values in the TranslatedCommand to the PreparedStatement
      */
-	protected void bind(PreparedStatement stmt, List<?> params, List<?> batchValues)
-			throws SQLException {
-		for (int i = 0; i< params.size(); i++) {
-		    Object paramValue = params.get(i);
-		    Object value = null;
-		    Class<?> paramType = null;
-		    if (paramValue instanceof Literal) {
-		    	Literal litParam = (Literal)paramValue;
-		    	value = litParam.getValue();
-		    	paramType = litParam.getType();
-		    } else if (paramValue instanceof Argument) {
-		    	Argument arg = (Argument)paramValue;
-		    	value = ((Literal)arg.getExpression()).getValue();
-		    	paramType = arg.getType();
-		    } else {
-		    	Parameter param = (Parameter)paramValue;
-		    	if (batchValues == null) {
-		    		throw new AssertionError("Expected batchValues when using a Parameter"); //$NON-NLS-1$
-		    	}
-		    	value = batchValues.get(param.getValueIndex());
-		    	paramType = param.getType();
-		    }
-		    this.executionFactory.bindValue(stmt, value, paramType, i+1);
-		}
-		if (batchValues != null) {
-			stmt.addBatch();
-		}
-	}
+    protected void bind(PreparedStatement stmt, List<?> params, List<?> batchValues)
+            throws SQLException {
+        for (int i = 0; i< params.size(); i++) {
+            Object paramValue = params.get(i);
+            Object value = null;
+            Class<?> paramType = null;
+            if (paramValue instanceof Literal) {
+                Literal litParam = (Literal)paramValue;
+                value = litParam.getValue();
+                paramType = litParam.getType();
+            } else if (paramValue instanceof Argument) {
+                Argument arg = (Argument)paramValue;
+                value = arg.getArgumentValue().getValue();
+                paramType = arg.getType();
+            } else {
+                Parameter param = (Parameter)paramValue;
+                if (batchValues == null) {
+                    throw new AssertionError("Expected batchValues when using a Parameter"); //$NON-NLS-1$
+                }
+                value = batchValues.get(param.getValueIndex());
+                paramType = param.getType();
+            }
+            this.executionFactory.bindValue(stmt, value, paramType, i+1);
+        }
+        if (batchValues != null) {
+            stmt.addBatch();
+        }
+    }
 
     // ===========================================================================================================================
     // Methods
@@ -125,28 +131,28 @@ public abstract class JDBCBaseExecution implements Execution  {
     public void close() {
         try {
             if (statement != null) {
-            	if (canceled) {
-            		try {
-            			this.executionFactory.intializeConnectionAfterCancel(connection);
-            		} catch (SQLException e) {
-            			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-            		}
-            	}
+                if (canceled) {
+                    try {
+                        this.executionFactory.intializeConnectionAfterCancel(connection);
+                    } catch (SQLException e) {
+                        LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+                    }
+                }
                 statement.close();
             }
         } catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-        } 
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+        }
     }
 
     public void cancel() throws TranslatorException {
         // if both the DBMS and driver support aborting an SQL
         try {
-        	Statement s = this.statement;
-        	if (s != null) {
-        		s.cancel();
-        		this.canceled = true;
-        	}
+            Statement s = this.statement;
+            if (s != null) {
+                s.cancel();
+                this.canceled = true;
+            }
         } catch (SQLException e) {
             // Defect 16187 - DataDirect does not support the cancel() method for
             // Statement.cancel() for DB2 and Informix. Here we are tolerant
@@ -155,13 +161,13 @@ public abstract class JDBCBaseExecution implements Execution  {
     }
 
     protected void setSizeContraints(Statement statement) {
-    	try {
-    		executionFactory.setFetchSize(command, context, statement, fetchSize);
-		} catch (SQLException e) {
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId(), " could not set fetch size: ", fetchSize); //$NON-NLS-1$
-    		}
-		}
+        try {
+            executionFactory.setFetchSize(command, context, statement, fetchSize);
+        } catch (SQLException e) {
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId(), " could not set fetch size: ", fetchSize); //$NON-NLS-1$
+            }
+        }
     }
 
     protected Statement getStatement() throws SQLException {
@@ -189,32 +195,32 @@ public abstract class JDBCBaseExecution implements Execution  {
             statement.close();
             statement = null;
         }
-    	statement = connection.prepareStatement(sql);
+        statement = connection.prepareStatement(sql);
         setSizeContraints(statement);
         return (PreparedStatement)statement;
     }
 
     /**
      * Returns the JDBC connection used by the execution object.
-     * 
+     *
      * @return Returns the connection.
      * @since 4.1.1
      */
     public Connection getConnection() {
         return this.connection;
     }
-    
+
     public void addStatementWarnings() throws SQLException {
-    	SQLWarning warning = this.statement.getWarnings();
-    	if (warning != null) {
-			context.addWarning(warning);
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-		    	while (warning != null) {
-					LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
-		    		warning = warning.getNextWarning();
-		    	}
-			}
-		}
-    	this.statement.clearWarnings();
+        SQLWarning warning = this.statement.getWarnings();
+        if (warning != null) {
+            context.addWarning(warning);
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+                while (warning != null) {
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
+                    warning = warning.getNextWarning();
+                }
+            }
+        }
+        this.statement.clearWarnings();
     }
 }

@@ -29,7 +29,7 @@ import org.teiid.net.socket.Message;
 /**
  * Represents a ClientConnection from the server's point of view.  This interface
  * can be used by a ServerListener implementation to manage the incoming
- * client connections, retrieve information about a particular connection, 
+ * client connections, retrieve information about a particular connection,
  * and send a message to a particular connection in the asynchronous message scenario.
  */
 public interface ClientInstance {
@@ -38,17 +38,16 @@ public interface ClientInstance {
      * Send a message to this particular client using the asynch message key.
      * @param message The message to send
      * @param messageKey The key sent with the asynch query
-     * @throws CommunicationException If an error occurs during the send
      */
     void send(Message message, Serializable messageKey);
-        
+
     /**
-     * Shutdown the server's connection to the client.  
+     * Shutdown the server's connection to the client.
      * @throws CommunicationException If an error occurs during the shutdown
      */
     void shutdown() throws CommunicationException;
-    
+
     Cryptor getCryptor();
-    
+
     DQPWorkContext getWorkContext();
 }

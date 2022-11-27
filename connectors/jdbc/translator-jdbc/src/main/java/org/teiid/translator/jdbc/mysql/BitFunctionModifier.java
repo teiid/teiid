@@ -28,20 +28,20 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 
 public class BitFunctionModifier extends AliasModifier {
-	private LanguageFactory langFactory;
+    private LanguageFactory langFactory;
 
-	public BitFunctionModifier(String alias, LanguageFactory langFactory) {
-		super(alias);
-		this.langFactory = langFactory;
-	}
-	
-	/**
-	 * Wrap the renamed function in a convert back to integer
-	 */
-	@Override
-	public List<?> translate(Function function) {
-		modify(function);
-		return Arrays.asList(ConvertModifier.createConvertFunction(langFactory, function, TypeFacility.RUNTIME_NAMES.INTEGER));
-	}
+    public BitFunctionModifier(String alias, LanguageFactory langFactory) {
+        super(alias);
+        this.langFactory = langFactory;
+    }
+
+    /**
+     * Wrap the renamed function in a convert back to integer
+     */
+    @Override
+    public List<?> translate(Function function) {
+        modify(function);
+        return Arrays.asList(ConvertModifier.createConvertFunction(langFactory, function, TypeFacility.RUNTIME_NAMES.INTEGER));
+    }
 
 }

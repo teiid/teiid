@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.teiid</groupId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
 	</parent>
 	<licenses>
         <license>
@@ -21,38 +21,11 @@
 	<name>Client</name>
 	<description>Contains the packages related to communication, administrative api,
     sessioning and transport level messaging.</description>
-    <packaging>bundle</packaging>
     
-    <build>
-        <plugins>
-            <!-- Specify the compiler options and settings -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.compiler.plugin}</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <showDeprecation>false</showDeprecation>
-                    <showWarnings>false</showWarnings>
-                    <compilerArguments>
-                        <source>1.6</source>
-                        <target>1.6</target>
-                    </compilerArguments>
-                </configuration>
-            </plugin>
-            <plugin>   
-              <groupId>org.apache.felix</groupId>
-              <artifactId>maven-bundle-plugin</artifactId>
-              <configuration>
-               <instructions>
-                <Import-Package>!org.jboss.modules.*,*</Import-Package>
-               </instructions>
-              </configuration>
-            </plugin>            
-        </plugins>   
-    </build>
-     
+    <properties>
+        <project.build.targetJdk>8</project.build.targetJdk>
+    </properties>
+    
     <dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -63,26 +36,11 @@
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
-		</dependency>
-        <dependency>
-            <groupId>org.jboss.modules</groupId>
-            <artifactId>jboss-modules</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-concurrent</artifactId>
-        </dependency>
-                   
+		</dependency>                   
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-api</artifactId>
         </dependency>
-        
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>opentracing-noop</artifactId>
-        </dependency>
-        
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-util</artifactId>
@@ -91,6 +49,11 @@
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-mock</artifactId>
             <scope>test</scope>
-        </dependency>         
+        </dependency>  
+		<dependency>
+            <groupId>com.github.stephenc.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 </project>

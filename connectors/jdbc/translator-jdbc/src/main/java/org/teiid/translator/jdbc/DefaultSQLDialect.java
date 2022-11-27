@@ -23,12 +23,12 @@ import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
 
 final class DefaultSQLDialect implements SQLDialect {
 
-	@Override
-	public String getTypeName(int code, long length, int precision, int scale) {
-		return null;
-	}
+    @Override
+    public String getTypeName(int code, long length, int precision, int scale) {
+        return null;
+    }
 
-	public AbstractMultiTableBulkIdStrategyImpl getDefaultMultiTableBulkIdStrategy() {
-	    return new GlobalTemporaryTableBulkIdStrategy();
-	}
+    public AbstractMultiTableBulkIdStrategyImpl getDefaultMultiTableBulkIdStrategy() {
+        return new GlobalTemporaryTableBulkIdStrategy();
+    }
 }

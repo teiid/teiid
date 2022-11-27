@@ -32,8 +32,8 @@ import junit.framework.TestCase;
 public class TestExternalizeUtil extends TestCase {
 
     private ByteArrayOutputStream bout;
-    private ObjectOutputStream oout;   
-    
+    private ObjectOutputStream oout;
+
     /**
      * Constructor for TestExternalizeUtil.
      * @param name
@@ -46,13 +46,13 @@ public class TestExternalizeUtil extends TestCase {
         bout = new ByteArrayOutputStream(4096);
         oout = new ObjectOutputStream(bout);
     }
-    
+
     public void testEmptyCollection() throws Exception {
-    	ExternalizeUtil.writeCollection(oout, Arrays.asList(new Object[0]));
-    	oout.flush();        
+        ExternalizeUtil.writeCollection(oout, Arrays.asList(new Object[0]));
+        oout.flush();
         ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
         ObjectInputStream oin = new ObjectInputStream(bin);
-        
+
         List<?> result = ExternalizeUtil.readList(oin);
         assertEquals(0, result.size());
     }

@@ -44,7 +44,7 @@ public class TestSearchedCaseExpression extends TestCase {
         }
         return list;
     }
-    
+
     public static List getAlphaWhenCriteria(int criteria) {
         ArrayList list = new ArrayList();
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
@@ -53,19 +53,19 @@ public class TestSearchedCaseExpression extends TestCase {
         }
         return list;
     }
-    
+
     public static SearchedCaseExpression example(int whens) {
         SearchedCaseExpression caseExpr = new SearchedCaseExpression(getWhenCriteria(whens), TestCaseExpression.getThenExpressions(whens));
         caseExpr.setElseExpression(new Constant(new Integer(9999)));
         return caseExpr;
     }
-    
+
     public static SearchedCaseExpression example2(int whens) {
         SearchedCaseExpression caseExpr = new SearchedCaseExpression(getAlphaWhenCriteria(whens), TestCaseExpression.getThenExpressions(whens));
         caseExpr.setElseExpression(new Constant(new Integer(9999)));
         return caseExpr;
     }
-    
+
     public static void helpTestWhenCriteria(SearchedCaseExpression caseExpr, int expectedWhens) {
         assertEquals(expectedWhens, caseExpr.getWhenCount());
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
@@ -74,14 +74,14 @@ public class TestSearchedCaseExpression extends TestCase {
                          caseExpr.getWhenCriteria(i));
         }
     }
-    
+
     public void testGetWhenCount() {
         assertEquals(1, example(1).getWhenCount());
         assertEquals(2, example(2).getWhenCount());
         assertEquals(3, example(3).getWhenCount());
         assertEquals(4, example(4).getWhenCount());
     }
-    
+
     public void testGetWhen() {
         SearchedCaseExpression expr = example(3);
         assertNotNull(expr.getWhen());
@@ -90,7 +90,7 @@ public class TestSearchedCaseExpression extends TestCase {
             expr.getWhen().add(new Object());
             fail("Should not be modifiable"); //$NON-NLS-1$
         } catch (UnsupportedOperationException e) {
-            
+
         }
     }
 
@@ -102,7 +102,7 @@ public class TestSearchedCaseExpression extends TestCase {
             expr.getThen().add(new Object());
             fail("Should not be modifiable"); //$NON-NLS-1$
         } catch (UnsupportedOperationException e) {
-            
+
         }
     }
 
@@ -124,23 +124,23 @@ public class TestSearchedCaseExpression extends TestCase {
         SearchedCaseExpression expr = new SearchedCaseExpression(whens, thens);
         expr.setElseExpression(elseExpression);
         expr.setType(DataTypeManager.DefaultDataClasses.STRING);
-        
+
         SearchedCaseExpression clone = (SearchedCaseExpression)expr.clone();
-        
+
         assertTrue(expr != clone);
         assertEquals(2, clone.getWhenCount());
-        
-        
+
+
         TestCaseExpression.helpTestStrictEquivalence(c1, clone.getWhenCriteria(0));
         TestCaseExpression.helpTestStrictEquivalence(expr.getWhenCriteria(0), clone.getWhenCriteria(0));
         TestCaseExpression.helpTestStrictEquivalence(c2, clone.getWhenCriteria(1));
         TestCaseExpression.helpTestStrictEquivalence(expr.getWhenCriteria(1), clone.getWhenCriteria(1));
-        
+
         TestCaseExpression.helpTestStrictEquivalence(const1, clone.getThenExpression(0));
         TestCaseExpression.helpTestStrictEquivalence(expr.getThenExpression(0), clone.getThenExpression(0));
         TestCaseExpression.helpTestStrictEquivalence(const2, clone.getThenExpression(1));
         TestCaseExpression.helpTestStrictEquivalence(expr.getThenExpression(1), clone.getThenExpression(1));
-        
+
         TestCaseExpression.helpTestStrictEquivalence(expr.getElseExpression(), clone.getElseExpression());
         assertEquals(expr.getType(), clone.getType());
     }
@@ -272,19 +272,19 @@ public class TestSearchedCaseExpression extends TestCase {
         expr.setType(null);
         assertNull(expr.getType());
     }
-    
+
     public void testEquals() {
         SearchedCaseExpression sc1 = example(3);
         assertTrue(sc1.equals(sc1));
         assertTrue(sc1.equals(sc1.clone()));
         assertTrue(sc1.clone().equals(sc1));
         assertTrue(sc1.equals(example(3)));
-        
+
         SearchedCaseExpression sc2 = example(4);
-        
+
         assertFalse(sc1.equals(sc2));
         assertFalse(sc2.equals(sc1));
-        
+
         SearchedCaseExpression sc3 = example(3);
         sc3.setElseExpression(new ElementSymbol("y")); //$NON-NLS-1$
         assertFalse(sc1.equals(sc3));

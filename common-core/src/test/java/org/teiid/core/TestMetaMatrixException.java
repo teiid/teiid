@@ -23,57 +23,40 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
- * Tests the children Iterator of the MetaMatrixException.  Primarily it does
- * this by comparing two Lists for equality: one List is created by Iterating
- * using the
- * {@link org.teiid.core.TeiidException#getChildren Iterator},
- * the other List is created by manually using the
- * {@link org.teiid.core.TeiidException#getChild getChild}
- * method recursively.
+ * Tests the children Iterator of the MetaMatrixException.
  */
 public class TestMetaMatrixException {
-
-    @Test public void testFailMetaMatrixExceptionWithNullMessage() {
-        Throwable e = null;
-        try {
-            new TeiidException((String)null);  // should throw NPE
-            fail("Should not get here"); //$NON-NLS-1$
-        } catch ( Throwable ex ) {
-            e = ex;
-        }
-        assertNotNull(e);
-    }
 
     @Test public void testMetaMatrixExceptionWithNullThrowable() {
         final TeiidException err = new TeiidException((Throwable)null);
         assertNull(err.getCode());
         assertNull(err.getMessage());
-        
+
     }
 
     @Test public void testMetaMatrixExceptionWithMessage() {
         final TeiidException err = new TeiidException("Test"); //$NON-NLS-1$
         assertNull(err.getCode());
         assertEquals("Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
     public static enum Event implements BundleUtil.Event {
-    	Code,
-    	propertyValuePhrase,
+        Code,
+        propertyValuePhrase,
     }
     @Test public void testMetaMatrixExceptionWithCodeAndMessage() {
-        final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$ 
+        final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
     }
 
-    
+
     @Test public void testMetaMatrixExceptionWithExceptionAndMessage() {
-        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$ 
+        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$
         final TeiidException err = new TeiidException(child, "Test"); //$NON-NLS-1$
         assertEquals("propertyValuePhrase", err.getCode()); //$NON-NLS-1$
         assertEquals("propertyValuePhrase Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 
     @Test public void testMetaMatrixExceptionWithExceptionAndCodeAndMessage() {
@@ -81,6 +64,6 @@ public class TestMetaMatrixException {
         final TeiidException err = new TeiidException(Event.Code,child, "Test"); //$NON-NLS-1$
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 }

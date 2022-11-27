@@ -35,120 +35,120 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents a group of <code>Statement</code> objects. The
- * statements are stored on this object in the order in which they are added.</p>
+ * statements are stored on this object in the order in which they are added.
  */
 public class Block extends Statement implements Labeled {
 
-	// list of statements on this block
-	private List<Statement> statements;
-	private boolean atomic;
-	private String label;
-	
-	private String exceptionGroup;
-	private List<Statement> exceptionStatements;
+    // list of statements on this block
+    private List<Statement> statements;
+    private boolean atomic;
+    private String label;
 
-	/**
-	 * Constructor for Block.
-	 */
-	public Block() {
-		statements = new ArrayList<Statement>();
-	}
+    private String exceptionGroup;
+    private List<Statement> exceptionStatements;
 
-	/**
-	 * Constructor for Block with a single <code>Statement</code>.
-	 * @param statement The <code>Statement</code> to be added to the block
-	 */
-	public Block(Statement statement) {
-		this();
-		statements.add(statement);
-	}
-	
-	public String getLabel() {
-		return label;
-	}
-	
-	public void setLabel(String label) {
-		this.label = label;
-	}
+    /**
+     * Constructor for Block.
+     */
+    public Block() {
+        statements = new ArrayList<Statement>();
+    }
 
-	/**
-	 * Get all the statements contained on this block.
-	 * @return A list of <code>Statement</code>s contained in this block
-	 */
-	public List<Statement> getStatements() {
-		return statements;
-	}
+    /**
+     * Constructor for Block with a single <code>Statement</code>.
+     * @param statement The <code>Statement</code> to be added to the block
+     */
+    public Block(Statement statement) {
+        this();
+        statements.add(statement);
+    }
 
-	/**
-	 * Set the statements contained on this block.
-	 * @param statements A list of <code>Statement</code>s contained in this block
-	 */
-	public void setStatements(List<Statement> statements) {
-		this.statements = statements;
-	}
+    public String getLabel() {
+        return label;
+    }
 
-	/**
-	 * Add a <code>Statement</code> to this block.
-	 * @param statement The <code>Statement</code> to be added to the block
-	 */
-	public void addStatement(Statement statement) {
-		addStatement(statement, false);
-	}
-	
-	public void addStatement(Statement statement, boolean exception) {
-		if (statement instanceof AssignmentStatement) {
-			AssignmentStatement stmt = (AssignmentStatement)statement;
-			Command cmd = stmt.getCommand();
-			if (cmd != null) {
-				internalAddStatement(new CommandStatement(cmd), exception);
-				stmt.setCommand(null);
-				stmt.setExpression(null);
-				if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT) 
-						&& stmt.getVariable().getGroupSymbol() != null && stmt.getVariable().getGroupSymbol().getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
-					return;
-				}
-				String fullName = ProcedureReservedWords.VARIABLES+Symbol.SEPARATOR+ProcedureReservedWords.ROWCOUNT;
-				stmt.setExpression(new ElementSymbol(fullName));
-			}
-		}
-		internalAddStatement(statement, exception);
-	}
+    public void setLabel(String label) {
+        this.label = label;
+    }
 
-	private void internalAddStatement(Statement statement, boolean exception) {
-		if (exception) {
-			if (this.exceptionStatements == null) {
-				exceptionStatements = new ArrayList<Statement>();
-			}
-			exceptionStatements.add(statement);
-		} else {
-			statements.add(statement);
-		}
-	}
-	
+    /**
+     * Get all the statements contained on this block.
+     * @return A list of <code>Statement</code>s contained in this block
+     */
+    public List<Statement> getStatements() {
+        return statements;
+    }
+
+    /**
+     * Set the statements contained on this block.
+     * @param statements A list of <code>Statement</code>s contained in this block
+     */
+    public void setStatements(List<Statement> statements) {
+        this.statements = statements;
+    }
+
+    /**
+     * Add a <code>Statement</code> to this block.
+     * @param statement The <code>Statement</code> to be added to the block
+     */
+    public void addStatement(Statement statement) {
+        addStatement(statement, false);
+    }
+
+    public void addStatement(Statement statement, boolean exception) {
+        if (statement instanceof AssignmentStatement) {
+            AssignmentStatement stmt = (AssignmentStatement)statement;
+            Command cmd = stmt.getCommand();
+            if (cmd != null) {
+                internalAddStatement(new CommandStatement(cmd), exception);
+                stmt.setCommand(null);
+                stmt.setExpression(null);
+                if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT)
+                        && stmt.getVariable().getGroupSymbol() != null && stmt.getVariable().getGroupSymbol().getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
+                    return;
+                }
+                String fullName = ProcedureReservedWords.VARIABLES+Symbol.SEPARATOR+ProcedureReservedWords.ROWCOUNT;
+                stmt.setExpression(new ElementSymbol(fullName));
+            }
+        }
+        internalAddStatement(statement, exception);
+    }
+
+    private void internalAddStatement(Statement statement, boolean exception) {
+        if (exception) {
+            if (this.exceptionStatements == null) {
+                exceptionStatements = new ArrayList<Statement>();
+            }
+            exceptionStatements.add(statement);
+        } else {
+            statements.add(statement);
+        }
+    }
+
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
-	/**
-	 * Deep clone statement to produce a new identical block.
-	 * @return Deep clone 
-	 */
-	public Block clone() {		
-		Block copy = new Block();
-		copy.setAtomic(atomic);
-		copy.statements = LanguageObject.Util.deepClone(statements, Statement.class);
-		if (exceptionStatements != null) {
-			copy.exceptionStatements = LanguageObject.Util.deepClone(exceptionStatements, Statement.class);
-		}
-		copy.exceptionGroup = this.exceptionGroup;
-		copy.setLabel(label);
-		return copy;
-	}
-	
+
+    /**
+     * Deep clone statement to produce a new identical block.
+     * @return Deep clone
+     */
+    public Block clone() {
+        Block copy = new Block();
+        copy.setAtomic(atomic);
+        copy.statements = LanguageObject.Util.deepClone(statements, Statement.class);
+        if (exceptionStatements != null) {
+            copy.exceptionStatements = LanguageObject.Util.deepClone(exceptionStatements, Statement.class);
+        }
+        copy.exceptionGroup = this.exceptionGroup;
+        copy.setLabel(label);
+        return copy;
+    }
+
     /**
      * Compare two queries for equality.  Blocks will only evaluate to equal if
      * they are IDENTICAL: statements in the block are equal and are in the same order.
@@ -156,25 +156,25 @@ public class Block extends Statement implements Labeled {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests		
-    	if(!(obj instanceof Block)) {
-    		return false;
-		}
-    	
-    	Block other = (Block)obj;
-    	
-		// Compare the statements on the block
-        return this.atomic == other.atomic 
+        // Quick fail tests
+        if(!(obj instanceof Block)) {
+            return false;
+        }
+
+        Block other = (Block)obj;
+
+        // Compare the statements on the block
+        return this.atomic == other.atomic
         && StringUtil.equalsIgnoreCase(label, other.label)
         && EquivalenceUtil.areEqual(getStatements(), other.getStatements())
         && EquivalenceUtil.areEqual(exceptionGroup, other.exceptionGroup)
         && EquivalenceUtil.areEqual(exceptionStatements, exceptionStatements);
-    }    
+    }
 
     /**
      * Get hashcode for block.  WARNING: This hash code relies on the hash codes of the
@@ -184,44 +184,44 @@ public class Block extends Statement implements Labeled {
      * @return Hash code
      */
     public int hashCode() {
-    	return statements.hashCode();
-	}
-      
+        return statements.hashCode();
+    }
+
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public boolean isAtomic() {
-		return atomic;
-	}
-    
+        return atomic;
+    }
+
     public void setAtomic(boolean atomic) {
-		this.atomic = atomic;
-	}
-    
+        this.atomic = atomic;
+    }
+
     @Override
     public int getType() {
-    	return Statement.TYPE_COMPOUND;
+        return Statement.TYPE_COMPOUND;
     }
-    
+
     public String getExceptionGroup() {
-		return exceptionGroup;
-	}
-    
+        return exceptionGroup;
+    }
+
     public void setExceptionGroup(String exceptionGroup) {
-		this.exceptionGroup = exceptionGroup;
-	}
-    
+        this.exceptionGroup = exceptionGroup;
+    }
+
     public List<Statement> getExceptionStatements() {
-		return exceptionStatements;
-	}
-    
+        return exceptionStatements;
+    }
+
     public void setExceptionStatements(List<Statement> exceptionStatements) {
-		this.exceptionStatements = exceptionStatements;
-	}
+        this.exceptionStatements = exceptionStatements;
+    }
 
 }// END CLASS

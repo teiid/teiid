@@ -43,7 +43,7 @@ public class TestQueryImpl extends TestCase {
     public TestQueryImpl(String name) {
         super(name);
     }
-    
+
     public static org.teiid.query.sql.lang.Select helpExampleSelect(boolean distinct) {
         ArrayList<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -64,7 +64,7 @@ public class TestQueryImpl extends TestCase {
                          TestOrderByImpl.helpExample(),
                          null);
     }
-    
+
     public static Select example(boolean distinct) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(distinct));
     }
@@ -92,28 +92,28 @@ public class TestQueryImpl extends TestCase {
     public void testGetOrderBy() throws Exception {
         assertNotNull(example(true).getOrderBy());
     }
-    
+
     public void testGetColumnNames() throws Exception {
-        String[] expected = new String[4]; 
+        String[] expected = new String[4];
         String[] names = example(true).getColumnNames();
         assertTrue(EquivalenceUtil.areEquivalent(expected, names));
     }
-    
+
     public void testGetColumnTypes() throws Exception {
         Class[] expected = {String.class, String.class, String.class, String.class};
         Class[] types = example(true).getColumnTypes();
         assertTrue(EquivalenceUtil.areEquivalent(expected, types));
     }
 
-	public static org.teiid.query.sql.lang.From helpExampleFrom() {
-	    List<UnaryFromClause> clauses = new ArrayList<UnaryFromClause>();
-	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g1"))); //$NON-NLS-1$
-	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("myAlias", "vm1.g2"))); //$NON-NLS-1$ //$NON-NLS-2$
-	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g3"))); //$NON-NLS-1$
-	    clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g4"))); //$NON-NLS-1$
-	    return new org.teiid.query.sql.lang.From(clauses);
-	}
-	
+    public static org.teiid.query.sql.lang.From helpExampleFrom() {
+        List<UnaryFromClause> clauses = new ArrayList<UnaryFromClause>();
+        clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g1"))); //$NON-NLS-1$
+        clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("myAlias", "vm1.g2"))); //$NON-NLS-1$ //$NON-NLS-2$
+        clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g3"))); //$NON-NLS-1$
+        clauses.add(new UnaryFromClause(TestGroupImpl.helpExample("vm1.g4"))); //$NON-NLS-1$
+        return new org.teiid.query.sql.lang.From(clauses);
+    }
+
     public void testGetSelectSymbols() throws Exception {
         List symbols = example(false).getDerivedColumns();
         assertNotNull(symbols);

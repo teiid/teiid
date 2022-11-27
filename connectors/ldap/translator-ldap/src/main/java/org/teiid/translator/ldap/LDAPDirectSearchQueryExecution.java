@@ -31,59 +31,59 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
 public class LDAPDirectSearchQueryExecution extends LDAPSyncQueryExecution implements ProcedureExecution {
-	
-	private String query;
-	private boolean returnsArray = true;
-	
-	public LDAPDirectSearchQueryExecution(List<Argument> arguments, LDAPExecutionFactory factory, ExecutionContext executionContext, LdapContext connection, String query, boolean returnsArray) {
-		super(null, factory, executionContext, connection);
-		//perform substitution
-		StringBuilder sb = new StringBuilder();
-		SQLStringVisitor.parseNativeQueryParts(query.substring(7), arguments, sb, new SQLStringVisitor.Substitutor() {
-			
-			@Override
-			public void substitute(Argument arg, StringBuilder builder, int index) {
-				builder.append(IQueryToLdapSearchParser.escapeReservedChars(IQueryToLdapSearchParser.getLiteralString(arg.getArgumentValue())));
-			}
-		});
-		this.query = sb.toString();
-		this.returnsArray = returnsArray;
-	}
-	
-	@Override
-	public void execute() throws TranslatorException {
-		IQueryToLdapSearchParser parser = new IQueryToLdapSearchParser(this.executionFactory);
-		LDAPSearchDetails details = parser.buildRequest(query);
-		// Create and configure the new search context.
-		LdapContext context =  createSearchContext(details.getContextName());
-		
-		// build search controls
-		SearchControls controls = new SearchControls();
-		controls.setSearchScope(details.getSearchScope());
-		controls.setTimeLimit(details.getTimeLimit());
-		controls.setCountLimit(details.getCountLimit());
-		controls.setReturningAttributes(details.getAttributes());
-		
-		this.delegate = new LDAPQueryExecution(context, details, controls, this.executionFactory, this.executionContext);
-		this.delegate.execute();		
-	}
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		List<?> vals = super.next();
-		if (vals == null) {
-			return null;
-		}
-		if (returnsArray) {
-			List<Object[]> row = new ArrayList<Object[]>(1);
-			row.add(vals.toArray(new Object[vals.size()]));
-			return row;
-		}
-		return vals;
-	}
-	
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;
-	}
+    private String query;
+    private boolean returnsArray = true;
+
+    public LDAPDirectSearchQueryExecution(List<Argument> arguments, LDAPExecutionFactory factory, ExecutionContext executionContext, LdapContext connection, String query, boolean returnsArray) {
+        super(null, factory, executionContext, connection);
+        //perform substitution
+        StringBuilder sb = new StringBuilder();
+        SQLStringVisitor.parseNativeQueryParts(query.substring(7), arguments, sb, new SQLStringVisitor.Substitutor() {
+
+            @Override
+            public void substitute(Argument arg, StringBuilder builder, int index) {
+                builder.append(IQueryToLdapSearchParser.escapeReservedChars(IQueryToLdapSearchParser.getLiteralString(arg.getArgumentValue())));
+            }
+        });
+        this.query = sb.toString();
+        this.returnsArray = returnsArray;
+    }
+
+    @Override
+    public void execute() throws TranslatorException {
+        IQueryToLdapSearchParser parser = new IQueryToLdapSearchParser(this.executionFactory);
+        LDAPSearchDetails details = parser.buildRequest(query);
+        // Create and configure the new search context.
+        LdapContext context =  createSearchContext(details.getContextName());
+
+        // build search controls
+        SearchControls controls = new SearchControls();
+        controls.setSearchScope(details.getSearchScope());
+        controls.setTimeLimit(details.getTimeLimit());
+        controls.setCountLimit(details.getCountLimit());
+        controls.setReturningAttributes(details.getAttributes());
+
+        this.delegate = new LDAPQueryExecution(context, details, controls, this.executionFactory, this.executionContext);
+        this.delegate.execute();
+    }
+
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        List<?> vals = super.next();
+        if (vals == null) {
+            return null;
+        }
+        if (returnsArray) {
+            List<Object[]> row = new ArrayList<Object[]>(1);
+            row.add(vals.toArray(new Object[vals.size()]));
+            return row;
+        }
+        return vals;
+    }
+
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return null;
+    }
 }

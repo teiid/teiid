@@ -31,12 +31,12 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 
 
 /**
- * <p>This visitor class will traverse a language object tree and collect all sub-commands 
- * it finds.  It uses a List to collect the sub-commands in the order they're found.</p>
- * 
- * <p>The easiest way to use this visitor is to call the static methods which create 
- * the visitor, run the visitor, and get the collection. 
- * The public visit() methods should NOT be called directly.</p>
+ * <p>This visitor class will traverse a language object tree and collect all sub-commands
+ * it finds.  It uses a List to collect the sub-commands in the order they're found.
+ *
+ * <p>The easiest way to use this visitor is to call the static methods which create
+ * the visitor, run the visitor, and get the collection.
+ * The public visit() methods should NOT be called directly.
  */
 public class CommandCollectorVisitor extends LanguageVisitor {
 
@@ -44,11 +44,11 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     private boolean collectExpanded;
 
     /**
-     * Get the commands collected by the visitor.  This should best be called 
+     * Get the commands collected by the visitor.  This should best be called
      * after the visitor has been run on the language object tree.
      * @return List of {@link org.teiid.query.sql.lang.Command}
      */
-    public List<Command> getCommands() { 
+    public List<Command> getCommands() {
         return this.commands;
     }
 
@@ -64,13 +64,13 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     }
 
     public void visit(SubqueryCompareCriteria obj) {
-    	if (obj.getCommand() != null) {
-    		this.commands.add(obj.getCommand());
-    	}
+        if (obj.getCommand() != null) {
+            this.commands.add(obj.getCommand());
+        }
     }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
@@ -79,7 +79,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
@@ -88,72 +88,71 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
     public void visit(CommandStatement obj) {
         this.commands.add(obj.getCommand());
-    }    
+    }
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
     public void visit(LoopStatement obj) {
         this.commands.add(obj.getCommand());
     }
-    
+
     public void visit(BatchedUpdateCommand obj) {
         this.commands.addAll(obj.getUpdateCommands());
     }
-    
+
     @Override
     public void visit(WithQueryCommand obj) {
-    	this.commands.add(obj.getCommand());
+        this.commands.add(obj.getCommand());
     }
-    
+
     @Override
     public void visit(Insert obj) {
-    	if (obj.getQueryExpression() != null) {
-    		this.commands.add(obj.getQueryExpression());
-    	}
+        if (obj.getQueryExpression() != null) {
+            this.commands.add(obj.getQueryExpression());
+        }
     }
-    
+
     @Override
     public void visit(UnaryFromClause obj) {
-    	if (collectExpanded && obj.getExpandedCommand() != null && !obj.getGroup().isProcedure()) {
-    		this.commands.add(obj.getExpandedCommand());
-    	}
+        if (collectExpanded && obj.getExpandedCommand() != null && !obj.getGroup().isProcedure()) {
+            this.commands.add(obj.getExpandedCommand());
+        }
     }
-    
+
     /**
      * Helper to quickly get the commands from obj
-     * @param obj Language object
-     * @param elements Collection to collect commands in
+     * @param command Language object
      */
     public static final List<Command> getCommands(Command command) {
-    	return getCommands(command, false);
+        return getCommands(command, false);
     }
-    	
-	public static final List<Command> getCommands(Command command, boolean includeExpanded) {
+
+    public static final List<Command> getCommands(Command command, boolean includeExpanded) {
         CommandCollectorVisitor visitor = new CommandCollectorVisitor();
         visitor.collectExpanded = includeExpanded;
         final boolean visitCommands = command instanceof SetQuery;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
 
-        	@Override
-        	protected void visitNode(LanguageObject obj) {
-        		if (!visitCommands && obj instanceof Command) {
-    				return;
-        		}
-        		super.visitNode(obj);
-        	}
-        	
+            @Override
+            protected void visitNode(LanguageObject obj) {
+                if (!visitCommands && obj instanceof Command) {
+                    return;
+                }
+                super.visitNode(obj);
+            }
+
         };
         command.acceptVisitor(navigator);
         return visitor.getCommands();
     }
-    
+
 }

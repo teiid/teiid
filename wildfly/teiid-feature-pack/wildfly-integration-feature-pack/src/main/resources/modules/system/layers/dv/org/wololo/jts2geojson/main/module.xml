@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.wololo.jts2geojson">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    <resources>
+    	<artifact name="${org.wololo:jts2geojson}"/>
+    </resources>
+    <dependencies>
+        <module name="org.locationtech.jts" />
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+    </dependencies>
+</module>

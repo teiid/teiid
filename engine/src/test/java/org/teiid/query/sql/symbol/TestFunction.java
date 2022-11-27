@@ -29,49 +29,49 @@ import junit.framework.TestCase;
 public class TestFunction extends TestCase {
 
     // ################################## FRAMEWORK ################################
-    
-    public TestFunction(String name) { 
+
+    public TestFunction(String name) {
         super(name);
-    }    
-    
+    }
+
     // ################################## TEST HELPERS ################################
 
     // ################################## ACTUAL TESTS ################################
 
-    public void testFunction1() { 
+    public void testFunction1() {
         Function f1 = new Function("f1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function f2 = new Function("f1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
-        UnitTestUtil.helpTestEquivalence(0, f1, f2);        
-    }    
+        UnitTestUtil.helpTestEquivalence(0, f1, f2);
+    }
 
-    public void testFunction2() { 
+    public void testFunction2() {
         Function f1 = new Function("f1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function f2 = new Function("F1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
-        UnitTestUtil.helpTestEquivalence(0, f1, f2);        
-    }    
+        UnitTestUtil.helpTestEquivalence(0, f1, f2);
+    }
 
-    public void testFunction3() { 
+    public void testFunction3() {
         Function f1 = new Function("f1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function f2 = new Function("f2", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
-        UnitTestUtil.helpTestEquivalence(1, f1, f2);        
-    } 
-    
-    public void testFunction4() { 
+        UnitTestUtil.helpTestEquivalence(1, f1, f2);
+    }
+
+    public void testFunction4() {
         Function f1 = new Function("f1", new Expression[] {null}); //$NON-NLS-1$
         Function f2 = new Function("f1", new Expression[] {null}); //$NON-NLS-1$
-        UnitTestUtil.helpTestEquivalence(0, f1, f2);        
-    }     
+        UnitTestUtil.helpTestEquivalence(0, f1, f2);
+    }
 
-    public void testFunction5() { 
+    public void testFunction5() {
         Function f1 = new Function("f1", new Expression[] {null}); //$NON-NLS-1$
         Function f2 = new Function("f1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
-        UnitTestUtil.helpTestEquivalence(1, f1, f2);        
-    }     
+        UnitTestUtil.helpTestEquivalence(1, f1, f2);
+    }
 
     public void testFunction6() {
         Function f1 = new Function("f1", new Expression[] {new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$
         Function f2 = new Function("f1", new Expression[] {new Constant("xyz"), new Constant("xyz")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         UnitTestUtil.helpTestEquivalence(1, f1, f2);
     }
- 
+
 }

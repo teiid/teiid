@@ -3,14 +3,19 @@
     <parent>
         <artifactId>solr</artifactId>
         <groupId>org.teiid.connectors</groupId>
-        <version>11.1.0-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>translator-solr</artifactId>
-    <groupId>org.teiid.connectors</groupId>
     <name>Apache SOLR Translator</name>
     <description>This translator provides access to Apache SOLR</description>
-    <packaging>bundle</packaging>
+    
+    <properties>
+	    <!-- 1. We declare some transitive dependencies that are needed in the wildfly module.
+	    -->
+	    <basepom.check.fail-dependency>false</basepom.check.fail-dependency>
+    </properties>
+    
     <dependencies>
         <dependency>
             <groupId>org.teiid</groupId>
@@ -19,10 +24,6 @@
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
 		<dependency>
 			<groupId>org.apache.solr</groupId>
@@ -35,10 +36,6 @@
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>
-        </dependency>        
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
         </dependency>        
         <dependency>
             <groupId>org.teiid.connectors</groupId>

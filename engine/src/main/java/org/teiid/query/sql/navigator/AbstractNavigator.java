@@ -27,55 +27,55 @@ import org.teiid.query.sql.LanguageVisitor;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class AbstractNavigator extends LanguageVisitor {
 
     private LanguageVisitor visitor;
-    
+
     public AbstractNavigator(LanguageVisitor visitor) {
         this.visitor = visitor;
     }
-    
+
     public LanguageVisitor getVisitor() {
         return this.visitor;
     }
 
     protected void visitVisitor(LanguageObject obj) {
-    	if(this.visitor.shouldAbort()) {
+        if(this.visitor.shouldAbort()) {
             return;
         }
-    	
+
         obj.acceptVisitor(this.visitor);
     }
-    
+
     protected void visitNode(LanguageObject obj) {
         if(this.visitor.shouldAbort()) {
             return;
         }
-        
+
         if(obj != null) {
             obj.acceptVisitor(this);
         }
     }
-    
+
     protected void visitNodes(Collection<? extends LanguageObject> nodes) {
         if(this.visitor.shouldAbort() || nodes == null) {
             return;
         }
         int size = nodes.size();
         if (size > 0) {
-        	if (nodes instanceof List<?> && nodes instanceof RandomAccess) {
-        		List<? extends LanguageObject> list = (List<? extends LanguageObject>) nodes;
-        		for (int i = 0; i < size; i++) {
-        			visitNode(list.get(i));
-        		}
-        		return;
-        	}
-        	for (LanguageObject languageObject : nodes) {
-				visitNode(languageObject);
-			}
+            if (nodes instanceof List<?> && nodes instanceof RandomAccess) {
+                List<? extends LanguageObject> list = (List<? extends LanguageObject>) nodes;
+                for (int i = 0; i < size; i++) {
+                    visitNode(list.get(i));
+                }
+                return;
+            }
+            for (LanguageObject languageObject : nodes) {
+                visitNode(languageObject);
+            }
         }
     }
 

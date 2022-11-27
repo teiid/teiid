@@ -1,0 +1,39 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="mongodb">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
+            <transaction-support>NoTransaction</transaction-support>
+             <!-- if you are using mongodb 4+ in a replica set you can use local transactions instead:
+             
+            <transaction-support>LocalTransaction</transaction-support> 
+            -->
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory" 
+                        jndi-name="java:/mongoDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-mongodb-ds">
+                        
+                      <!-- MongoDB server list (host:port[;host:port...]) -->
+                      <config-property name="RemoteServerList">localhost:27017</config-property>
+                      <!-- Database Name in the MongoDB -->
+                      <config-property name="Database">test</config-property>
+                        <!-- 
+                            Uncomment these properties to supply user name and password
+                        
+                        <config-property name="Username">user</config-property>
+                        <config-property name="Password">user</config-property>
+
+                        after 2.6 the default security is changed, so below properties also needed
+                        SecurityType is one of :["None","SCRAM_SHA_1","MONGODB_CR", "Kerberos","X509"]
+                         
+                        <config-property name="SecurityType">SCRAM_SHA_1</config-property>
+                        <config-property name="AuthDatabase">test</config-property>
+                        <config-property name="Ssl">false</config-property>                                                                                
+                        -->  
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

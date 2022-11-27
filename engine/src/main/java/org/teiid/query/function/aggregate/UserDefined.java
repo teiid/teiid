@@ -29,70 +29,70 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.util.CommandContext;
 
 public class UserDefined extends AggregateFunction {
-	
-	private FunctionDescriptor fd;
-	private UserDefinedAggregate<?> instance;
-	private ExposedStateUserDefinedAggregate<?> exposed;
-	private Object[] values;
-	
-	public UserDefined(FunctionDescriptor functionDescriptor) throws FunctionExecutionException {
-		this.fd = functionDescriptor;
-		this.instance = (UserDefinedAggregate<?>) fd.newInstance();
-		if (instance instanceof ExposedStateUserDefinedAggregate) {
-			this.exposed = (ExposedStateUserDefinedAggregate)instance;
-		}
-	}
 
-	@Override
-	public void addInputDirect(List<?> tuple, CommandContext commandContext) throws TeiidComponentException,
-			TeiidProcessingException {
-		if (values == null) {
-			values = new Object[argIndexes.length + (fd.requiresContext()?1:0)];
-		}
-		if (fd.requiresContext()) {
-			values[0] = commandContext;
-		}
-		for (int i = 0; i < argIndexes.length; i++) {
-			values[i + (fd.requiresContext()?1:0)] = tuple.get(argIndexes[i]);
-		}
-		fd.invokeFunction(values, commandContext, instance);
-	}
-	
-	@Override
-	public void reset() {
-		instance.reset();
-	}
-	
-	@Override
-	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
-			ExpressionEvaluationException, TeiidComponentException,
-			TeiidProcessingException {
-		return instance.getResult(commandContext);
-	}
-	
-	@Override
-	public boolean respectsNull() {
-		return !fd.getMethod().isNullOnNull();
-	}
-	
-	public List<? extends Class<?>> getStateTypes() {
-    	if (this.exposed != null) {
-    		return this.exposed.getStateTypes();
-    	}
-    	return null;
+    private FunctionDescriptor fd;
+    private UserDefinedAggregate<?> instance;
+    private ExposedStateUserDefinedAggregate<?> exposed;
+    private Object[] values;
+
+    public UserDefined(FunctionDescriptor functionDescriptor) throws FunctionExecutionException {
+        this.fd = functionDescriptor;
+        this.instance = (UserDefinedAggregate<?>) fd.newInstance();
+        if (instance instanceof ExposedStateUserDefinedAggregate) {
+            this.exposed = (ExposedStateUserDefinedAggregate)instance;
+        }
     }
-    
+
+    @Override
+    public void addInputDirect(List<?> tuple, CommandContext commandContext) throws TeiidComponentException,
+            TeiidProcessingException {
+        if (values == null) {
+            values = new Object[argIndexes.length + (fd.requiresContext()?1:0)];
+        }
+        if (fd.requiresContext()) {
+            values[0] = commandContext;
+        }
+        for (int i = 0; i < argIndexes.length; i++) {
+            values[i + (fd.requiresContext()?1:0)] = tuple.get(argIndexes[i]);
+        }
+        fd.invokeFunction(values, commandContext, instance);
+    }
+
+    @Override
+    public void reset() {
+        instance.reset();
+    }
+
+    @Override
+    public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
+            ExpressionEvaluationException, TeiidComponentException,
+            TeiidProcessingException {
+        return instance.getResult(commandContext);
+    }
+
+    @Override
+    public boolean respectsNull() {
+        return !fd.getMethod().isNullOnNull();
+    }
+
+    public List<? extends Class<?>> getStateTypes() {
+        if (this.exposed != null) {
+            return this.exposed.getStateTypes();
+        }
+        return null;
+    }
+
     public void getState(List<Object> state) {
-    	if (this.exposed != null) {
-    		this.exposed.getState(state);
-    	}
+        if (this.exposed != null) {
+            this.exposed.getState(state);
+        }
     }
-    
+
     public int setState(List<?> state, int index) {
-    	if (this.exposed != null) {
-    		return this.exposed.setState(state, index);
-    	}
-    	return 0;
+        if (this.exposed != null) {
+            return this.exposed.setState(state, index);
+        }
+        return 0;
     }
-	
+
 }

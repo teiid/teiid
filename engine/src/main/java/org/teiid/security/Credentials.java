@@ -21,25 +21,17 @@ package org.teiid.security;
 import java.io.Serializable;
 
 public class Credentials implements Serializable {
-    
-	private static final long serialVersionUID = 7453114713211221240L;
-	
-	private char[] credentials = null;
-    
-    /**
-     * Construct a new PasswordCredentials 
-     * @param credentials the password.
-     */
-    public Credentials(char[] credentials) {
+
+    private static final long serialVersionUID = 7453114713211221240L;
+
+    private Object credentials;
+
+    public Credentials(Object credentials) {
         this.credentials = credentials;
     }
 
-    /**
-     * Get the Credentials as a char[].
-     * @returns The Credentials in a char[].
-     */
-    public char[] getCredentialsAsCharArray() {
-        return this.credentials;
+    public Object getCredentials() {
+        return credentials;
     }
 
 }

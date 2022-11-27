@@ -38,19 +38,19 @@ public class TestTeiidTracingUtil {
         SpanContext spanContext = ttu.extractSpanContext("corrupted");
         assertNull(spanContext);
         assertNull(tracer.activeSpan()); //should be null, no side effect just from extract
-        
+
         Span span = ttu.buildSpan(new Options().tracingWithActiveSpanOnly(false), new CommandLogMessage(0, "", null, null, null, null, null, null, "", null), null);
         assertNotNull(span);
-        
+
         span = ttu.buildSpan(new Options().tracingWithActiveSpanOnly(false), new CommandLogMessage(0, "", null, null, null, null, null, null, "", null), "{\"spanid\":\"1\",\"traceid\":\"2\"}");
         assertNotNull(span);
     }
-    
+
     @Test public void testTracingEnabled() {
         TeiidTracingUtil ttu = new TeiidTracingUtil();
         MockTracer tracer = new MockTracer();
         ttu.setTracer(tracer);
         assertFalse(ttu.isTracingEnabled(new Options().tracingWithActiveSpanOnly(true), null));
     }
-    
+
 }

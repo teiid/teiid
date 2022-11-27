@@ -64,7 +64,7 @@ public class CorsFilter implements Filter {
                     httpResp, 400);
             return;
         }
-        
+
         if (isPreflightRequest(httpReq)) {
             httpResp.setHeader("Access-Control-Allow-Origin", httpReq.getHeader("Origin")); //$NON-NLS-1$ //$NON-NLS-2$
             httpResp.setHeader("Access-Control-Allow-Credentials", "true"); //$NON-NLS-1$ //$NON-NLS-2$

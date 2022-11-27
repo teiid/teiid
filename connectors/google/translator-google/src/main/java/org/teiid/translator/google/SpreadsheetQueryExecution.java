@@ -33,49 +33,49 @@ import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 
 /**
  * Execution of SELECT Command
- * 
+ *
  * @author felias
  *
  */
 public class SpreadsheetQueryExecution implements ResultSetExecution {
 
-	private Select query;
-	private GoogleSpreadsheetConnection connection;
-	private Iterator<SheetRow> rowIterator;
-	private ExecutionContext executionContext;
+    private Select query;
+    private GoogleSpreadsheetConnection connection;
+    private Iterator<SheetRow> rowIterator;
+    private ExecutionContext executionContext;
 
-	public SpreadsheetQueryExecution(Select query,
-			GoogleSpreadsheetConnection connection, ExecutionContext executionContext) {
-		this.executionContext = executionContext;
-		this.connection = connection;
-		this.query = query;
-	}
+    public SpreadsheetQueryExecution(Select query,
+            GoogleSpreadsheetConnection connection, ExecutionContext executionContext) {
+        this.executionContext = executionContext;
+        this.connection = connection;
+        this.query = query;
+    }
 
-	@Override
-	public void close() {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("close_query")); //$NON-NLS-1$
-	}
+    @Override
+    public void close() {
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("close_query")); //$NON-NLS-1$
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("cancel_query")); //$NON-NLS-1$
+    @Override
+    public void cancel() throws TranslatorException {
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("cancel_query")); //$NON-NLS-1$
 
-	}
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
-		visitor.translateSQL(query);
-		rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
-		
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
+        visitor.translateSQL(query);
+        rowIterator = connection.executeQuery(visitor.getWorksheet(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {		
-		if (rowIterator.hasNext()) {
-			return rowIterator.next().getRow();
-		}
-		return null;
-	}
+    }
+
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        if (rowIterator.hasNext()) {
+            return rowIterator.next().getRow();
+        }
+        return null;
+    }
 
 }

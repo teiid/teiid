@@ -27,49 +27,49 @@ import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 
 public class LocateFunctionModifier extends org.teiid.translator.jdbc.LocateFunctionModifier {
-	
-	public LocateFunctionModifier(LanguageFactory factory) {
-		super(factory);
-	}
 
-	@Override
-	public List<?> translate(Function function) {
-		modify(function);
-		List<Object> parts = new ArrayList<Object>();
-		List<Expression> params = function.getParameters();
-		parts.add("position("); //$NON-NLS-1$
-		parts.add(params.get(0));		
-		parts.add(" in "); //$NON-NLS-1$
-		boolean useSubStr = false;
-		if (params.size() == 3) {
-			useSubStr = true;
-			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
-				Integer value = (Integer)((Literal)params.get(2)).getValue();
-				if (value <= 1) {
-					useSubStr = false;
-				}
-			}
-		}
-		if (useSubStr) {
-			parts.add(0, "("); //$NON-NLS-1$
-			parts.add("substring("); //$NON-NLS-1$
-			parts.add(params.get(1));
-			parts.add(" from "); //$NON-NLS-1$
-			parts.add(params.get(2));
-			parts.add("))"); //$NON-NLS-1$
-			parts.add(" + "); //$NON-NLS-1$
-			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
-				Integer value = (Integer)((Literal)params.get(2)).getValue();
-				parts.add(value - 1);
-			} else {
-				parts.add(params.get(2));
-				parts.add(" - 1"); //$NON-NLS-1$
-			}
-		} else {
-			parts.add(params.get(1));
-		}
-		parts.add(")"); //$NON-NLS-1$
-		return parts;
-	}
-	
+    public LocateFunctionModifier(LanguageFactory factory) {
+        super(factory);
+    }
+
+    @Override
+    public List<?> translate(Function function) {
+        modify(function);
+        List<Object> parts = new ArrayList<Object>();
+        List<Expression> params = function.getParameters();
+        parts.add("position("); //$NON-NLS-1$
+        parts.add(params.get(0));
+        parts.add(" in "); //$NON-NLS-1$
+        boolean useSubStr = false;
+        if (params.size() == 3) {
+            useSubStr = true;
+            if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
+                Integer value = (Integer)((Literal)params.get(2)).getValue();
+                if (value <= 1) {
+                    useSubStr = false;
+                }
+            }
+        }
+        if (useSubStr) {
+            parts.add(0, "("); //$NON-NLS-1$
+            parts.add("substring("); //$NON-NLS-1$
+            parts.add(params.get(1));
+            parts.add(" from "); //$NON-NLS-1$
+            parts.add(params.get(2));
+            parts.add("))"); //$NON-NLS-1$
+            parts.add(" + "); //$NON-NLS-1$
+            if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
+                Integer value = (Integer)((Literal)params.get(2)).getValue();
+                parts.add(value - 1);
+            } else {
+                parts.add(params.get(2));
+                parts.add(" - 1"); //$NON-NLS-1$
+            }
+        } else {
+            parts.add(params.get(1));
+        }
+        parts.add(")"); //$NON-NLS-1$
+        return parts;
+    }
+
 }

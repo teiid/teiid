@@ -39,14 +39,14 @@ import org.teiid.core.util.MultiArrayOutputStream;
 public class ObjectEncoderOutputStream extends ObjectOutputStream {
 
     private final DataOutputStream out;
-	private MultiArrayOutputStream baos;
-    
+    private MultiArrayOutputStream baos;
+
     public ObjectEncoderOutputStream(DataOutputStream out, int initialBufferSize) throws SecurityException, IOException {
-    	super();
-    	this.out = out;
+        super();
+        this.out = out;
         baos = new MultiArrayOutputStream(initialBufferSize);
     }
-    
+
     @Override
     final protected void writeObjectOverride(Object obj) throws IOException {
         baos.reset(4);
@@ -55,58 +55,58 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
         ExternalizeUtil.writeCollection(oout, oout.getReferences());
         oout.flush();
         oout.close();
-        
+
         int val = baos.getCount()-4;
         byte[] b = baos.getBuffers()[0];
         b[3] = (byte) (val >>> 0);
-    	b[2] = (byte) (val >>> 8);
-    	b[1] = (byte) (val >>> 16);
-    	b[0] = (byte) (val >>> 24);
-    	baos.writeTo(out);
-        
-    	if (!oout.getStreams().isEmpty()) {
-    		baos.reset(0);
-    		byte[] chunk = new byte[(1 << 16)];
-	        for (InputStream is : oout.getStreams()) {
-	        	while (true) {
-		        	int bytes = is.read(chunk, 2, chunk.length - 2);
-		        	int toWrite = Math.max(0, bytes);
-		        	chunk[1] = (byte) (toWrite >>> 0);
-		        	chunk[0] = (byte) (toWrite >>> 8);
-		        	if (baos.getIndex() + toWrite + 2 > b.length) {
-		        		//exceeds the first buffer
-			        	baos.writeTo(out);
-			        	baos.reset(0);
-			        	out.write(chunk, 0, toWrite + 2);
-		        	} else {
-		        		//buffer the small chunk
-		        		baos.write(chunk, 0, toWrite + 2);
-		        	}
-		        	if (bytes < 1) {
-		        		is.close();
-		        		break;
-		        	}
-	        	}
-			}
-	        if (baos.getIndex() > 0) {
-	        	baos.writeTo(out);
-        	}
-    	}
+        b[2] = (byte) (val >>> 8);
+        b[1] = (byte) (val >>> 16);
+        b[0] = (byte) (val >>> 24);
+        baos.writeTo(out);
+
+        if (!oout.getStreams().isEmpty()) {
+            baos.reset(0);
+            byte[] chunk = new byte[(1 << 16)];
+            for (InputStream is : oout.getStreams()) {
+                while (true) {
+                    int bytes = is.read(chunk, 2, chunk.length - 2);
+                    int toWrite = Math.max(0, bytes);
+                    chunk[1] = (byte) (toWrite >>> 0);
+                    chunk[0] = (byte) (toWrite >>> 8);
+                    if (baos.getIndex() + toWrite + 2 > b.length) {
+                        //exceeds the first buffer
+                        baos.writeTo(out);
+                        baos.reset(0);
+                        out.write(chunk, 0, toWrite + 2);
+                    } else {
+                        //buffer the small chunk
+                        baos.write(chunk, 0, toWrite + 2);
+                    }
+                    if (bytes < 1) {
+                        is.close();
+                        break;
+                    }
+                }
+            }
+            if (baos.getIndex() > 0) {
+                baos.writeTo(out);
+            }
+        }
     }
-    
+
     @Override
     public void close() throws IOException {
-    	out.close();
+        out.close();
     }
-    
+
     @Override
     public void flush() throws IOException {
-    	out.flush();
+        out.flush();
     }
-    
+
     @Override
     public void reset() throws IOException {
-    	//automatically resets with each use
+        //automatically resets with each use
     }
-    
+
 }

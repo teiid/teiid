@@ -1,10 +1,24 @@
 language: java
-sudo: false
+jdk:
+    - openjdk9
+    - openjdk11
+stages:
+  - name: script
+    if: type != cron
 before_install:
-- cp settings.xml $HOME/.m2/settings.xml
+  - cp settings.xml $HOME/.m2/settings.xml
+install: mvn -P release,wildfly install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+script: mvn -P arquillian-tests,wildfly test -B
 cache:
   directories:
-  - $HOME/.m2
+    - $HOME/.m2
+deploy:
+  provider: script
+  script: "mvn -P dev,wildfly deploy -q"
+  skip_cleanup: true
+  on:
+    branch: master
+    jdk: openjdk9
 notifications:
   webhooks:
     urls:

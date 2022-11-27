@@ -31,32 +31,32 @@ import org.teiid.query.sql.proc.Statement.Labeled;
 
 
 /**
- * <p> This class represents a loop statement in the storedprocedure language 
+ * <p> This class represents a loop statement in the storedprocedure language
  * to cursor through a result set.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
- * a block, a select statement and a cursor. 
- * determines which block should be executed..</p>
+ * a block, a select statement and a cursor.
+ * determines which block should be executed..
  */
 public class LoopStatement extends Statement implements SubqueryContainer, Labeled {
     private String cursorName;
     private Block loopBlock;
     private Command query;
     private String label;
-    
+
     public LoopStatement(Block block, Command query, String cursorName){
         this.loopBlock = block;
         this.query = query;
         this.cursorName = cursorName;
-    }    
-    
+    }
+
     public String getLabel() {
-		return label;
-	}
-    
+        return label;
+    }
+
     public void setLabel(String label) {
-		this.label = label;
-	}
-    
+        this.label = label;
+    }
+
     /**
      * @return
      */
@@ -79,15 +79,12 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
     }
 
     /**
-     * Sets the command. 
+     * Sets the command.
      */
     public void setCommand(Command command){
         this.query = command;
     }
 
-    /**
-     * @param string
-     */
     public void setCursorName(String cursorName) {
         this.cursorName = cursorName;
     }
@@ -105,7 +102,7 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
     public void setCommand(Query query) {
         this.query = query;
     }
-    
+
     /**
      * Return the type for this statement, this is one of the types
      * defined on the statement object.
@@ -113,29 +110,29 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
      */
     public int getType() {
         return Statement.TYPE_LOOP;
-    }   
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     /**
      * Deep clone statement to produce a new identical statement.
-     * @return Deep clone 
+     * @return Deep clone
      */
     public Object clone() {
-        Block otherBlock = this.loopBlock.clone();    
+        Block otherBlock = this.loopBlock.clone();
         Command otherQuery = (Command) this.query.clone();
 
         LoopStatement ls = new LoopStatement(otherBlock, otherQuery, this.cursorName);
         ls.setLabel(label);
         return ls;
     }
-    
+
     /**
      * Compare two LoopStatements for equality.  They will only evaluate to equal if
      * they are IDENTICAL: the blocks is same, the query is same, and the cursor name is same.
@@ -148,14 +145,14 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
             return true;
         }
 
-        // Quick fail tests     
+        // Quick fail tests
         if(!(obj instanceof LoopStatement)) {
             return false;
         }
 
         LoopStatement other = (LoopStatement) obj;
-        
-        return 
+
+        return
             // Compare the query
             EquivalenceUtil.areEqual(query, other.query) &&
             // Compare the if block
@@ -163,7 +160,7 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
             // Compare the else block
             EquivalenceUtil.areEqual(cursorName, other.cursorName)
             && StringUtil.equalsIgnoreCase(this.label, other.label);
-    } 
+    }
 
     /**
      * Get hashcode for LoopStatement.  WARNING: This hash code relies on the

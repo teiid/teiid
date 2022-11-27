@@ -32,31 +32,31 @@ import org.teiid.query.tempdata.TempTableStore;
  */
 //TODO: merge with DQPWorkContext
 class ClientState {
-	LinkedHashSet<RequestID> requests;
-	TempTableStore sessionTables;
-	volatile SessionMetadata session;
-	
-	public ClientState(TempTableStore tableStoreImpl) {
-		this.sessionTables = tableStoreImpl;
-	}
-	
-	public synchronized void addRequest(RequestID requestID) {
-		if (requests == null) {
-			requests = new LinkedHashSet<RequestID>(2);
-		}
-		requests.add(requestID);
-	}
-	
-	public synchronized List<RequestID> getRequests() {
-		if (requests == null) {
-			return Collections.emptyList();
-		}
-		return new ArrayList<RequestID>(requests);
-	}
+    LinkedHashSet<RequestID> requests;
+    TempTableStore sessionTables;
+    volatile SessionMetadata session;
 
-	public synchronized void removeRequest(RequestID requestID) {
-		if (requests != null) {
-			requests.remove(requestID);
-		}
-	}
+    public ClientState(TempTableStore tableStoreImpl) {
+        this.sessionTables = tableStoreImpl;
+    }
+
+    public synchronized void addRequest(RequestID requestID) {
+        if (requests == null) {
+            requests = new LinkedHashSet<RequestID>(2);
+        }
+        requests.add(requestID);
+    }
+
+    public synchronized List<RequestID> getRequests() {
+        if (requests == null) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<RequestID>(requests);
+    }
+
+    public synchronized void removeRequest(RequestID requestID) {
+        if (requests != null) {
+            requests.remove(requestID);
+        }
+    }
 }

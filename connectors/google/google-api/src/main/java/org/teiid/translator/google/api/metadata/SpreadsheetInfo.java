@@ -11,40 +11,24 @@ import java.util.Map;
  *
  */
 public class SpreadsheetInfo {
-	private String spreadsheetName;
-	private Map<String, Worksheet> worksheetByName = new HashMap<String,Worksheet>();
-	private String spreadsheetKey;
-	
-	public String getSpreadsheetKey() {
-		return spreadsheetKey;
-	}
+    private Map<String, Worksheet> worksheetByName = new HashMap<String,Worksheet>();
 
-	public void setSpreadsheetKey(String spreadsheetKey) {
-		this.spreadsheetKey = spreadsheetKey;
-	}
+    public Worksheet createWorksheet(String name) {
+        return this.createWorksheet(name, name);
+    }
 
-	public SpreadsheetInfo(String spreadsheetName) {
-		this.spreadsheetName = spreadsheetName;
-		
-	}
-	
-	public Worksheet createWorksheet(String title) {
-		Worksheet worksheet = new Worksheet(title);
-		worksheetByName.put(title, worksheet);
-		return worksheet;
-	}
-	
-	public Collection<Worksheet> getWorksheets(){
-		return Collections.unmodifiableCollection(worksheetByName.values());
-	}
-	
-	public Worksheet getWorksheetByName(String worksheet){		
-		return worksheetByName.get(worksheet);		
-	}
-	
-	public String getSpreadsheetName() {
-		return spreadsheetName;
-	}
-	
-	
+    public Worksheet createWorksheet(String name, String title) {
+        Worksheet worksheet = new Worksheet(name, title);
+        worksheetByName.put(name, worksheet);
+        return worksheet;
+    }
+
+    public Collection<Worksheet> getWorksheets(){
+        return Collections.unmodifiableCollection(worksheetByName.values());
+    }
+
+    public Worksheet getWorksheetByName(String worksheet){
+        return worksheetByName.get(worksheet);
+    }
+
 }

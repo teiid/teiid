@@ -36,65 +36,65 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
 public class JPQLQueryExecution extends JPQLBaseExecution implements ResultSetExecution {
-	private QueryExpression command;
-	private Iterator resultsIterator;
-	private JPA2ExecutionFactory executionFactory;
+    private QueryExpression command;
+    private Iterator resultsIterator;
+    private JPA2ExecutionFactory executionFactory;
 
-	public JPQLQueryExecution(JPA2ExecutionFactory executionFactory, QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {
-		super(executionContext, metadata, em);
-		this.command = command;
-		this.executionFactory = executionFactory;
-	}
+    public JPQLQueryExecution(JPA2ExecutionFactory executionFactory, QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {
+        super(executionContext, metadata, em);
+        this.command = command;
+        this.executionFactory = executionFactory;
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		String jpql = JPQLSelectVisitor.getJPQLString((Select)this.command, this.executionFactory, this.metadata);
-		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "JPA Source-Query:", jpql); //$NON-NLS-1$
-		
-		Query query = this.enityManager.createQuery(jpql);
-		handleLimit(this.command, query);
-		List results = query.getResultList();
-		this.resultsIterator = results.iterator();
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        String jpql = JPQLSelectVisitor.getJPQLString((Select)this.command, this.executionFactory, this.metadata);
 
-	/**
-	 * If the query specifies a Limit, apply that to the query as firstResult
-	 * and maxResults.
-	 *
-	 * @param command the teiid query to be executed
-	 * @param query the JPA query to be executed
-	 */
-	private void handleLimit(QueryExpression command, Query query) {
-		Limit limit = command.getLimit();
-		if (limit == null) {
-			return;
-		}
-		query.setFirstResult(limit.getRowOffset())
-				.setMaxResults(limit.getRowLimit());
-	}
+        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "JPA Source-Query:", jpql); //$NON-NLS-1$
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		if (this.resultsIterator != null && this.resultsIterator.hasNext()) {
-			Object obj = this.resultsIterator.next();
-			if (obj instanceof Object[]) {
-				return Arrays.asList((Object[])obj);
-			}
-			return Arrays.asList(obj);
-		}
-		return null;
-	}
-	
-	@Override
-	public void close() {
-		// no close
-		this.resultsIterator = null;
+        Query query = this.enityManager.createQuery(jpql);
+        handleLimit(this.command, query);
+        List results = query.getResultList();
+        this.resultsIterator = results.iterator();
+    }
 
-	}
+    /**
+     * If the query specifies a Limit, apply that to the query as firstResult
+     * and maxResults.
+     *
+     * @param command the teiid query to be executed
+     * @param query the JPA query to be executed
+     */
+    private void handleLimit(QueryExpression command, Query query) {
+        Limit limit = command.getLimit();
+        if (limit == null) {
+            return;
+        }
+        query.setFirstResult(limit.getRowOffset())
+                .setMaxResults(limit.getRowLimit());
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-		// no cancel
-	}
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        if (this.resultsIterator != null && this.resultsIterator.hasNext()) {
+            Object obj = this.resultsIterator.next();
+            if (obj instanceof Object[]) {
+                return Arrays.asList((Object[])obj);
+            }
+            return Arrays.asList(obj);
+        }
+        return null;
+    }
+
+    @Override
+    public void close() {
+        // no close
+        this.resultsIterator = null;
+
+    }
+
+    @Override
+    public void cancel() throws TranslatorException {
+        // no cancel
+    }
 }

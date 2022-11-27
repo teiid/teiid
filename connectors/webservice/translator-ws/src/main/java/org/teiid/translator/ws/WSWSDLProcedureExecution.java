@@ -42,25 +42,21 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.WSConnection;
-import org.teiid.translator.WSConnection.Util;
 import org.teiid.util.StAXSQLXML;
+import org.teiid.util.WSUtil;
 
 /**
- * A WSDL soap call executor 
+ * A WSDL soap call executor
  */
 public class WSWSDLProcedureExecution implements ProcedureExecution {
 
-	RuntimeMetadata metadata;
+    RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
     private StAXSource returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
-    
-    /** 
-     * @param env
-     */
+
     public WSWSDLProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
         this.metadata = metadata;
         this.context = context;
@@ -68,70 +64,70 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
         this.conn = conn;
         this.executionFactory = executionFactory;
     }
-    
+
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
-        
+
         XMLType docObject = (XMLType)arguments.get(0).getArgumentValue().getValue();
         StAXSource source = null;
-    	try {
-	        source = convertToSource(docObject);
-	        
-	        Dispatch<StAXSource> dispatch = conn.createDispatch(StAXSource.class, executionFactory.getDefaultServiceMode());
-	        String operation = this.procedure.getProcedureName();
-	        if (this.procedure.getMetadataObject() != null && this.procedure.getMetadataObject().getNameInSource() != null) {
-	        	operation = this.procedure.getMetadataObject().getNameInSource();
-	        }
-	        QName opQName = new QName(conn.getServiceQName().getNamespaceURI(), operation);
-	        dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName); 
-	
-			if (source == null) {
-				// JBoss Native DispatchImpl throws exception when the source is null
-				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
-			}
-			this.returnValue = dispatch.invoke(source);
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		} catch (WebServiceException e) {
-			throw new TranslatorException(e);
-		} catch (XMLStreamException e) {
-			throw new TranslatorException(e);
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		} finally {
-			Util.closeSource(source);
-		}
+        try {
+            source = convertToSource(docObject);
+
+            Dispatch<StAXSource> dispatch = conn.createDispatch(StAXSource.class, executionFactory.getDefaultServiceMode());
+            String operation = this.procedure.getProcedureName();
+            if (this.procedure.getMetadataObject() != null && this.procedure.getMetadataObject().getNameInSource() != null) {
+                operation = this.procedure.getMetadataObject().getNameInSource();
+            }
+            QName opQName = new QName(conn.getServiceQName().getNamespaceURI(), operation);
+            dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName);
+
+            if (source == null) {
+                // JBoss Native DispatchImpl throws exception when the source is null
+                source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
+            }
+            this.returnValue = dispatch.invoke(source);
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        } catch (WebServiceException e) {
+            throw new TranslatorException(e);
+        } catch (XMLStreamException e) {
+            throw new TranslatorException(e);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        } finally {
+            WSUtil.closeSource(source);
+        }
     }
 
-	private StAXSource convertToSource(SQLXML xml) throws SQLException {
-		if (xml == null) {
-			return null;
-		}
-		return xml.getSource(StAXSource.class);
-	}
-    
+    private StAXSource convertToSource(SQLXML xml) throws SQLException {
+        if (xml == null) {
+            return null;
+        }
+        return xml.getSource(StAXSource.class);
+    }
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
-    	return null;
-    }  
-    
+        return null;
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-    	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 1 && Boolean.TRUE.equals(procedure.getArguments().get(1).getArgumentValue().getValue())) {
-			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
-			XMLType xml = new XMLType(sqlXml);
-			xml.setType(Type.DOCUMENT);
-			result = xml;
-		}
+        Object result = returnValue;
+        if (returnValue != null && procedure.getArguments().size() > 1 && Boolean.TRUE.equals(procedure.getArguments().get(1).getArgumentValue().getValue())) {
+            SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
+            XMLType xml = new XMLType(sqlXml);
+            xml.setType(Type.DOCUMENT);
+            result = xml;
+        }
         return Arrays.asList(result);
-    }    
-    
+    }
+
     public void close() {
-    	
+
     }
 
     public void cancel() throws TranslatorException {
         // no-op
-    }    
+    }
 }

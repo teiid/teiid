@@ -29,35 +29,35 @@ import org.teiid.core.TeiidProcessingException;
  * XA transaction-related.
  */
 public class XATransactionException extends TeiidProcessingException {
-	private static final long serialVersionUID = 5685144848609237877L;
-	private int errorCode = XAException.XAER_RMERR;
-    
+    private static final long serialVersionUID = 5685144848609237877L;
+    private int errorCode = XAException.XAER_RMERR;
+
     public XATransactionException(Throwable e) {
         super(e);
-    } 
-    
+    }
+
     public XATransactionException(BundleUtil.Event event, int code, Throwable e) {
         super( event, e);
         this.errorCode = code;
-    }    
-    
+    }
+
     public XATransactionException(BundleUtil.Event event, int code, Throwable e, String msg) {
         super(event, e, msg);
         this.errorCode = code;
     }
-    
+
     public XATransactionException(BundleUtil.Event event, Throwable e) {
         super(event, e);
     }
-    
+
     public XATransactionException(BundleUtil.Event event, int code, String msg) {
         super(event, msg);
         this.errorCode = code;
-    } 
-    
+    }
+
     public XATransactionException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }    
+    }
 
     public XAException getXAException() {
         Throwable actualException = getCause();

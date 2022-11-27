@@ -32,7 +32,7 @@ public interface Client {
     public static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
     public static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
     public static final String CHARSET = "charset"; //$NON-NLS-1$
-    
+
     VDBMetaData getVDB();
 
     MetadataStore getMetadataStore();
@@ -47,16 +47,16 @@ public interface Client {
     CountResponse executeCount(Query query, List<SQLParameter> parameters) throws SQLException;
 
     UpdateResponse executeUpdate(Command command, List<SQLParameter> parameters) throws SQLException;
-        
+
     String startTransaction() throws SQLException;
 
     void commit(String txnId) throws SQLException;
-    
+
     void rollback(String txnId) throws SQLException;
-    
+
     String getProperty(String name);
-    
+
     Connection open() throws SQLException, TeiidProcessingException;
-    
+
     void close() throws SQLException;
 }

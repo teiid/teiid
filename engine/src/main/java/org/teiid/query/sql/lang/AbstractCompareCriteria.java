@@ -25,7 +25,7 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * <p>The common functionality of a {@link CompareCriteria} and a
  * {@link SubqueryCompareCriteria}.  The comparison operators are defined
- * here.</p>
+ * here.
  */
 public abstract class AbstractCompareCriteria extends PredicateCriteria implements Negatable {
 
@@ -47,8 +47,8 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
     /** Constant indicating the first operand is greater than or equal to the second. */
     public static final int GE = 6;
 
-	/** The left-hand expression. */
-	private Expression leftExpression;
+    /** The left-hand expression. */
+    private Expression leftExpression;
 
     /**
      * The operator used in the clause.
@@ -96,22 +96,22 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
         else return -1;
     }
 
-	/**
-	 * Set left expression.
-	 * @param expression Left expression
-	 */
-	public void setLeftExpression(Expression expression) {
-		this.leftExpression = expression;
-	}
+    /**
+     * Set left expression.
+     * @param expression Left expression
+     */
+    public void setLeftExpression(Expression expression) {
+        this.leftExpression = expression;
+    }
 
-	/**
-	 * Get left expression.
-	 * @return Left expression
-	 */
-	public Expression getLeftExpression() {
-		return this.leftExpression;
-	}
-    
+    /**
+     * Get left expression.
+     * @return Left expression
+     */
+    public Expression getLeftExpression() {
+        return this.leftExpression;
+    }
+
     /**
      * Returns the operator as a string.
      * @return String version of operator
@@ -127,22 +127,22 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
             default: return "??"; //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public void negate() {
-    	this.setOperator(getInverseOperator(this.getOperator()));
+        this.setOperator(getInverseOperator(this.getOperator()));
     }
-    
+
     public static int getInverseOperator(int op) {
-    	switch ( op ) {
-        case EQ: return NE; 
+        switch ( op ) {
+        case EQ: return NE;
         case NE: return EQ;
         case LT: return GE;
         case GT: return LE;
         case LE: return GT;
         case GE: return LT;
         default: return -1;
-    	}
+        }
     }
-        
+
 }  // END CLASS

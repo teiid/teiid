@@ -25,8 +25,8 @@ import org.teiid.net.HostInfo;
 
 public interface ObjectChannelFactory {
 
-	int getSoTimeout();
+    int getSoTimeout();
 
-	ObjectChannel createObjectChannel(HostInfo info) throws CommunicationException, IOException;
-	
+    ObjectChannel createObjectChannel(HostInfo info) throws CommunicationException, IOException;
+
 }

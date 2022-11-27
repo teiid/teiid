@@ -1,0 +1,29 @@
+<module xmlns="urn:jboss:module:1.8" name="org.jboss.teiid.resource-adapter.s3">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <artifact name="${org.teiid.wildfly.connectors:connector-s3}"/>
+        <artifact name="${org.teiid.connectors:file-s3}"/>
+        <artifact name="${com.amazonaws:aws-java-sdk-s3}"/>
+        <resource-root path="."/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid.translator.file.api"/>
+        <module name="org.apache.commons.logging"/>
+        <module name="sun.jdk" />
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+        <module name="org.apache.httpcomponents.core"/>
+        <module name="org.joda.time"/>
+        <module name="com.amazonaws" />
+    </dependencies>
+</module>

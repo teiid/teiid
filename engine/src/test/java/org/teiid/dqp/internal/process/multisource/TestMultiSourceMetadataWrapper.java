@@ -41,24 +41,24 @@ public class TestMultiSourceMetadataWrapper {
         HashSet<String> multiSourceModels = new HashSet<String>();
         multiSourceModels.add("BQT1");
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(RealMetadataFactory.exampleBQTCached(), multiSourceModels);
-        
+
         Object groupID = wrapper.getGroupID("BQT1.SmallA"); //$NON-NLS-1$
         List<?> elements = wrapper.getElementIDsInGroupID(groupID);
         assertEquals(18, elements.size());
-        
+
         Object instanceElementID = elements.get(elements.size()-1);
         String fullName = wrapper.getFullName(instanceElementID);
         assertEquals("BQT1.SmallA." + MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME, fullName); //$NON-NLS-1$
-        
+
         assertEquals(instanceElementID, wrapper.getElementID(fullName));
-        
+
         assertEquals(groupID, wrapper.getGroupIDForElementID(instanceElementID));
         assertEquals(null, wrapper.getMaximumValue(instanceElementID));
         assertEquals(null, wrapper.getMinimumValue(instanceElementID));
         assertEquals(wrapper.getModelID(groupID), wrapper.getModelID(instanceElementID));
         assertEquals(null, wrapper.getDefaultValue(instanceElementID));
         assertEquals(255, wrapper.getElementLength(instanceElementID));
-        assertEquals(DataTypeManager.DefaultDataTypes.STRING, wrapper.getElementRuntimeTypeName(instanceElementID)); 
+        assertEquals(DataTypeManager.DefaultDataTypes.STRING, wrapper.getElementRuntimeTypeName(instanceElementID));
         assertEquals(new Properties(), wrapper.getExtensionProperties(instanceElementID));
         assertEquals(null, wrapper.getNameInSource(instanceElementID));
         assertEquals(null, wrapper.getNativeType(instanceElementID));
@@ -68,17 +68,17 @@ public class TestMultiSourceMetadataWrapper {
         assertEquals(0, wrapper.getRadix(instanceElementID));
         assertEquals(MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME, Symbol.getShortName(fullName));
         assertEquals(fullName, wrapper.getFullName(groupID) + Symbol.SEPARATOR + MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME);
-        
+
         TempMetadataAdapter tma = new TempMetadataAdapter(wrapper, new TempMetadataStore());
         ElementSymbol elementSymbol = new ElementSymbol("y");
         elementSymbol.setType(DataTypeManager.DefaultDataClasses.STRING);
-		TempMetadataID id = tma.getMetadataStore().addTempGroup("x", Arrays.asList(elementSymbol));
-        
+        TempMetadataID id = tma.getMetadataStore().addTempGroup("x", Arrays.asList(elementSymbol));
+
         assertFalse(tma.isMultiSourceElement(id.getElements().get(0)));
         assertTrue(tma.isMultiSourceElement(instanceElementID));
-        
+
         assertTrue(tma.isPseudo(instanceElementID));
-        
+
         assertEquals(17, tma.getElementIDsInGroupID(tma.getGroupID("VQT.Smalla")).size());
     }
 }

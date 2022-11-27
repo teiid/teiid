@@ -31,9 +31,9 @@ import com.datastax.driver.core.Row;
 
 public class TestCassandraQueryExecution {
 
-	@Test public void testGetRowWithNull() {
-		CassandraQueryExecution cqe = new CassandraQueryExecution(null, null, null);
-		Row row = Mockito.mock(Row.class);
+    @Test public void testGetRowWithNull() {
+        CassandraQueryExecution cqe = new CassandraQueryExecution(null, null, null);
+        Row row = Mockito.mock(Row.class);
         Mockito.stub(row.isNull(0)).toReturn(true);
         ColumnDefinitions cd = Mockito.mock(ColumnDefinitions.class);
         Mockito.stub(row.getColumnDefinitions()).toReturn(cd);
@@ -41,6 +41,6 @@ public class TestCassandraQueryExecution {
         Mockito.stub(cd.getType(0)).toReturn(DataType.cint());
         List<?> val = cqe.getRow(row);
         assertNull(val.get(0));
-	}
-	
+    }
+
 }

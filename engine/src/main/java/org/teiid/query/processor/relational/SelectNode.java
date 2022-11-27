@@ -42,130 +42,130 @@ import org.teiid.query.util.CommandContext;
 
 public class SelectNode extends SubqueryAwareRelationalNode {
 
-	private Criteria criteria;
-	private Criteria preEvalCriteria;
-	private List<Expression> projectedExpressions;
-	private boolean shouldEvaluate = false;
-    
+    private Criteria criteria;
+    private Criteria preEvalCriteria;
+    private List<Expression> projectedExpressions;
+    private boolean shouldEvaluate = false;
+
     // Derived element lookup map
-    private Map<Expression, Integer> elementMap; 
+    private Map<Expression, Integer> elementMap;
     private int[] projectionIndexes;
-	
+
     private boolean noRows;
-    
+
     // State if blocked on evaluating a criteria
     private TupleBatch currentBatch;
     private int currentRow = 1;
 
-	protected SelectNode() {
-		super();
-	}
-    
-	public SelectNode(int nodeID) {
-		super(nodeID);
-	}
-	
+    protected SelectNode() {
+        super();
+    }
+
+    public SelectNode(int nodeID) {
+        super(nodeID);
+    }
+
     public void reset() {
         super.reset();
-        
+
         currentBatch = null;
         currentRow = 1;
         noRows = false;
         preEvalCriteria = null;
     }
 
-	public void setCriteria(Criteria criteria) { 
-		this.criteria = criteria;
-	}
+    public void setCriteria(Criteria criteria) {
+        this.criteria = criteria;
+    }
 
-	public Criteria getCriteria() { // made public to support change in ProcedurePlanner
-		return this.criteria;
-	}
-	
-	public void setProjectedExpressions(List<Expression> projectedExpressions) {
-		this.projectedExpressions = projectedExpressions;
-	}
-	
-	@Override
-	public void initialize(CommandContext context, BufferManager bufferManager,
-			ProcessorDataManager dataMgr) {
-		super.initialize(context, bufferManager, dataMgr);
+    public Criteria getCriteria() { // made public to support change in ProcedurePlanner
+        return this.criteria;
+    }
+
+    public void setProjectedExpressions(List<Expression> projectedExpressions) {
+        this.projectedExpressions = projectedExpressions;
+    }
+
+    @Override
+    public void initialize(CommandContext context, BufferManager bufferManager,
+            ProcessorDataManager dataMgr) {
+        super.initialize(context, bufferManager, dataMgr);
         // Create element lookup map for evaluating project expressions
         if(this.elementMap == null) {
             this.elementMap = createLookupMap(this.getChildren()[0].getElements());
             this.projectionIndexes = getProjectionIndexes(this.elementMap, projectedExpressions!=null?projectedExpressions:getElements());
         }
-	}
-	
+    }
+
     /**
      * @see org.teiid.query.processor.relational.RelationalNode#nextBatchDirect()
      */
-	public TupleBatch nextBatchDirect()
-		throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		
-	    if (noRows) {
-	        this.terminateBatches();
+    public TupleBatch nextBatchDirect()
+        throws BlockedException, TeiidComponentException, TeiidProcessingException {
+
+        if (noRows) {
+            this.terminateBatches();
             return pullBatch();
-	    }
-	    
+        }
+
         if(currentBatch == null) {
-        	currentBatch = this.getChildren()[0].nextBatch();
+            currentBatch = this.getChildren()[0].nextBatch();
         }
 
         while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
-    		List<?> tuple = currentBatch.getTuple(currentRow);
+            List<?> tuple = currentBatch.getTuple(currentRow);
 
             if(getEvaluator(this.elementMap).evaluate(this.preEvalCriteria!=null?preEvalCriteria:criteria, tuple)) {
                 addBatchRow(projectTuple(this.projectionIndexes, tuple));
             }
             currentRow++;
-		}
-        
-        if (currentRow > currentBatch.getEndRow()) {
-	        if(currentBatch.getTerminationFlag()) {
-	            terminateBatches();
-	        }
-	        currentBatch = null;
         }
-        
-    	return pullBatch();
-	}
-    
-	protected void getNodeString(StringBuffer str) {
-		super.getNodeString(str);
-		str.append(criteria);
-	}
-	
-	public Object clone(){
-		SelectNode clonedNode = new SelectNode();
-		this.copyTo(clonedNode);
-		return clonedNode;
-	}
-	
-	protected void copyTo(SelectNode target){
-		super.copyTo(target);
-		target.criteria = criteria;
-		target.elementMap = elementMap;
-		target.projectionIndexes = projectionIndexes;
-		target.projectedExpressions = projectedExpressions;
-		target.shouldEvaluate = shouldEvaluate;
-	}
-    
-    public PlanNode getDescriptionProperties() {   
-    	PlanNode props = super.getDescriptionProperties();
-    	AnalysisRecord.addLanaguageObjects(props, PROP_CRITERIA, Arrays.asList(this.criteria));
+
+        if (currentRow > currentBatch.getEndRow()) {
+            if(currentBatch.getTerminationFlag()) {
+                terminateBatches();
+            }
+            currentBatch = null;
+        }
+
+        return pullBatch();
+    }
+
+    protected void getNodeString(StringBuffer str) {
+        super.getNodeString(str);
+        str.append(criteria);
+    }
+
+    public Object clone(){
+        SelectNode clonedNode = new SelectNode();
+        this.copyTo(clonedNode);
+        return clonedNode;
+    }
+
+    protected void copyTo(SelectNode target){
+        super.copyTo(target);
+        target.criteria = criteria;
+        target.elementMap = elementMap;
+        target.projectionIndexes = projectionIndexes;
+        target.projectedExpressions = projectedExpressions;
+        target.shouldEvaluate = shouldEvaluate;
+    }
+
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, PROP_CRITERIA, Arrays.asList(this.criteria));
         return props;
     }
-    
+
     @Override
     public Collection<? extends LanguageObject> getObjects() {
-    	return Arrays.asList(this.criteria);
+        return Arrays.asList(this.criteria);
     }
-    
+
     public void setShouldEvaluateExpressions(boolean shouldEvaluate) {
         this.shouldEvaluate = shouldEvaluate;
     }
-    
+
     @Override
     public void open()
             throws TeiidComponentException, TeiidProcessingException {
@@ -178,5 +178,5 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         }
         super.open();
     }
-    
+
 }

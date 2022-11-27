@@ -28,36 +28,36 @@ import org.teiid.core.util.ExternalizeUtil;
 
 
 public class MetadataResult implements Externalizable {
-	private static final long serialVersionUID = -1520482281079030324L;
-	private Map<Integer, Object>[] columnMetadata;
-	private Map<Integer, Object>[] parameterMetadata;
-	
-	public MetadataResult() {
-	}
-	
-	public MetadataResult(Map<Integer, Object>[] columnMetadata, Map<Integer, Object>[] parameterMetadata) {
-		this.columnMetadata = columnMetadata;
-		this.parameterMetadata = parameterMetadata;
-	}
-	public Map<Integer, Object>[] getColumnMetadata() {
-		return columnMetadata;
-	}
-	
-	public Map[] getParameterMetadata() {
-		return parameterMetadata;
-	}
-	
-	@Override
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		columnMetadata = ExternalizeUtil.readArray(in, Map.class);
-		parameterMetadata = ExternalizeUtil.readArray(in, Map.class);
-	}
-	
-	@Override
-	public void writeExternal(ObjectOutput out) throws IOException {
-		ExternalizeUtil.writeArray(out, columnMetadata);
-		ExternalizeUtil.writeArray(out, parameterMetadata);
-	}
-	
+    private static final long serialVersionUID = -1520482281079030324L;
+    private Map<Integer, Object>[] columnMetadata;
+    private Map<Integer, Object>[] parameterMetadata;
+
+    public MetadataResult() {
+    }
+
+    public MetadataResult(Map<Integer, Object>[] columnMetadata, Map<Integer, Object>[] parameterMetadata) {
+        this.columnMetadata = columnMetadata;
+        this.parameterMetadata = parameterMetadata;
+    }
+    public Map<Integer, Object>[] getColumnMetadata() {
+        return columnMetadata;
+    }
+
+    public Map[] getParameterMetadata() {
+        return parameterMetadata;
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+            ClassNotFoundException {
+        columnMetadata = ExternalizeUtil.readArray(in, Map.class);
+        parameterMetadata = ExternalizeUtil.readArray(in, Map.class);
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+        ExternalizeUtil.writeArray(out, columnMetadata);
+        ExternalizeUtil.writeArray(out, parameterMetadata);
+    }
+
 }

@@ -41,14 +41,14 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
     public CollectorVisitor(Class<T> type) {
         this.type = type;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public void visitNode(LanguageObject obj) {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
-    	super.visitNode(obj);
+        super.visitNode(obj);
     }
 
     public Collection<T> getCollectedObjects() {
@@ -56,7 +56,7 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
     }
 
     /**
-     * This is a utility method to instantiate and run the visitor in conjunction 
+     * This is a utility method to instantiate and run the visitor in conjunction
      * with a HierarchyVisitor to collect all objects of the specified type
      * of the specified tree in the language object tree.
      * @param type Language object type to look for
@@ -68,11 +68,10 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         visitor.visitNode(object);
         return visitor.getCollectedObjects();
     }
-    
+
     /**
      * This is a utility method for a common use of this visitor, which is to collect
      * all elements in an object tree.
-     * @param type Language object type to look for
      * @param object Root of the language object tree
      * @return Collection of IElement of the specified type
      */
@@ -83,18 +82,16 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
     /**
      * This is a utility method for a common use of this visitor, which is to collect
      * all groups in an object tree.
-     * @param type Language object type to look for
      * @param object Root of the language object tree
      * @return Collection of IGroup of the specified type
      */
     public static Collection<NamedTable> collectGroups(LanguageObject object) {
         return CollectorVisitor.collectObjects(NamedTable.class, object);
     }
-        
+
     /**
      * This is a utility method for a common use of this visitor, which is to collect
      * all groups used by all elements in an object tree.
-     * @param type Language object type to look for
      * @param object Root of the language object tree
      * @return Set of IGroup
      */
@@ -107,5 +104,5 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         }
         return groups;
     }
-    
+
 }

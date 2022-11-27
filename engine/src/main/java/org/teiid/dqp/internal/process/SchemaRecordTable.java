@@ -42,115 +42,115 @@ import org.teiid.query.tempdata.BaseIndexInfo;
 import org.teiid.query.util.CommandContext;
 
 class SchemaRecordTable extends RecordTable<Schema> {
-	
-	public SchemaRecordTable(int pkColumnIndex, List<ElementSymbol> columns) {
-		super(new int[] {0}, columns.subList(pkColumnIndex, pkColumnIndex + 1));
-	}
-	
-	protected boolean isValid(Schema s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
-		if (s == null || !vdb.isVisible(s.getName())) {
-			return false;
-		}
-		return super.isValid(s, vdb, rowBuffer, condition, commandContext);
-	}
-	
-	@Override
-	public SimpleIterator<Schema> processQuery(
-			VDBMetaData vdb, CompositeMetadataStore metadataStore,
-			BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
-		return processQuery(vdb, metadataStore.getSchemas(), ii, commandContext);
-	}
+
+    public SchemaRecordTable(int pkColumnIndex, List<ElementSymbol> columns) {
+        super(new int[] {0}, columns.subList(pkColumnIndex, pkColumnIndex + 1));
+    }
+
+    protected boolean isValid(Schema s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
+        if (s == null || !vdb.isVisible(s.getName())) {
+            return false;
+        }
+        return super.isValid(s, vdb, rowBuffer, condition, commandContext);
+    }
+
+    @Override
+    public SimpleIterator<Schema> processQuery(
+            VDBMetaData vdb, CompositeMetadataStore metadataStore,
+            BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
+        return processQuery(vdb, metadataStore.getSchemas(), ii, commandContext);
+    }
 
 }
 
 abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends RecordTable<T> {
-	
-	private SchemaRecordTable schemaTable;
-	
-	public SchemaChildRecordTable(int schemaPkColumnIndex, int tablePkColumnIndex, List<ElementSymbol> columns) {
-		super(new int[] {0}, columns.subList(tablePkColumnIndex, tablePkColumnIndex + 1));
-		this.schemaTable = new SchemaRecordTable(schemaPkColumnIndex, columns);
-	}
-	
-	@Override
-	public SimpleIterator<T> processQuery(
-			final VDBMetaData vdb, final CompositeMetadataStore metadataStore,
-			final BaseIndexInfo<?> ii, final TransformationMetadata metadata, final CommandContext commandContext) {
-		final SimpleIterator<Schema> schemas = schemaTable.processQuery(vdb, metadataStore.getSchemas(), ii, commandContext);
-		return new ExpandingSimpleIterator<Schema, T>(schemas) {
-			@Override
-			protected SimpleIterator<T> getChildIterator(
-					Schema parent) {
-				return processQuery(vdb, getChildren(parent, metadata), ii.next, commandContext);
-			}
-		};
-	}
-	
-	@Override
-	public BaseIndexInfo<RecordTable<?>> planQuery(Query query,
-			Criteria condition, CommandContext context) {
-		BaseIndexInfo<RecordTable<?>> ii = schemaTable.planQuery(query, query.getCriteria(), context);
-		ii.next = super.planQuery(query, ii.getNonCoveredCriteria(), context);
-		return ii;
-	}
-	
-	@Override
-	protected void fillRow(T s, List<Object> rowBuffer) {
-		rowBuffer.add(s.getName());
-	}
-	
-	protected abstract NavigableMap<String, T> getChildren(Schema s, TransformationMetadata metadata);
-	
+
+    private SchemaRecordTable schemaTable;
+
+    public SchemaChildRecordTable(int schemaPkColumnIndex, int tablePkColumnIndex, List<ElementSymbol> columns) {
+        super(new int[] {0}, columns.subList(tablePkColumnIndex, tablePkColumnIndex + 1));
+        this.schemaTable = new SchemaRecordTable(schemaPkColumnIndex, columns);
+    }
+
+    @Override
+    public SimpleIterator<T> processQuery(
+            final VDBMetaData vdb, final CompositeMetadataStore metadataStore,
+            final BaseIndexInfo<?> ii, final TransformationMetadata metadata, final CommandContext commandContext) {
+        final SimpleIterator<Schema> schemas = schemaTable.processQuery(vdb, metadataStore.getSchemas(), ii, commandContext);
+        return new ExpandingSimpleIterator<Schema, T>(schemas) {
+            @Override
+            protected SimpleIterator<T> getChildIterator(
+                    Schema parent) {
+                return processQuery(vdb, getChildren(parent, metadata), ii.next, commandContext);
+            }
+        };
+    }
+
+    @Override
+    public BaseIndexInfo<RecordTable<?>> planQuery(Query query,
+            Criteria condition, CommandContext context) {
+        BaseIndexInfo<RecordTable<?>> ii = schemaTable.planQuery(query, query.getCriteria(), context);
+        ii.next = super.planQuery(query, ii.getNonCoveredCriteria(), context);
+        return ii;
+    }
+
+    @Override
+    protected void fillRow(T s, List<Object> rowBuffer) {
+        rowBuffer.add(s.getName());
+    }
+
+    protected abstract NavigableMap<String, T> getChildren(Schema s, TransformationMetadata metadata);
+
 }
 
 class ProcedureSystemTable extends SchemaChildRecordTable<Procedure> {
-	public ProcedureSystemTable(int schemaPkColumnIndex,
-			int tablePkColumnIndex, List<ElementSymbol> columns) {
-		super(schemaPkColumnIndex, tablePkColumnIndex, columns);
-	}
+    public ProcedureSystemTable(int schemaPkColumnIndex,
+            int tablePkColumnIndex, List<ElementSymbol> columns) {
+        super(schemaPkColumnIndex, tablePkColumnIndex, columns);
+    }
 
-	@Override
-	protected NavigableMap<String, Procedure> getChildren(Schema s, TransformationMetadata metadata) {
-		return s.getProcedures();
-	}
+    @Override
+    protected NavigableMap<String, Procedure> getChildren(Schema s, TransformationMetadata metadata) {
+        return s.getProcedures();
+    }
 }
 
 class FunctionSystemTable extends SchemaChildRecordTable<FunctionMethod> {
-	public FunctionSystemTable(int schemaPkColumnIndex,
-			int tablePkColumnIndex, List<ElementSymbol> columns) {
-		super(schemaPkColumnIndex, tablePkColumnIndex, columns);
-	}
+    public FunctionSystemTable(int schemaPkColumnIndex,
+            int tablePkColumnIndex, List<ElementSymbol> columns) {
+        super(schemaPkColumnIndex, tablePkColumnIndex, columns);
+    }
 
-	@Override
-	protected NavigableMap<String, FunctionMethod> getChildren(Schema s, TransformationMetadata metadata) {
-		//since there is no proper schema for a UDF model, no results will show up for legacy functions
-		if (s.getName().equals(CoreConstants.SYSTEM_MODEL)) {
-			//currently all system functions are contributed via alternative mechanisms
-			//system source, push down functions.
-			FunctionLibrary library = metadata.getFunctionLibrary();
-			FunctionTree tree = library.getSystemFunctions();
-			FunctionTree[] userFuncs = library.getUserFunctions();
-			TreeMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
-			for (FunctionTree userFunc : userFuncs) {
-				if (userFunc.getSchemaName().equals(CoreConstants.SYSTEM_MODEL)) {
-					functions.putAll(userFunc.getFunctionsByUuid());
-				}
-			}
-			functions.putAll(tree.getFunctionsByUuid());
-			return functions;
-		}
-		return s.getFunctions();
-	}
+    @Override
+    protected NavigableMap<String, FunctionMethod> getChildren(Schema s, TransformationMetadata metadata) {
+        //since there is no proper schema for a UDF model, no results will show up for legacy functions
+        if (s.getName().equals(CoreConstants.SYSTEM_MODEL)) {
+            //currently all system functions are contributed via alternative mechanisms
+            //system source, push down functions.
+            FunctionLibrary library = metadata.getFunctionLibrary();
+            FunctionTree tree = library.getSystemFunctions();
+            FunctionTree[] userFuncs = library.getUserFunctions();
+            TreeMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+            for (FunctionTree userFunc : userFuncs) {
+                if (userFunc.getSchemaName().equals(CoreConstants.SYSTEM_MODEL)) {
+                    functions.putAll(userFunc.getFunctionsByUuid());
+                }
+            }
+            functions.putAll(tree.getFunctionsByUuid());
+            return functions;
+        }
+        return s.getFunctions();
+    }
 }
 
 class TableSystemTable extends SchemaChildRecordTable<Table> {
-	public TableSystemTable(int schemaPkColumnIndex,
-			int tablePkColumnIndex, List<ElementSymbol> columns) {
-		super(schemaPkColumnIndex, tablePkColumnIndex, columns);
-	}
+    public TableSystemTable(int schemaPkColumnIndex,
+            int tablePkColumnIndex, List<ElementSymbol> columns) {
+        super(schemaPkColumnIndex, tablePkColumnIndex, columns);
+    }
 
-	@Override
-	protected NavigableMap<String, Table> getChildren(Schema s, TransformationMetadata metadata) {
-		return s.getTables();
-	}
+    @Override
+    protected NavigableMap<String, Table> getChildren(Schema s, TransformationMetadata metadata) {
+        return s.getTables();
+    }
 }

@@ -24,15 +24,15 @@ import org.teiid.translator.ExecutionContext;
 import com.mongodb.DB;
 
 public class MongoDBBaseExecution {
-	protected ExecutionContext executionContext;
-	protected RuntimeMetadata metadata;
-	protected MongoDBConnection connection;
-	protected DB mongoDB;
+    protected ExecutionContext executionContext;
+    protected RuntimeMetadata metadata;
+    protected MongoDBConnection connection;
+    protected DB mongoDB;
 
-	protected MongoDBBaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, MongoDBConnection connection) {
-		this.executionContext = executionContext;
-		this.metadata = metadata;
-		this.connection = connection;
-		this.mongoDB = connection.getDatabase();
-	}
+    protected MongoDBBaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, MongoDBConnection connection) {
+        this.executionContext = executionContext;
+        this.metadata = metadata;
+        this.connection = connection;
+        this.mongoDB = connection.getDatabase();
+    }
 }

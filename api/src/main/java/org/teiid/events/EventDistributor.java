@@ -30,229 +30,225 @@ import org.teiid.metadata.TableStats;
  * Distributes events across the Teiid cluster
  */
 public interface EventDistributor {
-	
-	/**
-	 * Update the given materialized view row.
-	 * The tuple is expected to be in table order, which has the primary key first.
-	 * Deletes need to only send the key, not the entire row contents.
-	 * 
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param viewName
-	 * @param tuple
-	 * @param delete
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void updateMatViewRow(String vdbName, int vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
-	
-	/**
-	 * Update the given materialized view row.
-	 * The tuple is expected to be in table order, which has the primary key first.
-	 * Deletes need to only send the key, not the entire row contents.
-	 * 
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param viewName
-	 * @param tuple
-	 * @param delete
-	 */
-	@Replicated(remoteOnly=true)
-	void updateMatViewRow(String vdbName, String vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
-	
-	/**
-	 * Notify that the table data has changed.
-	 * @param vdbName
-	 * @param vdbVersion
- 	 * @param schema
-	 * @param tableNames
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
-	
-	/**
-	 * Notify that the table data has changed.
-	 * @param vdbName
-	 * @param vdbVersion
- 	 * @param schema
-	 * @param tableNames
-	 */
-	@Replicated(remoteOnly=true)
-	void dataModification(String vdbName, String vdbVersion, String schema, String... tableNames);
 
-	/**
-	 * Set the column stats
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schemaName
-	 * @param tableName
-	 * @param columnName
-	 * @param stats
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void setColumnStats(String vdbName, int vdbVersion, String schemaName,
-			String tableName, String columnName, ColumnStats stats);
+    /**
+     * Update the given materialized view row.
+     * The tuple is expected to be in table order, which has the primary key first.
+     * Deletes need to only send the key, not the entire row contents.
+     *
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param viewName
+     * @param tuple
+     * @param delete
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void updateMatViewRow(String vdbName, int vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
 
-	/**
-	 * Set the column stats
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schemaName
-	 * @param tableName
-	 * @param columnName
-	 * @param stats
-	 */
-	@Replicated(remoteOnly=true)
-	void setColumnStats(String vdbName, String vdbVersion, String schemaName,
-			String tableName, String columnName, ColumnStats stats);
-	
-	/**
-	 * Set the table stats
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schemaName
-	 * @param tableName
-	 * @param stats
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void setTableStats(String vdbName, int vdbVersion, String schemaName,
-			String tableName, TableStats stats);
-	
-	/**
-	 * Set the table stats
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schemaName
-	 * @param tableName
-	 * @param stats
-	 */
-	@Replicated(remoteOnly=true)
-	void setTableStats(String vdbName, String vdbVersion, String schemaName,
-			String tableName, TableStats stats);
-	
-	/**
-	 * Set the given property value
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param uuid
-	 * @param name
-	 * @param value
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void setProperty(String vdbName, int vdbVersion, String uuid, String name, String value);
-	
-	/**
-	 * Set the given property value
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param uuid
-	 * @param name
-	 * @param value
-	 */
-	@Replicated(remoteOnly=true)
-	void setProperty(String vdbName, String vdbVersion, String uuid, String name, String value);
-	
-	/**
-	 * Set the instead of trigger definition.  Only one of either the triggerDefinition or enabled should be specified.
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param viewName
-	 * @param triggerEvent
-	 * @param triggerDefinition
-	 * @param enabled
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, String schema, String viewName, Table.TriggerEvent triggerEvent, String triggerDefinition, Boolean enabled);
+    /**
+     * Update the given materialized view row.
+     * The tuple is expected to be in table order, which has the primary key first.
+     * Deletes need to only send the key, not the entire row contents.
+     *
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param viewName
+     * @param tuple
+     * @param delete
+     */
+    @Replicated(remoteOnly=true)
+    void updateMatViewRow(String vdbName, String vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
 
-	/**
-	 * Set the instead of trigger definition.  Only one of either the triggerDefinition or enabled should be specified.
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param viewName
-	 * @param triggerEvent
-	 * @param triggerDefinition
-	 * @param enabled
-	 */
-	@Replicated(remoteOnly=true)
-	void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion, String schema, String viewName, Table.TriggerEvent triggerEvent, String triggerDefinition, Boolean enabled);
+    /**
+     * Notify that the table data has changed.
+     * @param vdbName
+     * @param vdbVersion
+      * @param schema
+     * @param tableNames
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
 
-	/**
-	 * Set the procedure definition
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param procName
-	 * @param definition
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void setProcedureDefinition(String vdbName, int vdbVersion, String schema, String procName, String definition);
+    /**
+     * Notify that the table data has changed.
+     * @param vdbName
+     * @param vdbVersion
+      * @param schema
+     * @param tableNames
+     */
+    @Replicated(remoteOnly=true)
+    void dataModification(String vdbName, String vdbVersion, String schema, String... tableNames);
 
-	/**
-	 * Set the procedure definition
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param procName
-	 * @param definition
-	 */
-	@Replicated(remoteOnly=true)
-	void setProcedureDefinition(String vdbName, String vdbVersion, String schema, String procName, String definition);
-	
-	/**
-	 * Set the view definition
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param viewName
-	 * @param definition
-	 */
-	@Deprecated
-	@Replicated(remoteOnly=true)
-	void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
-	
-	/**
-	 * Set the view definition
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param schema
-	 * @param viewName
-	 * @param definition
-	 */
-	@Replicated(remoteOnly=true)
-	void setViewDefinition(String vdbName, String vdbVersion, String schema, String viewName, String definition);
-	
-	/**
-	 * Add EventListener for callback on events
-	 * @param listener
-	 */
-	void register(EventListener listener);
-	
-	/**
-	 * Remove EventListener
-	 * @param listener
-	 */
-	void unregister(EventListener listener);
-	
-	/**
+    /**
+     * Set the column stats
+     * @param vdbName
+     * @param vdbVersion
+     * @param schemaName
+     * @param tableName
+     * @param columnName
+     * @param stats
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void setColumnStats(String vdbName, int vdbVersion, String schemaName,
+            String tableName, String columnName, ColumnStats stats);
+
+    /**
+     * Set the column stats
+     * @param vdbName
+     * @param vdbVersion
+     * @param schemaName
+     * @param tableName
+     * @param columnName
+     * @param stats
+     */
+    @Replicated(remoteOnly=true)
+    void setColumnStats(String vdbName, String vdbVersion, String schemaName,
+            String tableName, String columnName, ColumnStats stats);
+
+    /**
+     * Set the table stats
+     * @param vdbName
+     * @param vdbVersion
+     * @param schemaName
+     * @param tableName
+     * @param stats
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void setTableStats(String vdbName, int vdbVersion, String schemaName,
+            String tableName, TableStats stats);
+
+    /**
+     * Set the table stats
+     * @param vdbName
+     * @param vdbVersion
+     * @param schemaName
+     * @param tableName
+     * @param stats
+     */
+    @Replicated(remoteOnly=true)
+    void setTableStats(String vdbName, String vdbVersion, String schemaName,
+            String tableName, TableStats stats);
+
+    /**
+     * Set the given property value
+     * @param vdbName
+     * @param vdbVersion
+     * @param uuid
+     * @param name
+     * @param value
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void setProperty(String vdbName, int vdbVersion, String uuid, String name, String value);
+
+    /**
+     * Set the given property value
+     * @param vdbName
+     * @param vdbVersion
+     * @param uuid
+     * @param name
+     * @param value
+     */
+    @Replicated(remoteOnly=true)
+    void setProperty(String vdbName, String vdbVersion, String uuid, String name, String value);
+
+    /**
+     * Set the instead of trigger definition.  Only one of either the triggerDefinition or enabled should be specified.
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param viewName
+     * @param triggerEvent
+     * @param triggerDefinition
+     * @param enabled
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, String schema, String viewName, Table.TriggerEvent triggerEvent, String triggerDefinition, Boolean enabled);
+
+    /**
+     * Set the instead of trigger definition.  Only one of either the triggerDefinition or enabled should be specified.
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param viewName
+     * @param triggerEvent
+     * @param triggerDefinition
+     * @param enabled
+     */
+    @Replicated(remoteOnly=true)
+    void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion, String schema, String viewName, Table.TriggerEvent triggerEvent, String triggerDefinition, Boolean enabled);
+
+    /**
+     * Set the procedure definition
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param procName
+     * @param definition
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void setProcedureDefinition(String vdbName, int vdbVersion, String schema, String procName, String definition);
+
+    /**
+     * Set the procedure definition
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param procName
+     * @param definition
+     */
+    @Replicated(remoteOnly=true)
+    void setProcedureDefinition(String vdbName, String vdbVersion, String schema, String procName, String definition);
+
+    /**
+     * Set the view definition
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param viewName
+     * @param definition
+     */
+    @Deprecated
+    @Replicated(remoteOnly=true)
+    void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
+
+    /**
+     * Set the view definition
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param viewName
+     * @param definition
+     */
+    @Replicated(remoteOnly=true)
+    void setViewDefinition(String vdbName, String vdbVersion, String schema, String viewName, String definition);
+
+    /**
+     * Add EventListener for callback on events
+     * @param listener
+     */
+    void register(EventListener listener);
+
+    /**
+     * Remove EventListener
+     * @param listener
+     */
+    void unregister(EventListener listener);
+
+    /**
      * Notify that the table data has changed.
      * <br>For an insert only the newValues are provided.
      * <br>For a delete only the oldValues are provided.
      * <br>For an update both are provided.
      * @return a {@link ResultsFuture} if execution has started, or null if no execution has started
-     * @param vdbName
-     * @param vdbVersion
-     * @param schema
-     * @param tableNames
      */
     ResultsFuture<?> dataModification(String vdbName, String vdbVersion, String schema, String tableName, Object[] oldValues, Object[] newValues, String[] columnNames);
 }

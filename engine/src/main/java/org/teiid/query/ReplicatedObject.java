@@ -25,57 +25,57 @@ import java.util.Collection;
 
 /**
  * Optional interface to be implemented by a replicated object to support full and partial state transfer.
- * 
+ *
  */
 public interface ReplicatedObject<K extends Serializable> {
-	
-	/**
-	 * Allows an application to write a state through a provided OutputStream.
-	 *
-	 * @param ostream the OutputStream
-	 */
-	void getState(OutputStream ostream);
 
-	/**
-	 * Allows an application to write a partial state through a provided OutputStream.
-	 *
-	 * @param state_id id of the partial state requested
-	 * @param ostream the OutputStream
-	 */
-	void getState(K state_id, OutputStream ostream);
+    /**
+     * Allows an application to write a state through a provided OutputStream.
+     *
+     * @param ostream the OutputStream
+     */
+    void getState(OutputStream ostream);
 
-	/**
-	 * Allows an application to read a state through a provided InputStream.
-	 * 
-	 * @param istream the InputStream
-	 */
-	void setState(InputStream istream);
+    /**
+     * Allows an application to write a partial state through a provided OutputStream.
+     *
+     * @param state_id id of the partial state requested
+     * @param ostream the OutputStream
+     */
+    void getState(K state_id, OutputStream ostream);
 
-	/**
-	 * Allows an application to read a partial state through a provided InputStream.
-	 *
-	 * @param state_id id of the partial state requested
-	 * @param istream the InputStream
-	 */
-	void setState(K state_id, InputStream istream);
-	
-	/**
-	 * Allows the replicator to set the local address from the channel
-	 * @param address
-	 */
-	void setAddress(Serializable address);
+    /**
+     * Allows an application to read a state through a provided InputStream.
+     *
+     * @param istream the InputStream
+     */
+    void setState(InputStream istream);
 
-	/**
-	 * Called when members are dropped
-	 * @param addresses
-	 */
-	void droppedMembers(Collection<Serializable> addresses);
-	
-	/**
-	 * Return true if the object has the given state
-	 * @param state_id
-	 * @return
-	 */
-	boolean hasState(K state_id);
-	
+    /**
+     * Allows an application to read a partial state through a provided InputStream.
+     *
+     * @param state_id id of the partial state requested
+     * @param istream the InputStream
+     */
+    void setState(K state_id, InputStream istream);
+
+    /**
+     * Allows the replicator to set the local address from the channel
+     * @param address
+     */
+    void setAddress(Serializable address);
+
+    /**
+     * Called when members are dropped
+     * @param addresses
+     */
+    void droppedMembers(Collection<Serializable> addresses);
+
+    /**
+     * Return true if the object has the given state
+     * @param state_id
+     * @return
+     */
+    boolean hasState(K state_id);
+
 }

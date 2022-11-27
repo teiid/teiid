@@ -29,15 +29,15 @@ import com.mongodb.QueryBuilder;
  * Represents a MERGED or EMBEDDED table's existence
  */
 public class ExistsNode extends ProcessingNode {
-    
+
     public ExistsNode(MongoDocument document) {
         super(document);
     }
-    
+
     @Override
     public BasicDBObject getInstruction() throws TranslatorException {
         DBObject object = QueryBuilder.start(getDocumentName()).exists("true").notEquals(null).get(); //$NON-NLS-1$
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\"$match\": {"+object.toString()+"}}"); //$NON-NLS-1$ //$NON-NLS-2$
-        return new BasicDBObject("$match", object); //$NON-NLS-1$ 
+        return new BasicDBObject("$match", object); //$NON-NLS-1$
     }
 }

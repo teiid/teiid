@@ -23,34 +23,34 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
 public class TestInformixExecutionFactory {
-	
-    private static InformixExecutionFactory TRANSLATOR; 
+
+    private static InformixExecutionFactory TRANSLATOR;
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
-        TRANSLATOR = new InformixExecutionFactory();        
+        TRANSLATOR = new InformixExecutionFactory();
         TRANSLATOR.start();
     }
-	
+
     @Test public void testCast() throws Exception {
-		String input = "SELECT cast(INTKEY as string) FROM BQT1.SmallA"; //$NON-NLS-1$       
-        String output = "SELECT cast(SmallA.IntKey AS varchar(255)) FROM SmallA";  //$NON-NLS-1$
-        
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-	}
-    
-    @Test public void testTimeLiteral() throws Exception {
-		String input = "SELECT {t '12:11:01'} FROM BQT1.SmallA"; //$NON-NLS-1$       
-        String output = "SELECT {t '12:11:01'} FROM SmallA";  //$NON-NLS-1$
-        
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-	}
-    
-    @Test public void testMinMaxBoolean() throws Exception {
-    	String input = "SELECT min(booleanvalue), max(booleanvalue) FROM BQT1.SmallA"; //$NON-NLS-1$       
-        String output = "SELECT cast(MIN(cast(SmallA.BooleanValue as char)) as boolean), cast(MAX(cast(SmallA.BooleanValue as char)) as boolean) FROM SmallA";  //$NON-NLS-1$
-        
+        String input = "SELECT cast(INTKEY as string), cast(stringkey as time), cast(stringkey as date), cast(stringkey as timestamp) FROM BQT1.SmallA"; //$NON-NLS-1$
+        String output = "SELECT cast(SmallA.IntKey AS varchar(255)), cast(SmallA.StringKey AS datetime hour to second), cast(SmallA.StringKey AS date), cast(SmallA.StringKey AS datetime year to fraction(5)) FROM SmallA";  //$NON-NLS-1$
+
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
-	
+
+    @Test public void testTimeLiteral() throws Exception {
+        String input = "SELECT {t '12:11:01'} FROM BQT1.SmallA"; //$NON-NLS-1$
+        String output = "SELECT {t '12:11:01'} FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
+    @Test public void testMinMaxBoolean() throws Exception {
+        String input = "SELECT min(booleanvalue), max(booleanvalue) FROM BQT1.SmallA"; //$NON-NLS-1$
+        String output = "SELECT cast(MIN(cast(SmallA.BooleanValue as char)) as boolean), cast(MAX(cast(SmallA.BooleanValue as char)) as boolean) FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+
 }

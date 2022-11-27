@@ -34,10 +34,10 @@ import java.util.Map;
  */
 
 public class ExternalizeUtil {
-    
+
     private ExternalizeUtil() {
     }
-    
+
     /**
      * Writes an array to the output.
      * @param out the output instance
@@ -55,7 +55,7 @@ public class ExternalizeUtil {
             }
         }
     }
-    
+
     /**
      * Writes a Collection to the output using its Iterator.
      * @param out the output instance
@@ -75,15 +75,15 @@ public class ExternalizeUtil {
             }
         }
     }
-    
+
     public static void writeList(ObjectOutput out, List<?> coll) throws IOException {
-    	writeCollection(out, coll);
+        writeCollection(out, coll);
     }
-    
+
     /**
      * Writes the key-value pairs of the given map to the output.
      * @param out the output instance
-     * @param list reference to a Map. Can be null.
+     * @param map reference to a Map. Can be null.
      * @throws IOException
      */
     public static void writeMap(ObjectOutput out, Map<?, ?> map) throws IOException {
@@ -97,7 +97,7 @@ public class ExternalizeUtil {
             }
         }
     }
-    
+
     /**
      * Reads an array of String that was written to the output by this utility class
      * @param in
@@ -106,19 +106,19 @@ public class ExternalizeUtil {
      * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
-	public static <T> T[] readArray(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
+    public static <T> T[] readArray(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
         final int length = in.readInt();
         T[] result = (T[])Array.newInstance(type, length);
         for (int i = 0; i < length; i++) {
-        	result[i] = type.cast(in.readObject());
+            result[i] = type.cast(in.readObject());
         }
         return result;
     }
-    
+
     public static String[] readStringArray(ObjectInput in) throws IOException, ClassNotFoundException {
-    	return readArray(in, String.class);
+        return readArray(in, String.class);
     }
-    
+
     /**
      * Reads a List that was written by this utility class.
      * @param in
@@ -129,11 +129,11 @@ public class ExternalizeUtil {
     public static <T> List<T> readList(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
         return Arrays.asList(readArray(in, type));
     }
-    
+
     public static List<?> readList(ObjectInput in) throws IOException, ClassNotFoundException {
-    	return readList(in, Object.class);
+        return readList(in, Object.class);
     }
-    
+
     /**
      * Reads a Map that was written by this utility class
      * @param in
@@ -142,7 +142,7 @@ public class ExternalizeUtil {
      * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
-	public static <K, V> Map<K, V> readMap(ObjectInput in) throws IOException, ClassNotFoundException {
+    public static <K, V> Map<K, V> readMap(ObjectInput in) throws IOException, ClassNotFoundException {
         final int size = in.readInt();
         HashMap<K, V> map = new HashMap<K, V>(size);
         for (int i = 0; i < size; i++) {
@@ -150,25 +150,25 @@ public class ExternalizeUtil {
         }
         return map;
     }
-    
+
     public static void writeEnum(ObjectOutput out, Enum<?> value) throws IOException {
-    	if (value == null) {
-    		out.writeObject(null);
-    	} else {
-    		out.writeUTF(value.name());
-    	}
+        if (value == null) {
+            out.writeObject(null);
+        } else {
+            out.writeUTF(value.name());
+        }
     }
-    
+
     public static <T extends Enum<T>> T readEnum(ObjectInput in, Class<T> clazz, T defaultVal) throws IOException {
-    	String name = in.readUTF();
-    	if (name == null) {
-    		return null;
-    	}
-    	try {
-    		return Enum.valueOf(clazz, name);
-    	} catch (IllegalArgumentException e) {
-    		return defaultVal;
-    	}
+        String name = in.readUTF();
+        if (name == null) {
+            return null;
+        }
+        try {
+            return Enum.valueOf(clazz, name);
+        } catch (IllegalArgumentException e) {
+            return defaultVal;
+        }
     }
-    
+
 }

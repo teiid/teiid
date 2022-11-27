@@ -35,19 +35,19 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class SubstringFunctionModifier extends FunctionModifier {
 
     private LanguageFactory languageFactory;
-    
+
     public SubstringFunctionModifier(LanguageFactory languageFactory) {
-    	this.languageFactory = languageFactory; 
+        this.languageFactory = languageFactory;
     }
 
     @Override
     public List<?> translate(Function function) {
         List<Expression> args = function.getParameters();
-        
+
         if(args.size() == 2) {
-            args.add(languageFactory.createFunction(SourceSystemFunctions.LENGTH, Arrays.asList(args.get(0)), TypeFacility.RUNTIME_TYPES.INTEGER)); 
-        } 
-    	return null;
+            args.add(languageFactory.createFunction(SourceSystemFunctions.LENGTH, Arrays.asList(args.get(0)), TypeFacility.RUNTIME_TYPES.INTEGER));
+        }
+        return null;
     }
-    
+
 }

@@ -50,15 +50,15 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * Will attempt to raise null nodes to their highest points 
+ * Will attempt to raise null nodes to their highest points
  */
 public final class RuleRaiseNull implements OptimizerRule {
 
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         List<PlanNode> nodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.NULL);
-        
+
         //create a new list to iterate over since the original will be modified
         for (PlanNode nullNode : new LinkedList<PlanNode>(nodes)) {
             while (nullNode.getParent() != null && nodes.contains(nullNode)) {
@@ -69,27 +69,27 @@ public final class RuleRaiseNull implements OptimizerRule {
                 } else {
                     break;
                 }
-            } 
-            
+            }
+
             if (nullNode.getParent() == null) {
                 nodes.remove(nullNode);
-            }                            
+            }
         }
-                
+
         return plan;
-	}
-    
+    }
+
     /**
      * @param nullNode
      * @param metadata
      * @param capFinder
      * @return null if the raising should not continue, else the newRoot
      */
-    PlanNode raiseNullNode(PlanNode rootNode, List<PlanNode> nodes, PlanNode nullNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    PlanNode raiseNullNode(PlanNode rootNode, List<PlanNode> nodes, PlanNode nullNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-        
+
         PlanNode parentNode = nullNode.getParent();
-        
+
         switch(parentNode.getType()) {
             case NodeConstants.Types.JOIN:
             {
@@ -98,22 +98,22 @@ public final class RuleRaiseNull implements OptimizerRule {
                     return raiseNullNode(rootNode, parentNode, nullNode, nodes);
                 }
                 //for outer joins if the null node is on the outer side, then the join itself is null
-                //if the null node is on the inner side, then the join can be removed but the null values 
+                //if the null node is on the inner side, then the join can be removed but the null values
                 //coming from the inner side will need to be placed into the frame
                 if (jt == JoinType.JOIN_LEFT_OUTER) {
                     if (nullNode == parentNode.getFirstChild()) {
                         return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-                    } 
+                    }
                     raiseNullThroughJoin(metadata, parentNode, parentNode.getLastChild());
                     return null;
-                } 
+                }
                 if (jt == JoinType.JOIN_RIGHT_OUTER) {
                     if (nullNode == parentNode.getLastChild()) {
                         return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-                    } 
+                    }
                     raiseNullThroughJoin(metadata, parentNode, parentNode.getFirstChild());
                     return null;
-                }   
+                }
                 if (jt == JoinType.JOIN_FULL_OUTER) {
                     if (nullNode == parentNode.getLastChild()) {
                         raiseNullThroughJoin(metadata, parentNode, parentNode.getLastChild());
@@ -123,29 +123,29 @@ public final class RuleRaiseNull implements OptimizerRule {
                     return null;
                 }
                 break;
-            }            
+            }
             case NodeConstants.Types.SET_OP:
             {
                 boolean isLeftChild = parentNode.getFirstChild() == nullNode;
                 SetQuery.Operation operation = (SetQuery.Operation)parentNode.getProperty(NodeConstants.Info.SET_OPERATION);
                 boolean raiseOverSetOp = (operation == SetQuery.Operation.INTERSECT || (operation == SetQuery.Operation.EXCEPT && isLeftChild));
-                
+
                 if (raiseOverSetOp) {
                     return raiseNullNode(rootNode, parentNode, nullNode, nodes);
                 }
-                
+
                 boolean isAll = parentNode.hasBooleanProperty(NodeConstants.Info.USE_ALL);
-                
+
                 if (isLeftChild) {
                     PlanNode firstProject = NodeEditor.findNodePreOrder(parentNode, NodeConstants.Types.PROJECT);
-                    
+
                     if (firstProject == null) { // will only happen if the other branch has only null nodes
                         return raiseNullNode(rootNode, parentNode, nullNode, nodes);
                     }
 
                     List<Expression> newProjectSymbols = (List<Expression>)firstProject.getProperty(NodeConstants.Info.PROJECT_COLS);
                     List<Expression> oldProjectSymbols = (List<Expression>)nullNode.getProperty(NodeConstants.Info.PROJECT_COLS);
-                    
+
                     for (int i = 0; i < newProjectSymbols.size(); i++) {
                         Expression newSes = newProjectSymbols.get(i);
                         Expression oldSes = oldProjectSymbols.get(i);
@@ -156,9 +156,9 @@ public final class RuleRaiseNull implements OptimizerRule {
                             newProjectSymbols.set(i, new AliasSymbol(Symbol.getShortName(oldSes), newSes));
                         }
                     }
-                    
+
                     PlanNode sort = NodeEditor.findParent(parentNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-                    
+
                     if (sort != null) { //correct the sort to the new columns as well
                         OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
                         for (OrderByItem item : sortOrder.getOrderByItems()) {
@@ -167,44 +167,47 @@ public final class RuleRaiseNull implements OptimizerRule {
                             item.setSymbol(sortElement);
                         }
                     }
-                    
+
+                    //repair the upper symbol map if needed
                     PlanNode sourceNode = NodeEditor.findParent(parentNode, NodeConstants.Types.SOURCE);
                     if (sourceNode != null && NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.PROJECT) == firstProject) {
                         SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-                        symbolMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), newProjectSymbols);
-                        sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
-                    }                                        
+                        if (!firstProject.hasProperty(Info.INTO_GROUP) && symbolMap != null) {
+                            symbolMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), newProjectSymbols);
+                            sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
+                        }
+                    }
                 }
-                
+
                 NodeEditor.removeChildNode(parentNode, nullNode);
 
                 PlanNode grandParent = parentNode.getParent();
                 PlanNode nestedSetOp = NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
-                
+
                 if (!isAll) { //ensure that the new child is distinct
-                	if (nestedSetOp != null) {
-                		nestedSetOp.setProperty(NodeConstants.Info.USE_ALL, false);
-                	} else if (NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) == null) {
-                		parentNode.getFirstChild().addAsParent(NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE));
-                	}
+                    if (nestedSetOp != null) {
+                        nestedSetOp.setProperty(NodeConstants.Info.USE_ALL, false);
+                    } else if (NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) == null) {
+                        parentNode.getFirstChild().addAsParent(NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE));
+                    }
                 }
-                
+
                 if (grandParent == null) {
                     PlanNode newRoot = parentNode.getFirstChild();
                     parentNode.removeChild(newRoot);
                     return newRoot;
                 }
-                
+
                 //the old estimates should be considered invalid
                 grandParent.setProperty(Info.EST_CARDINALITY, null);
                 grandParent.setProperty(Info.EST_COL_STATS, null);
 
                 //remove the set op
                 NodeEditor.removeChildNode(grandParent, parentNode);
-                
+
                 PlanNode sourceNode = NodeEditor.findParent(grandParent.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SET_OP);
                 PlanNode accessNode = NodeEditor.findParent(sourceNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE);
-                              
+
                 //remove the source node only if it doesn't create a situation that is invalid for dependent join processing
                 if (sourceNode != null && (nestedSetOp == null || accessNode == null || !accessNode.hasBooleanProperty(Info.IS_DEPENDENT_SET))) {
                     return RuleMergeVirtual.doMerge(sourceNode, rootNode, false, metadata, capFinder);
@@ -219,30 +222,30 @@ public final class RuleRaiseNull implements OptimizerRule {
                 }
                 break; //- the else case could be implemented, but it's a lot of work for little gain, since the null node can't raise higher
             }
-			case NodeConstants.Types.PROJECT: 
-			{
-				// check for project into
-				PlanNode upperProject = NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);	
-				
-				if (upperProject == null
-						|| upperProject.getProperty(NodeConstants.Info.INTO_GROUP) == null) {
-	                return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-				}
-				break;
-			}
-			case NodeConstants.Types.SOURCE:
-			{
-				PlanNode upperProject = parentNode.getParent();
-				if (upperProject != null && upperProject.getType() == NodeConstants.Types.PROJECT && upperProject.hasProperty(Info.INTO_GROUP)) {
-					break; //an insert plan
-				}
+            case NodeConstants.Types.PROJECT:
+            {
+                // check for project into
+                PlanNode upperProject = NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+
+                if (upperProject == null
+                        || upperProject.getProperty(NodeConstants.Info.INTO_GROUP) == null) {
+                    return raiseNullNode(rootNode, parentNode, nullNode, nodes);
+                }
+                break;
+            }
+            case NodeConstants.Types.SOURCE:
+            {
+                PlanNode upperProject = parentNode.getParent();
+                if (upperProject != null && upperProject.getType() == NodeConstants.Types.PROJECT && upperProject.hasProperty(Info.INTO_GROUP)) {
+                    break; //an insert plan
+                }
                 return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-			}
+            }
             default:
             {
                 return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-            }                      
-        }  
+            }
+        }
         return null;
     }
 
@@ -263,10 +266,10 @@ public final class RuleRaiseNull implements OptimizerRule {
         return rootNode;
     }
 
-    /** 
-     * Given a joinNode that should be an outer join and a null node as one of its children, replace elements in 
-     * the current frame from the null node groups with null values 
-     * 
+    /**
+     * Given a joinNode that should be an outer join and a null node as one of its children, replace elements in
+     * the current frame from the null node groups with null values
+     *
      * @param metadata
      * @param joinNode
      * @param nullNode
@@ -282,21 +285,21 @@ public final class RuleRaiseNull implements OptimizerRule {
         Assertion.assertTrue(joinNode.getType() == NodeConstants.Types.JOIN);
         Assertion.assertTrue(nullNode.getType() == NodeConstants.Types.NULL);
         Assertion.assertTrue(nullNode.getParent() == joinNode);
-        
+
         PlanNode frameStart = joinNode.getParent();
-        
+
         NodeEditor.removeChildNode(joinNode, nullNode);
         NodeEditor.removeChildNode(joinNode.getParent(), joinNode);
-        
+
         for (GroupSymbol group : nullNode.getGroups()) {
             Map<ElementSymbol, Expression> nullSymbolMap = FrameUtil.buildSymbolMap(group, null, metadata);
             FrameUtil.convertFrame(frameStart, group, null, nullSymbolMap, metadata);
         }
-        
-    }    
-    
+
+    }
+
     public String toString() {
-		return "RaiseNull"; //$NON-NLS-1$
-	}
-	
+        return "RaiseNull"; //$NON-NLS-1$
+    }
+
 }

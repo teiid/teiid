@@ -20,16 +20,16 @@ package org.teiid.metadata;
 public class DataWrapper extends AbstractMetadataRecord {
     private static final long serialVersionUID = -8632502901046172816L;
     private String type;
-    
+
     public DataWrapper(String name) {
         super.setName(name);
     }
-    
+
     public String getType() {
         return type;
     }
 
     public void setType(String type) {
         this.type = type;
-    }    
+    }
 }

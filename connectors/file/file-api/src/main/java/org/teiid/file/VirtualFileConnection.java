@@ -18,47 +18,99 @@
 package org.teiid.file;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-import javax.resource.ResourceException;
-import javax.resource.cci.Connection;
-
-import org.jboss.vfs.VirtualFile;
+import org.teiid.connector.DataPlugin;
+import org.teiid.resource.api.Connection;
+import org.teiid.translator.TranslatorException;
 
 /**
- * Common abstraction for a VirtualFileConnection with a JBoss Virtual File System(JBoss VFS).
- * @author kylin
- *
+ * Simple interface for the filesystem
  */
 public interface VirtualFileConnection extends Connection {
 
+    public static class FileMetadata {
+        private Long size;
+
+        public Long size() {
+            return size;
+        }
+
+        public FileMetadata size(Long s) {
+            this.size = s;
+            return this;
+        }
+    }
+
     /**
-     * Return a list of files by a given file pattern
-     * @param namePattern - the syntax and pattern
-     * @return
-     * @throws ResourceException
+     * Return an array of files by a given file pattern
+     *
+     * @param namePattern
+     *            - the syntax and pattern. The wildcard character * will
+     *            initially be treated as a literal match (there is currently no
+     *            escaping supported), then as a non-recursive glob search. <br>
+     *            For example the search /* would return all of the top level
+     *            directory contents - but not expand that to any
+     *            subdirectories. The wildcard may be used in both directories
+     *            and filenames.
+     * @return the virtual files found or null if a non-glob file match could
+     *         not be found
+     * @throws TranslatorException
      */
-    VirtualFile[] getFiles(String namePattern) throws ResourceException;
-    
+    VirtualFile[] getFiles(String namePattern) throws TranslatorException;
+
     /**
-     * Return a file by a given file name 
-     * @param name
-     * @return
-     * @throws ResourceException
+     * Add a file
+     * @param fileMetadata Additional metadata about the file to be created.  May not be used/supported by all file sources.
+     * @throws TranslatorException
      */
-    VirtualFile getFile(String path) throws ResourceException;
-    
+    default void add(InputStream in, String path, FileMetadata fileMetadata) throws TranslatorException {
+        add(in, path);
+    }
+
     /**
-     * Add a file to JBoss VFS
-     * @param file
-     * @throws ResourceException
+     * Add a file
+     * @throws TranslatorException
      */
-    boolean add(InputStream in, VirtualFile file) throws ResourceException;
-    
+    void add(InputStream in, String path) throws TranslatorException;
+
     /**
-     * Remove a file from JBoss VFS by given path
+     * Remove a file
      * @param path
      * @return
-     * @throws ResourceException
+     * @throws TranslatorException
      */
-    boolean remove(String path) throws ResourceException;
+    boolean remove(String path) throws TranslatorException;
+
+    default boolean areFilesUsableAfterClose() {
+        return true;
+    }
+
+    public static class Util {
+
+        /**
+         * Gets the file or files, if the path is a directory, at the given path.
+         * Note the path can only refer to a single directory - directories are not recursively scanned.
+         * @param exceptionIfFileNotFound
+         * @return the files or may be null if not found
+         */
+        public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound, boolean includeDirectories) throws TranslatorException {
+            VirtualFile[] files = fc.getFiles(location);
+            if (!includeDirectories && files != null) {
+                Collection<VirtualFile> filtered = Arrays.asList(files).stream().filter((f)->!f.isDirectory()).collect(Collectors.toList());
+                if (filtered.size() != files.length) {
+                    files = filtered.toArray(new VirtualFile[filtered.size()]);
+                }
+            }
+            if (exceptionIfFileNotFound && (files == null || files.length == 0) ) {
+                throw new TranslatorException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
+            }
+
+            return files;
+        }
+
+    }
+
 }

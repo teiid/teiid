@@ -30,42 +30,37 @@ import org.teiid.security.SecurityHelper;
  * has the proper security context.
  */
 public class DoNothingSecurityHelper implements SecurityHelper {
-	
-	@Override
-	public Subject getSubjectInContext(String securityDomain) {
-		return new Subject();
-	}
 
-	@Override
-	public Object getSecurityContext() {
-		return new Object();
-	}
+    @Override
+    public Object getSecurityContext(String securityDomain) {
+        return new Object();
+    }
 
-	@Override
-	public void clearSecurityContext() {
+    @Override
+    public void clearSecurityContext() {
 
-	}
+    }
 
-	@Override
-	public Object associateSecurityContext(Object context) {
-		return null;
-	}
-	
-	@Override
-	public Object authenticate(String securityDomain, String baseUserName,
-			Credentials credentials, String applicationName)
-			throws LoginException {
-		return new Object();
-	}
+    @Override
+    public Object associateSecurityContext(Object context) {
+        return null;
+    }
+
+    @Override
+    public Object authenticate(String securityDomain, String baseUserName,
+            Credentials credentials, String applicationName)
+            throws LoginException {
+        return new Object();
+    }
 
     @Override
     public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
         return null;
     }
 
-	@Override
-	public Subject getSubjectInContext(Object context) {
-		return new Subject();
-	}
-    
+    @Override
+    public Subject getSubjectInContext(Object context) {
+        return new Subject();
+    }
+
 }

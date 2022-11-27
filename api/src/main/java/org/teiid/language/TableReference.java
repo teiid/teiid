@@ -19,7 +19,7 @@
 package org.teiid.language;
 
 /**
- * Represents an item in the FROM clause 
+ * Represents an item in the FROM clause
  */
 public interface TableReference extends LanguageObject {
 

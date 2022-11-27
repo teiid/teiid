@@ -63,7 +63,7 @@ public interface RuntimeMetadata {
      * @return The object or throws a {@link TranslatorException} if the object cannot be found
      */
     Procedure getProcedure(String schema, String name) throws TranslatorException;
-    
+
     /**
      * Gets the contents of a VDB resource in binary form.
      * @param resourcePath a path returned by getVDBResourcePaths()
@@ -83,7 +83,7 @@ public interface RuntimeMetadata {
     public String getCharacterVDBResource(String resourcePath) throws TranslatorException;
 
     /**
-     * Gets the resource paths of all the resources in the VDB. 
+     * Gets the resource paths of all the resources in the VDB.
      * @return an array of resource paths of the resources in the VDB
      * @throws TranslatorException if the operation fails
      * @since 4.3

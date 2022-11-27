@@ -22,22 +22,20 @@ import java.io.IOException;
 
 
 
-/** 
+/**
  * An interface for generating or producing the LobChunks from a remote or local
  * location. A LobChunk is part or whole of a LOB (clob, blob, xml) object.
- * 
+ *
  * @see LobChunk
  */
 public interface LobChunkProducer {
     /**
      * Gets the next LobChunk from the source, based on the chunk size configured
-     * @param position position of the chunk starts from 1 to .. increments by one
-     * until the last chunk returned.  Must start with 1 and increment.
      * @return LobChunk at position in the streamble object.
      * @throws IOException
      */
     LobChunk getNextChunk() throws IOException;
-    
+
     /**
      * Close the underlaying stream of producing the chunks
      */

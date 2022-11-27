@@ -29,22 +29,22 @@ import org.teiid.query.sql.symbol.Symbol;
 /**
  * <p> This class is used to update LanguageObjects by replacing the virtual elements/
  * groups present in them with their physical counterparts. It is currently used only
- * to visit Insert/Delete/Update objects and parts of those objects.</p>
+ * to visit Insert/Delete/Update objects and parts of those objects.
  */
 public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
 
-	private Map symbolMap; // Map between virtual elements/groups and their physical elements
+    private Map symbolMap; // Map between virtual elements/groups and their physical elements
 
     /**
      * <p> This constructor initialises this object by setting the symbolMap and
-     * passing in the command object that is being visited.</p>
+     * passing in the command object that is being visited.
      * @param symbolMap A map of virtual elements/groups to their physical counterparts
      */
-    public StaticSymbolMappingVisitor(Map symbolMap) {                
+    public StaticSymbolMappingVisitor(Map symbolMap) {
         super();
-        
+
         Assertion.isNotNull(symbolMap);
-        this.symbolMap = symbolMap;		
+        this.symbolMap = symbolMap;
     }
 
     /*
@@ -53,7 +53,7 @@ public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
     protected Symbol getMappedSymbol(Symbol symbol) {
         return (Symbol) this.symbolMap.get(symbol);
     }
-    
+
     public static void mapSymbols(LanguageObject obj, Map symbolMap) {
         if (obj == null || symbolMap.isEmpty()) {
             return;
@@ -61,5 +61,5 @@ public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
         StaticSymbolMappingVisitor ssmv = new StaticSymbolMappingVisitor(symbolMap);
         DeepPreOrderNavigator.doVisit(obj, ssmv);
     }
-    
+
 }

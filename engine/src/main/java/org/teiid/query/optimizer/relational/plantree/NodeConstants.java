@@ -75,31 +75,32 @@ public final class NodeConstants {
         CONFORMED_SOURCES, //Set <model id>
         SUB_PLAN,
         SUB_PLANS,
-        
-        // Set operation properties 
+
+        // Set operation properties
         SET_OPERATION,      // SetQuery.Operation
         USE_ALL,            // Boolean
 
         // Join node properties
         JOIN_CRITERIA,      // List <CompareCriteria>
         JOIN_TYPE,          // JoinType
+        SINGLE_MATCH,       // Boolean
         JOIN_STRATEGY,      // JoinStrategyType
-        LEFT_EXPRESSIONS,   // List <SingleElementSymbol> 
-        RIGHT_EXPRESSIONS,  // List <SingleElementSymbol> 
+        LEFT_EXPRESSIONS,   // List <SingleElementSymbol>
+        RIGHT_EXPRESSIONS,  // List <SingleElementSymbol>
         DEPENDENT_VALUE_SOURCE, // String
         NON_EQUI_JOIN_CRITERIA,      // List <CompareCriteria>
         SORT_LEFT,  // SortOption
         SORT_RIGHT,     // SortOption
         IS_OPTIONAL,          // Boolean
-        IS_LEFT_DISTINCT, 	// Boolean
-        IS_RIGHT_DISTINCT, 	// Boolean
-        IS_SEMI_DEP,		// Boolean
+        IS_LEFT_DISTINCT,     // Boolean
+        IS_RIGHT_DISTINCT,     // Boolean
+        IS_SEMI_DEP,        // Boolean
         PRESERVE,
         RIGHT_NESTED_REFERENCES,
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>
         INTO_GROUP,         // GroupSymbol
-        HAS_WINDOW_FUNCTIONS,		// Boolean
+        HAS_WINDOW_FUNCTIONS,        // Boolean
         CONSTRAINT,
         UPSERT, //Boolean
 
@@ -117,11 +118,11 @@ public final class NodeConstants {
         // Sort node properties
         SORT_ORDER,         // OrderBy
         UNRELATED_SORT,     // Boolean
-        IS_DUP_REMOVAL,		// Boolean
+        IS_DUP_REMOVAL,        // Boolean
 
         // Source node properties
         SYMBOL_MAP,         // SymbolMap
-        PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
+        PARTITION_INFO,        // Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
         MAKE_DEP,           // Option.Makedep
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
@@ -134,7 +135,7 @@ public final class NodeConstants {
         MAKE_IND,
         SOURCE_HINT,
         CHECK_MAT_VIEW,
-        
+
         // Group node properties
         GROUP_COLS,         // List <Expression>
         ROLLUP,             // Boolean
@@ -150,17 +151,18 @@ public final class NodeConstants {
         EST_CARDINALITY,     // Float represents the estimated cardinality (amount of rows) produced by this node
         EST_COL_STATS,
         EST_SELECTIVITY,     // Float that represents the selectivity of a criteria node
-        
+
         // Tuple limit and offset
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated
         OFFSET_TUPLE_COUNT,  // Expression that evaluates to the tuple offset of the starting tuple
         IS_IMPLICIT_LIMIT,   // Boolean if the limit is created by the rewriter as part of a subquery optimization
-        IS_NON_STRICT,		 // Boolean if the unordered limit should not be enforced strictly
+        IS_NON_STRICT,         // Boolean if the unordered limit should not be enforced strictly
 
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >
         ACCESS_PATTERN_USED, // List <Object element ID>
-        REQUIRED_ACCESS_PATTERN_GROUPS,  
-        
+        REQUIRED_ACCESS_PATTERN_GROUPS,
+        APPROXIMATE_OUTPUT_COLUMNS, //int approximate number of output columns
+
     }
 }

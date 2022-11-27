@@ -20,10 +20,10 @@ package org.teiid.jdbc;
 
 public class AsynchPositioningException extends TeiidSQLException {
 
-	private static final long serialVersionUID = 4965087364648306848L;
-	
-	public AsynchPositioningException() {
-		super(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20030));
-	}
+    private static final long serialVersionUID = 4965087364648306848L;
+
+    public AsynchPositioningException() {
+        super(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20030));
+    }
 
 }

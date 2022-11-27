@@ -21,21 +21,21 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 
 public class AlterProcedure extends Alter<CreateProcedureCommand> {
-	
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	@Override
-	public AlterProcedure clone() {
-		AlterProcedure clone = new AlterProcedure();
-		this.cloneOnTo(clone);
-		return clone;
-	}
-	
-	@Override
-	public int getType() {
-		return TYPE_ALTER_PROC;
-	}
+
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public AlterProcedure clone() {
+        AlterProcedure clone = new AlterProcedure();
+        this.cloneOnTo(clone);
+        return clone;
+    }
+
+    @Override
+    public int getType() {
+        return TYPE_ALTER_PROC;
+    }
 }

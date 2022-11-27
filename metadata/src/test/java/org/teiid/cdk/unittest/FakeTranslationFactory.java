@@ -24,25 +24,25 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class FakeTranslationFactory {
-	
-	private static FakeTranslationFactory instance = new FakeTranslationFactory();
-	
-	public static FakeTranslationFactory getInstance() {
-		return instance;
-	}
 
-	public TranslationUtility getBQTTranslationUtility() {
-		return new TranslationUtility(RealMetadataFactory.exampleBQTCached());
-	}
-	
-	public TranslationUtility getYahooTranslationUtility() {
-		MetadataStore metadataStore = new MetadataStore();
+    private static FakeTranslationFactory instance = new FakeTranslationFactory();
+
+    public static FakeTranslationFactory getInstance() {
+        return instance;
+    }
+
+    public TranslationUtility getBQTTranslationUtility() {
+        return new TranslationUtility(RealMetadataFactory.exampleBQTCached());
+    }
+
+    public TranslationUtility getYahooTranslationUtility() {
+        MetadataStore metadataStore = new MetadataStore();
         // Create models
         Schema yahoo = RealMetadataFactory.createPhysicalModel("Yahoo", metadataStore); //$NON-NLS-1$
-        
+
         // Create physical groups
         Table quotes = RealMetadataFactory.createPhysicalGroup("Yahoo.QuoteServer", yahoo); //$NON-NLS-1$
-                
+
         // Create physical elements
         String[] elemNames = new String[] {
             "TickerSymbol", "LastTrade",  //$NON-NLS-1$ //$NON-NLS-2$
@@ -51,33 +51,33 @@ public class FakeTranslationFactory {
             "DaysHigh", "DaysLow",  //$NON-NLS-1$ //$NON-NLS-2$
             "TotalVolume"             //$NON-NLS-1$
         };
-        String[] elemTypes = new String[] {  
+        String[] elemTypes = new String[] {
             DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DOUBLE,
             DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME,
             DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING,
             DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.DOUBLE,
-            DataTypeManager.DefaultDataTypes.BIG_INTEGER            
+            DataTypeManager.DefaultDataTypes.BIG_INTEGER
         };
-        
+
         List<Column> cols = RealMetadataFactory.createElements(quotes, elemNames, elemTypes);
-        
+
         // Set name in source on each column
         String[] nameInSource = new String[] {
-           "Symbol", "Last", "Date", "Time", "Change", "Symbol2", "High", "Low", "Volume"        
+           "Symbol", "Last", "Date", "Time", "Change", "Symbol2", "High", "Low", "Volume"
         };
         for(int i=0; i<nameInSource.length; i++) {
             cols.get(i).setNameInSource(nameInSource[i]);
         }
-        
+
         // Set column-specific properties
         cols.get(0).setSelectable(false);
         cols.get(0).setSearchType(SearchType.Unsearchable);
-        
-		return new TranslationUtility(RealMetadataFactory.createTransformationMetadata(metadataStore, "yahoo"));
-	}
-	
-	public TranslationUtility getExampleTranslationUtility() {
-		return new TranslationUtility(RealMetadataFactory.example1Cached());
-	}
-	
+
+        return new TranslationUtility(RealMetadataFactory.createTransformationMetadata(metadataStore, "yahoo"));
+    }
+
+    public TranslationUtility getExampleTranslationUtility() {
+        return new TranslationUtility(RealMetadataFactory.example1Cached());
+    }
+
 }

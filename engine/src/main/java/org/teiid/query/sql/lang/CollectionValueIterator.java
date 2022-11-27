@@ -28,14 +28,14 @@ import org.teiid.query.sql.util.ValueIterator;
 public class CollectionValueIterator implements ValueIterator {
 
     private Collection vals;
-    
+
     private Iterator instance = null;
-    
+
     public CollectionValueIterator(Collection vals) {
         this.vals = vals;
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.sql.util.ValueIterator#hasNext()
      * @since 4.3
      */
@@ -46,7 +46,7 @@ public class CollectionValueIterator implements ValueIterator {
         return this.instance.hasNext();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.util.ValueIterator#next()
      * @since 4.3
      */
@@ -57,12 +57,12 @@ public class CollectionValueIterator implements ValueIterator {
         return this.instance.next();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.sql.util.ValueIterator#reset()
      * @since 4.3
      */
     public void reset() {
         this.instance = null;
     }
-    
+
 }

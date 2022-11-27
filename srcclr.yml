@@ -1,0 +1,1 @@
+custom_maven_command: -s settings.xml -e -V -B -DskipTests -DfailIfNoTests=false -Dtest=false -Pcore-release clean compile

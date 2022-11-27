@@ -35,7 +35,7 @@ public class TestRequestID extends TestCase {
     public TestRequestID(String name) {
         super(name);
     }
-    
+
     public void testGetters1() {
         String connID = "100"; //$NON-NLS-1$
         long executionID = 200;
@@ -43,18 +43,18 @@ public class TestRequestID extends TestCase {
         assertEquals("Lost connectionID", connID, r.getConnectionID()); //$NON-NLS-1$
         assertEquals("Lost executionID", executionID, r.getExecutionID()); //$NON-NLS-1$
         assertEquals("Wrong string representation", "100.200", r.toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
     }
-    
+
     public void testGetters2() {
         long executionID = 200;
         RequestID r = new RequestID(executionID);
         assertEquals("Lost connectionID", null, r.getConnectionID()); //$NON-NLS-1$
         assertEquals("Lost executionID", executionID, r.getExecutionID()); //$NON-NLS-1$
         assertEquals("Wrong string representation", "C.200", r.toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        
-    }  
-    
+
+    }
+
     public void testEquivalence1() {
         RequestID r1 = new RequestID("100", 200); //$NON-NLS-1$
         UnitTestUtil.helpTestEquivalence(0, r1, r1);
@@ -63,27 +63,27 @@ public class TestRequestID extends TestCase {
     public void testEquivalence2() {
         RequestID r1 = new RequestID("100", 200); //$NON-NLS-1$
         RequestID r2 = new RequestID("100", 200); //$NON-NLS-1$
-        UnitTestUtil.helpTestEquivalence(0, r1, r2);  
+        UnitTestUtil.helpTestEquivalence(0, r1, r2);
     }
 
     public void testEquivalence3() {
         RequestID r1 = new RequestID("101", 200); //$NON-NLS-1$
         RequestID r2 = new RequestID("100", 200); //$NON-NLS-1$
-        UnitTestUtil.helpTestEquivalence(1, r1, r2);  
+        UnitTestUtil.helpTestEquivalence(1, r1, r2);
     }
 
     public void testEquivalence4() {
         RequestID r1 = new RequestID("100", 200); //$NON-NLS-1$
         RequestID r2 = new RequestID("100", 201); //$NON-NLS-1$
-        UnitTestUtil.helpTestEquivalence(1, r1, r2);  
+        UnitTestUtil.helpTestEquivalence(1, r1, r2);
     }
 
     public void testEquivalence7() {
         RequestID r1 = new RequestID(200);
         RequestID r2 = new RequestID("100", 200); //$NON-NLS-1$
-        UnitTestUtil.helpTestEquivalence(1, r1, r2);  
+        UnitTestUtil.helpTestEquivalence(1, r1, r2);
     }
-    
+
     public void testSerialize1() throws Exception {
         RequestID copy = UnitTestUtil.helpSerialize(new RequestID("1", 100)); //$NON-NLS-1$
 

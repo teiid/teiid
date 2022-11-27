@@ -35,7 +35,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 public class FakeConnector extends ExecutionFactory<Object, Object> {
-    
+
     private int connectionCount;
     private int executionCount;
     private int closeCount;
@@ -45,11 +45,11 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     public int getConnectionCount() {
         return connectionCount;
     }
-    
+
     public int getExecutionCount() {
         return executionCount;
     }
-    
+
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
         executionCount++;
@@ -57,30 +57,30 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
         FakeExecution result = new FakeExecution(executionContext);
         if (command instanceof BatchedUpdates || (command instanceof BulkCommand && ((BulkCommand)command).getParameterValues() != null)) {
             result.batchOrBulk = true;
-        } 
+        }
         return result;
     }
-    
+
     @Override
     public Object getConnection(Object factory) throws TranslatorException {
         connectionCount++;
         return factory;
     }
-    
+
     @Override
     public void closeConnection(Object connection, Object factory) {
         closeCount++;
     }
-    
+
     public int getCloseCount() {
         return closeCount;
     }
-    
+
     public final class FakeExecution implements ResultSetExecution, UpdateExecution {
         private int rowCount;
         boolean batchOrBulk;
         ExecutionContext ec;
-        
+
         public FakeExecution(ExecutionContext ec) {
             this.ec = ec;
         }
@@ -107,20 +107,20 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
             }
             return new int[] {1};
         }
-        
+
         @Override
         public void close() {
         }
-        
+
         @Override
         public void cancel() throws TranslatorException {
         }
     }
-    
+
     public void setReturnSingleUpdate(boolean returnSingleUpdate) {
         this.returnSingleUpdate = returnSingleUpdate;
     }
-    
+
     @Override
     public boolean returnsSingleUpdateCount() {
         return returnSingleUpdate;
@@ -129,12 +129,12 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     public List<Command> getCommands() {
         return commands;
     }
-    
+
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;
     }
-    
+
     @Override
     public boolean supportsOrCriteria() {
         return true;

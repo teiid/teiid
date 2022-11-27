@@ -47,7 +47,7 @@ import org.teiid.translator.TranslatorException;
  */
 public class OlapQueryExecution implements ProcedureExecution {
 
-	protected Command command;
+    protected Command command;
     protected OlapConnection connection;
     protected ExecutionContext context;
     protected OlapExecutionFactory executionFactory;
@@ -58,106 +58,106 @@ public class OlapQueryExecution implements ProcedureExecution {
     private ListIterator<Position> rowPositionIterator;
     private String mdxQuery;
     private boolean returnsArray;
-    
-	public OlapQueryExecution(List<Argument> arguments, Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory, String mdxQuery, boolean returnsArray) {
-		this.mdxQuery = mdxQuery;
-		if (arguments.size() > 0 || !returnsArray) { //TODO this is a hack at backwards compatibility 
-			StringBuilder buffer = new StringBuilder();
-			SQLStringVisitor.parseNativeQueryParts(mdxQuery, arguments, buffer, new SQLStringVisitor.Substitutor() {
-				
-				@Override
-				public void substitute(Argument arg, StringBuilder builder, int index) {
-					Literal argumentValue = arg.getArgumentValue();
-					Object value = argumentValue.getValue();
-					if (value == null || value instanceof Number || value instanceof Boolean || value instanceof String) {
-						builder.append(argumentValue);
-					} else if (value instanceof Date) {
-						//bind as a string literal
-						builder.append(new Literal(value.toString(), String.class));
-					} else {
-						//bind as a string literal using the teiid format - this is likely not what the user wants
-						builder.append(new Literal(argumentValue.toString(), String.class));
-					}
-				}
-			});
-			this.mdxQuery = buffer.toString();
-		}
-		this.command = command;
-		this.connection = connection;
-		this.context = context;
-		this.executionFactory = executionFactory;
-		this.returnsArray = returnsArray;
-	}
-	
-	@Override
-	public void execute() throws TranslatorException {
-		try {
-			stmt = this.connection.createStatement();
-			cellSet = stmt.executeOlapQuery(mdxQuery);
-			CellSetAxis rowAxis = this.cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
-			rowPositionIterator = rowAxis.iterator();
-			columnsAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
-	    	colWidth = rowAxis.getAxisMetaData().getHierarchies().size() + this.columnsAxis.getPositions().size();
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		} 
-	}
-	
-	@Override
-	public void cancel() throws TranslatorException {
-		try {
-			OlapStatement olapStatement = this.stmt;
-			if (olapStatement != null) {
-				olapStatement.cancel();
-			}
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		}		
-	}
 
-	@Override
-	public void close() {
-		try {
-			if (this.stmt != null) {
-				this.stmt.close();
-				this.stmt = null;
-			}
-		} catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-		}
-	}
-	
+    public OlapQueryExecution(List<Argument> arguments, Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory, String mdxQuery, boolean returnsArray) {
+        this.mdxQuery = mdxQuery;
+        if (arguments.size() > 0 || !returnsArray) { //TODO this is a hack at backwards compatibility
+            StringBuilder buffer = new StringBuilder();
+            SQLStringVisitor.parseNativeQueryParts(mdxQuery, arguments, buffer, new SQLStringVisitor.Substitutor() {
+
+                @Override
+                public void substitute(Argument arg, StringBuilder builder, int index) {
+                    Literal argumentValue = arg.getArgumentValue();
+                    Object value = argumentValue.getValue();
+                    if (value == null || value instanceof Number || value instanceof Boolean || value instanceof String) {
+                        builder.append(argumentValue);
+                    } else if (value instanceof Date) {
+                        //bind as a string literal
+                        builder.append(new Literal(value.toString(), String.class));
+                    } else {
+                        //bind as a string literal using the teiid format - this is likely not what the user wants
+                        builder.append(new Literal(argumentValue.toString(), String.class));
+                    }
+                }
+            });
+            this.mdxQuery = buffer.toString();
+        }
+        this.command = command;
+        this.connection = connection;
+        this.context = context;
+        this.executionFactory = executionFactory;
+        this.returnsArray = returnsArray;
+    }
+
+    @Override
+    public void execute() throws TranslatorException {
+        try {
+            stmt = this.connection.createStatement();
+            cellSet = stmt.executeOlapQuery(mdxQuery);
+            CellSetAxis rowAxis = this.cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
+            rowPositionIterator = rowAxis.iterator();
+            columnsAxis = cellSet.getAxes().get(Axis.COLUMNS.axisOrdinal());
+            colWidth = rowAxis.getAxisMetaData().getHierarchies().size() + this.columnsAxis.getPositions().size();
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public void cancel() throws TranslatorException {
+        try {
+            OlapStatement olapStatement = this.stmt;
+            if (olapStatement != null) {
+                olapStatement.cancel();
+            }
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (this.stmt != null) {
+                this.stmt.close();
+                this.stmt = null;
+            }
+        } catch (SQLException e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+        }
+    }
+
     @Override
     public List<?> next() throws TranslatorException {
-    	if (!rowPositionIterator.hasNext()) {
-    		return null;
-    	}
-    	Position rowPosition = rowPositionIterator.next();
-    	Object[] result = new Object[colWidth];
-    	int i = 0;
-    	// add in rows axis
-		List<Member> members = rowPosition.getMembers();
-		for (Member member:members) {
-			String columnName = member.getName();
-			result[i++] = columnName;
-		}
+        if (!rowPositionIterator.hasNext()) {
+            return null;
+        }
+        Position rowPosition = rowPositionIterator.next();
+        Object[] result = new Object[colWidth];
+        int i = 0;
+        // add in rows axis
+        List<Member> members = rowPosition.getMembers();
+        for (Member member:members) {
+            String columnName = member.getName();
+            result[i++] = columnName;
+        }
 
-		// add col axis
-		for (Position colPos : columnsAxis) {
-			Cell cell = cellSet.getCell(colPos, rowPosition);
-			result[i++] = cell.getValue();
-		}	
-		if (returnsArray) {
-			ArrayList<Object[]> results = new ArrayList<Object[]>(1);
-			results.add(result);
-			return results;
-		}
-		return Arrays.asList(result);
-    }  
-    
+        // add col axis
+        for (Position colPos : columnsAxis) {
+            Cell cell = cellSet.getCell(colPos, rowPosition);
+            result[i++] = cell.getValue();
+        }
+        if (returnsArray) {
+            ArrayList<Object[]> results = new ArrayList<Object[]>(1);
+            results.add(result);
+            return results;
+        }
+        return Arrays.asList(result);
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         return null;
     }
-    
+
 }

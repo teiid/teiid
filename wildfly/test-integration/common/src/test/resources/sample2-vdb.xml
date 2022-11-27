@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="sample2" version="1">
+    <property name="cache-metadata" value="true" />
+    <property name="{http://teiid.org/rest}auto-generate" value="true"/>
+    <property name="{http://teiid.org/rest}security-type" value="none"/>
+    <property name="{http://teiid.org/rest}security-domain" value="teiid-security"/>
+    <property name="{http://teiid.org/rest}security-role" value="example-role"/>
+    
+    <model name="Txns">
+        <source name="text-connector" translator-name="loopback" />
+         <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE G1 (e1 string, e2 integer);
+                CREATE FOREIGN TABLE G2 (e1 string, e2 integer);
+        ]]> </metadata>
+    </model>
+    <model name="View" type ="VIRTUAL">
+         <metadata type="DDL"><![CDATA[
+            CREATE VIRTUAL PROCEDURE g1Table(IN p1 integer, IN p2 string) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'g1/{p1}')
+            AS
+            BEGIN
+                SELECT XMLELEMENT(NAME "rows", XMLATTRIBUTES (g1Table.p1 as p1, g1Table.p2 as p2), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;
+            END        
+            ]]> </metadata>
+    </model>
+
+</vdb>

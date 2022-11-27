@@ -31,18 +31,18 @@ import org.junit.Test;
 @SuppressWarnings("nls")
 public class TestObjectConverterUtil {
 
-	@Test public void testWriteWithLength() throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ByteArrayInputStream bais = new ByteArrayInputStream(new byte[] {1, 2, 3, 4, 5});
-		ObjectConverterUtil.write(baos, bais, new byte[3], 4);
-		assertEquals(4, baos.toByteArray().length);
-		
-		StringWriter sw = new StringWriter();
-		StringReader sr = new StringReader("123");
-		ObjectConverterUtil.write(sw, sr, 2, true);
-		assertEquals(2, sw.toString().length());
-	}
-	
+    @Test public void testWriteWithLength() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayInputStream bais = new ByteArrayInputStream(new byte[] {1, 2, 3, 4, 5});
+        ObjectConverterUtil.write(baos, bais, new byte[3], 4);
+        assertEquals(4, baos.toByteArray().length);
+
+        StringWriter sw = new StringWriter();
+        StringReader sr = new StringReader("123");
+        ObjectConverterUtil.write(sw, sr, 2, true);
+        assertEquals(2, sw.toString().length());
+    }
+
     @Test public void testCloseArguments() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream() {
             public void close() throws IOException {
@@ -53,5 +53,5 @@ public class TestObjectConverterUtil {
         ObjectConverterUtil.write(baos, bais, new byte[3], 4, false, true);
         assertEquals(4, baos.toByteArray().length);
     }
-	
+
 }

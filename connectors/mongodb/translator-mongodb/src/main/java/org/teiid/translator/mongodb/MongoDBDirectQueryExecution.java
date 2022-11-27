@@ -49,63 +49,63 @@ import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 /**
- * This enables the Direct Query execution of the MongoDB queries. For that to happen the procedure 
+ * This enables the Direct Query execution of the MongoDB queries. For that to happen the procedure
  * invocation needs to be like
  * {code}
- * 		native('CollectionName;{$match : { \"CompanyName\" : \"A\"}};{$project : {\"CompanyName\", "userName}}', [param1, param2])
- * {code} 
+ *         native('CollectionName;{$match : { \"CompanyName\" : \"A\"}};{$project : {\"CompanyName\", "userName}}', [param1, param2])
+ * {code}
  * the first parameter must be collection name, then the arguments must match the aggregation pipeline structure delimited by
  * semi-colon (;) between each pipeline statement
- * 
- *      select x.* from TABLE(call native('city;{$match:{"city":"FREEDOM"}}')) t, 
-		xmltable('/city' PASSING JSONTOXML('city', cast(array_get(t.tuple, 1) as BLOB)) COLUMNS city string, state string) x
- *     
+ *
+ *      select x.* from TABLE(call native('city;{$match:{"city":"FREEDOM"}}')) t,
+        xmltable('/city' PASSING JSONTOXML('city', cast(array_get(t.tuple, 1) as BLOB)) COLUMNS city string, state string) x
+ *
  *     select JSONTOXML('city', cast(array_get(t.tuple, 1) as BLOB)) as col from TABLE(call native('city;{$match:{"city":"FREEDOM"}}')) t;
  */
 public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements ProcedureExecution {
-	private String query;
-	private List<Argument> arguments;
-	protected boolean returnsArray;
-	private Cursor results;
-	private MongoDBExecutionFactory executionFactory;
-	
-	public MongoDBDirectQueryExecution(List<Argument> arguments, @SuppressWarnings("unused") Command cmd,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			MongoDBConnection connection, String nativeQuery, boolean returnsArray, MongoDBExecutionFactory ef) {
-		super(executionContext, metadata, connection);
-		this.arguments = arguments;
-		this.returnsArray = returnsArray;
-		this.query = nativeQuery;
-		this.executionFactory = ef;
-	}
+    private String query;
+    private List<Argument> arguments;
+    protected boolean returnsArray;
+    private Cursor results;
+    private MongoDBExecutionFactory executionFactory;
 
-	@Override
-	public void execute() throws TranslatorException {
-		StringBuilder buffer = new StringBuilder();		
-		SQLStringVisitor.parseNativeQueryParts(query, arguments, buffer, new SQLStringVisitor.Substitutor() {
-			@Override
-			public void substitute(Argument arg, StringBuilder builder, int index) {
-				Literal argumentValue = arg.getArgumentValue();
-				builder.append(argumentValue.getValue());
-			}
-		});
-		
-		StringTokenizer st = new StringTokenizer(buffer.toString(), ";"); //$NON-NLS-1$
-		String collectionName = st.nextToken();
-		boolean shellOperation = collectionName.equalsIgnoreCase("$ShellCmd"); //$NON-NLS-1$
-		String shellOperationName = null;
-		if (shellOperation) {
-		    collectionName = st.nextToken();
-		    shellOperationName = st.nextToken();
-		}
-	
-		DBCollection collection = this.mongoDB.getCollection(collectionName);
-		if (collection == null) {
-			throw new TranslatorException(MongoDBPlugin.Event.TEIID18020, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18020, collectionName));
-		}
-		
-		if (shellOperation) {
-		    
+    public MongoDBDirectQueryExecution(List<Argument> arguments, @SuppressWarnings("unused") Command cmd,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            MongoDBConnection connection, String nativeQuery, boolean returnsArray, MongoDBExecutionFactory ef) {
+        super(executionContext, metadata, connection);
+        this.arguments = arguments;
+        this.returnsArray = returnsArray;
+        this.query = nativeQuery;
+        this.executionFactory = ef;
+    }
+
+    @Override
+    public void execute() throws TranslatorException {
+        StringBuilder buffer = new StringBuilder();
+        SQLStringVisitor.parseNativeQueryParts(query, arguments, buffer, new SQLStringVisitor.Substitutor() {
+            @Override
+            public void substitute(Argument arg, StringBuilder builder, int index) {
+                Literal argumentValue = arg.getArgumentValue();
+                builder.append(argumentValue.getValue());
+            }
+        });
+
+        StringTokenizer st = new StringTokenizer(buffer.toString(), ";"); //$NON-NLS-1$
+        String collectionName = st.nextToken();
+        boolean shellOperation = collectionName.equalsIgnoreCase("$ShellCmd"); //$NON-NLS-1$
+        String shellOperationName = null;
+        if (shellOperation) {
+            collectionName = st.nextToken();
+            shellOperationName = st.nextToken();
+        }
+
+        DBCollection collection = this.mongoDB.getCollection(collectionName);
+        if (collection == null) {
+            throw new TranslatorException(MongoDBPlugin.Event.TEIID18020, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18020, collectionName));
+        }
+
+        if (shellOperation) {
+
             ArrayList<Object> operations = new ArrayList<Object>();
             while (st.hasMoreTokens()) {
                 String token = st.nextToken();
@@ -116,9 +116,9 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
                     operations.add(token);
                 }
             }
-            
-		    try {
-		        ReflectionHelper helper = new ReflectionHelper(DBCollection.class);
+
+            try {
+                ReflectionHelper helper = new ReflectionHelper(DBCollection.class);
                 Method method = helper.findBestMethodOnTarget(shellOperationName, operations.toArray(new Object[operations.size()]));
                 Object result = method.invoke(collection, operations.toArray(new Object[operations.size()]));
                 if (result instanceof Cursor) {
@@ -141,69 +141,69 @@ public class MongoDBDirectQueryExecution extends MongoDBBaseExecution implements
             } catch (InvocationTargetException e) {
                 throw new TranslatorException(MongoDBPlugin.Event.TEIID18034, e.getTargetException(), MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18034, buffer.toString()));
             }
-		}
-		else {
-	        ArrayList<DBObject> operations = new ArrayList<DBObject>();
-	        while (st.hasMoreTokens()) {
-	            String token = st.nextToken();
-	            operations.add((DBObject)JSON.parse(token));
-	        }
-		    
-    		if (operations.isEmpty()) {
-    			throw new TranslatorException(MongoDBPlugin.Event.TEIID18021, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18021, collectionName));
-    		}
-    		
+        }
+        else {
+            ArrayList<DBObject> operations = new ArrayList<DBObject>();
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                operations.add((DBObject)JSON.parse(token));
+            }
+
+            if (operations.isEmpty()) {
+                throw new TranslatorException(MongoDBPlugin.Event.TEIID18021, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18021, collectionName));
+            }
+
             this.results = collection.aggregate(operations,
                     this.executionFactory.getOptions(this.executionContext.getBatchSize()));
-		}
-	}
+        }
+    }
 
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;
-	}
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return null;
+    }
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		final DBObject value = nextRow();
-		if (value == null) {
-			return null;
-		}
-		
-		BlobType result = new BlobType(new BlobImpl(new InputStreamFactory() {
-        	@Override
-        	public InputStream getInputStream() throws IOException {
-        		return new ByteArrayInputStream(JSON.serialize(value).getBytes(Streamable.CHARSET));
-        	}
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        final DBObject value = nextRow();
+        if (value == null) {
+            return null;
+        }
+
+        BlobType result = new BlobType(new BlobImpl(new InputStreamFactory() {
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(JSON.serialize(value).getBytes(Streamable.CHARSET));
+            }
         }));
-		
-		if (returnsArray) {
-			List<Object[]> row = new ArrayList<Object[]>(1);
-			row.add(new Object[] {result});
-			return row;
-		}
-		return Arrays.asList(result);
-	}	
-	
-	@SuppressWarnings("unused")
-	public DBObject nextRow() throws TranslatorException, DataNotAvailableException {
-		if (this.results != null && this.results.hasNext()) {
-			DBObject result = this.results.next();
-			return result;
-		}
-		return null;
-	}	
-	
-	@Override
-	public void close() {
-	    if (this.results != null) {
-	        this.results.close();
-	        this.results = null;
-	    }
-	}
 
-	@Override
-	public void cancel() throws TranslatorException {
-		close();
-	}	
+        if (returnsArray) {
+            List<Object[]> row = new ArrayList<Object[]>(1);
+            row.add(new Object[] {result});
+            return row;
+        }
+        return Arrays.asList(result);
+    }
+
+    @SuppressWarnings("unused")
+    public DBObject nextRow() throws TranslatorException, DataNotAvailableException {
+        if (this.results != null && this.results.hasNext()) {
+            DBObject result = this.results.next();
+            return result;
+        }
+        return null;
+    }
+
+    @Override
+    public void close() {
+        if (this.results != null) {
+            this.results.close();
+            this.results = null;
+        }
+    }
+
+    @Override
+    public void cancel() throws TranslatorException {
+        close();
+    }
 }

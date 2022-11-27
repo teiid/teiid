@@ -37,7 +37,7 @@ public class TestDuplicateFilter {
 
     public void helpTestDuplicateFilter(Object[] input, Class<?> dataType, int expected) throws TeiidComponentException, TeiidProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        
+
         Count count = new Count();
         count.setArgIndexes(new int[] {0});
         SortingFilter filter = new SortingFilter(count, mgr, "test", true); //$NON-NLS-1$
@@ -47,26 +47,26 @@ public class TestDuplicateFilter {
         filter.setElements(Arrays.asList(element));
         filter.setArgIndexes(new int[] {0});
         filter.reset();
-        
+
         // Add inputs
         for(int i=0; i<input.length; i++) {
-            filter.addInputDirect(Arrays.asList(input[i]), null);    
-        }        
-        
+            filter.addInputDirect(Arrays.asList(input[i]), null);
+        }
+
         Integer actual = (Integer) filter.getResult(null);
         assertEquals("Did not get expected number of results", expected, actual.intValue()); //$NON-NLS-1$
     }
 
     @Test public void testNoInputs() throws Exception {
-        helpTestDuplicateFilter(new Object[0], DataTypeManager.DefaultDataClasses.STRING, 0);           
+        helpTestDuplicateFilter(new Object[0], DataTypeManager.DefaultDataClasses.STRING, 0);
     }
-    
+
     @Test public void testSmall()  throws Exception {
         Object[] input = new Object[] { "a", "b", "a", "c", "a", "c", "c", "f" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$
 
-        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.STRING, 4);        
+        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.STRING, 4);
     }
-    
+
     @Test public void testBig() throws Exception {
         int NUM_VALUES = 10000;
         int NUM_OUTPUT = 200;
@@ -76,7 +76,7 @@ public class TestDuplicateFilter {
             input[i] = new Integer(i % NUM_OUTPUT);
         }
 
-        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.INTEGER, NUM_OUTPUT);        
+        helpTestDuplicateFilter(input, DataTypeManager.DefaultDataClasses.INTEGER, NUM_OUTPUT);
     }
-    
+
 }

@@ -30,34 +30,34 @@ import org.teiid.translator.TranslatorException;
 
 public class CassandraDirectQueryExecution extends CassandraQueryExecution implements ProcedureExecution {
 
-	private String cql;
-	private List<Argument> arguments;
+    private String cql;
+    private List<Argument> arguments;
 
-	public CassandraDirectQueryExecution(String cql, List<Argument> arguments, Command command, CassandraConnection connection, ExecutionContext context, boolean returnsArray){
-		super(command, connection, context);
-		this.arguments = arguments;
-		this.cql = cql;
-		this.returnsArray = returnsArray;
-	}
+    public CassandraDirectQueryExecution(String cql, List<Argument> arguments, Command command, CassandraConnection connection, ExecutionContext context, boolean returnsArray){
+        super(command, connection, context);
+        this.arguments = arguments;
+        this.cql = cql;
+        this.returnsArray = returnsArray;
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		StringBuilder buffer = new StringBuilder();
-		SQLStringVisitor.parseNativeQueryParts(cql, arguments, buffer, new SQLStringVisitor.Substitutor() {
-			
-			@Override
-			public void substitute(Argument arg, StringBuilder builder, int index) {
-				Literal argumentValue = arg.getArgumentValue();
-				builder.append(argumentValue);
-			}
-		});
-		String source_cql = buffer.toString();
-		execute(source_cql);
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        StringBuilder buffer = new StringBuilder();
+        SQLStringVisitor.parseNativeQueryParts(cql, arguments, buffer, new SQLStringVisitor.Substitutor() {
 
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;
-	}
+            @Override
+            public void substitute(Argument arg, StringBuilder builder, int index) {
+                Literal argumentValue = arg.getArgumentValue();
+                builder.append(argumentValue);
+            }
+        });
+        String source_cql = buffer.toString();
+        execute(source_cql);
+    }
+
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return null;
+    }
 
 }

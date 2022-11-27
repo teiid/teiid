@@ -25,34 +25,34 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class Array implements Expression {
 
-	private Class<?> baseType;
-	private List<Expression> expressions;
-	
-	public Array(Class<?> baseType, List<Expression> expresssions) {
-		this.baseType = baseType;
-		this.expressions = expresssions;
-	}
-	
-	@Override
-	public Class<?> getType() {
-		return DataTypeManager.getArrayType(baseType);
-	}
+    private Class<?> baseType;
+    private List<Expression> expressions;
 
-	@Override
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
-	
-	public Class<?> getBaseType() {
-		return baseType;
-	}
-	
-	public void setBaseType(Class<?> baseType) {
-		this.baseType = baseType;
-	}
-	
-	public List<Expression> getExpressions() {
-		return expressions;
-	}
+    public Array(Class<?> baseType, List<Expression> expresssions) {
+        this.baseType = baseType;
+        this.expressions = expresssions;
+    }
+
+    @Override
+    public Class<?> getType() {
+        return DataTypeManager.getArrayType(baseType);
+    }
+
+    @Override
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public Class<?> getBaseType() {
+        return baseType;
+    }
+
+    public void setBaseType(Class<?> baseType) {
+        this.baseType = baseType;
+    }
+
+    public List<Expression> getExpressions() {
+        return expressions;
+    }
 
 }

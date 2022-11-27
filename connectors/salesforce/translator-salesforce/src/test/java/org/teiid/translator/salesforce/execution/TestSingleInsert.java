@@ -58,7 +58,7 @@ public class TestSingleInsert {
         Util.resetTimeZone();
         TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-1"));
     }
-    
+
     @AfterClass
     public static void oneTimeTeardown() {
         Util.resetTimeZone();
@@ -68,7 +68,7 @@ public class TestSingleInsert {
     @Test
     public void testDateTypes() throws Exception {
         NamedTable table = new NamedTable("temp", null, Mockito.mock(Table.class));
-        
+
         ArrayList<ColumnReference> elements = new ArrayList<ColumnReference>();
         elements.add(new ColumnReference(table, "one", Mockito.mock(Column.class), Integer.class));
         elements.add(new ColumnReference(table, "two", Mockito.mock(Column.class), Date.class));
@@ -78,13 +78,13 @@ public class TestSingleInsert {
         values.add(new Literal(1, DataTypeManager.DefaultDataClasses.INTEGER));
         values.add(new Literal(TimestampUtil.createDate(100, 01, 1), DataTypeManager.DefaultDataClasses.DATE));
         values.add(new Literal(TimestampUtil.createTimestamp(100, 01, 1, 0, 4, 0, 0), DataTypeManager.DefaultDataClasses.TIMESTAMP));
-        
+
         ExpressionValueSource valueSource = new ExpressionValueSource(values);
-        
+
         Insert insert = new Insert(table, elements, valueSource);
-        
+
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
-        
+
         Mockito.stub(connection.create(Mockito.any(DataPayload.class))).toAnswer(new Answer<Integer>() {
             @Override
             public Integer answer(InvocationOnMock invocation) throws Throwable {
@@ -98,12 +98,12 @@ public class TestSingleInsert {
                 return 1;
             }
         });
-        
+
         Mockito.stub(connection.upsert(Mockito.any(DataPayload.class))).toReturn(1);
-        
+
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
         config.setMaxBulkInsertBatchSize(1);
-        
+
         InsertExecutionImpl updateExecution = new InsertExecutionImpl(config, insert, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
         while(true) {
             try {
@@ -114,7 +114,7 @@ public class TestSingleInsert {
                 continue;
             }
         }
-        
+
         insert.setUpsert(true);
         updateExecution = new InsertExecutionImpl(config, insert, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
         while(true) {

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.teiid</groupId>
 		<artifactId>connectors</artifactId>
-		<version>11.1.0-SNAPSHOT</version>
+		<version>17.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.teiid.connectors</groupId>
@@ -17,12 +17,6 @@
 		<module>translator-salesforce</module>
 		<module>translator-salesforce-34</module>
 		<module>translator-salesforce-41</module>
-		<module>connector-salesforce</module>
-		<module>connector-salesforce-34</module>
-		<module>connector-salesforce-41</module>
-		<module>feature-pack-salesforce</module>
-        <module>feature-pack-salesforce-34</module>
-        <module>feature-pack-salesforce-41</module>
 	</modules>
 
 </project>

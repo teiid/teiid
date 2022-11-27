@@ -34,9 +34,9 @@ import io.opentracing.util.GlobalTracer;
  * and provides a way to manipulate a static tracer without using the GlobalTracer registration
  */
 public class GlobalTracerInjector implements Injector {
-    
+
     private static Tracer TRACER = GlobalTracer.get();
-    
+
     @Override
     public String getSpanContext() {
         return getSpanContext(TRACER);
@@ -49,14 +49,14 @@ public class GlobalTracerInjector implements Injector {
         }
         Map<String,String> spanMap = new HashMap<String, String>();
         tracer.inject(span.context(), Builtin.TEXT_MAP, new TextMapInjectAdapter(spanMap));
-        
+
         //simple json creation
         StringBuilder json = new StringBuilder();
         json.append('{');
         boolean first = true;
         for (Map.Entry<String, String> entry : spanMap.entrySet()) {
             if (!first) {
-                json.append(','); 
+                json.append(',');
             } else {
                 first = false;
             }
@@ -71,11 +71,11 @@ public class GlobalTracerInjector implements Injector {
     /*
      * Used to workaround that the GlobalTracer can only be registered once.
      */
-    
+
     public static Tracer getTracer() {
         return TRACER;
     }
-    
+
     public static void setTracer(Tracer tracer) {
         TRACER = tracer;
     }

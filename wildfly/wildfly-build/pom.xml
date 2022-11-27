@@ -1,0 +1,128 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>wildfly-parent</artifactId>
+    <groupId>org.teiid.wildfly</groupId>
+    <version>17.0.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  
+  <artifactId>teiid-wildfly</artifactId>
+  <name>Teiid Wildfly Build</name>
+  <description>Teiid Wildfly Build</description>
+  
+  <packaging>pom</packaging>
+  
+  <properties>
+      <!-- Directory name from upstream Wildfly server dist. -->
+      <dir.wildfly>wildfly-${version.org.wildfly}</dir.wildfly>
+      <!-- Teiid server directory name. -->
+      <dir.teiid>teiid-${project.version}</dir.teiid>
+  </properties>
+  
+    <build>
+        <outputDirectory>target/kits</outputDirectory>
+        
+        <resources>
+            <resource>
+                <directory>kits</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                    <include>**/*.sh</include>
+                    <include>**/*.bat</include>
+                    <include>**/*.html</include>
+                    <include>**/*.cli</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>kits</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                    <exclude>**/*.sh</exclude>
+                    <exclude>**/*.bat</exclude>
+                    <exclude>**/*.html</exclude>
+                    <exclude>**/*.cli</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        
+        <plugins>                        
+            <plugin>
+                <groupId>org.wildfly.build</groupId>
+                <artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
+                <!-- See https://github.com/wildfly/wildfly-build-tools/issues/47 -->
+                <version>1.2.6.Final</version>
+                <executions>
+                    <execution>
+                        <id>dist-provisioning</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <config-file>server-provisioning.xml</config-file>
+                            <serverName>teiid-${project.version}-wildfly-dist</serverName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack-server-deps</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
+                                    <version>${version.org.wildfly}</version>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.teiid.hal</groupId>
+                                    <artifactId>dist</artifactId>
+                                    <version>${version.teiid.console}</version>
+                                    <classifier>overlay</classifier>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}/${dir.wildfly}</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>assembly/src.xml</descriptor>
+                        <descriptor>assembly/wildfly-dist.xml</descriptor>
+                        <descriptor>assembly/wildfly-server.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-assemblies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+        </plugins>
+    </build>
+    
+</project>

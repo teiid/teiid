@@ -24,7 +24,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  * Root interface for all language object interfaces.
  */
 public interface LanguageObject {
-    
+
     void acceptVisitor(LanguageObjectVisitor visitor);
 
 }

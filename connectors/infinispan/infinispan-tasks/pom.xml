@@ -4,21 +4,30 @@
 	<parent>
 		<groupId>org.teiid.connectors</groupId>
 		<artifactId>infinispan</artifactId>
-		<version>11.1.0-SNAPSHOT</version>
+		<version>17.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>infinispan-tasks</artifactId>
 	<name>Infinispan Server Tasks</name>
 	<description>This defines Server Side tasks for Infinispan</description>
-	<packaging>bundle</packaging>
+
+    <properties>
+        <!-- duplicates in infinispan jars -->
+        <basepom.check.fail-duplicate-finder>false</basepom.check.fail-duplicate-finder>
+    </properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.infinispan</groupId>
-			<artifactId>infinispan-commons</artifactId>
+			<artifactId>infinispan-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.infinispan</groupId>
 			<artifactId>infinispan-tasks-api</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>jakarta.annotation</groupId>
+		    <artifactId>jakarta.annotation-api</artifactId>
+		    <scope>runtime</scope>
 		</dependency>
 	</dependencies>
 

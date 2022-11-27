@@ -41,25 +41,22 @@ import org.teiid.vdb.runtime.VDBKey;
  * state. Note that this service does <i>not</i> deal with authentication explicitly,
  * but may use a membership service provider to authenticate some
  * requests.
- * </p>
+ *
  */
 public interface SessionService {
     public static String NAME = "SessionService"; //$NON-NLS-1$
 
-    public static final long DEFAULT_MAX_SESSIONS = 10000; 
-    public static final long DEFAULT_SESSION_EXPIRATION = 0; 
-    
-    public static final String MAX_SESSIONS = "session.maxSessions"; //$NON-NLS-1$
-    public static final String SESSION_EXPIRATION = "session.expirationTimeInMilli"; //$NON-NLS-1$
-    
+    public static final long DEFAULT_MAX_SESSIONS = 10000;
+    public static final long DEFAULT_SESSION_EXPIRATION = 0;
+
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
      */
-	public SessionMetadata createSession(String vdbName,
-			String vdbVersion, AuthenticationType authType,
-			String user, Credentials credential,
-			String applicationName, Properties connProps) throws LoginException,
-			SessionServiceException;
+    public SessionMetadata createSession(String vdbName,
+            String vdbVersion, AuthenticationType authType,
+            String user, Credentials credential,
+            String applicationName, Properties connProps) throws LoginException,
+            SessionServiceException;
 
     /**
      * Closes the specified session.
@@ -95,7 +92,7 @@ public interface SessionService {
      */
     SessionMetadata validateSession(String sessionID)
     throws InvalidSessionException, SessionServiceException;
-    
+
     /**
      * Get all Sessions that are in the ACTIVE state
      * and currently logged in to a VDB.
@@ -109,16 +106,16 @@ public interface SessionService {
      * @param sessionID - identifies the client
      */
     public void pingServer(String sessionID) throws InvalidSessionException;
-    
-    SessionMetadata getActiveSession(String sessionID);
-    
-	void setDqp(DQPCore dqp);
-	
-	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
-	
-	SecurityHelper getSecurityHelper();
-	
-	GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
 
-	AuthenticationType getDefaultAuthenticationType();
+    SessionMetadata getActiveSession(String sessionID);
+
+    void setDqp(DQPCore dqp);
+
+    AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
+
+    SecurityHelper getSecurityHelper();
+
+    GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
+
+    AuthenticationType getDefaultAuthenticationType();
 }

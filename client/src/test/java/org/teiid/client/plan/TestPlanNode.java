@@ -32,16 +32,16 @@ import org.junit.Test;
 public class TestPlanNode {
 
     public static PlanNode example1() {
-    	PlanNode map = new PlanNode("x"); //$NON-NLS-1$ 
-    	map.addProperty("test", ""); //$NON-NLS-1$ //$NON-NLS-2$
-    	map.addProperty("null", (String)null); //$NON-NLS-1$ 
-    	map.addProperty("string", "string"); //$NON-NLS-1$ //$NON-NLS-2$
+        PlanNode map = new PlanNode("x"); //$NON-NLS-1$
+        map.addProperty("test", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        map.addProperty("null", (String)null); //$NON-NLS-1$
+        map.addProperty("string", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         List<String> list1 = new ArrayList<String>();
         list1.add("item1"); //$NON-NLS-1$
         list1.add("item2"); //$NON-NLS-1$
         list1.add("item3"); //$NON-NLS-1$
         map.addProperty("list<string>", list1); //$NON-NLS-1$
-        
+
         PlanNode child = new PlanNode("y"); //$NON-NLS-1$
         List<String> outputCols = new ArrayList<String>();
         outputCols.add("Name (string)"); //$NON-NLS-1$
@@ -59,36 +59,36 @@ public class TestPlanNode {
     @Test public void testXml() throws Exception {
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><node name=\"x\"><property name=\"test\"><value></value></property><property name=\"null\"></property><property name=\"string\"><value>string</value></property><property name=\"list&lt;string&gt;\"><value>item1</value><value>item2</value><value>item3</value></property><property name=\"child\"><node name=\"y\"><property name=\"outputCols\"><value>Name (string)</value><value>Year (integer)</value></property><property name=\"Join Type\"><value>INNER JOIN</value></property><property name=\"Criteria\"><value>Item.ID = History.ID</value></property><property name=\"Other\"></property></node></property></node>", example1().toXml()); //$NON-NLS-1$
     }
-    
+
     @Test public void testXmlRoundtrip() throws Exception {
-    	PlanNode example1 = example1();
-    	example1.addProperty("last", "x"); //$NON-NLS-1$ //$NON-NLS-2$
+        PlanNode example1 = example1();
+        example1.addProperty("last", "x"); //$NON-NLS-1$ //$NON-NLS-2$
         String planString = example1.toXml();
-    	PlanNode planNode = PlanNode.fromXml(planString);
+        PlanNode planNode = PlanNode.fromXml(planString);
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><node name=\"x\"><property name=\"test\"><value></value></property><property name=\"null\"></property><property name=\"string\"><value>string</value></property><property name=\"list&lt;string&gt;\"><value>item1</value><value>item2</value><value>item3</value></property><property name=\"child\"><node name=\"y\"><property name=\"outputCols\"><value>Name (string)</value><value>Year (integer)</value></property><property name=\"Join Type\"><value>INNER JOIN</value></property><property name=\"Criteria\"><value>Item.ID = History.ID</value></property><property name=\"Other\"></property></node></property><property name=\"last\"><value>x</value></property></node>", planNode.toXml()); //$NON-NLS-1$
     }
 
     @Test public void testText() throws Exception {
         assertEquals("x\n  + test:\n  + null\n  + string:string\n  + list<string>:\n    0: item1\n    1: item2\n    2: item3\n  + child:\n    y\n      + outputCols:\n        0: Name (string)\n        1: Year (integer)\n      + Join Type:INNER JOIN\n      + Criteria:Item.ID = History.ID\n      + Other\n", example1().toString()); //$NON-NLS-1$
     }
-    
+
     @Test public void testYaml() throws Exception {
-        assertEquals("x:\n" + 
-                "  test: \n" + 
-                "  null: ~\n" + 
-                "  string: string\n" + 
-                "  list<string>:\n" + 
-                "    - item1\n" + 
-                "    - item2\n" + 
-                "    - item3\n" + 
-                "  child:\n" + 
-                "    y:\n" + 
-                "      outputCols:\n" + 
-                "        - Name (string)\n" + 
-                "        - Year (integer)\n" + 
-                "      Join Type: INNER JOIN\n" + 
-                "      Criteria: Item.ID = History.ID\n" + 
-                "      Other: ~\n", example1().toYaml()); 
+        assertEquals("x:\n" +
+                "  test: \n" +
+                "  null: ~\n" +
+                "  string: string\n" +
+                "  list<string>:\n" +
+                "    - item1\n" +
+                "    - item2\n" +
+                "    - item3\n" +
+                "  child:\n" +
+                "    y:\n" +
+                "      outputCols:\n" +
+                "        - Name (string)\n" +
+                "        - Year (integer)\n" +
+                "      Join Type: INNER JOIN\n" +
+                "      Criteria: Item.ID = History.ID\n" +
+                "      Other: ~\n", example1().toYaml());
     }
-    
+
 }

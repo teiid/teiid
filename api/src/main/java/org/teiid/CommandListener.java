@@ -22,7 +22,7 @@ package org.teiid;
  * Listener for command events.
  */
 public interface CommandListener {
-	
-	void commandClosed(CommandContext context);
+
+    void commandClosed(CommandContext context);
 
 }

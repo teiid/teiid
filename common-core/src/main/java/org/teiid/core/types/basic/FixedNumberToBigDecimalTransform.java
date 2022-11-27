@@ -27,38 +27,38 @@ import org.teiid.core.types.TransformationException;
 
 public class FixedNumberToBigDecimalTransform extends Transform {
 
-	private Class<?> sourceType;
-	
-	public FixedNumberToBigDecimalTransform(Class<?> sourceType) {
-		this.sourceType = sourceType;
-	}
-	
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		return BigDecimal.valueOf(((Number)value).longValue());
-	}
+    private Class<?> sourceType;
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return sourceType;
-	}
+    public FixedNumberToBigDecimalTransform(Class<?> sourceType) {
+        this.sourceType = sourceType;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        return BigDecimal.valueOf(((Number)value).longValue());
+    }
+
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return sourceType;
+    }
+
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
+    }
 
 }

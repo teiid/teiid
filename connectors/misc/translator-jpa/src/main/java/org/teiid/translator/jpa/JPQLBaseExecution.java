@@ -23,15 +23,15 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 
 public class JPQLBaseExecution {
-	
-	protected ExecutionContext executionContext;
-	protected RuntimeMetadata metadata; 
-	protected EntityManager enityManager;
 
-	protected JPQLBaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {
-		this.executionContext = executionContext;
-		this.metadata = metadata;
-		this.enityManager = em;
-	}
+    protected ExecutionContext executionContext;
+    protected RuntimeMetadata metadata;
+    protected EntityManager enityManager;
+
+    protected JPQLBaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {
+        this.executionContext = executionContext;
+        this.metadata = metadata;
+        this.enityManager = em;
+    }
 
 }

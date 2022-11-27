@@ -35,47 +35,47 @@ import org.teiid.core.util.ObjectConverterUtil;
 
 @SuppressWarnings("nls")
 public class TestSaveOnReadInputStream {
-	
-	@Test public void testSave() throws IOException {
-		SaveOnReadInputStream soris = getSaveOnReadInputStream();
-		InputStreamFactory isf = soris.getInputStreamFactory();
-		InputStream is = isf.getInputStream();
-		assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is), Streamable.CHARSET));
-		InputStream is2 = isf.getInputStream(); 
-		assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is2), Streamable.CHARSET));
-	}
 
-	@Test public void testPartialReadSave() throws IOException {
-		SaveOnReadInputStream soris = getSaveOnReadInputStream();
-		InputStreamFactory isf = soris.getInputStreamFactory();
-		InputStream is = isf.getInputStream();
-		is.read();
-		
-		InputStream is2 = isf.getInputStream(); 
-		assertEquals("ello world", new String(ObjectConverterUtil.convertToByteArray(is), Streamable.CHARSET));
-		assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is2), Streamable.CHARSET));
-		InputStream is3 = isf.getInputStream(); 
-		assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is3), Streamable.CHARSET));
-	}
-	
-	@Test public void testStorageMode() throws IOException {
-		SaveOnReadInputStream soris = getSaveOnReadInputStream();
-		InputStreamFactory isf = soris.getInputStreamFactory();
-		
-		assertEquals(StorageMode.MEMORY, isf.getStorageMode());
-		
-		InputStream is = isf.getInputStream();
-		assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is), Streamable.CHARSET));
-	}
+    @Test public void testSave() throws IOException {
+        SaveOnReadInputStream soris = getSaveOnReadInputStream();
+        InputStreamFactory isf = soris.getInputStreamFactory();
+        InputStream is = isf.getInputStream();
+        assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is), Streamable.CHARSET));
+        InputStream is2 = isf.getInputStream();
+        assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is2), Streamable.CHARSET));
+    }
 
-	private SaveOnReadInputStream getSaveOnReadInputStream() {
-		FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test");
-		FileStoreInputStreamFactory factory = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-		
-		InputStream is = new ByteArrayInputStream("hello world".getBytes(Streamable.CHARSET));
-		
-		SaveOnReadInputStream soris = new SaveOnReadInputStream(is, factory);
-		return soris;
-	}
+    @Test public void testPartialReadSave() throws IOException {
+        SaveOnReadInputStream soris = getSaveOnReadInputStream();
+        InputStreamFactory isf = soris.getInputStreamFactory();
+        InputStream is = isf.getInputStream();
+        is.read();
+
+        InputStream is2 = isf.getInputStream();
+        assertEquals("ello world", new String(ObjectConverterUtil.convertToByteArray(is), Streamable.CHARSET));
+        assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is2), Streamable.CHARSET));
+        InputStream is3 = isf.getInputStream();
+        assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is3), Streamable.CHARSET));
+    }
+
+    @Test public void testStorageMode() throws IOException {
+        SaveOnReadInputStream soris = getSaveOnReadInputStream();
+        InputStreamFactory isf = soris.getInputStreamFactory();
+
+        assertEquals(StorageMode.MEMORY, isf.getStorageMode());
+
+        InputStream is = isf.getInputStream();
+        assertEquals("hello world", new String(ObjectConverterUtil.convertToByteArray(is), Streamable.CHARSET));
+    }
+
+    private SaveOnReadInputStream getSaveOnReadInputStream() {
+        FileStore fs = BufferManagerFactory.getStandaloneBufferManager().createFileStore("test");
+        FileStoreInputStreamFactory factory = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+
+        InputStream is = new ByteArrayInputStream("hello world".getBytes(Streamable.CHARSET));
+
+        SaveOnReadInputStream soris = new SaveOnReadInputStream(is, factory);
+        return soris;
+    }
 
 }

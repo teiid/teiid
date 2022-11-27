@@ -36,54 +36,54 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * <p>This class represents a processor plan.  It is generic in that it 
+ * <p>This class represents a processor plan.  It is generic in that it
  * abstracts the interface to the plan by the processor, meaning that the
  * actual implementation of the plan or the types of processing done by the
- * plan is not important to the processor.</p>
+ * plan is not important to the processor.
  * <p>All the implementations of this interface need to implement {@link #clone}
  * method. The plan is only clonable in the pre or post-processing stage, not
  * during the processing state (things like program state, result sets, etc).
  * It's only safe to clone in between query processings.  In other words, it's
  * only safe to call {@link #clone} before the call to {@link #open} or after
  * the call to {@link #close}.
- * </p>
+ *
  */
 public abstract class ProcessorPlan implements Cloneable, BatchProducer {
-	
+
     private CommandContext context;
 
-	/**
-	 * Initialize the plan with some required pieces of data for making 
-	 * queries.  The data manager is used to make queries and the processorID
-	 * must be passed with the request so the data manager can find the 
-	 * processor again.
-	 * 
-	 * @param context Process execution context
-	 * @param dataMgr Data manager reference
+    /**
+     * Initialize the plan with some required pieces of data for making
+     * queries.  The data manager is used to make queries and the processorID
+     * must be passed with the request so the data manager can find the
+     * processor again.
+     *
+     * @param context Process execution context
+     * @param dataMgr Data manager reference
      * @param bufferMgr Buffer manager reference
-	 */
-	public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
-		this.context = context;
-	}
-	
-	public void addWarning(TeiidException warning) {
-		if (context != null) {
-			context.addWarning(warning);
-		}
-	}
-	
+     */
+    public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+        this.context = context;
+    }
+
+    public void addWarning(TeiidException warning) {
+        if (context != null) {
+            context.addWarning(warning);
+        }
+    }
+
     /**
      * Reset a plan so that it can be processed again.
      */
     public void reset() {
     }
-    
+
     /**
      * Get list of resolved elements describing output columns for this plan.
      * @return List of SingleElementSymbol
      */
     public abstract List getOutputElements();
-    
+
     /**
      * Get the processor context, which can be modified.
      * @return context object
@@ -91,17 +91,17 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
     public CommandContext getContext() {
         return context;
     }
-    
+
     public void setContext(CommandContext context) {
-		this.context = context;
-	}
-    
+        this.context = context;
+    }
+
     /**
      * Open the plan for processing.
      * @throws TeiidComponentException
      */
     public abstract void open() throws TeiidComponentException, TeiidProcessingException;
-    
+
     /**
      * Get a batch of results or possibly an Exception.
      * @return Batch of results
@@ -117,43 +117,43 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
      * @throws TeiidComponentException
      */
     public abstract void close() throws TeiidComponentException;
-    
-	/**
-	 * Return a safe clone of the ProcessorPlan.  A ProcessorPlan may only be
-	 * safely cloned in between processings.  That is, it is only safe to clone
-	 * a plan before it is {@link #open opened} or after it is {@link #close
-	 * closed}.
-	 * @return safe clone of this ProcessorPlan, as long as it is not open for
-	 * processing
-	 */
-	public abstract ProcessorPlan clone();
-	
-	public Boolean requiresTransaction(boolean transactionalReads) {
-		return transactionalReads;
-	}
-	
+
+    /**
+     * Return a safe clone of the ProcessorPlan.  A ProcessorPlan may only be
+     * safely cloned in between processings.  That is, it is only safe to clone
+     * a plan before it is {@link #open opened} or after it is {@link #close
+     * closed}.
+     * @return safe clone of this ProcessorPlan, as long as it is not open for
+     * processing
+     */
+    public abstract ProcessorPlan clone();
+
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        return transactionalReads;
+    }
+
     public PlanNode getDescriptionProperties() {
         PlanNode props = new PlanNode(this.getClass().getSimpleName());
         props.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));
         return props;
     }
- 
+
     /**
      * return the final tuple buffer or null if not available
      * @return
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
-     * @throws BlockedException 
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
+     * @throws BlockedException
      */
     public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-    	return null;
+        return null;
     }
-    
+
     /**
-	 * Return true if the plan provides a final buffer via getBuffer
-	 */
+     * Return true if the plan provides a final buffer via getBuffer
+     */
     public boolean hasBuffer() {
-    	return false;
+        return false;
     }
-    
+
 }

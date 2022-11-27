@@ -24,24 +24,24 @@ import org.teiid.metadata.Table.TriggerEvent;
  * Represents a trigger on a physical table
  */
 public class Trigger extends AbstractMetadataRecord {
-    
-    private TriggerEvent event; 
+
+    private TriggerEvent event;
     private String plan;
     private boolean after;
     private String name;
-    
+
     public TriggerEvent getEvent() {
         return event;
     }
-    
+
     public void setEvent(TriggerEvent event) {
         this.event = event;
     }
-    
+
     public String getPlan() {
         return plan;
     }
-    
+
     public void setPlan(String plan) {
         this.plan = plan;
     }

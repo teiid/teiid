@@ -32,61 +32,61 @@ import junit.framework.TestCase;
 
 public class TestCreate extends TestCase {
 
-	// ################################## FRAMEWORK ################################
-	
-	public TestCreate(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################	
+    // ################################## FRAMEWORK ################################
 
-	public static final Create sample1() { 
+    public TestCreate(String name) {
+        super(name);
+    }
+
+    // ################################## TEST HELPERS ################################
+
+    public static final Create sample1() {
         Create create = new Create();
         create.setTable(new GroupSymbol("temp_table"));//$NON-NLS-1$
-        
-		List elements = new ArrayList();
-        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
-        elements.add(new ElementSymbol("b")); //$NON-NLS-1$
 
-	    create.setElementSymbolsAsColumns(elements);
-	    return create;	
-	}
-
-	public static final Create sample2() { 
-        Create create = new Create();
-        create.setTable(new GroupSymbol("temp_table2"));//$NON-NLS-1$
-        
         List elements = new ArrayList();
         elements.add(new ElementSymbol("a")); //$NON-NLS-1$
         elements.add(new ElementSymbol("b")); //$NON-NLS-1$
 
         create.setElementSymbolsAsColumns(elements);
-        return create;  	}
-			
-	// ################################## ACTUAL TESTS ################################
-	
-	public void testGetProjectedNoElements() {    
-	    assertEquals(Command.getUpdateCommandSymbol(), sample1().getProjectedSymbols());
+        return create;
     }
 
-	public void testSelfEquivalence(){
-		Create c1 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c1);
-	}
+    public static final Create sample2() {
+        Create create = new Create();
+        create.setTable(new GroupSymbol("temp_table2"));//$NON-NLS-1$
 
-	public void testEquivalence(){
-		Create c1 = sample1();
+        List elements = new ArrayList();
+        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("b")); //$NON-NLS-1$
+
+        create.setElementSymbolsAsColumns(elements);
+        return create;      }
+
+    // ################################## ACTUAL TESTS ################################
+
+    public void testGetProjectedNoElements() {
+        assertEquals(Command.getUpdateCommandSymbol(), sample1().getProjectedSymbols());
+    }
+
+    public void testSelfEquivalence(){
+        Create c1 = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c1);
+    }
+
+    public void testEquivalence(){
+        Create c1 = sample1();
         Create c2 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}
-	
-	public void testNonEquivalence(){
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c2);
+    }
+
+    public void testNonEquivalence(){
         Create c1 = sample1();
         Create c2 = sample2();
-		int equals = -1;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c2);
+    }
 
 }

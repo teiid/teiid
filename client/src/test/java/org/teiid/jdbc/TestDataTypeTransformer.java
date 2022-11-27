@@ -30,40 +30,40 @@ import org.teiid.core.types.ArrayImpl;
 
 @SuppressWarnings("nls")
 public class TestDataTypeTransformer {
-	
-	@Test public void testClobToStringConversion() throws Exception {
-		Clob clob = new SerialClob("foo".toCharArray()); //$NON-NLS-1$
-		String value = DataTypeTransformer.getString(clob);
-		assertEquals("foo", value); //$NON-NLS-1$
-	}
-	
-	@Test public void testInvalidTransformation() throws Exception {
-		try {
-			DataTypeTransformer.getDate(Integer.valueOf(1)); 
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (SQLException e) {
-			assertEquals("Unable to transform the column value 1 to a Date.", e.getMessage()); //$NON-NLS-1$
-		}
-	}
-	
-	@Test public void testGetDefaultShort() throws Exception {
-		assertEquals(0, DataTypeTransformer.getShort(null));
-	}
-	
-	@Test public void testGetDefaultByte() throws Exception {
-		assertEquals(0, DataTypeTransformer.getByte(null));
-	}
-	
-	@Test public void testGetString() throws Exception {
-		assertEquals("", DataTypeTransformer.getString(new SerialClob(new char[0])));
-	}
-	
-	@Test public void testGetArray() throws Exception {
-		assertEquals(new ArrayImpl(new Object[] {1, 2}), DataTypeTransformer.getArray(new int[] {1,2}));
-	}
-	
-	@Test public void testGetArray1() throws Exception {
-		assertEquals(new ArrayImpl(new Object[] {1, 2}), DataTypeTransformer.getArray(new Integer[] {1,2}));
-	}
-	
+
+    @Test public void testClobToStringConversion() throws Exception {
+        Clob clob = new SerialClob("foo".toCharArray()); //$NON-NLS-1$
+        String value = DataTypeTransformer.getString(clob);
+        assertEquals("foo", value); //$NON-NLS-1$
+    }
+
+    @Test public void testInvalidTransformation() throws Exception {
+        try {
+            DataTypeTransformer.getDate(Integer.valueOf(1));
+            fail("exception expected"); //$NON-NLS-1$
+        } catch (SQLException e) {
+            assertEquals("Unable to transform the column value 1 to a Date.", e.getMessage()); //$NON-NLS-1$
+        }
+    }
+
+    @Test public void testGetDefaultShort() throws Exception {
+        assertEquals(0, DataTypeTransformer.getShort(null));
+    }
+
+    @Test public void testGetDefaultByte() throws Exception {
+        assertEquals(0, DataTypeTransformer.getByte(null));
+    }
+
+    @Test public void testGetString() throws Exception {
+        assertEquals("", DataTypeTransformer.getString(new SerialClob(new char[0])));
+    }
+
+    @Test public void testGetArray() throws Exception {
+        assertEquals(new ArrayImpl(new Object[] {1, 2}), DataTypeTransformer.getArray(new int[] {1,2}));
+    }
+
+    @Test public void testGetArray1() throws Exception {
+        assertEquals(new ArrayImpl(new Object[] {1, 2}), DataTypeTransformer.getArray(new Integer[] {1,2}));
+    }
+
 }

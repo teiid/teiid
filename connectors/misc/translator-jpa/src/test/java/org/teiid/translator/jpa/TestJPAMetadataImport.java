@@ -36,54 +36,48 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestJPAMetadataImport {
 
-    private static JPA2ExecutionFactory TRANSLATOR; 
+    private static JPA2ExecutionFactory TRANSLATOR;
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new JPA2ExecutionFactory();
         TRANSLATOR.start();
-    }	
-    
+    }
+
     @Test public void testImport() throws Exception {
         EntityManagerFactory factory = Persistence.createEntityManagerFactory("org.teiid.translator.jpa.test");
-        
+
         Properties props = new Properties();
         MetadataFactory mf = new MetadataFactory("vdb", 1, "market", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 
         MetadataProcessor<EntityManager> processor = TRANSLATOR.getMetadataProcessor();
         processor.process(mf, factory.createEntityManager());
-        
+
         //no ordering is implied for the entities and can change, so we pull the ddl individually
-        
+
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, ".*Marketdata");
-        assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" + 
-                "\n" + 
-                "CREATE FOREIGN TABLE Marketdata (\n" + 
-                "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" + 
-                "\tprice bigdecimal OPTIONS (NAMEINSOURCE 'price'),\n" + 
-                "\texchange_name string OPTIONS (NAMEINSOURCE 'name', \"teiid_jpa:assosiated_with_table\" 'market.Exchange', \"teiid_jpa:relation_key\" 'name', \"teiid_jpa:relation_property\" 'exchange'),\n" + 
-                "\tstock_id string OPTIONS (NAMEINSOURCE 'id', \"teiid_jpa:assosiated_with_table\" 'market.Stock', \"teiid_jpa:relation_key\" 'id', \"teiid_jpa:relation_property\" 'stock'),\n" + 
-                "\tCONSTRAINT PK_Marketdata PRIMARY KEY(id),\n" + 
-                "\tCONSTRAINT FK_exchange FOREIGN KEY(exchange_name) REFERENCES Exchange  OPTIONS (NAMEINSOURCE 'exchange'),\n" + 
-                "\tCONSTRAINT FK_stock FOREIGN KEY(stock_id) REFERENCES Stock  OPTIONS (NAMEINSOURCE 'stock')\n" + 
+        assertEquals("CREATE FOREIGN TABLE Marketdata (\n" +
+                "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" +
+                "\texchange_name string OPTIONS (NAMEINSOURCE 'name', \"teiid_jpa:assosiated_with_table\" 'market.Exchange', \"teiid_jpa:relation_key\" 'name', \"teiid_jpa:relation_property\" 'exchange'),\n" +
+                "\tprice bigdecimal OPTIONS (NAMEINSOURCE 'price'),\n" +
+                "\tstock_id string OPTIONS (NAMEINSOURCE 'id', \"teiid_jpa:assosiated_with_table\" 'market.Stock', \"teiid_jpa:relation_key\" 'id', \"teiid_jpa:relation_property\" 'stock'),\n" +
+                "\tCONSTRAINT PK_Marketdata PRIMARY KEY(id),\n" +
+                "\tCONSTRAINT FK_exchange FOREIGN KEY(exchange_name) REFERENCES Exchange  OPTIONS (NAMEINSOURCE 'exchange'),\n" +
+                "\tCONSTRAINT FK_stock FOREIGN KEY(stock_id) REFERENCES Stock  OPTIONS (NAMEINSOURCE 'stock')\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Marketdata');", ddl);
-        
+
         ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, "Stock");
-        assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" + 
-                "\n" +
-                "CREATE FOREIGN TABLE Stock (\n" + 
-                "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" + 
-                "\tsymbol string OPTIONS (NAMEINSOURCE 'symbol'),\n" + 
-                "\tcompanyName string OPTIONS (NAMEINSOURCE 'companyName'),\n" + 
-                "\tCONSTRAINT PK_Stock PRIMARY KEY(id)\n" + 
+        assertEquals("CREATE FOREIGN TABLE Stock (\n" +
+                "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" +
+                "\tcompanyName string OPTIONS (NAMEINSOURCE 'companyName'),\n" +
+                "\tsymbol string OPTIONS (NAMEINSOURCE 'symbol'),\n" +
+                "\tCONSTRAINT PK_Stock PRIMARY KEY(id)\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Stock');", ddl);
-        
+
         ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, "Exchange");
-        assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" + 
-                "\n" +
-                "CREATE FOREIGN TABLE Exchange (\n" + 
-                "\tname string OPTIONS (NAMEINSOURCE 'name'),\n" + 
-                "\tCONSTRAINT PK_Exchange PRIMARY KEY(name)\n" + 
+        assertEquals("CREATE FOREIGN TABLE Exchange (\n" +
+                "\tname string OPTIONS (NAMEINSOURCE 'name'),\n" +
+                "\tCONSTRAINT PK_Exchange PRIMARY KEY(name)\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Exchange');", ddl);
-    }      
+    }
 }

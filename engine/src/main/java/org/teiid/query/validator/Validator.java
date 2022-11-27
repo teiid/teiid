@@ -44,7 +44,7 @@ public class Validator {
         executeValidation(object, metadata, visitor);
 
         // Construct combined runtime / query metadata if necessary
-        if(object instanceof Command) {                        
+        if(object instanceof Command) {
             // Recursively validate subcommands
             Iterator<Command> iter = CommandCollectorVisitor.getCommands((Command)object).iterator();
             while(iter.hasNext()) {
@@ -52,61 +52,61 @@ public class Validator {
                 validate(subCommand, metadata, visitor);
             }
         }
-        
+
         // Otherwise, return a report
         return visitor.getReport();
     }
 
-    private static final void executeValidation(LanguageObject object, final QueryMetadataInterface metadata, final AbstractValidationVisitor visitor) 
+    private static final void executeValidation(LanguageObject object, final QueryMetadataInterface metadata, final AbstractValidationVisitor visitor)
         throws TeiidComponentException {
 
         // Reset visitor
         visitor.reset();
 
-		visitor.setMetadata(metadata);
+        visitor.setMetadata(metadata);
         setTempMetadata(metadata, visitor, object);
-        
+
         PreOrderNavigator nav = new PreOrderNavigator(visitor) {
-        	
-        	protected void visitNode(LanguageObject obj) {
-        		QueryMetadataInterface previous = visitor.getMetadata();
-        		setTempMetadata(metadata, visitor, obj);
-        		super.visitNode(obj);
-        		visitor.setMetadata(previous);
-        	}
-        	
-        	@Override
-        	protected void preVisitVisitor(LanguageObject obj) {
-        		super.preVisitVisitor(obj);
-        		visitor.stack.add(obj);
-        	}
-        	
-        	@Override
-        	protected void postVisitVisitor(LanguageObject obj) {
-        		visitor.stack.pop();
-        	}
-        	
+
+            protected void visitNode(LanguageObject obj) {
+                QueryMetadataInterface previous = visitor.getMetadata();
+                setTempMetadata(metadata, visitor, obj);
+                super.visitNode(obj);
+                visitor.setMetadata(previous);
+            }
+
+            @Override
+            protected void preVisitVisitor(LanguageObject obj) {
+                super.preVisitVisitor(obj);
+                visitor.stack.add(obj);
+            }
+
+            @Override
+            protected void postVisitVisitor(LanguageObject obj) {
+                visitor.stack.pop();
+            }
+
         };
-        object.acceptVisitor(nav);        	
-        
+        object.acceptVisitor(nav);
+
         // If an error occurred, throw an exception
         TeiidComponentException e = visitor.getException();
-        if(e != null) { 
+        if(e != null) {
             throw e;
-        }                
+        }
     }
-    
-	private static void setTempMetadata(final QueryMetadataInterface metadata,
-			final AbstractValidationVisitor visitor,
-			LanguageObject obj) {
-		if (obj instanceof Command) {
-			Command command = (Command)obj;
-			visitor.currentCommand = command;
-			TempMetadataStore tempMetadata = command.getTemporaryMetadata();
+
+    private static void setTempMetadata(final QueryMetadataInterface metadata,
+            final AbstractValidationVisitor visitor,
+            LanguageObject obj) {
+        if (obj instanceof Command) {
+            Command command = (Command)obj;
+            visitor.currentCommand = command;
+            TempMetadataStore tempMetadata = command.getTemporaryMetadata();
             if(tempMetadata != null && !tempMetadata.getData().isEmpty()) {
-            	visitor.setMetadata(new TempMetadataAdapter(metadata, tempMetadata));
-            }    
-		}
-	}
-    
-}    
+                visitor.setMetadata(new TempMetadataAdapter(metadata, tempMetadata));
+            }
+        }
+    }
+
+}

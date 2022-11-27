@@ -27,9 +27,9 @@ import org.teiid.language.LanguageObject;
  */
 public class DelegatingHierarchyVisitor extends HierarchyVisitor {
     private LanguageObjectVisitor postVisitor = null;
-    
+
     private LanguageObjectVisitor preVisitor = null;
-    
+
     public DelegatingHierarchyVisitor(LanguageObjectVisitor preProcessingDelegate,
                                       LanguageObjectVisitor postProcessingDelegate) {
         if (preProcessingDelegate == null && postProcessingDelegate == null) {
@@ -42,28 +42,28 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
     protected LanguageObjectVisitor getPostVisitor() {
         return postVisitor;
     }
-    
+
     protected LanguageObjectVisitor getPreVisitor() {
         return preVisitor;
     }
 
     @Override
     public void visitNode(LanguageObject obj) {
-    	if (obj == null) {
-    		return;
-    	}
-    	if (preVisitor != null) {
-    		obj.acceptVisitor(preVisitor);
+        if (obj == null) {
+            return;
+        }
+        if (preVisitor != null) {
+            obj.acceptVisitor(preVisitor);
         }
         super.visitNode(obj);
         if (postVisitor != null) {
             obj.acceptVisitor(postVisitor);
         }
     }
-        
-    /** 
+
+    /**
      * This utility method can be used to execute the behaviorVisitor in a pre-order walk
-     * of the language objects.  "Pre-order" in this case means that the visit method of the 
+     * of the language objects.  "Pre-order" in this case means that the visit method of the
      * behaviorVisitor will be called before the visit method of it's children.  It is expected
      * that the behavior visit does NOT perform iteration, as that function will be performed
      * by the HierarchyVisitor.
@@ -75,9 +75,9 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         object.acceptVisitor(hierarchyVisitor);
     }
 
-    /** 
+    /**
      * This utility method can be used to execute the behaviorVisitor in a post-order walk
-     * of the language objects.  "Post-order" in this case means that the visit method of the 
+     * of the language objects.  "Post-order" in this case means that the visit method of the
      * behaviorVisitor will be called after the visit method of it's children.  It is expected
      * that the behavior visit does NOT perform iteration, as that function will be performed
      * by the HierarchyVisitor.
@@ -88,5 +88,5 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
         DelegatingHierarchyVisitor hierarchyVisitor = new DelegatingHierarchyVisitor(null, behaviorVisitor);
         object.acceptVisitor(hierarchyVisitor);
     }
-    
+
 }

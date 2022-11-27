@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.apache.poi">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.apache.poi:poi}" />
+        <artifact name="${org.apache.poi:poi-ooxml}" />
+        <artifact name="${org.apache.poi:poi-ooxml-schemas}" />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="org.apache.xmlbeans" />
+
+    </dependencies>
+</module>

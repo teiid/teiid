@@ -33,7 +33,7 @@ public class SimpleDBUpdateExecute implements UpdateExecution {
     public SimpleDBUpdateExecute(Command command, SimpleDBConnection connection) throws TranslatorException {
         this.connection = connection;
         this.visitor = new SimpleDBUpdateVisitor((Update)command);
-        this.visitor.checkExceptions();        
+        this.visitor.checkExceptions();
     }
 
     @Override
@@ -45,18 +45,18 @@ public class SimpleDBUpdateExecute implements UpdateExecution {
     private String buildSelect() {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ").append(SimpleDBMetadataProcessor.ITEM_NAME); //$NON-NLS-1$
-        sb.append(" FROM ").append(SimpleDBMetadataProcessor.getName(this.visitor.getTable())); //$NON-NLS-1$
+        sb.append(" FROM ").append(SimpleDBMetadataProcessor.getQuotedName(this.visitor.getTable())); //$NON-NLS-1$
         if (this.visitor.getCriteria() != null) {
             sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
         }
         return sb.toString();
-    }    
-    
+    }
+
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
         return new int[] { updatedCount };
     }
-    
+
     @Override
     public void close() {
     }

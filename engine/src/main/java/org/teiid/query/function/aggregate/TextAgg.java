@@ -48,85 +48,81 @@ public class TextAgg extends SingleArgumentAggregateFunction {
 
     private FileStoreInputStreamFactory result;
     private TextLine textLine;
-    
+
     public TextAgg(TextLine textLine) {
-    	this.textLine = textLine;    	    	
-	}
-
-	private FileStoreInputStreamFactory buildResult(CommandContext context) throws TeiidProcessingException {
-		try {
-			FileStore fs = context.getBufferManager().createFileStore("textagg"); //$NON-NLS-1$
-			FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, textLine.getEncoding()==null?Streamable.ENCODING:textLine.getEncoding());
-			Writer w = fisf.getWriter();
-			if (textLine.isIncludeHeader()) {
-				Object[] header = TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
-					public Object getValue(DerivedColumn t) {
-						if (t.getAlias() == null && t.getExpression() instanceof ElementSymbol) {
-							return ((ElementSymbol)t.getExpression()).getShortName();
-						}
-						return t.getAlias();
-					}
-				}, textLine);
-				writeList(w, header);
-			}
-			w.flush();
-			return fisf;
-		} catch (IOException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30420, e);
-		}
-	}
-
-	private void writeList(Writer w, Object[] list) throws IOException {
-		for (int i = 0; i < list.length; i++) {
-			w.write(list[i].toString());
-		}
-	}
-
-    public void reset() {
-    	this.result = null;
+        this.textLine = textLine;
     }
 
-    /**
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    private FileStoreInputStreamFactory buildResult(CommandContext context) throws TeiidProcessingException {
+        try {
+            FileStore fs = context.getBufferManager().createFileStore("textagg"); //$NON-NLS-1$
+            FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, textLine.getEncoding()==null?Streamable.ENCODING:textLine.getEncoding());
+            Writer w = fisf.getWriter();
+            if (textLine.isIncludeHeader()) {
+                Object[] header = TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
+                    public Object getValue(DerivedColumn t) {
+                        if (t.getAlias() == null && t.getExpression() instanceof ElementSymbol) {
+                            return ((ElementSymbol)t.getExpression()).getShortName();
+                        }
+                        return t.getAlias();
+                    }
+                }, textLine);
+                writeList(w, header);
+            }
+            w.flush();
+            return fisf;
+        } catch (IOException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30420, e);
+        }
+    }
+
+    private void writeList(Writer w, Object[] list) throws IOException {
+        for (int i = 0; i < list.length; i++) {
+            w.write(list[i].toString());
+        }
+    }
+
+    public void reset() {
+        this.result = null;
+    }
+
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
-    	try {
-    		if (this.result == null) {
-    			this.result = buildResult(commandContext);
-    		}
-    		Array in = (Array)input;
-    		Writer w = result.getWriter();
-    		writeList(w, (Object[])in.getArray());
-			w.flush();
-		} catch (SQLException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
-		} catch (IOException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
-		}
+        try {
+            if (this.result == null) {
+                this.result = buildResult(commandContext);
+            }
+            Array in = (Array)input;
+            Writer w = result.getWriter();
+            writeList(w, (Object[])in.getArray());
+            w.flush();
+        } catch (SQLException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
+        } catch (IOException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
+        }
     }
 
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
     public Object getResult(CommandContext commandContext) throws TeiidProcessingException{
-    	if (this.result == null) {
-    		this.result = buildResult(commandContext);
-    	}
-    	
-    	try {
-    		FileStoreOutputStream fs = this.result.getOuputStream();
-			fs.close();
-		
-			if (fs.bytesWritten()) {
-				return new BlobType(new BlobImpl(result));
-			}
-			return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
-		} catch (IOException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
-		}  catch (SQLException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
-		}
+        if (this.result == null) {
+            this.result = buildResult(commandContext);
+        }
+
+        try {
+            FileStoreOutputStream fs = this.result.getOuputStream();
+            fs.close();
+
+            if (fs.bytesWritten()) {
+                return new BlobType(new BlobImpl(result));
+            }
+            return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
+        } catch (IOException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
+        }  catch (SQLException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
+        }
     }
 }

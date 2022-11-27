@@ -32,23 +32,23 @@ import org.teiid.net.HostInfo;
 
 public interface SocketServerInstance {
 
-	<T> T getService(Class<T> iface);
+    <T> T getService(Class<T> iface);
 
-	void shutdown();
-	
-	HostInfo getHostInfo();
-	
-	boolean isOpen();
-	
-	Cryptor getCryptor();
+    void shutdown();
 
-	long getSynchTimeout();
+    HostInfo getHostInfo();
 
-	void send(Message message, ResultsReceiver<Object> receiver, Serializable key) throws CommunicationException, InterruptedException;
+    boolean isOpen();
 
-	void read(long timeout, TimeUnit unit, ResultsFuture<?> resultsFuture) throws TimeoutException, InterruptedException;
+    Cryptor getCryptor();
 
-	String getServerVersion();
+    long getSynchTimeout();
 
-	InetAddress getLocalAddress();
+    void send(Message message, ResultsReceiver<Object> receiver, Serializable key) throws CommunicationException, InterruptedException;
+
+    void read(long timeout, TimeUnit unit, ResultsFuture<?> resultsFuture) throws TimeoutException, InterruptedException;
+
+    String getServerVersion();
+
+    InetAddress getLocalAddress();
 }

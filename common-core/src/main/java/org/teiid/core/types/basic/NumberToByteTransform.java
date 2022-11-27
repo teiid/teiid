@@ -22,35 +22,35 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 
 public class NumberToByteTransform extends NumberToNumberTransform {
-	
-	public NumberToByteTransform(Class<?> sourceType) {
-	    super(Byte.MIN_VALUE, Byte.MAX_VALUE, sourceType);
-	}
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		checkValueRange(value);
-		return Byte.valueOf(((Number)value).byteValue());
-	}
+    public NumberToByteTransform(Class<?> sourceType) {
+        super(Byte.MIN_VALUE, Byte.MAX_VALUE, sourceType);
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.BYTE;
-	}
-	
-	@Override
-	public boolean isExplicit() {
-		return true;
-	}
-	
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        checkValueRange(value);
+        return Byte.valueOf(((Number)value).byteValue());
+    }
+
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.BYTE;
+    }
+
+    @Override
+    public boolean isExplicit() {
+        return true;
+    }
+
 }

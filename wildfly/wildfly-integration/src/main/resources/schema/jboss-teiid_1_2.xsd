@@ -1,0 +1,456 @@
+<!--
+ Copyright Red Hat, Inc. and/or its affiliates
+ and other contributors as indicated by the @author tags and
+ the COPYRIGHT.txt file distributed with this work.
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+  -->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+        targetNamespace="urn:jboss:domain:teiid:1.2" 
+        xmlns="urn:jboss:domain:teiid:1.2" 
+        elementFormDefault="qualified" 
+        attributeFormDefault="unqualified" 
+        version="1.0">
+
+    <!-- The naming subsystem root element -->
+    <xs:element name="subsystem" type="teiidType" />
+
+    <xs:complexType name="teiidType">
+        <xs:sequence>
+            <xs:element name="allow-env-function" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false">
+                <xs:annotation>
+                    <xs:documentation>Allow execution of ENV function (default false)</xs:documentation>
+                </xs:annotation>
+            </xs:element>            
+
+		    <xs:element name="async-thread-pool" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Asynchronous thread pool used by Teiid</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+					<xs:attribute name="max-thread-count" type="xs:int">
+						<xs:annotation>
+							<xs:documentation>Maximum number threads in the pool</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+                    <xs:attribute name="keepalive-time" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Keep alive time for idle threads in milli-seconds</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute> 					
+                </xs:complexType>
+		    </xs:element>            
+              
+            <xs:element name="buffer-manager" maxOccurs="1" minOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Buffer manager information</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:attribute name="storage-enabled" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Use storage (disk and fixed memory) for buffer management</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="inline-lobs" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Set to true to allow inlining of memory based and small lobs into results.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>                    
+                    <xs:attribute name="processor-batch-size" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>The max row count of a batch sent internally within the query processor. Should be &lt;= the connectorBatchSize. (default 512)</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="heap-max-processing-kb" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>The approximate amount of buffer memory in kilobytes allowable for a single processing operation (sort, grouping, etc.) regardless of existing memory commitments. -1 means to automatically calculate a value (default -1)</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="heap-max-reserve-mb" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>The approximate amount of heap memory in megabytes allowed to be held by the buffer manager. -1 means to automatically calculate a value (default -1)</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="disk-max-space-mb" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Max storage space, in MB, to be used for buffer files (default 50G) </xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="disk-max-file-size-mb" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Max File size in MB (default 2GB)</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="disk-max-open-files" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Max open buffer files (default 64)</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>        
+                    <xs:attribute name="fixed-memory-space-mb" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Memory buffer space used by the buffer manager in MB.  -1 determines the setting automatically from the max-reserve-kb (default -1). This value cannot be smaller than max-storage-object-size</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute> 
+                    <xs:attribute name="fixed-memory-off-heap" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Set to true to hold the memory buffer off-heap. If true you must ensure that the VM can allocate that much direct memory (default false).</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute> 
+                    <xs:attribute name="storage-max-object-size-kb" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608 or 8MB). Setting this value too high will reduce the effectiveness of the memory buffer.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="disk-encrypt-files" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Set to true to encrypt temporary data files with 128-bit AES.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>                                                                     
+                </xs:complexType>
+            </xs:element>
+            
+            <xs:element name="max-threads" type="xs:int" minOccurs="0" maxOccurs="1" default="64">
+                <xs:annotation>
+                    <xs:documentation>Process pool maximum thread count. (default 64)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="max-active-plans" type="xs:int" minOccurs="0" maxOccurs="1" default="20">
+                <xs:annotation>
+                    <xs:documentation>Max active plans (default 20). Increase this value on highly concurrent systems - but ensure that the underlying pools can handle the increased load without timeouts.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="thread-count-for-source-concurrency" type="xs:int" minOccurs="0" maxOccurs="1" default="0">
+                <xs:annotation>
+                    <xs:documentation> Max source query concurrency per user request (default 0).
+                        0 indicates use the default calculated value based on max active plans and max threads - approximately 2*(max threads)/(max active plans).
+                        1 forces serial execution in the processing thread, just as is done for a transactional request.
+                        Any number greater than 1 limits the maximum number of concurrently executing source requests accordingly.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="time-slice-in-milliseconds" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
+                <xs:annotation>
+                    <xs:documentation>Query processor time slice, in milliseconds. (default 2000)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="max-row-fetch-size" type="xs:int" minOccurs="0" maxOccurs="1" default="20480">
+                <xs:annotation>
+                    <xs:documentation>Maximum allowed fetch size, set via JDBC. User requested value ignored above this value. (default 20480)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="lob-chunk-size-in-kb" type="xs:int" minOccurs="0" maxOccurs="1" default="100">
+                <xs:annotation>
+                    <xs:documentation>The max lob chunk size in KB transferred each time when processing blobs, clobs (100KB default)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="query-threshold-in-seconds" type="xs:int" minOccurs="0" maxOccurs="1" default="600">
+                <xs:annotation>
+                    <xs:documentation>Long running query threshold, after which a alert can be generated by tooling if configured (600 secs)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="max-source-rows-allowed" type="xs:int" minOccurs="0" maxOccurs="1" default="-1">
+                <xs:annotation>
+                    <xs:documentation>Maximum rows allowed from a source query. -1 indicates no limit. (default -1)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="exception-on-max-source-rows" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Indicates if an exception should be thrown if the specified value for Maximum Source Rows is exceeded; only up to the maximum rows will be consumed. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="max-odbc-lob-size-allowed" type="xs:int" minOccurs="0" maxOccurs="1" default="5242880">
+                <xs:annotation>
+                    <xs:documentation>Maximum size of lob allowed through ODBC connection in bytes (default 5MB)</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="detect-change-events" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true">
+                <xs:annotation>
+                    <xs:documentation>Set to true for the engine to detect local change events. Should be disabled if using external change data capture tools. (default true)</xs:documentation>
+                </xs:annotation>
+            </xs:element>            
+            <xs:element name="query-timeout" type="xs:long" minOccurs="0" maxOccurs="1" default="0">
+                <xs:annotation>
+                    <xs:documentation>Set the default query timeout for all queries in milliseconds. 0 indicates no timeout.  Lesser timeout values may be set per VDB or by clients. (default 0)</xs:documentation>
+                </xs:annotation>
+            </xs:element>      
+            
+            <xs:element name="workmanager" type="xs:string" minOccurs="0" maxOccurs="1" default="default">
+                <xs:annotation>
+                    <xs:documentation>WorkManager name to use in processing. (default name is "default")</xs:documentation>
+                </xs:annotation>
+            </xs:element>                             
+            
+            <xs:element name="data-roles-required" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false">
+                <xs:annotation>
+                    <xs:documentation>If data roles are required. default false</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="authorization-validator-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>An authorization validator that by default uses data role information stored in VDBs. Provide module name.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="policy-decider-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>A policy decider that uses data role information stored in VDBs, Provide module name.</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <!-- <xs:element name="metadata-repository-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Runtime Metadata Updates can be made persistent though by configuring a "org.teiid.metadata.MetadataRepository"</xs:documentation>
+                </xs:annotation>
+            </xs:element> -->
+            
+            <xs:element name="preparser-module" type="xs:string" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Incoming SQL can be modified by an "org.teiid.PreParser"</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="resultset-cache" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Configuration for result set caching.</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string"/>
+                    <xs:attribute name="infinispan-container" type="xs:string" use="required"/>
+                    <xs:attribute name="enable" type="xs:boolean" default="true"/>
+                    <xs:attribute name="max-staleness" type="xs:int" default="60"/>
+                </xs:complexType>
+            </xs:element>
+            
+            <xs:element name="preparedplan-cache" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Configuration for prepared plan caching. (local memory only)</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string"/>
+                    <xs:attribute name="infinispan-container" type="xs:string" use="required"/>
+                    <xs:attribute name="enable" type="xs:boolean" default="true"/>
+                </xs:complexType>
+            </xs:element>
+            
+            <xs:element name="distributed-cache" maxOccurs="1" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Cluster wide results distributor </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="jgroups-stack" type="xs:string" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            
+            <xs:element name="authentication" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:attribute name="security-domain" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Comma separated list of domains to be used to login into Teiid</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="max-sessions-allowed" type="xs:int" default="10000">
+                        <xs:annotation>
+                            <xs:documentation>Maximum number of sessions allowed by the system (default 10000)</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="sessions-expiration-timelimit" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Max allowed time in milliseconds before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="type" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Default authentication type to be used. Allowed values(USERPASSWORD, GSS)</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>                    
+                    <xs:attribute name="trust-all-local" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Allow all local pass-through connections regardless of whether they are in the configured security domain.</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="allow-security-domain-qualifier" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Allow user names to be qualified with @security-domain.</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>                    
+                </xs:complexType>                
+            </xs:element>
+        
+            <xs:element name="transport" type="transport-type" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Teiid transport configuration</xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            
+            <xs:element name="translator" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>Translators defined in the system</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string" use="required"/>
+                    <xs:attribute name="module" type="xs:string" use="required"/>
+                </xs:complexType>
+            </xs:element>            
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="transport-type">
+        <xs:sequence>
+            <xs:element name="pg" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:attribute name="max-lob-size-in-bytes" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Max Lob size allowed in the PG transport</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                </xs:complexType>                
+            </xs:element>
+
+            
+            <xs:element name="ssl" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>SSL Configuration</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="keystore" minOccurs="0" maxOccurs="1">
+                            <xs:complexType>
+                                <xs:attribute name="name" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>Keystore Name</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
+                                <xs:attribute name="password" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>Keystore Password</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
+                                <xs:attribute name="type" type="xs:string" default="JKS">
+                                    <xs:annotation>
+                                        <xs:documentation>Keystore Type</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
+                                <xs:attribute name="key-alias" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key alias name</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>                   
+                                <xs:attribute name="key-password" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key password</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>             
+                            </xs:complexType>                        
+                        </xs:element>
+                        <xs:element name="truststore" minOccurs="0" maxOccurs="1">
+                            <xs:complexType>
+                                <xs:attribute name="name" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>Truststore Name</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
+                                <xs:attribute name="password" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>Truststore Password</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
+                                <xs:attribute name="check-expired" type="xs:boolean">
+                                    <xs:annotation>
+                                        <xs:documentation>Check for valid certificate dates.</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>
+                            </xs:complexType>                        
+                        </xs:element>                                                
+                    </xs:sequence>
+                    <xs:attribute name="mode" default="login">
+                        <xs:annotation>
+                            <xs:documentation>can be one of disabled, login, or enabled
+                                disabled = no transport or message level security will be used
+                                login = only the login traffic will be encrypted at a message level
+                                using 128 bit AES with an ephemerial DH key exchange.
+                                No other config values are needed in this mode; and it only applies to the JDBC transport
+                                enabled = traffic will be secured using this configuration</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="login" />
+                                <xs:enumeration value="enabled" />
+                                <xs:enumeration value="disabled" />
+                            </xs:restriction>
+                        </xs:simpleType>                
+                    </xs:attribute>
+                    <xs:attribute name="authentication-mode" default="1-way">
+                        <xs:annotation>
+                            <xs:documentation>1-way, 2-way, anonymous</xs:documentation>
+                        </xs:annotation>
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="1-way" />
+                                <xs:enumeration value="2-way" />
+                                <xs:enumeration value="anonymous" />
+                            </xs:restriction>
+                        </xs:simpleType>                                
+                    </xs:attribute>
+                    <xs:attribute name="ssl-protocol" type="xs:string" default="TLSv1"/>
+                    <xs:attribute name="keymanagement-algorithm" type="xs:string"/>
+                    <xs:attribute name="enable" type="xs:boolean"/>
+                    <xs:attribute name="enabled-cipher-suites" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Comma separated cipher suites that are allowed to be used for SSL. Use to restrict encryption strength(128 bit, 256 bit). 
+                            Only provide encryption suites that are supported by the server JVM.</xs:documentation>
+                        </xs:annotation>        
+                    </xs:attribute>
+                </xs:complexType>
+            </xs:element>            
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="protocol" default="teiid">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="teiid" />
+                    <xs:enumeration value="pg" />
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>         
+        <xs:attribute name="socket-binding" type="xs:string" use="required"/>
+        <xs:attribute name="input-buffer-size" type="xs:int">
+                <xs:annotation>
+                    <xs:documentation>SO_RCVBUF size, 0 indicates that system default should be used (default 0) </xs:documentation>
+                </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="output-buffer-size" type="xs:string">
+                <xs:annotation>
+                    <xs:documentation>SO_SNDBUF size, 0 indicates that system default should be used (default 0)</xs:documentation>
+                </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="max-socket-threads" type="xs:int">
+                <xs:annotation>
+                    <xs:documentation>Max number of threads dedicated to initial request processing.
+                        Zero indicates the system default of max available processors. (default 0)
+                        Setting this value above the max available processors is not recommended.</xs:documentation>
+                </xs:annotation>        
+        </xs:attribute>
+    </xs:complexType>
+
+</xs:schema>

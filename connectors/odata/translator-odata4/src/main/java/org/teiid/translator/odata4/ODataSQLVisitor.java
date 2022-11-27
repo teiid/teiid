@@ -49,11 +49,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         this.metadata = metadata;
         this.odataQuery = new ODataSelectQuery(executionFactory, metadata);
     }
-    
+
     public List<Column> getProjectedColumns(){
         return this.projectedColumns;
     }
-    
+
     public ODataSelectQuery getODataQuery() {
         return this.odataQuery;
     }
@@ -63,7 +63,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         URIBuilderImpl uriBuilder = this.odataQuery.buildURL(serviceRoot,
                 this.projectedColumns,
                 LanguageUtil.combineCriteria(this.conditionFragments));
-        
+
         if (this.orderBy.length() > 0) {
             uriBuilder.orderBy(this.orderBy.toString());
         }
@@ -78,8 +78,8 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             names.add(c.getName());
         }
         return names;
-    }    
-    
+    }
+
     @Override
     public void visit(NamedTable obj) {
         try {
@@ -104,7 +104,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
                 }
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
-            }                        
+            }
         }
         else if (obj.getRightItem() instanceof Join) {
             Condition updated = obj.getCondition();
@@ -118,14 +118,14 @@ public class ODataSQLVisitor extends HierarchyVisitor {
                 }
             } catch (TranslatorException e) {
                 this.exceptions.add(e);
-            }            
+            }
         }
         else {
             Condition updated = obj.getCondition();
             Table left = ((NamedTable)obj.getLeftItem()).getMetadataObject();
             Table right = ((NamedTable)obj.getRightItem()).getMetadataObject();
             try {
-                if (ODataMetadataProcessor.isComplexType(left) || 
+                if (ODataMetadataProcessor.isComplexType(left) ||
                         ODataMetadataProcessor.isNavigationType(left)) {
                     throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17027, left.getName()));
                 }
@@ -139,7 +139,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             }
         }
     }
-    
+
     @Override
     public void visit(Limit obj) {
         if (obj.getRowOffset() != 0) {
@@ -209,7 +209,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17008)));
         }
     }
-    
+
     public void append(LanguageObject obj) {
         visitNode(obj);
     }

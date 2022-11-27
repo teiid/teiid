@@ -43,12 +43,12 @@ import com.datastax.driver.core.Row;
 @SuppressWarnings("nls")
 public class TestNativeCassandra {
 
-	@Test public void testDirect() throws TranslatorException {
-		CassandraExecutionFactory cef = new CassandraExecutionFactory();
-		cef.setSupportsDirectQueryProcedure(true);
-		
-		String input = "call native('select $1', 'a')";
-		
+    @Test public void testDirect() throws TranslatorException {
+        CassandraExecutionFactory cef = new CassandraExecutionFactory();
+        cef.setSupportsDirectQueryProcedure(true);
+
+        String input = "call native('select $1', 'a')";
+
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
@@ -63,24 +63,24 @@ public class TestNativeCassandra {
         ColumnDefinitions cd = Mockito.mock(ColumnDefinitions.class);
         Mockito.stub(row.getColumnDefinitions()).toReturn(cd);
         Mockito.stub(rs.one()).toReturn(row).toReturn(null);
-        
+
         Mockito.stub(connection.executeQuery("select 'a'")).toReturn(rsf);
-        
-		ResultSetExecution execution = (ResultSetExecution)cef.createExecution(command, ec, rm, connection);
+
+        ResultSetExecution execution = (ResultSetExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
 
         List<?> vals = execution.next();
         assertTrue(vals.get(0) instanceof Object[]);
-	}
-	
-	@Test public void testNativeQuery() throws Exception {
-		CassandraExecutionFactory cef = new CassandraExecutionFactory();
-		cef.setSupportsDirectQueryProcedure(true);
-		
-		String input = "call proc('a', 1)";
-		
+    }
+
+    @Test public void testNativeQuery() throws Exception {
+        CassandraExecutionFactory cef = new CassandraExecutionFactory();
+        cef.setSupportsDirectQueryProcedure(true);
+
+        String input = "call proc('a', 1)";
+
         TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign procedure proc (in x string, in y integer) options (\"teiid_rel:native-query\" 'delete from $1 where $2')", "x", "y");
-		TranslationUtility util = new TranslationUtility(metadata);
+        TranslationUtility util = new TranslationUtility(metadata);
         Command command = util.parseCommand(input);
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
@@ -88,11 +88,11 @@ public class TestNativeCassandra {
 
         ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
         Mockito.stub(connection.executeQuery("delete from 'a' where 1")).toReturn(rsf);
-        
-		Execution execution = cef.createExecution(command, ec, rm, connection);
+
+        Execution execution = cef.createExecution(command, ec, rm, connection);
         execution.execute();
 
         Mockito.verify(connection).executeQuery("delete from 'a' where 1");
-	}
-	
+    }
+
 }

@@ -29,13 +29,13 @@ import org.teiid.core.TeiidProcessingException;
 
 public class DupRemoveNode extends RelationalNode {
 
-	private STree stree = null;
-	private TupleBatch batch;
-	private int counter;
-	
-	public DupRemoveNode(int nodeID) {
-		super(nodeID);
-	}
+    private STree stree = null;
+    private TupleBatch batch;
+    private int counter;
+
+    public DupRemoveNode(int nodeID) {
+        super(nodeID);
+    }
 
     public void reset() {
         super.reset();
@@ -43,52 +43,52 @@ public class DupRemoveNode extends RelationalNode {
         counter = 0;
         batch = null;
     }
-    
+
     @Override
     public void open() throws TeiidComponentException, TeiidProcessingException {
-    	super.open();
-    	
-    	stree = getBufferManager().createSTree(this.getElements(), this.getConnectionID(), this.getElements().size());
+        super.open();
+
+        stree = getBufferManager().createSTree(this.getElements(), this.getConnectionID(), this.getElements().size());
     }
 
-	public TupleBatch nextBatchDirect()
-		throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		while (true) {
-			if (batch == null) {
-				batch = this.getChildren()[0].nextBatch();
-			}
-			
-			List<List<?>> tuples = batch.getTuples();
-			for (;counter < tuples.size(); counter++) {
-				List<?> tuple = tuples.get(counter);
-				List<?> existing = stree.insert(tuple, InsertMode.NEW, -1);
-				if (existing != null) {
-					continue;
-				}
-				this.addBatchRow(tuple);
-				if (this.isBatchFull()) {
-					return pullBatch();
-				}
-			}
-			if (batch.getTerminationFlag()) {
-				terminateBatches();
-				return pullBatch();
-			}
-			batch = null;
-			counter = 0;
-		}
+    public TupleBatch nextBatchDirect()
+        throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        while (true) {
+            if (batch == null) {
+                batch = this.getChildren()[0].nextBatch();
+            }
+
+            List<List<?>> tuples = batch.getTuples();
+            for (;counter < tuples.size(); counter++) {
+                List<?> tuple = tuples.get(counter);
+                List<?> existing = stree.insert(tuple, InsertMode.NEW, -1);
+                if (existing != null) {
+                    continue;
+                }
+                this.addBatchRow(tuple);
+                if (this.isBatchFull()) {
+                    return pullBatch();
+                }
+            }
+            if (batch.getTerminationFlag()) {
+                terminateBatches();
+                return pullBatch();
+            }
+            batch = null;
+            counter = 0;
+        }
     }
 
     public void closeDirect() {
-    	if (stree != null) {
-    		stree.remove();
-    	}
+        if (stree != null) {
+            stree.remove();
+        }
     }
 
-	public Object clone(){
-		DupRemoveNode clonedNode = new DupRemoveNode(super.getID());
-		copyTo(clonedNode);
-		return clonedNode;
-	}
-    
+    public Object clone(){
+        DupRemoveNode clonedNode = new DupRemoveNode(super.getID());
+        copyTo(clonedNode);
+        return clonedNode;
+    }
+
 }

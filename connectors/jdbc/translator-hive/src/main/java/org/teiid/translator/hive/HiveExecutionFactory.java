@@ -35,7 +35,7 @@ import org.teiid.util.Version;
 
 @Translator(name="hive", description="A translator for hive based database on HDFS")
 public class HiveExecutionFactory extends BaseHiveExecutionFactory {
-    
+
     public static final Version V_3 = Version.getVersion("3.0"); //$NON-NLS-1$
 
     public static String HIVE = "hive"; //$NON-NLS-1$
@@ -43,7 +43,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
         setSupportsOrderBy(false); //TEIID-4858 hive order by performance is slow
     }
-    
+
     @Override
     public void start() throws TranslatorException {
         super.start();
@@ -59,7 +59,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("binary", FunctionModifier.BLOB, FunctionModifier.VARBINARY); //$NON-NLS-1$
         convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-        convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$        
+        convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
         // unsupported types
         //FunctionModifier.TIME,
         //FunctionModifier.CHAR,
@@ -107,7 +107,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(HIVE, "to_date", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "from_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "to_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
-        
+
         addAggregatePushDownFunction(HIVE, "LEAD", OBJECT, OBJECT); //$NON-NLS-1$
         addAggregatePushDownFunction(HIVE, "LEAD", OBJECT, OBJECT, INTEGER); //$NON-NLS-1$
         addAggregatePushDownFunction(HIVE, "LEAD", OBJECT, OBJECT, INTEGER, OBJECT); //$NON-NLS-1$
@@ -119,8 +119,8 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         addAggregatePushDownFunction(HIVE, "PERCENT_RANK", FLOAT); //$NON-NLS-1$
         addAggregatePushDownFunction(HIVE, "CUME_DIST", FLOAT); //$NON-NLS-1$
         addAggregatePushDownFunction(HIVE, "NTILE", LONG, INTEGER); //$NON-NLS-1$
-    }    
-    
+    }
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -176,49 +176,49 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
-    }    
-    
+    }
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
         return true;
     }
-    
+
     @Override
     public boolean supportsElementaryOlapOperations() {
         return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsGroupByRollup() {
         //https://cwiki.apache.org/confluence/display/Hive/Enhanced+Aggregation,+Cube,+Grouping+and+Rollup
         return true;
-    }   
-    
+    }
+
     @Override
     public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
-    	return SupportedJoinCriteria.EQUI;
+        return SupportedJoinCriteria.EQUI;
     }
-    
+
     @Override
     public boolean useParensForJoins() {
-    	return false;
+        return false;
     }
-        
+
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
         return "DATE '" + formatDateValue(dateValue) + '\'';
-    }     
-    
+    }
+
     @Override
     public boolean requiresLeftLinearJoin() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIsDistinctCriteria() {
         return getVersion().compareTo(V_3) >= 0;
     }
-    
+
     @Override
     protected boolean usesDatabaseVersion() {
         return true;

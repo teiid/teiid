@@ -26,7 +26,7 @@ package org.teiid.client.metadata;
  */
 
 public interface ResultsMetadataConstants {
-    
+
     // constant indicating the position of catalog or Virtual database name.
     public static final Integer VIRTUAL_DATABASE_NAME = new Integer(0);
     // constant indicating the position of schema or Virtual database version.
@@ -61,9 +61,9 @@ public interface ResultsMetadataConstants {
     public static final Integer CURRENCY = new Integer(16);
     // constant indicating the display size for a column
     public static final Integer DISPLAY_SIZE = new Integer(17);
-    
+
     /**
-     * These types are associated with a DataType or an Element needing the indication of null types. 
+     * These types are associated with a DataType or an Element needing the indication of null types.
      */
     public static final class NULL_TYPES {
         public static final Integer NOT_NULL = new Integer(1);
@@ -72,7 +72,7 @@ public interface ResultsMetadataConstants {
     }
 
     /**
-     * These types are associated with the Element having valid search types. 
+     * These types are associated with the Element having valid search types.
      */
     public static final class SEARCH_TYPES {
         public static final Integer SEARCHABLE = new Integer(1);

@@ -7,19 +7,19 @@
 package org.teiid.json.simple;
 
 /**
- * @author FangYidong<fangyidong@yahoo.com.cn>
+ * @author FangYidong fangyidong@yahoo.com.cn
  */
 public class Yytoken {
-	public static final int TYPE_VALUE=0;//JSON primitive value: string,number,boolean,null
-	
-	public static final int TYPE_LEFT_BRACE=1;
-	public static final int TYPE_RIGHT_BRACE=2;
-	public static final int TYPE_LEFT_SQUARE=3;
-	public static final int TYPE_RIGHT_SQUARE=4;
-	public static final int TYPE_COMMA=5;
-	public static final int TYPE_COLON=6;
-	public static final int TYPE_EOF=-1;//end of file
-	
+    public static final int TYPE_VALUE=0;//JSON primitive value: string,number,boolean,null
+
+    public static final int TYPE_LEFT_BRACE=1;
+    public static final int TYPE_RIGHT_BRACE=2;
+    public static final int TYPE_LEFT_SQUARE=3;
+    public static final int TYPE_RIGHT_SQUARE=4;
+    public static final int TYPE_COMMA=5;
+    public static final int TYPE_COLON=6;
+    public static final int TYPE_EOF=-1;//end of file
+
     public static final Yytoken LEFT_BRACE=new Yytoken(TYPE_LEFT_BRACE, null);
     public static final Yytoken RIGHT_BRACE=new Yytoken(TYPE_RIGHT_BRACE, null);
     public static final Yytoken LEFT_SQUARE=new Yytoken(TYPE_LEFT_SQUARE, null);
@@ -27,50 +27,50 @@ public class Yytoken {
     public static final Yytoken COMMA=new Yytoken(TYPE_COMMA, null);
     public static final Yytoken COLON=new Yytoken(TYPE_COLON, null);
     public static final Yytoken EOF=new Yytoken(TYPE_EOF, null);
-    
+
     public static final Yytoken NULL_VALUE=new Yytoken(TYPE_VALUE, null);
-	
-	public final int type;
-	public final Object value;
-	
-	public Yytoken(Object value){
-	    this.type = TYPE_VALUE;
-	    this.value = value;
-	}
-	
-	private Yytoken(int type,Object value){
-		this.type=type;
-		this.value=value;
-	}
-	
-	public String toString(){
-		StringBuffer sb = new StringBuffer();
-		switch(type){
-		case TYPE_VALUE:
-			sb.append("VALUE(").append(value).append(")");
-			break;
-		case TYPE_LEFT_BRACE:
-			sb.append("LEFT BRACE({)");
-			break;
-		case TYPE_RIGHT_BRACE:
-			sb.append("RIGHT BRACE(})");
-			break;
-		case TYPE_LEFT_SQUARE:
-			sb.append("LEFT SQUARE([)");
-			break;
-		case TYPE_RIGHT_SQUARE:
-			sb.append("RIGHT SQUARE(])");
-			break;
-		case TYPE_COMMA:
-			sb.append("COMMA(,)");
-			break;
-		case TYPE_COLON:
-			sb.append("COLON(:)");
-			break;
-		case TYPE_EOF:
-			sb.append("END OF FILE");
-			break;
-		}
-		return sb.toString();
-	}
+
+    public final int type;
+    public final Object value;
+
+    public Yytoken(Object value){
+        this.type = TYPE_VALUE;
+        this.value = value;
+    }
+
+    private Yytoken(int type,Object value){
+        this.type=type;
+        this.value=value;
+    }
+
+    public String toString(){
+        StringBuffer sb = new StringBuffer();
+        switch(type){
+        case TYPE_VALUE:
+            sb.append("VALUE(").append(value).append(")");
+            break;
+        case TYPE_LEFT_BRACE:
+            sb.append("LEFT BRACE({)");
+            break;
+        case TYPE_RIGHT_BRACE:
+            sb.append("RIGHT BRACE(})");
+            break;
+        case TYPE_LEFT_SQUARE:
+            sb.append("LEFT SQUARE([)");
+            break;
+        case TYPE_RIGHT_SQUARE:
+            sb.append("RIGHT SQUARE(])");
+            break;
+        case TYPE_COMMA:
+            sb.append("COMMA(,)");
+            break;
+        case TYPE_COLON:
+            sb.append("COLON(:)");
+            break;
+        case TYPE_EOF:
+            sb.append("END OF FILE");
+            break;
+        }
+        return sb.toString();
+    }
 }

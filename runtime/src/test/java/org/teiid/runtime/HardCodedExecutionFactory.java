@@ -39,157 +39,161 @@ import org.teiid.translator.UpdateExecution;
 
 @Translator(name="hardcoded")
 public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> {
-	Map<String, List<? extends List<?>>> dataMap = new ConcurrentHashMap<String, List<? extends List<?>>>();
-	Map<String, Object> updateMap = new ConcurrentHashMap<String, Object>();
-	
-	private List<Command> commands = new CopyOnWriteArrayList<Command>();
-	
-	public HardCodedExecutionFactory() {
-		setSourceRequired(false);
-	}
-	
-	@Override
-	public ProcedureExecution createProcedureExecution(Call command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
-	    this.commands.add(command);
-		List<? extends List<?>> list = getData(command);
-		if (list == null) {
-			throw new RuntimeException(command.toString());
-		}
-		final Iterator<? extends List<?>> result = list.iterator();
-		return new ProcedureExecution() {
-			
-			@Override
-			public void execute() throws TranslatorException {
-				
-			}
-			
-			@Override
-			public void close() {
-				
-			}
-			
-			@Override
-			public void cancel() throws TranslatorException {
-				
-			}
-			
-			@Override
-			public List<?> next() throws TranslatorException, DataNotAvailableException {
-				if (result.hasNext()) {
-					return result.next();
-				}
-				return null;
-			}
+    Map<String, List<? extends List<?>>> dataMap = new ConcurrentHashMap<String, List<? extends List<?>>>();
+    Map<String, Object> updateMap = new ConcurrentHashMap<String, Object>();
 
-			@Override
-			public List<?> getOutputParameterValues()
-					throws TranslatorException {
-				return null;
-			}
-		};
-	}
-	
-	@Override
-	public ResultSetExecution createResultSetExecution(
-			final QueryExpression command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, Object connection)
-			throws TranslatorException {
-	    this.commands.add(command);
-		List<? extends List<?>> list = getData(command);
-		if (list == null) {
-			throw new RuntimeException(command.toString());
-		}
-		final Iterator<? extends List<?>> result = list.iterator();
-		return new ResultSetExecution() {
-			
-			@Override
-			public void execute() throws TranslatorException {
-				
-			}
-			
-			@Override
-			public void close() {
-				
-			}
-			
-			@Override
-			public void cancel() throws TranslatorException {
-				
-			}
-			
-			@Override
-			public List<?> next() throws TranslatorException, DataNotAvailableException {
-				if (result.hasNext()) {
-					return result.next();
-				}
-				return null;
-			}
-		};
-	}
-	
-	protected List<? extends List<?>> getData(final QueryExpression command) {
-		return getData((Command)command);
-	}
+    private List<Command> commands = new CopyOnWriteArrayList<Command>();
 
-	protected List<? extends List<?>> getData(final Command command) {
-		return dataMap.get(command.toString());
-	}
-	
-	@Override
-	public UpdateExecution createUpdateExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
-	    this.commands.add(command);
-		Object response = updateMap.get(command.toString());
-		if (response == null) {
-			throw new RuntimeException(command.toString());
-		}
-		if (response instanceof int[]) {
-			final int[] result = (int[])response;
-			return new UpdateExecution() {
-				
-				@Override
-				public void execute() throws TranslatorException {
-					
-				}
-				
-				@Override
-				public void close() {
-					
-				}
-				
-				@Override
-				public void cancel() throws TranslatorException {
-					
-				}
-				
-				@Override
-				public int[] getUpdateCounts() throws DataNotAvailableException,
-						TranslatorException {
-					return result;
-				}
-				
-			};
-		}
-		throw (TranslatorException)response;
-	}
-	
-	public void addData(String key, List<? extends List<?>> list) {
-		this.dataMap.put(key, list);
-	}
-	
-	public void addUpdate(String key, int[] counts) {
-		this.updateMap.put(key, counts);
-	}
-	
-	public void addUpdate(String key, TranslatorException exception) {
-		this.updateMap.put(key, exception);
-	}
-	
-	public List<Command> getCommands() {
+    public HardCodedExecutionFactory() {
+        setSourceRequired(false);
+    }
+
+    @Override
+    public ProcedureExecution createProcedureExecution(Call command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            Object connection) throws TranslatorException {
+        this.commands.add(command);
+        List<? extends List<?>> list = getData(command);
+        if (list == null) {
+            throw new RuntimeException(command.toString());
+        }
+        final Iterator<? extends List<?>> result = list.iterator();
+        return new ProcedureExecution() {
+
+            @Override
+            public void execute() throws TranslatorException {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public void cancel() throws TranslatorException {
+
+            }
+
+            @Override
+            public List<?> next() throws TranslatorException, DataNotAvailableException {
+                if (result.hasNext()) {
+                    return result.next();
+                }
+                return null;
+            }
+
+            @Override
+            public List<?> getOutputParameterValues()
+                    throws TranslatorException {
+                return null;
+            }
+        };
+    }
+
+    @Override
+    public ResultSetExecution createResultSetExecution(
+            final QueryExpression command, ExecutionContext executionContext,
+            RuntimeMetadata metadata, Object connection)
+            throws TranslatorException {
+        this.commands.add(command);
+        List<? extends List<?>> list = getData(command);
+        if (list == null) {
+            throw new RuntimeException(command.toString());
+        }
+        final Iterator<? extends List<?>> result = list.iterator();
+        return new ResultSetExecution() {
+
+            @Override
+            public void execute() throws TranslatorException {
+
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public void cancel() throws TranslatorException {
+
+            }
+
+            @Override
+            public List<?> next() throws TranslatorException, DataNotAvailableException {
+                if (result.hasNext()) {
+                    return result.next();
+                }
+                return null;
+            }
+        };
+    }
+
+    protected List<? extends List<?>> getData(final QueryExpression command) {
+        return getData((Command)command);
+    }
+
+    protected List<? extends List<?>> getData(final Command command) {
+        return dataMap.get(command.toString());
+    }
+
+    @Override
+    public UpdateExecution createUpdateExecution(Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            Object connection) throws TranslatorException {
+        this.commands.add(command);
+        Object response = updateMap.get(command.toString());
+        if (response == null) {
+            throw new RuntimeException(command.toString());
+        }
+        if (response instanceof int[]) {
+            final int[] result = (int[])response;
+            return new UpdateExecution() {
+
+                @Override
+                public void execute() throws TranslatorException {
+
+                }
+
+                @Override
+                public void close() {
+
+                }
+
+                @Override
+                public void cancel() throws TranslatorException {
+
+                }
+
+                @Override
+                public int[] getUpdateCounts() throws DataNotAvailableException,
+                        TranslatorException {
+                    return result;
+                }
+
+            };
+        }
+        throw (TranslatorException)response;
+    }
+
+    public void addData(String key, List<? extends List<?>> list) {
+        this.dataMap.put(key, list);
+    }
+
+    public void addUpdate(String key, int[] counts) {
+        this.updateMap.put(key, counts);
+    }
+
+    public void addUpdate(String key, TranslatorException exception) {
+        this.updateMap.put(key, exception);
+    }
+
+    public List<Command> getCommands() {
         return commands;
     }
-	
+
+    public void clearData() {
+        this.dataMap.clear();
+    }
+
 }

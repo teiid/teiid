@@ -38,15 +38,13 @@ public class Max extends SingleArgumentAggregateFunction {
     public void reset() {
         maxValue = null;
     }
-    
+
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
-    	this.outputType = inputType;
+        this.outputType = inputType;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object value, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
@@ -55,7 +53,7 @@ public class Max extends SingleArgumentAggregateFunction {
         } else {
             Comparable valueComp = (Comparable) value;
 
-        	if (Constant.COMPARATOR.compare(valueComp, maxValue) > 0) {
+            if (Constant.COMPARATOR.compare(valueComp, maxValue) > 0) {
                 maxValue = valueComp;
             }
         }
@@ -67,21 +65,21 @@ public class Max extends SingleArgumentAggregateFunction {
     public Object getResult(CommandContext commandContext) {
         return this.maxValue;
     }
-    
+
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	return Arrays.asList(outputType);
+        return Arrays.asList(outputType);
     }
-    
+
     @Override
     public void getState(List<Object> state) {
-    	state.add(maxValue);
+        state.add(maxValue);
     }
-    
+
     @Override
     public int setState(List<?> state, int index) {
-    	this.maxValue = state.get(index);
-    	return index++;
+        this.maxValue = state.get(index);
+        return index++;
     }
-    
+
 }

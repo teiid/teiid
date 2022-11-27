@@ -26,24 +26,24 @@ import org.teiid.query.util.CommandContext;
 
 public abstract class SingleArgumentAggregateFunction extends AggregateFunction {
 
-	@Override
-	public void addInputDirect(List<?> tuple, CommandContext commandContext)
-			throws TeiidComponentException, TeiidProcessingException {
-		addInputDirect(tuple.get(argIndexes[0]), tuple, commandContext);
-	}
-	
-	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
-		initialize(dataType, inputTypes[0]);
-	}
-	
-	/**
-	 * @param dataType  
-	 * @param inputType 
-	 */
-	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?> inputType) {
-		
-	}
-	
-	public abstract void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
+    @Override
+    public void addInputDirect(List<?> tuple, CommandContext commandContext)
+            throws TeiidComponentException, TeiidProcessingException {
+        addInputDirect(tuple.get(argIndexes[0]), tuple, commandContext);
+    }
+
+    public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
+        initialize(dataType, inputTypes[0]);
+    }
+
+    /**
+     * @param dataType
+     * @param inputType
+     */
+    public void initialize(java.lang.Class<?> dataType, java.lang.Class<?> inputType) {
+
+    }
+
+    public abstract void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
     throws TeiidProcessingException, TeiidComponentException;
 }

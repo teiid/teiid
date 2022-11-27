@@ -31,42 +31,42 @@ import junit.framework.TestCase;
 public class TestAccessPattern extends TestCase {
 
     public void testOrdering() {
-        
+
         AccessPattern ap1 = new AccessPattern(createElements(1));
-        AccessPattern ap2 = new AccessPattern(createElements(2)); 
-        
+        AccessPattern ap2 = new AccessPattern(createElements(2));
+
         List accessPatterns = new ArrayList();
-        
+
         accessPatterns.add(ap2);
         accessPatterns.add(ap1);
-        
+
         Collections.sort(accessPatterns);
-        
+
         assertEquals(ap1, accessPatterns.get(0));
     }
-    
+
     public void testClone() {
 
         AccessPattern ap2 = new AccessPattern(createElements(2));
-        
+
         AccessPattern clone = (AccessPattern)ap2.clone();
-        
+
         assertNotSame(ap2, clone);
-        
+
         assertEquals(ap2.getUnsatisfied(), clone.getUnsatisfied());
     }
 
-    /** 
+    /**
      * @return
      */
     private List createElements(int number) {
         List elements = new ArrayList();
-        
+
         for (int i = 0; i < number; i++) {
             elements.add(new ElementSymbol(String.valueOf(i)));
         }
-        
+
         return elements;
     }
-    
+
 }

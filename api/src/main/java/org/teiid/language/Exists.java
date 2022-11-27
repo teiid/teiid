@@ -21,13 +21,13 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
- * Represents an EXISTS criteria that checks whether any results would be 
- * returned from a subquery.  
+ * Represents an EXISTS criteria that checks whether any results would be
+ * returned from a subquery.
  */
 public class Exists extends Condition implements Predicate, SubqueryContainer {
 
     private QueryExpression query;
-    
+
     public Exists(QueryExpression query) {
         this.query = query;
     }

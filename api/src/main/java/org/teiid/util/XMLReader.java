@@ -35,88 +35,88 @@ import org.teiid.core.types.XMLType;
  * Provides a {@link Reader} adapter for StAX
  */
 public class XMLReader extends Reader {
-	private static final int BUFFER_SIZE = 1<<13;
-	private int pos = 0;
-	private StringBuilder builder = new StringBuilder(BUFFER_SIZE);
-	private XMLEventReader reader;
-	private XMLEventWriter writer;
-	
-	public XMLReader(StAXSource source, XMLOutputFactory outFactory) throws XMLStreamException {
-		reader = source.getXMLEventReader();
-		if (reader == null) {
-			this.reader = XMLType.getXmlInputFactory().createXMLEventReader(source.getXMLStreamReader());
-		}
-		this.writer = outFactory.createXMLEventWriter(new Writer() {
-			
-			@Override
-			public void write(char[] cbuf, int off, int len) throws IOException {
-				builder.append(cbuf, off, len);
-			}
-			
-			@Override
-			public void flush() throws IOException {
-				
-			}
-			
-			@Override
-			public void write(String str, int off, int len) throws IOException {
-				builder.append(str, off, len);
-			}
-			
-			@Override
-			public void close() throws IOException {
-				
-			}
-		});
-	}
-	
-	@Override
-	public int read() throws IOException {
-		while (pos >= builder.length()) {
-			if (!reader.hasNext()) {
-				return -1;
-			}
-			if (builder.length() > BUFFER_SIZE) {
-				builder.setLength(0);
-				pos = 0;
-			}
-			try {
-				XMLEvent event = reader.nextEvent();
-				writer.add(event);
-				writer.flush();
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
-			}
-		}
-		return builder.charAt(pos++);
-	}
-	
+    private static final int BUFFER_SIZE = 1<<13;
+    private int pos = 0;
+    private StringBuilder builder = new StringBuilder(BUFFER_SIZE);
+    private XMLEventReader reader;
+    private XMLEventWriter writer;
 
-	@Override
-	public void close() throws IOException {
-		try {
-			reader.close();
-		} catch (XMLStreamException e) {
-			throw new IOException(e);
-		}
-	}
-	
-	@Override
-	public int read(char[] cbuf, int off, int len) throws IOException {
-		int i = 0;
-		int c = 0;
-		for (i = 0; i < len; i++) {
-			c = read();
-			if (c == -1) {
-				if (i == 0) {
-					return -1;
-				}
-				break;
-			}
-			cbuf[i+off] = (char)c;
-		}
-		return i;
-	}
-	
+    public XMLReader(StAXSource source, XMLOutputFactory outFactory) throws XMLStreamException {
+        reader = source.getXMLEventReader();
+        if (reader == null) {
+            this.reader = XMLType.getXmlInputFactory().createXMLEventReader(source.getXMLStreamReader());
+        }
+        this.writer = outFactory.createXMLEventWriter(new Writer() {
+
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+                builder.append(cbuf, off, len);
+            }
+
+            @Override
+            public void flush() throws IOException {
+
+            }
+
+            @Override
+            public void write(String str, int off, int len) throws IOException {
+                builder.append(str, off, len);
+            }
+
+            @Override
+            public void close() throws IOException {
+
+            }
+        });
+    }
+
+    @Override
+    public int read() throws IOException {
+        while (pos >= builder.length()) {
+            if (!reader.hasNext()) {
+                return -1;
+            }
+            if (builder.length() > BUFFER_SIZE) {
+                builder.setLength(0);
+                pos = 0;
+            }
+            try {
+                XMLEvent event = reader.nextEvent();
+                writer.add(event);
+                writer.flush();
+            } catch (XMLStreamException e) {
+                throw new IOException(e);
+            }
+        }
+        return builder.charAt(pos++);
+    }
+
+
+    @Override
+    public void close() throws IOException {
+        try {
+            reader.close();
+        } catch (XMLStreamException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public int read(char[] cbuf, int off, int len) throws IOException {
+        int i = 0;
+        int c = 0;
+        for (i = 0; i < len; i++) {
+            c = read();
+            if (c == -1) {
+                if (i == 0) {
+                    return -1;
+                }
+                break;
+            }
+            cbuf[i+off] = (char)c;
+        }
+        return i;
+    }
+
 
 }

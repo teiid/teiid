@@ -36,11 +36,11 @@ public class TestIsNullCriteriaImpl extends TestCase {
     }
 
     public static IsNullCriteria helpExample(boolean negated) {
-    	IsNullCriteria crit = new IsNullCriteria(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
+        IsNullCriteria crit = new IsNullCriteria(TestElementImpl.helpExample("vm1.g1", "e1")); //$NON-NLS-1$ //$NON-NLS-2$
         crit.setNegated(negated);
         return crit;
     }
-    
+
     public static IsNull example(boolean negated) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(negated));
     }

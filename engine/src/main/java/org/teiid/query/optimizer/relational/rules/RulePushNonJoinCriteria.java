@@ -51,53 +51,53 @@ import org.teiid.query.util.CommandContext;
 
 /**
  * Pushes on criteria out of the on clause if possible.
- * 
+ *
  * If the join no longer contains criteria, it will be changed into a cross join.
- * 
+ *
  * Upon a successful push, RulePushSelectCriteria will be run again.
  */
 public final class RulePushNonJoinCriteria implements OptimizerRule {
-	
-	private boolean firstRun = true;
-	
-	public RulePushNonJoinCriteria(boolean firstRun) {
-		this.firstRun = firstRun;
-	}
 
-	/**
-	 * Execute the rule as described in the class comments.
-	 * @param plan Incoming query plan, may be modified during method and may be returned from method
-	 * @param metadata Metadata source
-	 * @param rules Rules from optimizer rule stack, may be manipulated during method
-	 * @return Updated query plan if rule fired, else original query plan
-	 */
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private boolean firstRun = true;
+
+    public RulePushNonJoinCriteria(boolean firstRun) {
+        this.firstRun = firstRun;
+    }
+
+    /**
+     * Execute the rule as described in the class comments.
+     * @param plan Incoming query plan, may be modified during method and may be returned from method
+     * @param metadata Metadata source
+     * @param rules Rules from optimizer rule stack, may be manipulated during method
+     * @return Updated query plan if rule fired, else original query plan
+     */
+    public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         boolean treeChanged = false;
         boolean removeCopiedFlag = false;
         boolean pushRuleRaiseNull = false;
-        
+
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN)) {
             List criteria = (List)node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-                        
+
             JoinType joinType = (JoinType)node.getProperty(NodeConstants.Info.JOIN_TYPE);
-            
+
             //criteria cannot be pushed out of a full outer join clause
             if (joinType == JoinType.JOIN_FULL_OUTER || joinType == JoinType.JOIN_CROSS) {
                 continue;
             }
-            
+
             Iterator crits = criteria.iterator();
             while (crits.hasNext()) {
                 Criteria crit = (Criteria)crits.next();
-                                
+
                 //special case handling for true/false criteria
                 if (crit.equals(QueryRewriter.FALSE_CRITERIA) || crit.equals(QueryRewriter.UNKNOWN_CRITERIA)) {
                     if (joinType == JoinType.JOIN_INNER) {
                         FrameUtil.replaceWithNullNode(node);
                     } else {
-                        //must be a left or right outer join, replace the inner side with null  
+                        //must be a left or right outer join, replace the inner side with null
                         FrameUtil.replaceWithNullNode(JoinUtil.getInnerSideJoinNodes(node)[0]);
                         removeCopiedFlag = true;
                     }
@@ -109,18 +109,18 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
                     crits.remove();
                     break;
                 }
-                
+
                 if (pushCriteria(node, crit, crits, metadata)) {
                     treeChanged = true;
                 }
             }
-            
+
             //degrade the join if there is no criteria left
             if (criteria.isEmpty() && joinType == JoinType.JOIN_INNER) {
                 node.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
                 treeChanged = true;
             }
-             
+
             if (removeCopiedFlag) {
                 //allow the criteria above the join to be eligible for pushing and copying
                 PlanNode parent = node.getParent();
@@ -128,37 +128,37 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
                     parent.setProperty(NodeConstants.Info.IS_COPIED, Boolean.FALSE);
                     parent = parent.getParent();
                 }
-            }            
+            }
         }
-        
+
         if (treeChanged) {
             rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
-        
+
         if (pushRuleRaiseNull) {
             rules.push(RuleConstants.RAISE_NULL);
         }
 
-		return plan;
-	}
-    
-    /** 
+        return plan;
+    }
+
+    /**
      * True if the criteria is pushed.
-     * 
+     *
      * It's possible to push to the inner side of the join if the new criteria node
      * originates there
-     * 
+     *
      * @param joinNode
      * @param tgtCrit
-     * @param metadata 
+     * @param metadata
      * @return
      */
     private boolean pushCriteria(PlanNode joinNode,
                                   Criteria tgtCrit, Iterator iter, QueryMetadataInterface metadata) {
         PlanNode newCritNode = RelationalPlanner.createSelectNode(tgtCrit, false);
-        
+
         Set<GroupSymbol> groups = newCritNode.getGroups();
-        
+
         PlanNode[] innerJoinNodes = JoinUtil.getInnerSideJoinNodes(joinNode);
 
         boolean pushed = false;
@@ -173,73 +173,73 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
                 pushed = true;
             }
         }
-        
+
         if (pushed) {
-        	iter.remove();
+            iter.remove();
         } else if (firstRun && tgtCrit instanceof CompareCriteria) {
             CompareCriteria crit = (CompareCriteria) tgtCrit;
-            
+
             Expression leftExpr = crit.getLeftExpression();
             Expression rightExpr = crit.getRightExpression();
-                        
-        	for (int i = 0; i < innerJoinNodes.length; i++) {
-        		PlanNode node = FrameUtil.findJoinSourceNode(innerJoinNodes[i]);
-        		
-        		boolean outer = false;
-        		for (PlanNode child : NodeEditor.findAllNodes(node, NodeConstants.Types.JOIN)) {
-        			if (((JoinType)child.getProperty(Info.JOIN_TYPE)).isOuter()) {
-        				outer = true;
-        				break;
-        			}
-        		}
-        		
-        		if (!outer) {
-        			continue;
-        		}
-        		
-                Set<GroupSymbol> leftExprGroups = GroupsUsedByElementsVisitor.getGroups(leftExpr);            
+
+            for (int i = 0; i < innerJoinNodes.length; i++) {
+                PlanNode node = FrameUtil.findJoinSourceNode(innerJoinNodes[i]);
+
+                boolean outer = false;
+                for (PlanNode child : NodeEditor.findAllNodes(node, NodeConstants.Types.JOIN)) {
+                    if (((JoinType)child.getProperty(Info.JOIN_TYPE)).isOuter()) {
+                        outer = true;
+                        break;
+                    }
+                }
+
+                if (!outer) {
+                    continue;
+                }
+
+                Set<GroupSymbol> leftExprGroups = GroupsUsedByElementsVisitor.getGroups(leftExpr);
                 Set<GroupSymbol> rightExprGroups = GroupsUsedByElementsVisitor.getGroups(rightExpr);
 
                 ArrayList<ElementSymbol> notNull = new ArrayList<ElementSymbol>(2);
-                
-        		if (node.getGroups().containsAll(leftExprGroups)) {
-        			collectNotNull(leftExpr, notNull);
-        		} else if (node.getGroups().containsAll(rightExprGroups)) {
-        			collectNotNull(rightExpr, notNull);
-        		}
-        		
-        		if (!notNull.isEmpty()) {
-        			pushed = true;
-        			for (ElementSymbol es : notNull) {
-        				IsNullCriteria inc = new IsNullCriteria(es);
-        				inc.setNegated(true);
-        				PlanNode notNullCrit = RelationalPlanner.createSelectNode(inc, false);
-        				notNullCrit.setProperty(NodeConstants.Info.IS_TEMPORARY, true);
-        				innerJoinNodes[i].addAsParent(notNullCrit);
-        			}
-        		}
-        	}
+
+                if (node.getGroups().containsAll(leftExprGroups)) {
+                    collectNotNull(leftExpr, notNull);
+                } else if (node.getGroups().containsAll(rightExprGroups)) {
+                    collectNotNull(rightExpr, notNull);
+                }
+
+                if (!notNull.isEmpty()) {
+                    pushed = true;
+                    for (ElementSymbol es : notNull) {
+                        IsNullCriteria inc = new IsNullCriteria(es);
+                        inc.setNegated(true);
+                        PlanNode notNullCrit = RelationalPlanner.createSelectNode(inc, false);
+                        notNullCrit.setProperty(NodeConstants.Info.IS_TEMPORARY, true);
+                        innerJoinNodes[i].addAsParent(notNullCrit);
+                    }
+                }
+            }
         }
-        
+
         return pushed;
     }
 
-	private void collectNotNull(Expression leftExpr,
-			ArrayList<ElementSymbol> notNull) {
-		if (leftExpr instanceof ElementSymbol) {
-			notNull.add((ElementSymbol)leftExpr);
-		} else if (leftExpr instanceof Function) {
-			Function f = (Function)leftExpr;
-			if (!f.getFunctionDescriptor().isNullDependent()) {
-				for (Expression arg : f.getArgs()) {
-					collectNotNull(arg, notNull);
-				}
-			}
-		}
-	}
+    private void collectNotNull(Expression leftExpr,
+            ArrayList<ElementSymbol> notNull) {
+        if (leftExpr instanceof ElementSymbol) {
+            notNull.add((ElementSymbol)leftExpr);
+        } else if (leftExpr instanceof Function) {
+            Function f = (Function)leftExpr;
+            if (!f.getFunctionDescriptor().isNullDependent()) {
+                for (Expression arg : f.getArgs()) {
+                    collectNotNull(arg, notNull);
+                }
+            }
+        }
+    }
 
     public String toString() {
-		return "PushNonJoinCriteria"; //$NON-NLS-1$
-	}
+        return "PushNonJoinCriteria"; //$NON-NLS-1$
+    }
 
 }
