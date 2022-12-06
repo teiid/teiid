@@ -72,7 +72,7 @@
         <version.commons-configuration>1.7</version.commons-configuration>
         <version.commons-configuration2>2.7</version.commons-configuration2>
         <version.commons-logging>1.2</version.commons-logging>
-        <version.commons-net>3.6</version.commons-net>
+        <version.commons-net>3.9.0</version.commons-net>
 
         <version.de.flapdoodle.embed.mongo>2.2.0</version.de.flapdoodle.embed.mongo>
         <version.de.flapdoodle.embed.process>2.1.2</version.de.flapdoodle.embed.process>
