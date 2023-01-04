@@ -91,7 +91,7 @@ public class TestHotrodExecution {
         ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.proto"))));
 
         EC = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(EC.getBatchSize()).toReturn(512);
+        Mockito.when(EC.getBatchSize()).thenReturn(512);
 
     }
 

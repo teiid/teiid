@@ -44,7 +44,9 @@
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-        </dependency>
+			<scope>compile</scope>
+			<version>${version.javax.xml.bind.api}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
@@ -132,8 +134,12 @@
             <artifactId>teiid-runtime</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>        		
-	</dependencies>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<outputDirectory>target/classes</outputDirectory>

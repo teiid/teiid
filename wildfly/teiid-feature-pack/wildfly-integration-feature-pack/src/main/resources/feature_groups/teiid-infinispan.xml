@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature-group-spec name="teiid-infinispan" xmlns="urn:jboss:galleon:feature-group:1.0">
+    <feature spec="subsystem.infinispan">
+        <feature spec="subsystem.infinispan.cache-container">
+            <param name="cache-container" value="teiid"/>
+            <param name="default-cache" value="resultset"/>
+            <feature spec="subsystem.infinispan.cache-container.local-cache">
+                <param name="cache-container" value="teiid"/>
+                <param name="local-cache" value="resultset"/>
+                <feature spec="subsystem.infinispan.cache-container.local-cache.component.transaction">
+                    <param name="cache-container" value="teiid"/>
+                    <param name="local-cache" value="resultset"/>
+                    <param name="mode" value="NON_XA"/>
+                </feature>
+                <feature spec="subsystem.infinispan.cache-container.local-cache.memory.heap">
+                    <param name="cache-container" value="teiid"/>
+                    <param name="local-cache" value="resultset"/>
+                    <param name="size" value="1024"/>
+                </feature>
+                <feature spec="subsystem.infinispan.cache-container.local-cache.component.expiration">
+                    <param name="cache-container" value="teiid"/>
+                    <param name="local-cache" value="resultset"/>
+                    <param name="lifespan" value="7200000"/>
+                </feature>
+            </feature>
+            <feature spec="subsystem.infinispan.cache-container.local-cache">
+                <param name="cache-container" value="teiid"/>
+                <param name="local-cache" value="resultset-repl"/>
+                <feature spec="subsystem.infinispan.cache-container.local-cache.component.transaction">
+                    <param name="cache-container" value="teiid"/>
+                    <param name="local-cache" value="resultset-repl"/>
+                    <param name="mode" value="NON_XA"/>
+                </feature>
+                <feature spec="subsystem.infinispan.cache-container.local-cache.memory.heap">
+                    <param name="cache-container" value="teiid"/>
+                    <param name="local-cache" value="resultset-repl"/>
+                    <param name="size" value="1024"/>
+                </feature>
+                <feature spec="subsystem.infinispan.cache-container.local-cache.component.expiration">
+                    <param name="cache-container" value="teiid"/>
+                    <param name="local-cache" value="resultset-repl"/>
+                    <param name="lifespan" value="7200000"/>
+                </feature>
+            </feature>
+        </feature>
+        <feature spec="subsystem.infinispan.cache-container.local-cache">
+            <param name="cache-container" value="teiid"/>
+            <param name="local-cache" value="preparedplan"/>
+            <feature spec="subsystem.infinispan.cache-container.local-cache.memory.heap">
+                <param name="cache-container" value="teiid"/>
+                <param name="local-cache" value="preparedplan"/>
+                <param name="size" value="512"/>
+            </feature>
+            <feature spec="subsystem.infinispan.cache-container.local-cache.component.expiration">
+                <param name="cache-container" value="teiid"/>
+                <param name="local-cache" value="preparedplan"/>
+                <param name="lifespan" value="28800"/>
+            </feature>
+        </feature>
+    </feature>
+</feature-group-spec>

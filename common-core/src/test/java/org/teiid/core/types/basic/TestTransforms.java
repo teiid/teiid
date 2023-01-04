@@ -257,7 +257,7 @@ public class TestTransforms {
 
     @Test public void testPrimitiveArrayConversion() throws Exception {
         Object val = DataTypeManager.transformValue(new long[] {1}, DataTypeManager.DefaultDataClasses.OBJECT, Long[].class);
-        assertEquals(new ArrayImpl(new Long[]{Long.valueOf(1)}), val);
+        assertEquals(new ArrayImpl((Object[]) new Long[]{1L}), val);
     }
 
 }

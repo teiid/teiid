@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.TreeMap;
 
 import org.infinispan.protostream.descriptors.Type;
-import org.infinispan.protostream.impl.WireFormat;
+import org.infinispan.protostream.descriptors.WireType;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.metadata.Column;
 
@@ -66,7 +66,7 @@ public class TableWireFormat implements Serializable{
         this.writeTag = tag;
         Class<?> columnType = column.getJavaType();
         Type protobufType = buildProbufType(column.getNativeType(), columnType);
-        this.readTag = WireFormat.makeTag(tag, protobufType.getWireType());;
+        this.readTag = WireType.makeTag(tag, protobufType.getWireType());;
         this.type = protobufType;
         this.column = column;
         this.attributeName = name;
@@ -79,7 +79,7 @@ public class TableWireFormat implements Serializable{
     }
 
     public static int buildNestedTag(int tag) {
-        return WireFormat.makeTag(tag, WireFormat.WIRETYPE_LENGTH_DELIMITED);
+        return WireType.makeTag(tag, WireType.WIRETYPE_LENGTH_DELIMITED);
     }
 
     private Type buildProbufType(String nativeType, Class<?> columnType) {

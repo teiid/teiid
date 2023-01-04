@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature-group-spec name="teiid-configuration" xmlns="urn:jboss:galleon:feature-group:1.0">
+    <feature spec="subsystem.teiid">
+        <param name="buffer-manager-disk-max-space-mb" value="51200"/>
+        <param name="resultset-cache-infinispan-container" value="teiid"/>
+        <param name="resultset-cache-name" value="resultset"/>
+        <param name="preparedplan-cache-infinispan-container" value="teiid"/>
+        <param name="preparedplan-cache-name" value="preparedplan"/>
+        <param name="authentication-security-domain" value="teiid-security"/>
+        <feature spec="subsystem.teiid.transport">
+            <param name="transport" value="local"/>
+        </feature>
+        <feature spec="subsystem.teiid.transport">
+            <param name="transport" value="odata"/>
+        </feature>
+        <feature spec="subsystem.teiid.transport">
+            <param name="transport" value="jdbc"/>
+            <param name="protocol" value="teiid"/>
+            <param name="socket-binding" value="teiid-jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.transport">
+            <param name="transport" value="odbc"/>
+            <param name="protocol" value="pg"/>
+            <param name="socket-binding" value="teiid-odbc"/>
+            <param name="ssl-mode" value="disabled"/>
+        </feature>
+        <param name="policy-decider-module" value="org.jboss.teiid"/>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="jdbc-simple"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="jdbc-ansi"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="access"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="db2"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="derby"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="exasol"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="h2"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="hsql"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="hana"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="informix"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="metamatrix"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="mysql"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="mysql5"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="oracle"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="parquet"/>
+            <param name="module" value="org.jboss.teiid.translator.parquet"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="postgresql"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="greenplum"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="sqlserver"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="sybase"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="sybaseiq"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="sap-iq"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="teiid"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="teradata"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="modeshape"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="ingres"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="ingres93"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="intersystems-cache"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="netezza"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="file"/>
+            <param name="module" value="org.jboss.teiid.translator.file"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="google-spreadsheet"/>
+            <param name="module" value="org.jboss.teiid.translator.google"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="ldap"/>
+            <param name="module" value="org.jboss.teiid.translator.ldap"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="loopback"/>
+            <param name="module" value="org.jboss.teiid.translator.loopback"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="olap"/>
+            <param name="module" value="org.jboss.teiid.translator.olap"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="ws"/>
+            <param name="module" value="org.jboss.teiid.translator.ws"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="salesforce"/>
+            <param name="module" value="org.jboss.teiid.translator.salesforce"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="salesforce-34"/>
+            <param name="module" value="org.jboss.teiid.translator.salesforce-34"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="salesforce-41"/>
+            <param name="module" value="org.jboss.teiid.translator.salesforce-41"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="hive"/>
+            <param name="module" value="org.jboss.teiid.translator.hive"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="jpa2"/>
+            <param name="module" value="org.jboss.teiid.translator.jpa"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="odata"/>
+            <param name="module" value="org.jboss.teiid.translator.odata"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="sap-gateway"/>
+            <param name="module" value="org.jboss.teiid.translator.odata"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="sap-nw-gateway"/>
+            <param name="module" value="org.jboss.teiid.translator.odata"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="mongodb"/>
+            <param name="module" value="org.jboss.teiid.translator.mongodb"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="couchbase"/>
+            <param name="module" value="org.jboss.teiid.translator.couchbase"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="cassandra"/>
+            <param name="module" value="org.jboss.teiid.translator.cassandra"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="simpledb"/>
+            <param name="module" value="org.jboss.teiid.translator.simpledb"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="accumulo"/>
+            <param name="module" value="org.jboss.teiid.translator.accumulo"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="solr"/>
+            <param name="module" value="org.jboss.teiid.translator.solr"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="excel"/>
+            <param name="module" value="org.jboss.teiid.translator.excel"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="impala"/>
+            <param name="module" value="org.jboss.teiid.translator.hive"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="prestodb"/>
+            <param name="module" value="org.jboss.teiid.translator.prestodb"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="phoenix"/>
+            <param name="module" value="org.jboss.teiid.translator.phoenix"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="hbase"/>
+            <param name="module" value="org.jboss.teiid.translator.phoenix"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="ucanaccess"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="vertica"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="actian-vector"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="osisoft-pi"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="odata4"/>
+            <param name="module" value="org.jboss.teiid.translator.odata4"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="redshift"/>
+            <param name="module" value="org.jboss.teiid.translator.jdbc"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="swagger"/>
+            <param name="module" value="org.jboss.teiid.translator.openapi"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="openapi"/>
+            <param name="module" value="org.jboss.teiid.translator.openapi"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="delegator"/>
+            <param name="module" value="org.jboss.teiid.api"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="infinispan-hotrod"/>
+            <param name="module" value="org.jboss.teiid.translator.infinispan.hotrod"/>
+        </feature>
+        <feature spec="subsystem.teiid.translator">
+            <param name="translator" value="amazon-s3"/>
+            <param name="module" value="org.jboss.teiid.translator.amazon.s3"/>
+        </feature>
+    </feature>
+    <feature spec="socket-binding-group.socket-binding">
+        <param name="socket-binding-group" value="standard-sockets"/>
+        <param name="socket-binding" value="teiid-jdbc"/>
+        <param name="port" value="31000"/>
+    </feature>
+    <feature spec="socket-binding-group.socket-binding">
+        <param name="socket-binding-group" value="standard-sockets"/>
+        <param name="socket-binding" value="teiid-odbc"/>
+        <param name="port" value="35432"/>
+    </feature>
+</feature-group-spec>

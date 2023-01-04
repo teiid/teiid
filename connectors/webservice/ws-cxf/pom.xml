@@ -182,7 +182,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-expression</artifactId>
-            <version>${version.org.springframework}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>

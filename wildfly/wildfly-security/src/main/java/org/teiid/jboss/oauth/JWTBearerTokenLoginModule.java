@@ -33,12 +33,12 @@ import org.apache.cxf.rs.security.oauth2.client.Consumer;
 import org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.jwt.JwtBearerGrant;
-import org.jboss.security.JBossJSSESecurityDomain;
+//import org.jboss.security.JBossJSSESecurityDomain;
 import org.teiid.core.util.Base64;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
-public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
+public class JWTBearerTokenLoginModule extends OAuth20LoginModule { // convert to realm
     private String scope;
     private String issuer;
     private String audience;
@@ -50,7 +50,7 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
     private String certificateAlias;
     private String certificatePassword;
     private String algorithamName;
-    private static JBossJSSESecurityDomain securityDomain;
+//    private static JBossJSSESecurityDomain securityDomain;
 
     @Override
     public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
@@ -134,9 +134,9 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
             loadKeystore(this.keystoreURL, this.keystorePassword, this.keystoreType, password);
 
             // Sign the JWT Header + "." + JWT Claims Object
-            Key key = securityDomain.getKey(this.certificateAlias, password);
+//            Key key = securityDomain.getKey(this.certificateAlias, password);
             Signature signature = Signature.getInstance(this.algorithamName == null?"SHA256withRSA":this.algorithamName);
-            signature.initSign((PrivateKey) key);
+//            signature.initSign((PrivateKey) key);
             signature.update(token.toString().getBytes("UTF-8"));
             String signedPayload = Base64.encodeUrlSafe(signature.sign());
 
@@ -156,6 +156,7 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
     private static void loadKeystore(String keystoreURL,
             String keystorePassword, String keystoreType, String password)
             throws Exception, IOException {
+/*
         if (securityDomain == null) {
             securityDomain = new JBossJSSESecurityDomain("JWTBearer");
             securityDomain.setKeyStorePassword(keystorePassword);
@@ -164,5 +165,6 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
             securityDomain.setServiceAuthToken(password);
             securityDomain.reloadKeyAndTrustStore();
         }
+*/
     }
 }

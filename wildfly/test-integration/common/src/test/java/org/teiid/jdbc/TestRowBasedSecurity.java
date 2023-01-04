@@ -26,19 +26,15 @@ import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.security.Identity;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.*;
 
 import javax.security.auth.Subject;
 
 import org.junit.After;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
@@ -64,13 +60,12 @@ public class TestRowBasedSecurity {
     @Test public void testSecurity() throws Exception {
         es = new EmbeddedServer();
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
-        final Vector<Principal> v = new Vector<Principal>();
-        v.add(new Identity("myrole") {});
+
         final Subject subject = new Subject();
-        Group g = Mockito.mock(Group.class);
-        Mockito.stub(g.getName()).toReturn("Roles");
-        Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
-        subject.getPrincipals().add(g);
+        SimpleGroup rolesGroup = new SimpleGroup("Roles");
+        rolesGroup.addMember(new SimplePrincipal("myrole"));
+        subject.getPrincipals().add(rolesGroup);
+
         ec.setSecurityHelper(new DoNothingSecurityHelper() {
 
             @Override
@@ -157,7 +152,7 @@ public class TestRowBasedSecurity {
         assertEquals(2, rs.getInt(1));
 
         //different session with different roles
-        v.clear();
+//        v.clear();
         c = es.getDriver().connect("jdbc:teiid:z;PassthroughAuthentication=true", null);
         s = c.createStatement();
         rs = s.executeQuery("select count(col2) from v where col is not null");
@@ -173,13 +168,11 @@ public class TestRowBasedSecurity {
     @Test public void testDdlSecurity() throws Exception {
         es = new EmbeddedServer();
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
-        final Vector<Principal> v = new Vector<Principal>();
-        v.add(new Identity("myrole") {});
+
         final Subject subject = new Subject();
-        Group g = Mockito.mock(Group.class);
-        Mockito.stub(g.getName()).toReturn("Roles");
-        Mockito.stub(g.members()).toReturn((Enumeration) v.elements());
-        subject.getPrincipals().add(g);
+        SimpleGroup rolesGroup = new SimpleGroup("Roles");
+        rolesGroup.addMember(new SimplePrincipal("myrole"));
+        subject.getPrincipals().add(rolesGroup);
         ec.setSecurityHelper(new DoNothingSecurityHelper() {
 
             @Override
@@ -214,6 +207,41 @@ public class TestRowBasedSecurity {
         ResultSet rs = s.executeQuery("select id, ssn from account");
         rs.next();
         assertEquals("xxxx", rs.getString(2));
+    }
+
+    private static class SimplePrincipal extends Identity {
+        private SimplePrincipal(String name) {
+            super(name);
+        }
+    }
+
+    private static class SimpleGroup extends org.jboss.security.SimplePrincipal implements Iterable<Principal> {
+        private HashSet<Principal> members = new HashSet<>();
+
+        private SimpleGroup(String name) {
+            super(name);
+        }
+
+        public boolean addMember(Principal user) {
+            return members.add(user);
+        }
+
+        public boolean isMember(Principal member) {
+            return members.contains(member);
+        }
+
+        public Enumeration<? extends Principal> members() {
+            return Collections.enumeration(members);
+        }
+
+        public boolean removeMember(Principal user) {
+            return members.remove(user);
+        }
+
+        @Override
+        public Iterator<Principal> iterator() {
+            return members.iterator();
+        }
     }
 
 }

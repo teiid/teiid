@@ -1,0 +1,20 @@
+<module xmlns="urn:jboss:module:1.8" name="org.apache.hadoop.client">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <artifact name="${org.apache.hadoop:hadoop-client-api}"/>
+        <artifact name="${org.apache.hadoop:hadoop-client-runtime}"/>
+        <artifact name="${org.apache.htrace:htrace-core4}"/>
+    </resources>
+
+    <dependencies>
+        <module name="sun.jdk" />
+        <module name="javax.api"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.log4j"/>
+        <module name="org.apache.commons.logging"/>
+        <!-- findbugs -->
+    </dependencies>
+</module>

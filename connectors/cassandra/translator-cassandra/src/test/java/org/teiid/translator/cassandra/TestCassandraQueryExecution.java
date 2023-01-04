@@ -18,27 +18,26 @@
 
 package org.teiid.translator.cassandra;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
-
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Row;
+import org.junit.Test;
+import org.mockito.Mockito;
+
+import java.util.List;
+
+import static org.junit.Assert.assertNull;
 
 public class TestCassandraQueryExecution {
 
     @Test public void testGetRowWithNull() {
         CassandraQueryExecution cqe = new CassandraQueryExecution(null, null, null);
         Row row = Mockito.mock(Row.class);
-        Mockito.stub(row.isNull(0)).toReturn(true);
+        Mockito.when(row.isNull(0)).thenReturn(true);
         ColumnDefinitions cd = Mockito.mock(ColumnDefinitions.class);
-        Mockito.stub(row.getColumnDefinitions()).toReturn(cd);
-        Mockito.stub(cd.size()).toReturn(1);
-        Mockito.stub(cd.getType(0)).toReturn(DataType.cint());
+        Mockito.when(row.getColumnDefinitions()).thenReturn(cd);
+        Mockito.when(cd.size()).thenReturn(1);
+        Mockito.when(cd.getType(0)).thenReturn(DataType.cint());
         List<?> val = cqe.getRow(row);
         assertNull(val.get(0));
     }

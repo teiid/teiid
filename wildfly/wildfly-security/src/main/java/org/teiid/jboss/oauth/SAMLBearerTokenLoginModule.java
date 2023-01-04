@@ -28,8 +28,7 @@ import org.apache.cxf.rs.security.oauth2.client.Consumer;
 import org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.saml.Saml2BearerGrant;
-
-public abstract class SAMLBearerTokenLoginModule extends OAuth20LoginModule {
+public abstract class SAMLBearerTokenLoginModule extends OAuth20LoginModule {// needs to be updated to a Realm
     private String scope;
 
     @Override

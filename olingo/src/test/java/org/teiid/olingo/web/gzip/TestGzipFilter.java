@@ -17,9 +17,8 @@
  */
 package org.teiid.olingo.web.gzip;
 
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 import javax.servlet.FilterChain;
@@ -73,7 +72,7 @@ public class TestGzipFilter{
         return req;
     }
 
-    private class IgnoreCaseStringMatcher extends BaseMatcher<String>{
+    private static class IgnoreCaseStringMatcher implements ArgumentMatcher<String> {
         private final String toMatch;
 
         private IgnoreCaseStringMatcher(String toMatch){
@@ -81,13 +80,8 @@ public class TestGzipFilter{
         }
 
         @Override
-        public boolean matches(Object item){
+        public boolean matches(String item){
             return toMatch.equalsIgnoreCase(Objects.toString(item));
-        }
-
-        @Override
-        public void describeTo(Description description){
-            description.appendText(toMatch);
         }
     }
 }

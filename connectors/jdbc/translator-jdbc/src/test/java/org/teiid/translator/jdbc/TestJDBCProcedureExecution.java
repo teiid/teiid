@@ -18,17 +18,17 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.language.Command;
+import org.teiid.translator.ExecutionContext;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Types;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.teiid.language.Command;
-import org.teiid.translator.ExecutionContext;
+import static org.junit.Assert.assertEquals;
 
 public class TestJDBCProcedureExecution {
 
@@ -36,9 +36,9 @@ public class TestJDBCProcedureExecution {
         Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
         Connection connection = Mockito.mock(Connection.class);
         CallableStatement cs = Mockito.mock(CallableStatement.class);
-        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-        Mockito.stub(cs.getInt(1)).toReturn(5);
-        Mockito.stub(connection.prepareCall("{call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
+        Mockito.when(cs.getUpdateCount()).thenReturn(-1);
+        Mockito.when(cs.getInt(1)).thenReturn(5);
+        Mockito.when(connection.prepareCall("{call spTest8a(?)}")).thenReturn(cs); //$NON-NLS-1$
         JDBCExecutionFactory ef = new JDBCExecutionFactory();
 
         JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -50,9 +50,9 @@ public class TestJDBCProcedureExecution {
         Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
         Connection connection = Mockito.mock(Connection.class);
         CallableStatement cs = Mockito.mock(CallableStatement.class);
-        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-        Mockito.stub(cs.getInt(2)).toReturn(5);
-        Mockito.stub(connection.prepareCall("{call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+        Mockito.when(cs.getUpdateCount()).thenReturn(-1);
+        Mockito.when(cs.getInt(2)).thenReturn(5);
+        Mockito.when(connection.prepareCall("{call spTest8(?,?)}")).thenReturn(cs); //$NON-NLS-1$
         JDBCExecutionFactory config = new JDBCExecutionFactory();
 
         JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config);

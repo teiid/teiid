@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature-group-spec name="teiid-datasources" xmlns="urn:jboss:galleon:feature-group:1.0">
+    <feature spec="subsystem.datasources">
+        <feature spec="subsystem.datasources.data-source">
+            <param name="data-source" value="ExampleDS"/>
+            <param name="jndi-name" value="java:jboss/datasources/ExampleDS"/>
+            <param name="enabled" value="true"/>
+            <param name="use-java-context" value="true"/>
+            <param name="statistics-enabled" value="${wildfly.datasources.statistics-enabled:${wildfly.statistics-enabled:false}}"/>
+            <param name="connection-url" value="jdbc:h2:mem:test;DB_CLOSE_DELAY\=-1;DB_CLOSE_ON_EXIT\=FALSE"/>
+            <param name="driver-name" value="h2"/>
+            <param name="user-name" value="sa"/>
+            <param name="password" value="sa"/>
+        </feature>
+        <feature spec="subsystem.datasources.jdbc-driver">
+            <param name="jdbc-driver" value="h2"/>
+            <param name="driver-name" value="h2"/>
+            <param name="driver-module-name" value="com.h2database.h2"/>
+            <param name="driver-xa-datasource-class-name" value="org.h2.jdbcx.JdbcDataSource"/>
+        </feature>
+        <feature spec="subsystem.datasources.jdbc-driver">
+            <param name="jdbc-driver" value="teiid-local"/>
+            <param name="driver-name" value="teiid-local"/>
+            <param name="driver-module-name" value="org.jboss.teiid"/>
+            <param name="driver-class-name" value="org.teiid.jdbc.TeiidDriver"/>
+            <param name="driver-xa-datasource-class-name" value="org.teiid.jdbc.TeiidDataSource"/>
+        </feature>
+        <feature spec="subsystem.datasources.jdbc-driver">
+            <param name="jdbc-driver" value="teiid"/>
+            <param name="driver-name" value="teiid"/>
+            <param name="driver-module-name" value="org.jboss.teiid.client"/>
+            <param name="driver-class-name" value="org.teiid.jdbc.TeiidDriver"/>
+            <param name="driver-xa-datasource-class-name" value="org.teiid.jdbc.TeiidDataSource"/>
+        </feature>
+    </feature>
+</feature-group-spec>

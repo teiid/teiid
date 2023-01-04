@@ -1,0 +1,7 @@
+<config xmlns="urn:jboss:galleon:config:1.0" model="standalone">
+    <layers>
+        <include name="teiid-api"/>
+        <include name="teiid-client"/>
+        <include name="teiid-common-core"/>
+    </layers>
+</config>

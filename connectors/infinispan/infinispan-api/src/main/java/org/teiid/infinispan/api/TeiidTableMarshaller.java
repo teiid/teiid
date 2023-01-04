@@ -24,12 +24,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import org.infinispan.protostream.ImmutableSerializationContext;
-import org.infinispan.protostream.RawProtoStreamReader;
-import org.infinispan.protostream.RawProtoStreamWriter;
-import org.infinispan.protostream.RawProtobufMarshaller;
+import org.infinispan.protostream.*;
 import org.infinispan.protostream.impl.ByteArrayOutputStreamEx;
-import org.infinispan.protostream.impl.RawProtoStreamWriterImpl;
+import org.infinispan.protostream.impl.TagWriterImpl;
 import org.teiid.translator.document.Document;
 
 public class TeiidTableMarshaller implements RawProtobufMarshaller<InfinispanDocument>, Serializable {
@@ -74,7 +71,7 @@ public class TeiidTableMarshaller implements RawProtobufMarshaller<InfinispanDoc
                 if (children != null) {
                     for (Document d : children) {
                         ByteArrayOutputStreamEx baos = new ByteArrayOutputStreamEx();
-                        RawProtoStreamWriter rpsw = RawProtoStreamWriterImpl.newInstance(baos);
+                        TagWriter rpsw = TagWriterImpl.newInstance(ProtobufUtil.newSerializationContext(), baos);
                         writeTo(ctx, rpsw, (InfinispanDocument)d);
                         rpsw.flush();
                         baos.flush();

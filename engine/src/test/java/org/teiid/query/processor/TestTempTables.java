@@ -18,23 +18,6 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.sql.Connection;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -60,6 +43,14 @@ import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+import javax.transaction.*;
+import java.sql.Connection;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
 @SuppressWarnings({"nls", "unchecked"})
 public class TestTempTables extends TempTableTestHarness {
 
@@ -78,7 +69,7 @@ public class TestTempTables extends TempTableTestHarness {
         execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
         execute("update x set e1 = e2 where e2 > 1", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
 
-        Mockito.verify(txn).registerSynchronization((Synchronization) Mockito.anyObject());
+        Mockito.verify(txn).registerSynchronization(Mockito.any(Synchronization.class));
         synch.afterCompletion(Status.STATUS_ROLLEDBACK);
 
         try {
@@ -182,8 +173,8 @@ public class TestTempTables extends TempTableTestHarness {
                 synch = (Synchronization)invocation.getArguments()[0];
                 return null;
             }
-        }).when(txn).registerSynchronization((Synchronization)Mockito.anyObject());
-        Mockito.stub(txn.toString()).toReturn("txn");
+        }).when(txn).registerSynchronization(Mockito.any(Synchronization.class));
+        Mockito.when(txn.toString()).thenReturn("txn");
         tc = new TransactionContext();
         tc.setTransaction(txn);
         tc.setIsolationLevel(isolation);

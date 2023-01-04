@@ -17,22 +17,24 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.parser.ParseInfo;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
 
 
 @SuppressWarnings("nls")
@@ -52,11 +54,11 @@ public class TestSessionAwareCache {
 
         // make sure that in the case of session specific; we do not call prepare
         // as session is local only call for distributed
-        Mockito.verify(result, times(0)).prepare((BufferManager)anyObject());
+        Mockito.verify(result, times(0)).prepare(any(BufferManager.class));
 
         Object c = cache.get(id);
 
-        Mockito.verify(result, times(0)).restore((BufferManager)anyObject());
+        Mockito.verify(result, times(0)).restore(any(BufferManager.class));
 
         assertTrue(result==c);
     }
@@ -64,25 +66,27 @@ public class TestSessionAwareCache {
     @Test
     public void testUserSpecfic() {
 
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+        cache.setTupleBufferCache(bm);
 
         CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 
         Cachable result = Mockito.mock(Cachable.class);
-        Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
-        Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);
+        Mockito.when(result.prepare(any(BufferManager.class))).thenReturn(true);
+        Mockito.when(result.restore(any(BufferManager.class))).thenReturn(true);
 
         cache.put(id, Determinism.USER_DETERMINISTIC, result, null);
 
         // make sure that in the case of session specific; we do not call prepare
         // as session is local only call for distributed
-        Mockito.verify(result, times(1)).prepare((BufferManager)anyObject());
+        Mockito.verify(result, times(1)).prepare(any(BufferManager.class));
 
         id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 
         Object c = cache.get(id);
 
-        Mockito.verify(result, times(1)).restore((BufferManager)anyObject());
+        Mockito.verify(result, times(1)).restore(any(BufferManager.class));
 
         assertTrue(result==c);
     }
@@ -90,25 +94,27 @@ public class TestSessionAwareCache {
     @Test
     public void testNoScope() {
 
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+        cache.setTupleBufferCache(bm);
 
         CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 
         Cachable result = Mockito.mock(Cachable.class);
-        Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
-        Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);
+        Mockito.when(result.prepare(any(BufferManager.class))).thenReturn(true);
+        Mockito.when(result.restore(any(BufferManager.class))).thenReturn(true);
 
         cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
 
         // make sure that in the case of session specific; we do not call prepare
         // as session is local only call for distributed
-        Mockito.verify(result, times(1)).prepare((BufferManager)anyObject());
+        Mockito.verify(result, times(1)).prepare(any(BufferManager.class));
 
         id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 
         Object c = cache.get(id);
 
-        Mockito.verify(result, times(1)).restore((BufferManager)anyObject());
+        Mockito.verify(result, times(1)).restore(any(BufferManager.class));
 
         assertTrue(result==c);
     }
@@ -116,13 +122,15 @@ public class TestSessionAwareCache {
     @Test
     public void testVDBRemoval() {
 
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+        cache.setTupleBufferCache(bm);
 
         CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 
         Cachable result = Mockito.mock(Cachable.class);
-        Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
-        Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);
+        Mockito.when(result.prepare(any(BufferManager.class))).thenReturn(true);
+        Mockito.when(result.restore(any(BufferManager.class))).thenReturn(true);
 
         id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
         cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
@@ -138,13 +146,15 @@ public class TestSessionAwareCache {
 
     @Test public void testRemove() {
 
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+        cache.setTupleBufferCache(bm);
 
         CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 
         Cachable result = Mockito.mock(Cachable.class);
-        Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
-        Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);
+        Mockito.when(result.prepare(any(BufferManager.class))).thenReturn(true);
+        Mockito.when(result.restore(any(BufferManager.class))).thenReturn(true);
 
         id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
         cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
@@ -176,7 +186,7 @@ public class TestSessionAwareCache {
         assertEquals(Long.valueOf(1), cache.computeTtl(id, result, 1L));
 
         AccessInfo ai = new AccessInfo();
-        Mockito.stub(result.getAccessInfo()).toReturn(ai);
+        Mockito.when(result.getAccessInfo()).thenReturn(ai);
 
         Table t = new Table();
         t.setProperty(DataModifiable.DATA_TTL, "2");
@@ -196,14 +206,16 @@ public class TestSessionAwareCache {
 
     @Test public void testClear() {
 
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+        cache.setTupleBufferCache(bm);
 
         DQPWorkContext context = buildWorkContext();
         CacheID id = new CacheID(context, new ParseInfo(), "SELECT * FROM FOO");
 
         Cachable result = Mockito.mock(Cachable.class);
-        Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
-        Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);
+        Mockito.when(result.prepare(any(BufferManager.class))).thenReturn(true);
+        Mockito.when(result.restore(any(BufferManager.class))).thenReturn(true);
 
         id = new CacheID(context, new ParseInfo(), "SELECT * FROM FOO");
         cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);

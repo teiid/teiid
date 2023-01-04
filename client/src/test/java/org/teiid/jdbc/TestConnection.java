@@ -18,14 +18,6 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.sql.Array;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.util.Properties;
-
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -38,6 +30,15 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.net.ServerConnection;
+
+import java.sql.Array;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.util.Properties;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("nls")
 public class TestConnection {
@@ -66,19 +67,19 @@ public class TestConnection {
         ServerConnection mock = mock(ServerConnection.class);
         DQP dqp = mock(DQP.class);
         try {
-            stub(dqp.start((XidImpl)Mockito.anyObject(), Mockito.anyInt(), Mockito.anyInt())).toAnswer(new Answer() {
+            when(dqp.start(Mockito.any(XidImpl.class), Mockito.anyInt(), Mockito.anyInt())).thenAnswer(new Answer() {
                 @Override
                 public Object answer(InvocationOnMock invocation) throws Throwable {
                     return ResultsFuture.NULL_FUTURE;
                 }
             });
-            stub(dqp.rollback((XidImpl)Mockito.anyObject())).toAnswer(new Answer() {
+            when(dqp.rollback((XidImpl)Mockito.any(XidImpl.class))).thenAnswer(new Answer() {
                 @Override
                 public Object answer(InvocationOnMock invocation) throws Throwable {
                     return ResultsFuture.NULL_FUTURE;
                 }
             });
-            stub(dqp.rollback()).toAnswer(new Answer() {
+            when(dqp.rollback()).thenAnswer(new Answer() {
                 @Override
                 public Object answer(InvocationOnMock invocation) throws Throwable {
                     return ResultsFuture.NULL_FUTURE;
@@ -97,9 +98,9 @@ public class TestConnection {
             e.printStackTrace();
         }
 
-        stub(mock.getService(DQP.class)).toReturn(dqp);
+        when(mock.getService(DQP.class)).thenReturn(dqp);
 
-        stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(1, "admin"), STD_DATABASE_NAME, "fake")); //$NON-NLS-1$
+        when(mock.getLogonResult()).thenReturn(new LogonResult(new SessionToken(1, "admin"), STD_DATABASE_NAME, "fake")); //$NON-NLS-1$
         return new ConnectionImpl(mock, props, url);
     }
 

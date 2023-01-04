@@ -17,10 +17,6 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -32,12 +28,12 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.*;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+
+import java.util.ArrayList;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestTranslatorUtil {
@@ -113,7 +109,7 @@ public class TestTranslatorUtil {
         metadata.addProperty("MyProperty", "correctly-assigned");
 
         Logger logger = Mockito.mock(Logger.class);
-        Mockito.stub(logger.isEnabled(Mockito.anyString(), Mockito.anyInt())).toReturn(true);
+        Mockito.when(logger.isEnabled(Mockito.anyString(), Mockito.anyInt())).thenReturn(true);
         Mockito.doThrow(new RuntimeException("fail")).when(logger).log(Mockito.eq(MessageLevel.WARNING), Mockito.eq(LogConstants.CTX_RUNTIME), Mockito.anyString());
         LogManager.setLogListener(logger);
         try {

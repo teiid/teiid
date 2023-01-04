@@ -17,12 +17,12 @@
  */
 package org.teiid.translator.salesforce.execution;
 
-import static org.junit.Assert.assertEquals;
-
-import java.sql.Time;
-import java.util.List;
-import java.util.TimeZone;
-
+import com.sforce.async.BatchResult;
+import com.sforce.async.JobInfo;
+import com.sforce.async.OperationEnum;
+import com.sforce.async.Result;
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.sobject.SObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -44,12 +44,11 @@ import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
 
-import com.sforce.async.BatchResult;
-import com.sforce.async.JobInfo;
-import com.sforce.async.OperationEnum;
-import com.sforce.async.Result;
-import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.sobject.SObject;
+import java.sql.Time;
+import java.util.List;
+import java.util.TimeZone;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestUpdates {
@@ -87,8 +86,8 @@ public class TestUpdates {
         qr.setSize(1);
         qr.setDone(true);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
-        Mockito.stub(connection.delete(new String[] {"x"})).toReturn(1);
+        Mockito.when(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).thenReturn(qr);
+        Mockito.when(connection.delete(new String[] {"x"})).thenReturn(1);
 
         while(true) {
             try {
@@ -115,7 +114,7 @@ public class TestUpdates {
 
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 
-        Mockito.stub(connection.delete(new String[] {"123", "456"})).toReturn(2);
+        Mockito.when(connection.delete(new String[] {"123", "456"})).thenReturn(2);
 
         DeleteExecutionImpl updateExecution = new DeleteExecutionImpl(config, delete, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
 
@@ -139,7 +138,7 @@ public class TestUpdates {
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 
         ExecutionContext mock = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(mock.getSourceHint()).toReturn("bulk");
+        Mockito.when(mock.getSourceHint()).thenReturn("bulk");
 
         DeleteExecutionImpl updateExecution = new DeleteExecutionImpl(config, delete, connection, Mockito.mock(RuntimeMetadata.class), mock);
 
@@ -152,7 +151,7 @@ public class TestUpdates {
         qr.setSize(1);
         qr.setDone(true);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.when(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).thenReturn(qr);
 
         JobInfo jobInfo = Mockito.mock(JobInfo.class);
 
@@ -196,7 +195,7 @@ public class TestUpdates {
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 
         ExecutionContext mock = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(mock.getSourceHint()).toReturn("bulk");
+        Mockito.when(mock.getSourceHint()).thenReturn("bulk");
 
         DeleteExecutionImpl updateExecution = new DeleteExecutionImpl(config, delete, connection, Mockito.mock(RuntimeMetadata.class), mock);
 
@@ -205,7 +204,7 @@ public class TestUpdates {
         qr.setSize(0);
         qr.setDone(true);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
+        Mockito.when(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).thenReturn(qr);
 
         while(true) {
             try {
@@ -245,8 +244,8 @@ public class TestUpdates {
 
         ArgumentCaptor<List> data = ArgumentCaptor.forClass(List.class);
 
-        Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
-        Mockito.stub(connection.update(data.capture())).toReturn(1);
+        Mockito.when(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).thenReturn(qr);
+        Mockito.when(connection.update(data.capture())).thenReturn(1);
 
         while(true) {
             try {

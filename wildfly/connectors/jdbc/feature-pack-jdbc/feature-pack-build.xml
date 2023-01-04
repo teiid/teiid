@@ -1,6 +1,0 @@
-<build xmlns="urn:wildfly:feature-pack-build:1.1">
-    <dependencies>
-    	<artifact name="org.teiid.wildfly:teiid-wildfly-integration-feature-pack"/>
-        <artifact name="org.wildfly:wildfly-feature-pack"/>
-    </dependencies>
-</build>

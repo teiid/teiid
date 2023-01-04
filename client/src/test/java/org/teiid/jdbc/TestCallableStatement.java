@@ -18,20 +18,6 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.io.Reader;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
@@ -40,6 +26,16 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.security.LogonResult;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.net.ServerConnection;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestCallableStatement {
@@ -53,8 +49,8 @@ public class TestCallableStatement {
         params.put(Integer.valueOf(2), Integer.valueOf(2));
         ResultSetImpl rs = Mockito.mock(ResultSetImpl.class);
         mmcs.resultSet = rs;
-        Mockito.stub(rs.getOutputParamValue(1)).toReturn(null);
-        Mockito.stub(rs.getOutputParamValue(2)).toReturn(Boolean.TRUE);
+        Mockito.when(rs.getOutputParamValue(1)).thenReturn(null);
+        Mockito.when(rs.getOutputParamValue(2)).thenReturn(Boolean.TRUE);
         mmcs.getBoolean(1);
         assertTrue(mmcs.wasNull());
         assertTrue(mmcs.getBoolean(2));
@@ -119,8 +115,8 @@ public class TestCallableStatement {
         ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
         ServerConnection sc = Mockito.mock(ServerConnection.class);
 
-        Mockito.stub(sc.getLogonResult()).toReturn(new LogonResult());
-        Mockito.stub(conn.getServerConnection()).toReturn(sc);
+        Mockito.when(sc.getLogonResult()).thenReturn(new LogonResult());
+        Mockito.when(conn.getServerConnection()).thenReturn(sc);
 
         CallableStatementImpl mmcs = new CallableStatementImpl(conn, "{?=call x(?)}", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
         return mmcs;

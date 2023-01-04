@@ -18,13 +18,13 @@
 
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.vdb.runtime.VDBKey;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestVDBRepository {
@@ -36,14 +36,14 @@ public class TestVDBRepository {
         vdb.setName("name");
         vdb.setVersion(1);
         vdb.setConnectionType(ConnectionType.NONE);
-        Mockito.stub(mock1.getVDB()).toReturn(vdb);
+        Mockito.when(mock1.getVDB()).thenReturn(vdb);
         repo.getVdbRepo().put(new VDBKey("name", 1), mock1);
         CompositeVDB mock2 = Mockito.mock(CompositeVDB.class);
         VDBMetaData vdb2 = new VDBMetaData();
         vdb2.setName("name");
         vdb2.setVersion(2);
         vdb2.setConnectionType(ConnectionType.NONE);
-        Mockito.stub(mock2.getVDB()).toReturn(vdb2);
+        Mockito.when(mock2.getVDB()).thenReturn(vdb2);
         repo.getVdbRepo().put(new VDBKey("name", 2), mock2);
 
         VDBMetaData live = repo.getLiveVDB("name");

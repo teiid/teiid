@@ -27,17 +27,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.security.Identity;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.security.auth.Subject;
@@ -163,31 +157,32 @@ public class TestDDLMetadataStore {
         }
     }
 
-    private static class SimpleGroup extends SimplePrincipal implements Group {
+    private static class SimpleGroup extends SimplePrincipal implements Iterable<Principal> {
         private HashSet<Principal> members = new HashSet<>();
 
         private SimpleGroup(String name) {
             super(name);
         }
 
-        @Override
         public boolean addMember(Principal user) {
             return members.add(user);
         }
 
-        @Override
         public boolean isMember(Principal member) {
             return members.contains(member);
         }
 
-        @Override
         public Enumeration<? extends Principal> members() {
             return Collections.enumeration(members);
         }
 
-        @Override
         public boolean removeMember(Principal user) {
             return members.remove(user);
+        }
+
+        @Override
+        public Iterator<Principal> iterator() {
+            return members.iterator();
         }
     }
 

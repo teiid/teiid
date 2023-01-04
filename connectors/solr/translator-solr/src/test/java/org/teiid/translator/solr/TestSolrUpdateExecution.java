@@ -17,10 +17,6 @@
  */
 package org.teiid.translator.solr;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -43,6 +39,10 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
 @SuppressWarnings("nls")
 public class TestSolrUpdateExecution {
     private SolrExecutionFactory translator;
@@ -61,7 +61,7 @@ public class TestSolrUpdateExecution {
 
         Command cmd = this.utility.parseCommand(query);
         ExecutionContext context = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(context.getCommandContext()).toReturn(Mockito.mock(CommandContext.class));
+        Mockito.when(context.getCommandContext()).thenReturn(Mockito.mock(CommandContext.class));
 
         SolrConnection connection = Mockito.mock(SolrConnection.class);
         UpdateResponse response = Mockito.mock(UpdateResponse.class);
@@ -70,7 +70,7 @@ public class TestSolrUpdateExecution {
 
 
         Mockito.when(connection.query(Mockito.any(SolrQuery.class))).thenReturn(responseDocs[0], responseDocs[1]);
-        Mockito.stub(connection.update(Mockito.any(UpdateRequest.class))).toReturn(response);
+        Mockito.when(connection.update(Mockito.any(UpdateRequest.class))).thenReturn(response);
 
         UpdateExecution execution = this.translator.createUpdateExecution(cmd, context, this.utility.createRuntimeMetadata(), connection);
         execution.execute();
@@ -93,10 +93,10 @@ public class TestSolrUpdateExecution {
         insert.addField("nis", "any");
 
         QueryResponse queryResponse = Mockito.mock(QueryResponse.class);
-        Mockito.stub(queryResponse.getResults()).toReturn(new SolrDocumentList());
+        Mockito.when(queryResponse.getResults()).thenReturn(new SolrDocumentList());
 
         QueryResponse queryResponse2 = Mockito.mock(QueryResponse.class);
-        Mockito.stub(queryResponse2.getResults()).toReturn(new SolrDocumentList());
+        Mockito.when(queryResponse2.getResults()).thenReturn(new SolrDocumentList());
 
         UpdateRequest request = helpUpdate(query, queryResponse, queryResponse2);
 
@@ -121,10 +121,10 @@ public class TestSolrUpdateExecution {
         list.add(doc);
 
         QueryResponse queryResponse = Mockito.mock(QueryResponse.class);
-        Mockito.stub(queryResponse.getResults()).toReturn(list);
+        Mockito.when(queryResponse.getResults()).thenReturn(list);
 
         QueryResponse queryResponse2 = Mockito.mock(QueryResponse.class);
-        Mockito.stub(queryResponse2.getResults()).toReturn(new SolrDocumentList());
+        Mockito.when(queryResponse2.getResults()).thenReturn(new SolrDocumentList());
 
         UpdateRequest request = helpUpdate(query, queryResponse, queryResponse2);
         List<SolrInputDocument> docs = request.getDocuments();
@@ -154,10 +154,10 @@ public class TestSolrUpdateExecution {
         list.add(doc);
 
         QueryResponse queryResponse = Mockito.mock(QueryResponse.class);
-        Mockito.stub(queryResponse.getResults()).toReturn(list);
+        Mockito.when(queryResponse.getResults()).thenReturn(list);
 
         QueryResponse queryResponse2 = Mockito.mock(QueryResponse.class);
-        Mockito.stub(queryResponse2.getResults()).toReturn(new SolrDocumentList());
+        Mockito.when(queryResponse2.getResults()).thenReturn(new SolrDocumentList());
 
         UpdateRequest request = helpUpdate(query, queryResponse, queryResponse2);
         List<SolrInputDocument> docs = request.getDocuments();

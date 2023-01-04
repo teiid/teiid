@@ -553,8 +553,16 @@ class TeiidAdd extends AbstractAddStepHandler {
         edfs.dqpCore.setSessionService(sessionServiceImpl);
 
         if (isDefined(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context)) {
-               String securityDomain = asString(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context);
-               sessionServiceImpl.setSecurityDomain(securityDomain);
+            String securityDomain = asString(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context);
+            sessionServiceImpl.setSecurityDomain(securityDomain);
+/* The security domain is not yet ready, will retrieve it as needed
+            SecurityDomain securityDomainX = JBossSecurityHelper.getSecurityDomain(securityDomain);
+            if (securityDomainX != null) {
+                securityDomainX.registerWithClassLoader(this.getClass().getClassLoader());
+            } else {
+                LogManager.logError(LogConstants.CTX_RUNTIME,"Security Domain '"+securityDomain+"' was not found");
+            }
+*/
         }
 
            if (isDefined(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context)) {

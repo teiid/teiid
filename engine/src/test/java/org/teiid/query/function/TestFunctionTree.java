@@ -18,12 +18,6 @@
 
 package org.teiid.query.function;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.TeiidRuntimeException;
@@ -38,6 +32,12 @@ import org.teiid.query.function.source.SystemSource;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestFunctionTree {
@@ -154,7 +154,7 @@ public class TestFunctionTree {
 
         Collection<org.teiid.metadata.FunctionMethod> list = Arrays.asList(method);
         FunctionMetadataSource fms = Mockito.mock(FunctionMetadataSource.class);
-        Mockito.stub(fms.getFunctionMethods()).toReturn(list);
+        Mockito.when(fms.getFunctionMethods()).thenReturn(list);
         FunctionTree ft = new FunctionTree("foo", fms);
         assertEquals(1, ft.getFunctionsInCategory(FunctionCategoryConstants.MISCELLANEOUS).size());
     }

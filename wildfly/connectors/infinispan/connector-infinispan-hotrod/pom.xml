@@ -10,6 +10,10 @@
 	<name>Infinispan Hotrod Protocol Based Resource Adapter</name>
 	<description>This resource adapter uses Hotrod protocol to create a connection to the Infinispan Cache</description>
 
+	<properties>
+		<version.com.fasterxml.jackson.core>2.11.0.rc1</version.com.fasterxml.jackson.core>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.teiid</groupId>
@@ -62,6 +66,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+			<version>${version.com.fasterxml.jackson.core}</version>
             <scope>test</scope>
         </dependency>        
 		<dependency>
@@ -83,7 +88,18 @@
 			<artifactId>jboss-logging</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging-annotations</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${version.com.fasterxml.jackson.core}</version>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-infinispan-hotrod</artifactId>

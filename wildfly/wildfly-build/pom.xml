@@ -49,22 +49,140 @@
             </resource>
         </resources>
         
-        <plugins>                        
+        <plugins>
             <plugin>
-                <groupId>org.wildfly.build</groupId>
-                <artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
-                <!-- See https://github.com/wildfly/wildfly-build-tools/issues/47 -->
-                <version>1.2.6.Final</version>
+                <groupId>org.jboss.galleon</groupId>
+                <artifactId>galleon-maven-plugin</artifactId>
+                <version>${version.galleon.maven.plugin}</version>
                 <executions>
                     <execution>
-                        <id>dist-provisioning</id>
                         <goals>
-                            <goal>build</goal>
+                            <goal>provision</goal>
                         </goals>
-                        <phase>compile</phase>
                         <configuration>
-                            <config-file>server-provisioning.xml</config-file>
-                            <serverName>teiid-${project.version}-wildfly-dist</serverName>
+                            <featurePacks>
+                                <feature-pack>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-ee-galleon-pack</artifactId>
+                                    <version>${version.org.wildfly}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-galleon-pack</artifactId>
+                                    <version>${version.org.wildfly}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly</groupId>
+                                    <artifactId>teiid-wildfly-integration-galleon-pack</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly</groupId>
+                                    <artifactId>teiid-client-galleon-pack</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly</groupId>
+                                    <artifactId>rest-service-galleon-pack</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly</groupId>
+                                    <artifactId>olingo-feature-pack</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-accumulo</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-amazon</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-cassandra</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-couchbase</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-file</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-google</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-infinispan</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-jdbc</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-ldap</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-misc</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-mongodb</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-odata</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-openapi</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-salesforce</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-salesforce-34</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-salesforce-41</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-solr</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                                <feature-pack>
+                                    <groupId>org.teiid.wildfly.connectors</groupId>
+                                    <artifactId>feature-pack-ws</artifactId>
+                                    <version>${project.version}</version>
+                                </feature-pack>
+                            </featurePacks>
+                            <installDir>${project.build.directory}/teiid-${project.version}-wildfly-dist</installDir>
                         </configuration>
                     </execution>
                 </executions>
@@ -82,13 +200,6 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>org.wildfly</groupId>
-                                    <artifactId>wildfly-dist</artifactId>
-                                    <version>${version.org.wildfly}</version>
-                                    <type>zip</type>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
-                                <artifactItem>
                                     <groupId>org.teiid.hal</groupId>
                                     <artifactId>dist</artifactId>
                                     <version>${version.teiid.console}</version>
@@ -101,14 +212,12 @@
                     </execution>
                 </executions>
             </plugin>
-            
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
-                        <descriptor>assembly/wildfly-server.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

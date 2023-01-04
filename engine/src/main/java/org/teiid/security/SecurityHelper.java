@@ -21,14 +21,14 @@ package org.teiid.security;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
-public interface SecurityHelper {
+public interface SecurityHelper<CtxObj> {
 
     /**
      * Associate the given context and return the old context
      * @param context
      * @return
      */
-    Object associateSecurityContext(Object context);
+    CtxObj associateSecurityContext(CtxObj context);
 
     /**
      * Clear any security context associated with the thread
@@ -39,14 +39,14 @@ public interface SecurityHelper {
      * Get the current security context associated with the thread
      * @return
      */
-    Object getSecurityContext(String securityDomain);
+    CtxObj getSecurityContext(String securityDomain);
 
     /**
      * Get the subject associated with the security context.
      * @param context
      * @return
      */
-    Subject getSubjectInContext(Object context);
+    Subject getSubjectInContext(CtxObj context);
 
     /**
      * Authenticate the user and return the security context
@@ -57,7 +57,7 @@ public interface SecurityHelper {
      * @return a non-null context object
      * @throws LoginException
      */
-    Object authenticate(String securityDomain, String baseUserName, Credentials credentials, String applicationName)
+    CtxObj authenticate(String securityDomain, String baseUserName, Credentials credentials, String applicationName)
             throws LoginException;
 
     /**

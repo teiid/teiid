@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+
+<build xmlns="urn:wildfly:feature-pack-build:3.1" producer="org.jboss.teiid:galleon-pack-amazon">
+    <transitive>
+        <dependency group-id="org.wildfly" artifact-id="wildfly-ee-galleon-pack">
+            <name>org.wildfly:wildfly-ee-galleon-pack</name>
+            <packages inherit="false">
+                <exclude name="product.conf"/>
+            </packages>
+            <default-configs inherit="false"/>
+        </dependency>
+    </transitive>
+    <dependencies>
+        <dependency group-id="org.wildfly" artifact-id="wildfly-galleon-pack">
+            <name>org.wildfly:wildfly-galleon-pack</name>
+            <packages inherit="false">
+                <include name="docs.examples"/>
+            </packages>
+            <default-configs inherit="false"/>
+        </dependency>
+        <dependency group-id="org.teiid.wildfly" artifact-id="teiid-client-galleon-pack">
+            <name>org.teiid.wildfly:teiid-client-galleon-pack</name>
+            <packages inherit="false"/>
+            <default-configs inherit="false"/>
+        </dependency>
+        <dependency group-id="org.teiid.wildfly.connectors" artifact-id="feature-pack-ws">
+            <name>org.teiid.wildfly.connectors:feature-pack-ws</name>
+            <packages inherit="false"/>
+            <default-configs inherit="false"/>
+        </dependency>
+    </dependencies>
+    <default-packages>
+        <package name="docs"/>
+        <package name="org.jboss.teiid.resource-adapter.simpledb"/>
+        <package name="org.jboss.teiid.translator.amazon.s3"/>
+        <package name="org.jboss.teiid.translator.simpledb"/>
+        <package name="com.amazonaws"/>
+        <package name="com.fasterxml.jackson.dataformat.cbor"/>
+    </default-packages>
+</build>

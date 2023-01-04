@@ -20,16 +20,15 @@ package org.teiid.jboss.oauth;
 import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedAction;
-import java.security.acl.Group;
 import java.util.Map;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.security.SimplePrincipal;
-import org.jboss.security.SecurityContextAssociation;
-import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
+//import org.jboss.security.SimplePrincipal;
+//import org.jboss.security.SecurityContextAssociation;
+//import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
 import org.teiid.OAuthCredential;
 import org.teiid.OAuthCredentialContext;
 
@@ -38,7 +37,7 @@ import org.teiid.OAuthCredentialContext;
  * Users either need to provide all the options or extend this login module to provide
  * all necessary options at runtime.
  */
-public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
+public class OAuth20LoginModule { //extends AbstractPasswordCredentialLoginModule { // convert to realm
     private String clientId;
     private String clientSecret;
     private String refreshToken;
@@ -48,9 +47,9 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
     protected Subject callerSubject;
     protected Principal callerPrincipal;
 
-    @Override
+//    @Override
     public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
-       super.initialize(subject, handler, sharedState, options);
+//       super.initialize(subject, handler, sharedState, options);
 
        this.clientId = (String) options.get("client-id"); //$NON-NLS-1$
        this.clientSecret = (String) options.get("client-secret"); //$NON-NLS-1$
@@ -60,7 +59,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
         this.accessToken = (String) options.get("access-token"); //$NON-NLS-1$
     }
 
-    @Override
+//    @Override
     public boolean login() throws LoginException {
         this.callerSubject = getSubject();
         this.callerPrincipal = getPrincipal();
@@ -69,7 +68,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
             if (getClientId() == null || getClientSecret() == null ||
                     (getAccessTokenURI() == null && getAccessToken() == null)
                     || (getRefreshToken() == null && getAccessToken() == null)) {
-                super.loginOk = false;
+//                super.loginOk = false;
                 return false;
             }
 
@@ -83,27 +82,28 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
             setCredential(cred);
         }
 
-        super.loginOk = true;
+//        super.loginOk = true;
         return true;
    }
 
-    @Override
+//    @Override
     protected Principal getIdentity() {
         if (this.callerPrincipal != null) {
             return this.callerPrincipal;
         }
-        return new SimplePrincipal("oauth-user"); //$NON-NLS-1$
+//        return new SimplePrincipal("oauth-user"); //$NON-NLS-1$
+        return null;
     }
 
-    @Override
-    protected Group[] getRoleSets() throws LoginException {
-        return new Group[]{};
+//    @Override
+    protected Principal[] getRoleSets() throws LoginException {
+        return new Principal[]{};
     }
 
-    @Override
+//    @Override
     public boolean commit() throws LoginException {
-       subject.getPrincipals().add(getIdentity());
-       addPrivateCredential(this.subject, getCredential());
+//       subject.getPrincipals().add(getIdentity());
+//       addPrivateCredential(this.subject, getCredential());
        return true;
     }
 
@@ -123,24 +123,28 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
 
     static Principal getPrincipal() {
         if (System.getSecurityManager() == null) {
-            return SecurityContextAssociation.getPrincipal();
+//            return SecurityContextAssociation.getPrincipal();
+            return null;
         }
 
         return AccessController.doPrivileged(new PrivilegedAction<Principal>() {
             public Principal run() {
-                return SecurityContextAssociation.getPrincipal();
+//                return SecurityContextAssociation.getPrincipal();
+                return null;
             }
         });
     }
 
     static Subject getSubject() {
         if (System.getSecurityManager() == null) {
-            return SecurityContextAssociation.getSubject();
+//            return SecurityContextAssociation.getSubject();
+            return  null;
         }
 
         return AccessController.doPrivileged(new PrivilegedAction<Subject>() {
             public Subject run() {
-                return SecurityContextAssociation.getSubject();
+//                return SecurityContextAssociation.getSubject();
+                return null;
             }
         });
     }

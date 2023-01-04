@@ -18,32 +18,30 @@
 package org.teiid.jboss;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Map;
-import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 
-import org.jboss.security.SecurityContext;
-import org.jboss.security.SubjectInfo;
-import org.jboss.security.auth.spi.AbstractServerLoginModule;
+//import org.jboss.security.auth.spi.AbstractServerLoginModule;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.wildfly.security.auth.server.SecurityIdentity;
 
 /**
  * This login modules simply takes the subject in the current context and adds
  * its principle to shared state. This is same as CallerIdentityLoginModule,
  * just it does not extend the AbstractPasswordCredentialLoginModule
  */
-public class AssosiateCallerIdentityLoginModule extends AbstractServerLoginModule {
+//DTS-67778  Removing PicketBox
+public class AssosiateCallerIdentityLoginModule { //extends AbstractServerLoginModule { // needs to be updated to a Realm
 
     private Principal principal;
 
     public void initialize(Subject subject, CallbackHandler handler,
             Map sharedState, Map options) {
-        super.initialize(subject, handler, sharedState, options);
+//        super.initialize(subject, handler, sharedState, options);
     }
 
     /**
@@ -56,23 +54,19 @@ public class AssosiateCallerIdentityLoginModule extends AbstractServerLoginModul
      */
     public boolean login() throws LoginException {
 
-        SecurityContext sc = SecurityActions.getSecurityContext();
-        SubjectInfo si = sc.getSubjectInfo();
-        Subject subject = si.getAuthenticatedSubject();
+        SecurityIdentity sc = SecurityActions.getSecurityIdentity();
+        this.principal = sc.getPrincipal();
 
-        Set<Principal> principals = subject.getPrincipals();
-        this.principal = principals.iterator().next();
-
-        if (super.login() == true) {
-            return true;
-        }
+//        if (super.login() == true) {
+//            return true;
+//        }
 
         LogManager.logDetail(LogConstants.CTX_SECURITY, "Adding Passthrough principal="+principal.getName()); //$NON-NLS-1$
 
         // Put the principal name into the sharedState map
-        sharedState.put("javax.security.auth.login.name", principal.getName()); //$NON-NLS-1$
-        sharedState.put("javax.security.auth.login.password", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        super.loginOk = true;
+//        sharedState.put("javax.security.auth.login.name", principal.getName()); //$NON-NLS-1$
+//        sharedState.put("javax.security.auth.login.password", ""); //$NON-NLS-1$ //$NON-NLS-2$
+//        super.loginOk = true;
 
         return true;
     }
@@ -81,7 +75,7 @@ public class AssosiateCallerIdentityLoginModule extends AbstractServerLoginModul
         return principal;
     }
 
-    protected Group[] getRoleSets() throws LoginException {
-        return new Group[] {};
+    protected Principal[] getRoleSets() throws LoginException {
+        return new Principal[] {};
     }
 }

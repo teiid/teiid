@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature-group-spec name="teiid-logging" xmlns="urn:jboss:galleon:feature-group:1.0">
+    <feature spec="subsystem.logging">
+        <feature spec="subsystem.logging.pattern-formatter">
+            <param name="pattern-formatter" value="PATTERN"/>
+            <param name="pattern" value="&quot;%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n&quot;"/>
+        </feature>
+        <feature spec="subsystem.logging.pattern-formatter">
+            <reset param="pattern"/>
+            <param name="pattern-formatter" value="COLOR-PATTERN"/>
+            <param name="pattern" value="&quot;%K{level}%d{HH:mm:ss,SSS} %-5p [%c] (%t) %X{teiid-session} %s%e%n&quot;"/>
+        </feature>
+        <feature spec="subsystem.logging.logger">
+            <param name="logger" value="org.teiid.COMMAND_LOG"/>
+            <param name="level" value="WARN"/>
+        </feature>
+    </feature>
+</feature-group-spec>

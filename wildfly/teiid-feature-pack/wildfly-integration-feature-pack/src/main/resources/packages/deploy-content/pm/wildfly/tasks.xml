@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<tasks xmlns="urn:wildfly:wildfly-feature-pack-tasks:3.0">
+    <mkdir name="modules/system/layers/dv/org/jboss/teiid/main/deployments"/>
+    <copy-artifact artifact="org.teiid:teiid-olingo::odata4:war" to-location="modules/system/layers/dv/org/jboss/teiid/main/deployments/teiid-olingo-odata4.war" extract="false"/>
+</tasks>

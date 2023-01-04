@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 package org.teiid.translator.odata;
-import java.io.Reader;
-import java.io.StringWriter;
 
 import org.odata4j.core.OError;
 import org.odata4j.core.OErrors;
@@ -28,6 +26,9 @@ import org.odata4j.stax2.XMLEvent2;
 import org.odata4j.stax2.XMLEventReader2;
 import org.odata4j.stax2.XMLWriter2;
 import org.odata4j.stax2.util.StaxUtil;
+
+import java.io.Reader;
+import java.io.StringWriter;
 
 @SuppressWarnings("nls")
 // TEIID-2759 - allowing to wrap the innererror with root element
@@ -54,8 +55,13 @@ public class AtomErrorFormatParser extends XmlFormatParser implements FormatPars
         code = xmlReader.getElementText();
       else if (isStartElement(event, MESSAGE))
         message = xmlReader.getElementText();
-      else if (isStartElement(event, INNER_ERROR))
-        innerError = StaxUtil.outerXml(event, xmlReader);
+      else if (isStartElement(event, INNER_ERROR)) {
+        StringWriter writer = new StringWriter();
+        XMLWriter2 xmlWriter = StaxUtil.newXMLWriter(writer);
+        StaxUtil.outerXml(event, xmlReader, xmlWriter);
+        xmlWriter.endDocument();
+        innerError = writer.toString();
+      }
       else if (!event.isStartElement() || !event.isEndElement())
         continue;
       else

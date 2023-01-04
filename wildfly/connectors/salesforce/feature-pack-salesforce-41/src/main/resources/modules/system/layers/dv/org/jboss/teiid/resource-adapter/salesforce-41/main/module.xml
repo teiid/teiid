@@ -20,7 +20,7 @@
         <module name="javax.jws.api"/>
         <module name="javax.wsdl4j.api"/>
         <module name="org.jboss.teiid.translator.salesforce-41" />
-        <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>
+<!--        <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>-->
         <module name="org.apache.cxf.impl" export="true">
             <imports>
                 <include path="META-INF" />

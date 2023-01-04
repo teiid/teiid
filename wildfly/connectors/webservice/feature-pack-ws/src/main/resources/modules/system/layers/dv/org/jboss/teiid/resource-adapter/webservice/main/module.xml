@@ -13,7 +13,7 @@
     </resources>
 
     <dependencies>
-        <module name="sun.jdk" />        
+<!--        <module name="sun.jdk" />        -->
         <module name="javax.api" />
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
@@ -24,7 +24,7 @@
         <module name="org.apache.cxf.impl" />
         <module name="javax.wsdl4j.api" />
         <module name="javax.xml.ws.api" />
-        <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>
+<!--        <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>-->
         <module name="org.apache.cxf.impl" export="true">
             <imports>
                 <include path="META-INF" />

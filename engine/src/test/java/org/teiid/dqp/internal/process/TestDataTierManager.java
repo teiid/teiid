@@ -18,11 +18,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -54,6 +49,11 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.CacheDirective.Invalidation;
 import org.teiid.translator.CacheDirective.Scope;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestDataTierManager {
@@ -128,7 +128,7 @@ public class TestDataTierManager {
         rm.start(new DQPConfiguration());
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
-        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
+        Mockito.when(repo.getConnectorManager(Mockito.anyString())).thenReturn(connectorManager);
         vdb.addAttachment(ConnectorManagerRepository.class, repo);
 
         dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);

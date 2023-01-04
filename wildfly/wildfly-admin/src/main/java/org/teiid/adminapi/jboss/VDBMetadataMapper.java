@@ -221,11 +221,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
     }
 
     public AttributeDefinition[] getAttributeDefinitions() {
-        ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
-        ObjectListAttributeDefinition vdbimports = ObjectListAttributeDefinition.Builder.of(IMPORT_VDBS, VDBImportMapper.INSTANCE.getAttributeDefinition()).build();
-        ObjectListAttributeDefinition models = ObjectListAttributeDefinition.Builder.of(MODELS, ModelMetadataMapper.INSTANCE.getAttributeDefinition()).build();
-        ObjectListAttributeDefinition translators = ObjectListAttributeDefinition.Builder.of(OVERRIDE_TRANSLATORS, VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
-        ObjectListAttributeDefinition policies = ObjectListAttributeDefinition.Builder.of(DATA_POLICIES, DataPolicyMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+        ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
+        ObjectListAttributeDefinition vdbimports = ObjectListAttributeDefinition.Builder.of(IMPORT_VDBS, VDBImportMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
+        ObjectListAttributeDefinition models = ObjectListAttributeDefinition.Builder.of(MODELS, ModelMetadataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
+        ObjectListAttributeDefinition translators = ObjectListAttributeDefinition.Builder.of(OVERRIDE_TRANSLATORS, VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
+        ObjectListAttributeDefinition policies = ObjectListAttributeDefinition.Builder.of(DATA_POLICIES, DataPolicyMetadataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
 
         return new AttributeDefinition[] {
                 createAttribute(VDBNAME, ModelType.STRING, false),
@@ -398,14 +398,14 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
         }
 
         public ObjectTypeAttributeDefinition getAttributeDefinition() {
-            ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
-            ObjectListAttributeDefinition sourceMappings = ObjectListAttributeDefinition.Builder.of(SOURCE_MAPPINGS, SourceMappingMetadataMapper.INSTANCE.getAttributeDefinition()).build();
-            ObjectListAttributeDefinition errors = ObjectListAttributeDefinition.Builder.of(VALIDITY_ERRORS, ValidationErrorMapper.INSTANCE.getAttributeDefinition()).build();
+            ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
+            ObjectListAttributeDefinition sourceMappings = ObjectListAttributeDefinition.Builder.of(SOURCE_MAPPINGS, SourceMappingMetadataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
+            ObjectListAttributeDefinition errors = ObjectListAttributeDefinition.Builder.of(VALIDITY_ERRORS, ValidationErrorMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
             ObjectListAttributeDefinition metadatas = ObjectListAttributeDefinition.Builder.of(METADATAS, ObjectTypeAttributeDefinition.Builder.of("MetadataMapper", //$NON-NLS-1$
                     new AttributeDefinition[] {
                             createAttribute(METADATA, ModelType.STRING, true),
                             createAttribute(METADATA_TYPE, ModelType.STRING, true)
-                    }).build()).build();
+                    }).build()).setRequired(false).build();
 
             return ObjectTypeAttributeDefinition.Builder.of("ModelMetadataMapper", //$NON-NLS-1$
                 new AttributeDefinition[] {
@@ -648,7 +648,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
         }
 
         public AttributeDefinition[] getAttributeDefinitions() {
-            ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+            ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
             return new AttributeDefinition[] {
                     createAttribute(TRANSLATOR_NAME, ModelType.STRING, false),
                     createAttribute(BASETYPE, ModelType.STRING, false),
@@ -694,7 +694,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
             return ObjectTypeAttributeDefinition.Builder.of("PropertyMetaDataMapper", //$NON-NLS-1$
                     createAttribute(PROPERTY_NAME, ModelType.STRING, false),
                     createAttribute(PROPERTY_VALUE, ModelType.STRING, false)
-            ).build();
+            ).setRequired(false).build();
         }
     }
 
@@ -854,7 +854,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
         }
 
         public ObjectTypeAttributeDefinition getAttributeDefinition() {
-            ObjectListAttributeDefinition dataPermisstions = ObjectListAttributeDefinition.Builder.of(DATA_PERMISSIONS, PermissionMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+            ObjectListAttributeDefinition dataPermisstions = ObjectListAttributeDefinition.Builder.of(DATA_PERMISSIONS, PermissionMetaDataMapper.INSTANCE.getAttributeDefinition()).setRequired(false).build();
             StringListAttributeDefinition roleNames = new StringListAttributeDefinition.Builder(MAPPED_ROLE_NAMES).build();
             return ObjectTypeAttributeDefinition.Builder.of("DataPolicyMetadataMapper", //$NON-NLS-1$
                 new AttributeDefinition[] {

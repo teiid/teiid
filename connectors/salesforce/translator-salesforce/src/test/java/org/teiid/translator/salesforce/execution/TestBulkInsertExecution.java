@@ -17,19 +17,12 @@
  */
 package org.teiid.translator.salesforce.execution;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.sforce.async.Error;
+import com.sforce.async.*;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Parameter;
+import org.teiid.language.*;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -38,19 +31,19 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 
-import com.sforce.async.BatchResult;
-import com.sforce.async.Error;
-import com.sforce.async.JobInfo;
-import com.sforce.async.OperationEnum;
-import com.sforce.async.Result;
-import com.sforce.async.StatusCode;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings("nls")
 public class TestBulkInsertExecution {
 
     @Test
     public void testFlowAndInvocationStack() throws Exception {
-        NamedTable table = new NamedTable("temp", null, Mockito.mock(Table.class));
+        Table tempTableMock = Mockito.mock(Table.class);
+        String tableName = "temp";
+        Mockito.when(tempTableMock.getSourceName()).thenReturn(tableName);
+        NamedTable table = new NamedTable(tableName, null, tempTableMock);
 
         ArrayList<ColumnReference> elements = new ArrayList<ColumnReference>();
         elements.add(new ColumnReference(table, "one", Mockito.mock(Column.class), Integer.class));
@@ -110,7 +103,10 @@ public class TestBulkInsertExecution {
 
     @Test
     public void testFlowAndErrorReturn() throws Exception {
-        NamedTable table = new NamedTable("temp", null, Mockito.mock(Table.class));
+        Table tempTableMock = Mockito.mock(Table.class);
+        String tableName = "temp";
+        Mockito.when(tempTableMock.getSourceName()).thenReturn(tableName);
+        NamedTable table = new NamedTable(tableName, null, tempTableMock);
 
         ArrayList<ColumnReference> elements = new ArrayList<ColumnReference>();
         elements.add(new ColumnReference(table, "one", Mockito.mock(Column.class), Integer.class));

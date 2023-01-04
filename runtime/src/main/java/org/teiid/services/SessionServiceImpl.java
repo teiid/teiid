@@ -20,7 +20,6 @@ package org.teiid.services;
 
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -557,7 +556,7 @@ public class SessionServiceImpl implements SessionService {
     private String getUserName(Subject subject, String userName) {
         Set<Principal> principals = subject.getPrincipals();
         for (Principal p:principals) {
-            if (p instanceof Group) {
+            if (p instanceof Iterable) {
                 continue;
             }
             String name = p.getName();

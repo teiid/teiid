@@ -13,7 +13,7 @@
         <module name="javax.api" />
         <module name="sun.jdk" />
         <module name="org.slf4j" />
-        <module name="io.netty"/>
+        <module name="io.netty.netty-handler"/>
         <module name="com.google.guava"  export="true"/>
     </dependencies>
 
