@@ -18,20 +18,6 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -43,19 +29,9 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.Array;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.Literal;
-import org.teiid.language.Parameter;
-import org.teiid.language.Select;
+import org.teiid.language.*;
 import org.teiid.language.visitor.CollectorVisitor;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -64,13 +40,17 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCProcedureExecution;
-import org.teiid.translator.jdbc.JDBCQueryExecution;
-import org.teiid.translator.jdbc.JDBCUpdateExecution;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.TranslatedCommand;
-import org.teiid.translator.jdbc.TranslationHelper;
+import org.teiid.translator.jdbc.*;
 import org.teiid.util.Version;
+
+import java.sql.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("nls")
 public class TestOracleTranslator {
@@ -966,11 +946,11 @@ public class TestOracleTranslator {
         Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "call spTest8(1)"); //$NON-NLS-1$
         Connection connection = Mockito.mock(Connection.class);
         CallableStatement cs = Mockito.mock(CallableStatement.class);
-        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        Mockito.when(cs.getUpdateCount()).thenReturn(-1);
         ResultSet rs = Mockito.mock(ResultSet.class);
-        Mockito.stub(cs.getObject(1)).toReturn(rs);
-        Mockito.stub(cs.getInt(3)).toReturn(4);
-        Mockito.stub(connection.prepareCall("{?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+        Mockito.when(cs.getObject(1)).thenReturn(rs);
+        Mockito.when(cs.getInt(3)).thenReturn(4);
+        Mockito.when(connection.prepareCall("{?= call spTest8(?,?)}")).thenReturn(cs); //$NON-NLS-1$
         OracleExecutionFactory ef = new OracleExecutionFactory();
 
         JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -1021,11 +1001,11 @@ public class TestOracleTranslator {
         Command command = commandBuilder.getCommand("call proc(2)");
         Connection connection = Mockito.mock(Connection.class);
         CallableStatement cs = Mockito.mock(CallableStatement.class);
-        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        Mockito.when(cs.getUpdateCount()).thenReturn(-1);
         ResultSet rs = Mockito.mock(ResultSet.class);
-        Mockito.stub(cs.getObject(1)).toReturn(rs);
-        Mockito.stub(cs.getInt(3)).toReturn(4);
-        Mockito.stub(connection.prepareCall("select x from y where z = ?")).toReturn(cs); //$NON-NLS-1$
+        Mockito.when(cs.getObject(1)).thenReturn(rs);
+        Mockito.when(cs.getInt(3)).thenReturn(4);
+        Mockito.when(connection.prepareCall("select x from y where z = ?")).thenReturn(cs); //$NON-NLS-1$
         OracleExecutionFactory ef = new OracleExecutionFactory();
 
         JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -1043,7 +1023,7 @@ public class TestOracleTranslator {
         }
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).toReturn(ps); //$NON-NLS-1$
+        Mockito.when(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).thenReturn(ps); //$NON-NLS-1$
         OracleExecutionFactory ef = new OracleExecutionFactory();
         ef.start();
         JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
@@ -1140,10 +1120,10 @@ public class TestOracleTranslator {
 
         Connection connection = Mockito.mock(Connection.class);
         CallableStatement cs = Mockito.mock(CallableStatement.class);
-        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        Mockito.when(cs.getUpdateCount()).thenReturn(-1);
         ResultSet rs = Mockito.mock(ResultSet.class);
-        Mockito.stub(cs.getObject(2)).toReturn(rs);
-        Mockito.stub(connection.prepareCall(output)).toReturn(cs); //$NON-NLS-1$
+        Mockito.when(cs.getObject(2)).thenReturn(rs);
+        Mockito.when(connection.prepareCall(output)).thenReturn(cs); //$NON-NLS-1$
         OracleExecutionFactory ef = new OracleExecutionFactory();
 
         JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -1166,14 +1146,14 @@ public class TestOracleTranslator {
         ((Comparison)command.getWhere()).setRightExpression(param);
         Connection connection = Mockito.mock(Connection.class);
         Statement statement = Mockito.mock(Statement.class);
-        Mockito.stub(connection.createStatement()).toReturn(statement);
+        Mockito.when(connection.createStatement()).thenReturn(statement);
         PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(ps.executeBatch()).toReturn(new int[] {-2, -2});
-        Mockito.stub(connection.prepareStatement("INSERT INTO TEIID_DKJ1 (COL1) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
+        Mockito.when(ps.executeBatch()).thenReturn(new int[] {-2, -2});
+        Mockito.when(connection.prepareStatement("INSERT INTO TEIID_DKJ1 (COL1) VALUES (?)")).thenReturn(ps); //$NON-NLS-1$
 
         //we won't bother to retrieve the results, but we expect the following join query
         PreparedStatement ps1 = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM TEIID_DKJ1, SmallishA WHERE SmallishA.description = TEIID_DKJ1.COL1")).toReturn(ps1); //$NON-NLS-1$
+        Mockito.when(connection.prepareStatement("SELECT SmallishA.ID FROM TEIID_DKJ1, SmallishA WHERE SmallishA.description = TEIID_DKJ1.COL1")).thenReturn(ps1); //$NON-NLS-1$
 
         OracleExecutionFactory ef = new OracleExecutionFactory() {
             public String getTemporaryTableName(String prefix) {
@@ -1393,13 +1373,13 @@ public class TestOracleTranslator {
 
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(ps.executeUpdate()).toReturn(1);
-        Mockito.stub(connection.prepareStatement("INSERT INTO char_test (name) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
+        Mockito.when(ps.executeUpdate()).thenReturn(1);
+        Mockito.when(connection.prepareStatement("INSERT INTO char_test (name) VALUES (?)")).thenReturn(ps); //$NON-NLS-1$
         OracleExecutionFactory ef = new OracleExecutionFactory();
         ef.start();
 
         ExecutionContext executionContext = Mockito.mock(ExecutionContext.class);
-        Mockito.stub(executionContext.getCommandContext()).toReturn(Mockito.mock(CommandContext.class));
+        Mockito.when(executionContext.getCommandContext()).thenReturn(Mockito.mock(CommandContext.class));
         JDBCUpdateExecution update = new JDBCUpdateExecution(command, connection, executionContext,  ef);
         update.execute();
         Mockito.verify(ps, Mockito.times(1)).setObject(1, "Ā", Types.VARCHAR);

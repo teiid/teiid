@@ -18,16 +18,16 @@
 
 package org.teiid.olingo.gzip;
 
-import static org.junit.Assert.*;
-
-import java.util.Collections;
-
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.olingo.web.ODataFilter;
+
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
+import java.util.Collections;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @SuppressWarnings("nls")
 public class TestODataFilter {
@@ -36,16 +36,16 @@ public class TestODataFilter {
         ODataFilter filter = new ODataFilter();
         FilterConfig config = Mockito.mock(FilterConfig.class);
         ServletContext mock = Mockito.mock(ServletContext.class);
-        Mockito.stub(mock.getInitParameterNames()).toReturn(Collections.emptyEnumeration());
-        Mockito.stub(config.getServletContext()).toReturn(mock);
-        Mockito.stub(config.getInitParameterNames()).toReturn(Collections.emptyEnumeration());
+        Mockito.when(mock.getInitParameterNames()).thenReturn(Collections.emptyEnumeration());
+        Mockito.when(config.getServletContext()).thenReturn(mock);
+        Mockito.when(config.getInitParameterNames()).thenReturn(Collections.emptyEnumeration());
 
         //default to 1
         filter.init(config);
         assertEquals("1", filter.getDefaultVdbVersion());
 
         //override
-        Mockito.stub(config.getInitParameter("explicit-vdb-version")).toReturn("false");
+        Mockito.when(config.getInitParameter("explicit-vdb-version")).thenReturn("false");
         filter.init(config);
         assertNull(filter.getDefaultVdbVersion());
     }

@@ -80,12 +80,6 @@
 	        <artifactId>jboss-connector-api_1.7_spec</artifactId>
 	        <scope>provided</scope>
 	    </dependency>
-        <dependency>
-            <groupId>org.jboss.arquillian.testenricher</groupId>
-            <artifactId>arquillian-testenricher-initialcontext</artifactId>
-            <version>${version.org.jboss.arquillian.testenricher}</version>
-            <scope>provided</scope>
-        </dependency>        
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-vfs</artifactId>

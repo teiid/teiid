@@ -12,8 +12,8 @@
         <module name="org.jboss.teiid.api"/>
         <module name="org.apache.cxf" /> <!-- for OAuth -->
         <module name="org.apache.cxf.impl" /> <!-- for OAuth -->
-        <module name="org.apache.cxf.impl.frontend-jaxrs" />  <!-- for OAuth -->
-        <module name="org.picketbox"/>
+<!--        <module name="org.apache.cxf.jaxrs.client" />  &lt;!&ndash; for OAuth &ndash;&gt;-->
+        <module name="org.wildfly.security.elytron"/>
         <module name="org.jboss.as.security"/>
     </dependencies>
 

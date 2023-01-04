@@ -68,7 +68,7 @@ public class InfinispanConnectionFactory implements Closeable {
                 @Override
                 protected ByteBuffer objectToBuffer(Object o,
                         int estimatedSize)
-                        throws IOException, InterruptedException {
+                        throws IOException {
                     try {
                         if (o instanceof InfinispanDocument) {
                             TeiidMarshallerProvider.setCurrentDocument((InfinispanDocument)o);

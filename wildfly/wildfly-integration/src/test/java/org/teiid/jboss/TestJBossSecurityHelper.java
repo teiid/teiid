@@ -18,53 +18,43 @@
 
 package org.teiid.jboss;
 
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.security.auth.Subject;
-
-import org.jboss.as.security.plugins.SecurityDomainContext;
-import org.jboss.security.AuthenticationManager;
-import org.jboss.security.SimplePrincipal;
-import org.jboss.security.plugins.JBossSecurityContext;
-import org.junit.Test;
+import com.sun.security.auth.UserPrincipal;
+import junit.framework.TestCase;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
-import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.vdb.runtime.VDBKey;
+import org.wildfly.security.auth.SupportLevel;
+import org.wildfly.security.auth.principal.NamePrincipal;
+import org.wildfly.security.auth.server.*;
+import org.wildfly.security.auth.server.event.*;
+import org.wildfly.security.credential.Credential;
+import org.wildfly.security.evidence.Evidence;
+import org.wildfly.security.evidence.PasswordGuessEvidence;
+import org.wildfly.security.permission.PermissionVerifier;
 
-import junit.framework.TestCase;
+import java.security.Principal;
+import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
+import java.util.Properties;
 
 @SuppressWarnings("nls")
 public class TestJBossSecurityHelper extends TestCase {
 
-    private JBossSecurityHelper buildSecurityHelper(final String domain, final SecurityDomainContext sdc)
-            throws Exception {
-        Principal p = Mockito.mock(Principal.class);
-        Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
-        HashSet<Principal> principals = new HashSet<Principal>();
-        principals.add(p);
-
-        @SuppressWarnings("serial")
-        JBossSecurityHelper sh = new JBossSecurityHelper() {
-
+    private JBossSecurityHelper buildSecurityHelper(final String domainName, SecurityDomain securityDomain) {
+        return new JBossSecurityHelper() {
             @Override
-            protected SecurityDomainContext getSecurityDomainContext(String securityDomain) {
-                if (securityDomain.equals(domain)) {
-                    return sdc;
+            public SecurityDomain getSecurityDomain(String securityDomainName) {
+                if (securityDomainName.equals(domainName)) {
+                    return securityDomain;
                 }
-                return null;
+                return super.getSecurityDomain(securityDomainName);
             }
         };
-        return sh;
     }
 
     public void testAuthenticate() throws Exception {
@@ -72,67 +62,34 @@ public class TestJBossSecurityHelper extends TestCase {
 
         String domains = "testFile";
 
-        AuthenticationManager authManager = new AuthenticationManager() {
-            public String getSecurityDomain() {
-                return null;
-            }
-            public boolean isValid(Principal principal, Object credential, Subject activeSubject) {
-                return true;
-            }
-            public boolean isValid(Principal principal, Object credential) {
-                return true;
-            }
-            @Override
-            public Principal getTargetPrincipal(Principal anotherDomainPrincipal, Map<String, Object> contextMap) {
-                return null;
-            }
-            @Override
-            public Subject getActiveSubject() {
-                return null;
-            }
-            @Override
-            public void logout(Principal arg0, Subject arg1) {
-            }
-        };
-        final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
+        final SecurityDomain securityDomain = makeSecurityDomain("testFile", new UserPrincipal("user1"), new PasswordGuessEvidence("pass1".toCharArray()));
 
-        JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
+        JBossSecurityHelper ms = buildSecurityHelper(domains, securityDomain);
 
-        Object c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$
-        assertTrue(c instanceof JBossSecurityContext); //$NON-NLS-1$
-        assertEquals(domains, ((JBossSecurityContext)c).getSecurityDomain());
+        SecurityIdentity securityIdentity = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$
+        assertNotNull(securityIdentity);
+        assertEquals("user1", securityIdentity.getPrincipal().getName());
     }
 
-    public void validateSession(boolean securityEnabled) throws Exception {
-        final ArrayList<String> domains = new ArrayList<String>();
-        domains.add("somedomain");
-
-        AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
-        Mockito.stub(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).toReturn(true);
-
-        final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
-
+    public void validateSession() throws Exception {
+        final SecurityDomain securityDomain = makeSecurityDomain("some_domain", new UserPrincipal("steve"), new PasswordGuessEvidence("pass1".toCharArray()));
         SessionServiceImpl jss = new SessionServiceImpl() {
             @Override
-            protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
-                    throws SessionServiceException {
+            protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) {
                 return Mockito.mock(VDBMetaData.class);
             }
         };
-        jss.setSecurityHelper(buildSecurityHelper("somedomain", securityContext));
-        jss.setSecurityDomain("somedomain");
+        jss.setSecurityHelper(buildSecurityHelper("some_domain", securityDomain));
+        jss.setSecurityDomain("some_domain");
 
         try {
             jss.validateSession(String.valueOf(1));
             fail("exception expected"); //$NON-NLS-1$
-        } catch (InvalidSessionException e) {
+        } catch (InvalidSessionException ignore) {
 
         }
 
-        SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1"), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
-        if (securityEnabled) {
-            Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject());
-        }
+        SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve", new Credentials("pass1"), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
 
         String id1 = info.getSessionId();
         jss.validateSession(id1);
@@ -145,23 +102,133 @@ public class TestJBossSecurityHelper extends TestCase {
         try {
             jss.validateSession(id1);
             fail("exception expected"); //$NON-NLS-1$
-        } catch (InvalidSessionException e) {
-
+        } catch (InvalidSessionException ignore) {
         }
 
         try {
             jss.closeSession(id1);
             fail("exception expected"); //$NON-NLS-1$
-        } catch (InvalidSessionException e) {
+        } catch (InvalidSessionException ignore) {
 
         }
     }
 
-    @Test public void testvalidateSession() throws Exception{
-        validateSession(true);
+    public void testValidateSession() throws Exception {
+        validateSession();
     }
 
-    @Test public void testvalidateSession2() throws Exception {
-        validateSession(false);
+    private SecurityDomain makeSecurityDomain(String realmName, Principal principal, PasswordGuessEvidence evidence) {
+        SecurityDomain.Builder securityDomain = SecurityDomain.builder();
+        securityDomain.addRealm(realmName, makeSecurityRealm(realmName, principal, evidence)).build();
+        securityDomain.setDefaultRealmName(realmName);
+        securityDomain.setPermissionMapper((permissionMappable, roles) -> PermissionVerifier.ALL);
+
+        return securityDomain.build();
+    }
+
+    private SecurityRealm makeSecurityRealm(String realmName, Principal userPrincipal, PasswordGuessEvidence evidence) {
+        RealmIdentity realmIdentity = new TestRealmIdentity(realmName, new TestCredential(evidence));
+        return new SecurityRealm() {
+            @Override
+            public SupportLevel getCredentialAcquireSupport(Class<? extends Credential> credentialType, String algorithmName, AlgorithmParameterSpec parameterSpec) {
+                return SupportLevel.UNSUPPORTED;
+            }
+
+            @Override
+            public SupportLevel getEvidenceVerifySupport(Class<? extends Evidence> evidenceType, String algorithmName) {
+                return SupportLevel.SUPPORTED;
+            }
+
+            @Override
+            public RealmIdentity getRealmIdentity(Principal principal) {
+                if (principal instanceof NamePrincipal && principal.getName().equals(userPrincipal.getName())) {
+                    return new TestRealmIdentity(principal.getName(), new TestCredential(evidence));
+                }
+                return realmIdentity;
+            }
+
+            @Override
+            public void handleRealmEvent(RealmEvent event) {
+                if (event instanceof RealmIdentitySuccessfulAuthorizationEvent) {
+                    System.out.println("Realm Identity successful authentication");
+                } else if (event instanceof RealmSuccessfulAuthenticationEvent) {
+                    System.out.println("Realm successful authentication");
+                } else if (event instanceof RealmIdentityFailedAuthorizationEvent) {
+                    System.out.println("Realm Identity: You failed.");
+                } else if (event instanceof RealmFailedAuthenticationEvent) {
+                    System.out.println("Realm: You failed.");
+                } else {
+                    System.out.println("Something else happened.");
+                }
+            }
+        };
+    }
+
+    private static class TestRealmIdentity implements RealmIdentity {
+
+        private final String name;
+        private final Credential credential;
+
+        TestRealmIdentity(final String name, Credential credential) {
+            this.name = name;
+            this.credential = credential;
+        }
+
+        public Principal getRealmIdentityPrincipal() {
+            return new NamePrincipal(name);
+        }
+
+        @Override
+        public SupportLevel getCredentialAcquireSupport(final Class<? extends Credential> credentialType, final String algorithmName, final AlgorithmParameterSpec parameterSpec) {
+            return SupportLevel.SUPPORTED;
+        }
+
+        @Override
+        public <C extends Credential> C getCredential(final Class<C> credentialType) throws RealmUnavailableException {
+            return getCredential(credentialType, null);
+        }
+
+        @Override
+        public SupportLevel getEvidenceVerifySupport(final Class<? extends Evidence> evidenceType, final String algorithmName) {
+            return SupportLevel.SUPPORTED;
+        }
+
+        @Override
+        public boolean verifyEvidence(final Evidence evidence) {
+            return this.credential.verify(evidence);
+        }
+
+        @Override
+        public boolean exists() throws RealmUnavailableException {
+            return true;
+        }
+    }
+
+    private static class TestCredential implements Credential {
+
+        private final PasswordGuessEvidence evidence;
+
+        public TestCredential(PasswordGuessEvidence evidence) {
+            this.evidence = evidence;
+        }
+
+        @Override
+        public boolean canVerify(Evidence evidence) {
+            return evidence instanceof PasswordGuessEvidence;
+        }
+
+        @Override
+        public boolean verify(Evidence evidence) {
+            return evidence instanceof PasswordGuessEvidence && Arrays.equals(this.evidence.getGuess(), ((PasswordGuessEvidence) evidence).getGuess());
+        }
+
+        @Override
+        public Credential clone() {
+            try {
+                return (Credential) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

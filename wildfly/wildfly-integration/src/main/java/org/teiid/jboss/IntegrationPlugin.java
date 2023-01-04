@@ -35,7 +35,7 @@ public class IntegrationPlugin {
         return ResourceBundle.getBundle(IntegrationPlugin.BUNDLE_NAME, locale);
     }
 
-    public static enum Event implements BundleUtil.Event {
+    public enum Event implements BundleUtil.Event {
         TEIID50001,
         TEIID50002,
         TEIID50003,

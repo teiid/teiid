@@ -18,15 +18,6 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.util.Arrays;
-import java.util.TimeZone;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,6 +31,13 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.util.Version;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.Arrays;
+import java.util.TimeZone;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestPostgreSQLTranslator {
@@ -740,7 +738,7 @@ public class TestPostgreSQLTranslator {
     @Test public void testArrayBind() throws Exception {
         PreparedStatement ps = Mockito.mock(PreparedStatement.class);
         Connection c = Mockito.mock(Connection.class);
-        Mockito.stub(ps.getConnection()).toReturn(c);
+        Mockito.when(ps.getConnection()).thenReturn(c);
         TRANSLATOR.bindValue(ps, new Array(String.class,
                 Arrays.asList((Expression)new Literal("a", String.class))), String[].class, 1);
         Mockito.verify(c, Mockito.times(1)).createArrayOf("varchar", new Object[] {"a"});

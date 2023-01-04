@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<layer-spec xmlns="urn:jboss:galleon:layer-spec:1.0" name="teiid-common-core">
+    <!-- Will install the JBoss Modules org.jboss.teiid.common-core module. -->
+    <packages>
+        <package name="org.jboss.teiid.common-core"/>
+    </packages>
+</layer-spec>

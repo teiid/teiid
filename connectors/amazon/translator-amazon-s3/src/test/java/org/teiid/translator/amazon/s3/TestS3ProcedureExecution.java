@@ -18,12 +18,12 @@
 
 package org.teiid.translator.amazon.s3;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ws.WSConnection;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestS3ProcedureExecution {
@@ -33,7 +33,7 @@ public class TestS3ProcedureExecution {
         S3ProcedureExecution s3ProcedureExecution = new S3ProcedureExecution(null, null, null, null, conn);
         assertEquals("https://s3.z.amazonaws.com/y/x", s3ProcedureExecution.determineEndpoint("x", "y", "z"));
 
-        Mockito.stub(conn.getEndPoint()).toReturn("http://localhost:9000");
+        Mockito.when(conn.getEndPoint()).thenReturn("http://localhost:9000");
         s3ProcedureExecution = new S3ProcedureExecution(null, null, null, null, conn);
         assertEquals("http://localhost:9000/y/x", s3ProcedureExecution.determineEndpoint("x", "y", "z"));
     }

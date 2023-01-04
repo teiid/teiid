@@ -18,38 +18,10 @@
 
 package org.teiid.runtime;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.math.BigDecimal;
-import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import javax.transaction.*;
-import javax.transaction.xa.XAResource;
-
+import io.opentracing.Scope;
+import io.opentracing.mock.MockSpan;
+import io.opentracing.mock.MockTracer;
+import io.opentracing.util.GlobalTracer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -66,11 +38,7 @@ import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.*;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
@@ -88,32 +56,32 @@ import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.Logger;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.resource.api.XAImporter;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
-import org.teiid.translator.DataNotAvailableException;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorBatchException;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.WireProtocol;
 
-import io.opentracing.Scope;
-import io.opentracing.mock.MockSpan;
-import io.opentracing.mock.MockTracer;
-import io.opentracing.util.GlobalTracer;
+import javax.transaction.*;
+import javax.transaction.xa.XAResource;
+import java.io.*;
+import java.math.BigDecimal;
+import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
@@ -275,7 +243,7 @@ public class TestEmbeddedServer {
             @Override
             public boolean enlistResource(XAResource xaRes)
                     throws RollbackException, IllegalStateException, SystemException {
-                throw new UnsupportedOperationException();
+                return true;
             }
 
             @Override
@@ -2724,8 +2692,8 @@ public class TestEmbeddedServer {
         MockTracer tracer = new MockTracer();
         GlobalTracerInjector.setTracer(tracer);
         Logger logger = Mockito.mock(Logger.class);
-        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)).toReturn(false);
-        Mockito.stub(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)).toReturn(false);
+        Mockito.when(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)).thenReturn(false);
+        Mockito.when(logger.isEnabled(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)).thenReturn(false);
         Logger old = org.teiid.logging.LogManager.setLogListener(logger);
         try {
             SocketConfiguration s = new SocketConfiguration();

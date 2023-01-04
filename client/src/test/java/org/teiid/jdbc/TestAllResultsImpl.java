@@ -18,23 +18,9 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Properties;
-import java.util.TimeZone;
-
+import net.jcip.annotations.NotThreadSafe;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -47,7 +33,14 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
 
-import net.jcip.annotations.NotThreadSafe;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 @NotThreadSafe
 public class TestAllResultsImpl {
@@ -289,11 +282,11 @@ public class TestAllResultsImpl {
 
     @Test public void testGetFetchSize() throws Exception {
         StatementImpl s = mock(StatementImpl.class);
-        stub(s.getFetchSize()).toReturn(500);
+        when(s.getFetchSize()).thenReturn(500);
         ConnectionImpl c = mock(ConnectionImpl.class);
-        stub(s.getConnection()).toReturn(c);
+        when(s.getConnection()).thenReturn(c);
         Properties p = new Properties();
-        stub(c.getConnectionProps()).toReturn(p);
+        when(c.getConnectionProps()).thenReturn(p);
         ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg2(), s);
         assertEquals(500, rs.getFetchSize());
         rs.setFetchSize(100);
@@ -712,7 +705,7 @@ public class TestAllResultsImpl {
         next.setException(new Throwable());
         ResultsFuture<ResultsMessage> rf = new ResultsFuture<ResultsMessage>();
         rf.getResultsReceiver().receiveResults(next);
-        Mockito.stub(statement.getDQP().processCursorRequest(0, 2, 0)).toReturn(rf);
+        Mockito.when(statement.getDQP().processCursorRequest(0, 2, 0)).thenReturn(rf);
         ResultSetImpl cs = new ResultSetImpl(resultsMsg, statement, null, 2);
         cs.next();
         cs.next();
@@ -728,10 +721,10 @@ public class TestAllResultsImpl {
         DQP dqp = statement.getDQP();
         if (dqp == null) {
             dqp = mock(DQP.class);
-            stub(statement.getDQP()).toReturn(dqp);
+            when(statement.getDQP()).thenReturn(dqp);
         }
-        stub(statement.getFetchSize()).toReturn(fetchSize);
-        stub(dqp.processCursorRequest(Matchers.eq(REQUEST_ID), Matchers.anyInt(), Matchers.eq(fetchSize))).toAnswer(new Answer<ResultsFuture<ResultsMessage>>() {
+        when(statement.getFetchSize()).thenReturn(fetchSize);
+        when(dqp.processCursorRequest(Mockito.eq(REQUEST_ID), Mockito.anyInt(), Mockito.eq(fetchSize))).thenAnswer(new Answer<ResultsFuture<ResultsMessage>>() {
             @Override
             public ResultsFuture<ResultsMessage> answer(
                     InvocationOnMock invocation) throws Throwable {

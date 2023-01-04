@@ -54,34 +54,34 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 
     @Override
     public V get(K key) {
-        return this.cacheStore.with(this.classloader).get(key);
+        return this.cacheStore.get(key);
     }
 
     public V put(K key, V value) {
-        return this.cacheStore.with(this.classloader).put(key, value);
+        return this.cacheStore.put(key, value);
     }
 
     @Override
     public V put(K key, V value, Long ttl) {
         if (ttl != null) {
-            return this.cacheStore.with(this.classloader).put(key, value, ttl, TimeUnit.MILLISECONDS);
+            return this.cacheStore.put(key, value, ttl, TimeUnit.MILLISECONDS);
         }
-        return this.cacheStore.with(this.classloader).put(key, value);
+        return this.cacheStore.put(key, value);
     }
 
     @Override
     public V remove(K key) {
-        return this.cacheStore.with(this.classloader).remove(key);
+        return this.cacheStore.remove(key);
     }
 
     @Override
     public int size() {
-        return this.cacheStore.with(this.classloader).size();
+        return this.cacheStore.size();
     }
 
     @Override
     public void clear() {
-        this.cacheStore.with(this.classloader).clear();
+        this.cacheStore.clear();
     }
 
     @Override
@@ -91,6 +91,6 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 
     @Override
     public Set<K> keySet() {
-        return this.cacheStore.with(this.classloader).keySet();
+        return this.cacheStore.keySet();
     }
 }

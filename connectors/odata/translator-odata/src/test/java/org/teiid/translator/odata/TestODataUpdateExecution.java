@@ -17,27 +17,6 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.activation.DataSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -51,18 +30,29 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
-import org.teiid.language.QueryExpression;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.ws.WSConnection;
+
+import javax.activation.DataSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
+import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.http.HTTPBinding;
+import java.io.*;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataUpdateExecution {
@@ -90,12 +80,12 @@ public class TestODataUpdateExecution {
         headers.put(WSConnection.STATUS_CODE, new Integer(responseCode[0]));
 
         Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Mockito.when(dispatch.getRequestContext()).thenReturn(headers);
+        Mockito.when(dispatch.getResponseContext()).thenReturn(headers);
 
-        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING),
+        Mockito.when(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING),
                 Mockito.anyString(), Mockito.eq(DataSource.class),
-                Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+                Mockito.eq(Mode.MESSAGE))).thenReturn(dispatch);
 
         DataSource ds = new DataSource() {
             @Override
@@ -117,7 +107,7 @@ public class TestODataUpdateExecution {
             }
         };
         ArgumentCaptor<DataSource> payload = ArgumentCaptor.forClass(DataSource.class);
-        Mockito.stub(dispatch.invoke(payload.capture())).toReturn(ds);
+        Mockito.when(dispatch.invoke(payload.capture())).thenReturn(ds);
 
         UpdateExecution execution = translator.createUpdateExecution(cmd,
                 context, utility.createRuntimeMetadata(), connection);
@@ -154,7 +144,7 @@ public class TestODataUpdateExecution {
         reader.close();
 
         String expected =  "<category term=\"NorthwindModel.Category\" "
-                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"></category>"
+                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"/>"
                 + "<content type=\"application/xml\">"
                 + "<m:properties><d:CategoryID m:type=\"Edm.Int32\">1</d:CategoryID>"
                 + "<d:CategoryName>catname</d:CategoryName><d:Description>desc</d:Description>"
@@ -173,8 +163,7 @@ public class TestODataUpdateExecution {
         reader.close();
 
         String expected = "<category term=\"NorthwindModel.Category\" "
-                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\">"
-                + "</category>"
+                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"/>"
                 + "<content type=\"application/xml\">"
                 + "<m:properties>"
                 + "<d:CategoryName>catname</d:CategoryName>"
@@ -236,8 +225,7 @@ public class TestODataUpdateExecution {
         String payload = helpExecute(query, result, expectedURL, new int[] {201, 201}, metadata, 1);
 
         String expected = "<category term=\"PM1.G2\" "
-                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\">"
-                + "</category>"
+                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"/>"
                 + "<content type=\"application/xml\">"
                 + "<m:properties>"
                 + "<d:e1 m:type=\"Edm.Int32\">1</d:e1>"
@@ -305,8 +293,7 @@ public class TestODataUpdateExecution {
         String payload = helpExecute(query, result, expectedURL, new int[] {200, 204}, metadata, 2);
 
         String expected = "<category term=\"PM1.G2\" "
-                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\">"
-                + "</category>"
+                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"/>"
                 + "<content type=\"application/xml\">"
                 + "<m:properties><d:e3 m:type=\"Collection(Edm.Int32)\">"
                 + "<d:element>1</d:element>"

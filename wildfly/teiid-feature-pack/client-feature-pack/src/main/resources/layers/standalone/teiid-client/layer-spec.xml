@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<layer-spec xmlns="urn:jboss:galleon:layer-spec:1.0" name="teiid-client">
+    <!-- Will install the JBoss Modules org.jboss.teiid.client module. -->
+    <packages>
+        <package name="org.jboss.teiid.client"/>
+    </packages>
+</layer-spec>

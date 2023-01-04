@@ -18,32 +18,20 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.*;
-
-import java.sql.BatchUpdateException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
-import org.teiid.language.BatchedUpdates;
-import org.teiid.language.Command;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.Parameter;
+import org.teiid.language.*;
 import org.teiid.translator.TranslatorBatchException;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestJDBCUpdateExecution {
@@ -62,8 +50,8 @@ public class TestJDBCUpdateExecution {
         command.setParameterValues(Arrays.asList(Arrays.asList(1, 2), Arrays.asList(1, 2)).iterator());
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement p = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(p.executeBatch()).toReturn(new int [] {1, 1});
-        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, ?)")).toReturn(p); //$NON-NLS-1$
+        Mockito.when(p.executeBatch()).thenReturn(new int [] {1, 1});
+        Mockito.when(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, ?)")).thenReturn(p); //$NON-NLS-1$
 
         JDBCExecutionFactory config = new JDBCExecutionFactory();
 
@@ -88,8 +76,8 @@ public class TestJDBCUpdateExecution {
         command.setParameterValues(Arrays.asList(Arrays.asList("a", value)).iterator());
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement p = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(p.executeBatch()).toReturn(new int [] {1});
-        Mockito.stub(connection.prepareStatement("INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES (?, st_geomfromwkb(?, ?))")).toReturn(p); //$NON-NLS-1$
+        Mockito.when(p.executeBatch()).thenReturn(new int [] {1});
+        Mockito.when(connection.prepareStatement("INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES (?, st_geomfromwkb(?, ?))")).thenReturn(p); //$NON-NLS-1$
 
         JDBCExecutionFactory config = new JDBCExecutionFactory();
 
@@ -105,7 +93,7 @@ public class TestJDBCUpdateExecution {
 
         Connection connection = Mockito.mock(Connection.class);
         Statement s = Mockito.mock(Statement.class);
-        Mockito.stub(connection.createStatement()).toReturn(s);
+        Mockito.when(connection.createStatement()).thenReturn(s);
 
         JDBCExecutionFactory config = new JDBCExecutionFactory() {
             @Override
@@ -120,9 +108,9 @@ public class TestJDBCUpdateExecution {
         };
         ResultSet r = Mockito.mock(ResultSet.class);
         ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
-        Mockito.stub(r.getMetaData()).toReturn(rs);
+        Mockito.when(r.getMetaData()).thenReturn(rs);
 
-        Mockito.stub(s.getGeneratedKeys()).toReturn(r);
+        Mockito.when(s.getGeneratedKeys()).thenReturn(r);
 
         FakeExecutionContextImpl context = new FakeExecutionContextImpl();
         context.setGeneratedKeyColumns(command);
@@ -139,8 +127,8 @@ public class TestJDBCUpdateExecution {
         };
 
         s = Mockito.mock(Statement.class);
-        Mockito.stub(connection.createStatement()).toReturn(s);
-        Mockito.stub(s.getGeneratedKeys()).toReturn(r);
+        Mockito.when(connection.createStatement()).thenReturn(s);
+        Mockito.when(s.getGeneratedKeys()).thenReturn(r);
 
         updateExecution = new JDBCUpdateExecution(command, connection, context, config);
         updateExecution.execute();
@@ -153,7 +141,7 @@ public class TestJDBCUpdateExecution {
         ((Literal)((ExpressionValueSource)command.getValueSource()).getValues().get(0)).setBindEligible(true);
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement s = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, 2)", new String[] {"IntKey"})).toReturn(s);
+        Mockito.when(connection.prepareStatement("INSERT INTO SmallA (IntKey, IntNum) VALUES (?, 2)", new String[] {"IntKey"})).thenReturn(s);
 
         JDBCExecutionFactory config = new JDBCExecutionFactory() {
             @Override
@@ -167,12 +155,12 @@ public class TestJDBCUpdateExecution {
             }
         };
         ResultSet r = Mockito.mock(ResultSet.class);
-        Mockito.stub(r.next()).toReturn(true).toReturn(false);
+        Mockito.when(r.next()).thenReturn(true).thenReturn(false);
 
         ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
-        Mockito.stub(r.getMetaData()).toReturn(rs);
+        Mockito.when(r.getMetaData()).thenReturn(rs);
 
-        Mockito.stub(s.getGeneratedKeys()).toReturn(r);
+        Mockito.when(s.getGeneratedKeys()).thenReturn(r);
 
         FakeExecutionContextImpl context = new FakeExecutionContextImpl();
         context.setGeneratedKeyColumns(command);
@@ -205,16 +193,16 @@ public class TestJDBCUpdateExecution {
         command.setParameterValues(vals.iterator());
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement p = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(p.executeBatch()).toReturn(new int[] {1, 1});
-        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(p); //$NON-NLS-1$
+        Mockito.when(p.executeBatch()).thenReturn(new int[] {1, 1});
+        Mockito.when(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).thenReturn(p); //$NON-NLS-1$
 
         JDBCExecutionFactory config = new JDBCExecutionFactory();
         config.setMaxPreparedInsertBatchSize(2);
         ResultSet r = Mockito.mock(ResultSet.class);
         ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
-        Mockito.stub(r.getMetaData()).toReturn(rs);
+        Mockito.when(r.getMetaData()).thenReturn(rs);
 
-        Mockito.stub(p.getGeneratedKeys()).toReturn(r);
+        Mockito.when(p.getGeneratedKeys()).thenReturn(r);
 
         FakeExecutionContextImpl context = new FakeExecutionContextImpl();
 
@@ -228,15 +216,15 @@ public class TestJDBCUpdateExecution {
         Insert command1 = (Insert)TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into BQT1.SmallA (StringKey) values ('1')"); //$NON-NLS-1$
         Connection connection = Mockito.mock(Connection.class);
         Statement s = Mockito.mock(Statement.class);
-        Mockito.stub(s.executeBatch()).toReturn(new int[] {1, 1});
-        Mockito.stub(connection.createStatement()).toReturn(s);
+        Mockito.when(s.executeBatch()).thenReturn(new int[] {1, 1});
+        Mockito.when(connection.createStatement()).thenReturn(s);
 
         JDBCExecutionFactory config = new JDBCExecutionFactory();
         ResultSet r = Mockito.mock(ResultSet.class);
         ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
-        Mockito.stub(r.getMetaData()).toReturn(rs);
+        Mockito.when(r.getMetaData()).thenReturn(rs);
 
-        Mockito.stub(s.getGeneratedKeys()).toReturn(r);
+        Mockito.when(s.getGeneratedKeys()).thenReturn(r);
 
         FakeExecutionContextImpl context = new FakeExecutionContextImpl();
 
@@ -250,15 +238,15 @@ public class TestJDBCUpdateExecution {
         Insert command1 = (Insert)TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into BQT1.SmallA (StringKey) values ('1')"); //$NON-NLS-1$
         Connection connection = Mockito.mock(Connection.class);
         Statement s = Mockito.mock(Statement.class);
-        Mockito.stub(s.executeBatch()).toThrow(new BatchUpdateException(new int[] {Statement.EXECUTE_FAILED}));
-        Mockito.stub(connection.createStatement()).toReturn(s);
+        Mockito.when(s.executeBatch()).thenThrow(new BatchUpdateException(new int[] {Statement.EXECUTE_FAILED}));
+        Mockito.when(connection.createStatement()).thenReturn(s);
 
         JDBCExecutionFactory config = new JDBCExecutionFactory();
         ResultSet r = Mockito.mock(ResultSet.class);
         ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
-        Mockito.stub(r.getMetaData()).toReturn(rs);
+        Mockito.when(r.getMetaData()).thenReturn(rs);
 
-        Mockito.stub(s.getGeneratedKeys()).toReturn(r);
+        Mockito.when(s.getGeneratedKeys()).thenReturn(r);
 
         FakeExecutionContextImpl context = new FakeExecutionContextImpl();
 
@@ -283,13 +271,13 @@ public class TestJDBCUpdateExecution {
 
         Connection connection = Mockito.mock(Connection.class);
         PreparedStatement s = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(s.executeBatch()).toThrow(new BatchUpdateException(new int[] {1, Statement.EXECUTE_FAILED}));
-        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(s);
+        Mockito.when(s.executeBatch()).thenThrow(new BatchUpdateException(new int[] {1, Statement.EXECUTE_FAILED}));
+        Mockito.when(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).thenReturn(s);
 
         JDBCExecutionFactory config = new JDBCExecutionFactory();
         ResultSet r = Mockito.mock(ResultSet.class);
         ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
-        Mockito.stub(r.getMetaData()).toReturn(rs);
+        Mockito.when(r.getMetaData()).thenReturn(rs);
 
         FakeExecutionContextImpl context = new FakeExecutionContextImpl();
 
@@ -307,10 +295,10 @@ public class TestJDBCUpdateExecution {
         updateExecution = new JDBCUpdateExecution(command, connection, context, config);
         command.setParameterValues(Arrays.asList(Arrays.asList(1), Arrays.asList(1)).iterator());
         s = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(s);
-        Mockito.stub(s.executeBatch())
-        .toReturn(new int[] {1})
-        .toThrow(new BatchUpdateException(new int[] {Statement.EXECUTE_FAILED}));
+        Mockito.when(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).thenReturn(s);
+        Mockito.when(s.executeBatch())
+        .thenReturn(new int[] {1})
+        .thenThrow(new BatchUpdateException(new int[] {Statement.EXECUTE_FAILED}));
         updateExecution.setMaxPreparedInsertBatchSize(1);
         try {
             updateExecution.execute();
@@ -325,9 +313,9 @@ public class TestJDBCUpdateExecution {
         updateExecution = new JDBCUpdateExecution(command, connection, context, config);
         command.setParameterValues(Arrays.asList(Arrays.asList(1), Arrays.asList(1)).iterator());
         s = Mockito.mock(PreparedStatement.class);
-        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(s);
-        Mockito.stub(s.executeBatch())
-        .toThrow(new BatchUpdateException(new int[] {1}));
+        Mockito.when(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).thenReturn(s);
+        Mockito.when(s.executeBatch())
+        .thenThrow(new BatchUpdateException(new int[] {1}));
         try {
             updateExecution.execute();
             fail();

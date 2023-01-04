@@ -21,12 +21,12 @@
 					<execution>
 						<phase>process-resources</phase>
 						<configuration>
-							<tasks>
+							<target>
 								<tstamp />
 								<replace dir="${project.build.outputDirectory}" token="@build-date@" value="${DSTAMP}">
 									<include name="**/*.properties" />
 								</replace>
-							</tasks>
+							</target>
 						</configuration>
 						<goals>
 							<goal>run</goal>

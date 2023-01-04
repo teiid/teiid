@@ -12,7 +12,5 @@
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.resource.api"/>
-        <module name="org.codehaus.jackson.jackson-core-asl" />
-        <module name="org.codehaus.jackson.jackson-mapper-asl" />
     </dependencies>
 </module>

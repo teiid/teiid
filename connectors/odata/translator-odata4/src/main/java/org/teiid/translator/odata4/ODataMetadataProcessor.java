@@ -469,6 +469,9 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if(index != -1) {
                     toTable.setNameInSource(binding.getTarget());
                 }
+                if(toTable == null) {
+                    continue;
+                }
             } else if (property.isContainsTarget()) {
                 // it is defined the set of rows are specific to this EntitySet
                 toTable = addNavigationAsTable(mf, metadata, fromTable, property);

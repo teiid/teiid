@@ -18,21 +18,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
-
-import java.sql.ResultSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,6 +48,14 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
+
+import java.sql.ResultSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestDQPCore {
@@ -117,7 +110,7 @@ public class TestDQPCore {
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         context.getVDB().addAttachment(ConnectorManagerRepository.class, repo);
-        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(agds);
+        Mockito.when(repo.getConnectorManager(Mockito.anyString())).thenReturn(agds);
         BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
         bm.setInlineLobs(false);
         FakeBufferService bs = new FakeBufferService(bm, bm);

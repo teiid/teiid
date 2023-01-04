@@ -46,7 +46,7 @@ public class TestSalesforceConnectionImpl {
         dr.setDeletedDate(c);
         dr.setId("id");
         gdr.setDeletedRecords(new DeletedRecord[] {dr});
-        Mockito.stub(pc.getDeleted("x", null, null)).toReturn(gdr);
+        Mockito.when(pc.getDeleted("x", null, null)).thenReturn(gdr);
         SalesforceConnectionImpl sfci = new SalesforceConnectionImpl(pc);
         DeletedResult result = sfci.getDeleted("x", null, null);
         assertEquals(1, result.getResultRecords().size());

@@ -22,13 +22,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.ietf.jgss.GSSCredential;
 
 
-public class GSSResult {
+public class GSSResult<CtxObj> {
     private static String NULL_TOKEN = "Auth validated with no further peer token ";
     private static AtomicLong COUNT = new AtomicLong(0);
 
     private byte[] serviceToken;
     private boolean authenticated;
-    private Object securityContext;
+    private CtxObj securityContext;
     private String userName;
     private GSSCredential delegationCredential;
 
@@ -57,11 +57,11 @@ public class GSSResult {
         return this.serviceToken;
     }
 
-    public void setSecurityContext(Object sc) {
+    public void setSecurityContext(CtxObj sc) {
         this.securityContext = sc;
     }
 
-    public Object getSecurityContext() {
+    public CtxObj getSecurityContext() {
         return this.securityContext;
     }
 

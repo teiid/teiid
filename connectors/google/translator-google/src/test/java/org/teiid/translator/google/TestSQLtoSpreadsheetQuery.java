@@ -18,23 +18,13 @@
 
 package org.teiid.translator.google;
 
-import static org.junit.Assert.*;
-
-import java.util.LinkedHashMap;
-import java.util.Properties;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
-import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.Insert;
-import org.teiid.language.Select;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.metadata.CompositeMetadataStore;
@@ -46,15 +36,17 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
-import org.teiid.translator.google.api.metadata.Column;
-import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
-import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.google.api.metadata.Util;
-import org.teiid.translator.google.api.metadata.Worksheet;
+import org.teiid.translator.google.api.metadata.*;
 import org.teiid.translator.google.visitor.SpreadsheetDeleteVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetInsertVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
+
+import java.util.LinkedHashMap;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests transformation from Teiid Query to worksheet Query.
@@ -84,7 +76,7 @@ public class TestSQLtoSpreadsheetQuery {
     private QueryMetadataInterface dummySpreadsheetMetadata() throws Exception {
         GoogleSpreadsheetConnection conn = Mockito.mock(GoogleSpreadsheetConnection.class);
 
-        Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
+        Mockito.when(conn.getSpreadsheetInfo()).thenReturn(people);
 
         MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
         GoogleMetadataProcessor processor = new GoogleMetadataProcessor();
@@ -228,7 +220,7 @@ public class TestSQLtoSpreadsheetQuery {
         String sql="insert into PeopleList(A,B,C) values ('String,String', 'val', 15.5)";
         Insert insert = (Insert)getCommand(sql);
         GoogleSpreadsheetConnection gsc = Mockito.mock(GoogleSpreadsheetConnection.class);
-        Mockito.stub(gsc.getSpreadsheetInfo()).toReturn(people);
+        Mockito.when(gsc.getSpreadsheetInfo()).thenReturn(people);
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
         SpreadsheetUpdateExecution sue = new SpreadsheetUpdateExecution(insert, gsc, ec, rm);

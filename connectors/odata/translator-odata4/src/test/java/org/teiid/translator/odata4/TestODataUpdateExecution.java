@@ -17,48 +17,30 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.activation.DataSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-
-import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
-import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.core.util.UnitTestUtil;
-import org.teiid.language.Call;
 import org.teiid.language.Command;
-import org.teiid.language.QueryExpression;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.ws.WSConnection;
+
+import javax.activation.DataSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
+import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.http.HTTPBinding;
+import java.io.*;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataUpdateExecution {
@@ -82,11 +64,11 @@ public class TestODataUpdateExecution {
         headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
         Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Mockito.when(dispatch.getRequestContext()).thenReturn(headers);
+        Mockito.when(dispatch.getResponseContext()).thenReturn(headers);
 
-        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
-                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.when(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
+                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).thenReturn(dispatch);
 
         DataSource ds = new DataSource() {
             @Override
@@ -108,7 +90,7 @@ public class TestODataUpdateExecution {
             }
         };
         ArgumentCaptor<DataSource> data = ArgumentCaptor.forClass(DataSource.class);
-        Mockito.stub(dispatch.invoke(data.capture())).toReturn(ds);
+        Mockito.when(dispatch.invoke(data.capture())).thenReturn(ds);
 
         UpdateExecution execution = translator
                 .createUpdateExecution(cmd, context,

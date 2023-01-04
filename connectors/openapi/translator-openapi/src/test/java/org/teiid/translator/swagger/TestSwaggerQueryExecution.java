@@ -17,27 +17,6 @@
  */
 package org.teiid.translator.swagger;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
-import javax.activation.DataSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -50,6 +29,18 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ws.WSConnection;
+
+import javax.activation.DataSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
+import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.http.HTTPBinding;
+import java.io.*;
+import java.net.URLDecoder;
+import java.sql.Timestamp;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings({ "nls", "unused" })
 public class TestSwaggerQueryExecution {
@@ -86,13 +77,13 @@ public class TestSwaggerQueryExecution {
         WSConnection connection = Mockito.mock(WSConnection.class);
 
         Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-        Mockito.stub(dispatch.getRequestContext()).toReturn(userHeaders);
-        Mockito.stub(dispatch.getResponseContext()).toReturn(userHeaders);
+        Mockito.when(dispatch.getRequestContext()).thenReturn(userHeaders);
+        Mockito.when(dispatch.getResponseContext()).thenReturn(userHeaders);
 
-        Mockito.stub(connection.createDispatch(
+        Mockito.when(connection.createDispatch(
                 Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
                 Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE)))
-                .toReturn(dispatch);
+                .thenReturn(dispatch);
 
         DataSource outputDS = new DataSource() {
             @Override
@@ -117,8 +108,8 @@ public class TestSwaggerQueryExecution {
                 return "application/json";
             }
         };
-        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class)))
-                .toReturn(outputDS);
+        Mockito.when(dispatch.invoke(Mockito.nullable(DataSource.class)))
+                .thenReturn(outputDS);
 
         ProcedureExecution execution = translator.createProcedureExecution(
                 (Call) cmd, context, utility.createRuntimeMetadata(),

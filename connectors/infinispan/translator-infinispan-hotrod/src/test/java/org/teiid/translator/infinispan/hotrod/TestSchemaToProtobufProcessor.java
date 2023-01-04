@@ -17,11 +17,6 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.*;
-
-import java.io.FileReader;
-import java.util.Properties;
-
 import org.infinispan.commons.api.BasicCache;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -31,6 +26,11 @@ import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.parser.QueryParser;
+
+import java.io.FileReader;
+import java.util.Properties;
+
+import static org.junit.Assert.assertEquals;
 
 public class TestSchemaToProtobufProcessor {
 
@@ -42,8 +42,8 @@ public class TestSchemaToProtobufProcessor {
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
         InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
         BasicCache cache = Mockito.mock(BasicCache.class);
-        Mockito.stub(cache.getName()).toReturn("default");
-        Mockito.stub(conn.getCache()).toReturn(cache);
+        Mockito.when(cache.getName()).thenReturn("default");
+        Mockito.when(conn.getCache()).thenReturn(cache);
         ProtobufResource resource = tool.process(mf, conn);
 
         String expected = "package model;\n" +
@@ -135,8 +135,8 @@ public class TestSchemaToProtobufProcessor {
         tool.setIndexMessages(true);
         InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
         BasicCache cache = Mockito.mock(BasicCache.class);
-        Mockito.stub(cache.getName()).toReturn("default");
-        Mockito.stub(conn.getCache()).toReturn(cache);
+        Mockito.when(cache.getName()).thenReturn("default");
+        Mockito.when(conn.getCache()).thenReturn(cache);
         ProtobufResource resource = tool.process(mf, conn);
 
         String expected = "package model;\n" +
@@ -207,8 +207,8 @@ public class TestSchemaToProtobufProcessor {
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables_bad.proto");
         InfinispanConnection conn = Mockito.mock(InfinispanConnection.class);
         BasicCache cache = Mockito.mock(BasicCache.class);
-        Mockito.stub(cache.getName()).toReturn("foo");
-        Mockito.stub(conn.getCache()).toReturn(cache);
+        Mockito.when(cache.getName()).thenReturn("foo");
+        Mockito.when(conn.getCache()).thenReturn(cache);
         ProtobufResource resource = tool.process(mf, conn);
 
         String expected = "package model;\n" +

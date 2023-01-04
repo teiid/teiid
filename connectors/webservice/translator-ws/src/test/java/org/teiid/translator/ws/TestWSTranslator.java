@@ -18,24 +18,6 @@
 
 package org.teiid.translator.ws;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayInputStream;
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.activation.DataSource;
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service;
-import javax.xml.ws.handler.MessageContext;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
@@ -51,6 +33,19 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+
+import javax.activation.DataSource;
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service;
+import javax.xml.ws.handler.MessageContext;
+import java.io.ByteArrayInputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings("nls")
 public class TestWSTranslator {
@@ -85,11 +80,11 @@ public class TestWSTranslator {
         RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
         Dispatch<Object> mockDispatch = mockDispatch();
         DataSource source = Mockito.mock(DataSource.class);
-        Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(source);
-        Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+        Mockito.when(mockDispatch.invoke(Mockito.nullable(DataSource.class))).thenReturn(source);
+        Mockito.when(mockConnection.createDispatch(Mockito.any(String.class), Mockito.nullable(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).thenReturn(mockDispatch);
         CommandBuilder cb = new CommandBuilder(tm);
 
-        Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null)");
+        Call call = (Call)cb.getCommand("call invokeHttp('GET', null, 'http://localhost/service')");
         BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
         pe.execute();
         pe.getOutputParameterValues();
@@ -97,8 +92,8 @@ public class TestWSTranslator {
         mockConnection = Mockito.mock(WSConnection.class);
         mockDispatch = Mockito.mock(Dispatch.class);
         StAXSource ssource = Mockito.mock(StAXSource.class);
-        Mockito.stub(mockDispatch.invoke(Mockito.any(StAXSource.class))).toReturn(ssource);
-        Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+        Mockito.when(mockDispatch.invoke(Mockito.any(StAXSource.class))).thenReturn(ssource);
+        Mockito.when(mockConnection.createDispatch(Mockito.any(String.class), Mockito.nullable(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).thenReturn(mockDispatch);
         call = (Call)cb.getCommand("call invoke()");
         WSProcedureExecution wpe = new WSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
         wpe.execute();
@@ -118,12 +113,12 @@ public class TestWSTranslator {
         Dispatch<Object> mockDispatch = mockDispatch();
         DataSource mock = Mockito.mock(DataSource.class);
         ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
-        Mockito.stub(mock.getInputStream()).toReturn(baos);
-        Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
-        Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+        Mockito.when(mock.getInputStream()).thenReturn(baos);
+        Mockito.when(mockDispatch.invoke(Mockito.nullable(DataSource.class))).thenReturn(mock);
+        Mockito.when(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).thenReturn(mockDispatch);
         CommandBuilder cb = new CommandBuilder(tm);
 
-        Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, true)");
+        Call call = (Call)cb.getCommand("call invokeHttp('GET', null, 'http://localhost/service', true)");
         BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
         pe.execute();
         List<?> result = pe.getOutputParameterValues();
@@ -150,12 +145,12 @@ public class TestWSTranslator {
         Dispatch<Object> mockDispatch = mockDispatch();
         DataSource mock = Mockito.mock(DataSource.class);
         ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
-        Mockito.stub(mock.getInputStream()).toReturn(baos);
-        Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
-        Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+        Mockito.when(mock.getInputStream()).thenReturn(baos);
+        Mockito.when(mockDispatch.invoke(Mockito.nullable(DataSource.class))).thenReturn(mock);
+        Mockito.when(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).thenReturn(mockDispatch);
         CommandBuilder cb = new CommandBuilder(tm);
 
-        Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, false, '{\"ContentType\":\"application/json\"}')");
+        Call call = (Call)cb.getCommand("call invokeHttp('GET', null, 'http://localhost/service', false, '{\"ContentType\":\"application/json\"}')");
         BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
         pe.execute();
 
@@ -168,9 +163,9 @@ public class TestWSTranslator {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put(WSConnection.STATUS_CODE, 200);
         Map<String, Object> requestMap = new HashMap<String, Object>();
-        Mockito.stub(mockDispatch.getRequestContext()).toReturn(requestMap);
+        Mockito.when(mockDispatch.getRequestContext()).thenReturn(requestMap);
         requestMap.put(MessageContext.HTTP_REQUEST_HEADERS, new LinkedHashMap<String, List<String>>());
-        Mockito.stub(mockDispatch.getResponseContext()).toReturn(map);
+        Mockito.when(mockDispatch.getResponseContext()).thenReturn(map);
         return mockDispatch;
     }
 

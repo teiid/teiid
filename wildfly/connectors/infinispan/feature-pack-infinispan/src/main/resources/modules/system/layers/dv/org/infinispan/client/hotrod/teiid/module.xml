@@ -13,7 +13,7 @@
     <dependencies>
         <module name="javax.api"/>
         <module name="com.google.code.gson"/>
-        <module name="io.netty"/>
+        <module name="io.netty.netty-handler"/>
         <module name="io.reactivex.rxjava2.rxjava"/>
         <module name="javax.transaction.api"/>
         <module name="org.infinispan.commons" slot="teiid"/>

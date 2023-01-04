@@ -1,0 +1,5 @@
+<config xmlns="urn:jboss:galleon:config:1.0" model="standalone">
+    <layers>
+        <include name="teiid-rest-service"/>
+    </layers>
+</config>

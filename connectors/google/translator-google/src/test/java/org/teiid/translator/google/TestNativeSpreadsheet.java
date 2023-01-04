@@ -18,11 +18,6 @@
 
 package org.teiid.translator.google;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -36,6 +31,11 @@ import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.SheetRow;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 public class TestNativeSpreadsheet {
 
@@ -52,11 +52,11 @@ public class TestNativeSpreadsheet {
         GoogleSpreadsheetConnection connection = Mockito.mock(GoogleSpreadsheetConnection.class);
         SpreadsheetInfo info = new SpreadsheetInfo();
         info.createWorksheet("x");
-        Mockito.stub(connection.getSpreadsheetInfo()).toReturn(info);
+        Mockito.when(connection.getSpreadsheetInfo()).thenReturn(info);
 
         RowsResult result = Mockito.mock(RowsResult.class);
-        Mockito.stub(result.iterator()).toReturn(Arrays.asList(new SheetRow()).iterator());
-        Mockito.stub(connection.executeQuery(info.getWorksheetByName("x"), "'a' foo", null, 2, 0)).toReturn(result);
+        Mockito.when(result.iterator()).thenReturn(Arrays.asList(new SheetRow()).iterator());
+        Mockito.when(connection.executeQuery(info.getWorksheetByName("x"), "'a' foo", null, 2, 0)).thenReturn(result);
 
         ResultSetExecution execution = (ResultSetExecution)sef.createExecution(command, ec, rm, connection);
         execution.execute();

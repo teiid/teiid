@@ -18,12 +18,11 @@
 
 package org.teiid.query.analysis;
 
-import java.util.Collection;
-
 import junit.framework.TestCase;
-
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
+
+import java.util.Collection;
 
 
 /**
@@ -63,7 +62,8 @@ public class TestAnalysisRecord extends TestCase {
         rec.println("b"); //$NON-NLS-1$
 
         String log = rec.getDebugLog();
-        assertEquals("a\nb\n", log); //$NON-NLS-1$
+        String lineSeparator = System.lineSeparator();
+        assertEquals(String.format("a%sb%s", lineSeparator, lineSeparator), log); //$NON-NLS-1$
     }
 
 }

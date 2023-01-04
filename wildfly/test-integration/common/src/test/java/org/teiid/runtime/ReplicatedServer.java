@@ -20,7 +20,7 @@ package org.teiid.runtime;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-import org.infinispan.transaction.tm.DummyTransactionManager;
+import org.infinispan.transaction.tm.EmbeddedTransactionManager;
 import org.teiid.jboss.NodeTracker;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.logging.LogConstants;
@@ -53,7 +53,7 @@ public class ReplicatedServer extends FakeServer {
             }
         };
         config.setInfinispanConfigFile(ispn);
-        config.setTransactionManager(new DummyTransactionManager());
+        config.setTransactionManager(EmbeddedTransactionManager.getInstance());
         config.setNodeName(nodeName);
         server.start(config, true);
 

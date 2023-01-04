@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature-group-spec name="teiid-resource-adapters" xmlns="urn:jboss:galleon:feature-group:1.0">
+    <feature spec="subsystem.resource-adapters">
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="file"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.file"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="ftp"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.ftp"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="hdfs"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.hdfs"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="s3"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.s3"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="google"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.google"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="ldap"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.ldap"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="salesforce"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.salesforce"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="salesforce-34"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.salesforce-34"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="salesforce-41"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.salesforce-41"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="webservice"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.webservice"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="mongodb"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.mongodb"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="couchbase"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.couchbase"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="cassandra"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.cassandra"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="simpledb"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.simpledb"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="accumulo"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.accumulo"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="solr"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.solr"/>
+        </feature>
+        <feature spec="subsystem.resource-adapters.resource-adapter">
+            <param name="resource-adapter" value="infinispan"/>
+            <param name="module" value="org.jboss.teiid.resource-adapter.infinispan.hotrod"/>
+        </feature>
+    </feature>
+</feature-group-spec>

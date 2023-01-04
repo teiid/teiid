@@ -140,7 +140,7 @@ public class OAuthUtil {
         }
 
         URI authenticateURL = org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.getAuthorizationURI(authorizeURL,
-                consumer.getKey(),
+                consumer.getClientId(),
                 callback,
                 "Auth URL",
                 scope);
@@ -188,7 +188,7 @@ public class OAuthUtil {
         String callback = getInput(in, "Enter callback URL (the redirect url match the setting in your Facebook App) = ");
 
         URI authenticateURL = org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.getAuthorizationURI(authorizeURL,
-                consumer.getKey(),
+                consumer.getClientId(),
                 callback,
                 "Auth URL",
                 scope);

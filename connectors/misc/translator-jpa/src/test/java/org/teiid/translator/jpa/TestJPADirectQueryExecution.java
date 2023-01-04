@@ -17,11 +17,6 @@
  */
 package org.teiid.translator.jpa;
 
-import static org.junit.Assert.*;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -32,6 +27,11 @@ import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestJPADirectQueryExecution {
@@ -55,7 +55,7 @@ public class TestJPADirectQueryExecution {
         EntityManager connection = Mockito.mock(EntityManager.class);
         Query query = Mockito.mock(Query.class);
 
-        Mockito.stub(connection.createQuery("SELECT Account.Id, Account.Type, Account.Name FROM Account")).toReturn(query);
+        Mockito.when(connection.createQuery("SELECT Account.Id, Account.Type, Account.Name FROM Account")).thenReturn(query);
 
         JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();
@@ -90,8 +90,8 @@ public class TestJPADirectQueryExecution {
         EntityManager connection = Mockito.mock(EntityManager.class);
 
         Query query = Mockito.mock(Query.class);
-        Mockito.stub(query.executeUpdate()).toReturn(12);
-        Mockito.stub(connection.createQuery("delete-query")).toReturn(query);
+        Mockito.when(query.executeUpdate()).thenReturn(12);
+        Mockito.when(connection.createQuery("delete-query")).thenReturn(query);
 
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
 
@@ -115,7 +115,7 @@ public class TestJPADirectQueryExecution {
         EntityManager connection = Mockito.mock(EntityManager.class);
 
         ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
-        Mockito.stub(connection.merge(argument.capture())).toReturn(new String("one"));
+        Mockito.when(connection.merge(argument.capture())).thenReturn(new String("one"));
 
         JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();

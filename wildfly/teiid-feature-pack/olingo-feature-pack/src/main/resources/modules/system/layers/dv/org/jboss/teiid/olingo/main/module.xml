@@ -6,6 +6,7 @@
     
     <resources>        
         <artifact name="${org.teiid:teiid-olingo}"/>
+        <artifact name="${org.teiid:teiid-olingo::odata4}"/>
     </resources>
 
     <dependencies>

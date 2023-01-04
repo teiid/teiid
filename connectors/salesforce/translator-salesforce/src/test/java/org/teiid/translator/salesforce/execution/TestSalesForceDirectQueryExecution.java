@@ -17,10 +17,8 @@
  */
 package org.teiid.translator.salesforce.execution;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
-
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.sobject.SObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,8 +32,10 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 
-import com.sforce.soap.partner.QueryResult;
-import com.sforce.soap.partner.sobject.SObject;
+import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("nls")
 public class TestSalesForceDirectQueryExecution {
@@ -59,7 +59,7 @@ public class TestSalesForceDirectQueryExecution {
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
         QueryResult qr = Mockito.mock(QueryResult.class);
-        Mockito.stub(qr.isDone()).toReturn(true);
+        Mockito.when(qr.isDone()).thenReturn(true);
 
         SObject[] results = new SObject[1];
 
@@ -71,8 +71,8 @@ public class TestSalesForceDirectQueryExecution {
         s.addField("Type", "The Type");
         s.addField("Name", "The Name");
 
-        Mockito.stub(qr.getRecords()).toReturn(results);
-        Mockito.stub(connection.query("SELECT Account.Id, Account.Type, Account.Name FROM Account", 0, false)).toReturn(qr);
+        Mockito.when(qr.getRecords()).thenReturn(results);
+        Mockito.when(connection.query("SELECT Account.Id, Account.Type, Account.Name FROM Account", 0, false)).thenReturn(qr);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();
@@ -106,7 +106,7 @@ public class TestSalesForceDirectQueryExecution {
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
         ArgumentCaptor<String[]> payloadArgument = ArgumentCaptor.forClass(String[].class);
-        Mockito.stub(connection.delete(payloadArgument.capture())).toReturn(23);
+        Mockito.when(connection.delete(payloadArgument.capture())).thenReturn(23);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();
@@ -129,7 +129,7 @@ public class TestSalesForceDirectQueryExecution {
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
         ArgumentCaptor<List> payloadArgument = ArgumentCaptor.forClass(List.class);
-        Mockito.stub(connection.update(payloadArgument.capture())).toReturn(23);
+        Mockito.when(connection.update(payloadArgument.capture())).thenReturn(23);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();
@@ -154,7 +154,7 @@ public class TestSalesForceDirectQueryExecution {
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
         ArgumentCaptor<DataPayload> payloadArgument = ArgumentCaptor.forClass(DataPayload.class);
-        Mockito.stub(connection.create(payloadArgument.capture())).toReturn(23);
+        Mockito.when(connection.create(payloadArgument.capture())).thenReturn(23);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
         execution.execute();

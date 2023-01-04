@@ -18,9 +18,7 @@
 package org.teiid.resource.spi;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Set;
 
 import javax.resource.spi.security.PasswordCredential;
@@ -78,14 +76,13 @@ public class ConnectionContext {
 
     public static String[] getRoles(Subject subject, String[] defalt) {
         ArrayList<String> roles = new ArrayList<String>();
-        Set<Group> principals = subject.getPrincipals(Group.class);
+        Set<Principal> principals = subject.getPrincipals();
         if ((principals != null) && (principals.size() > 0)) {
-            for (Group group : principals) {
-                if (group.getName().equalsIgnoreCase("roles")) { //$NON-NLS-1$
-                    Enumeration<? extends Principal> members = group.members();
-                    while(members.hasMoreElements()) {
-                        Principal member = members.nextElement();
-                        roles.add(member.getName());
+            for (Principal p : principals) {
+                if ((p instanceof Iterable) && p.getName().equalsIgnoreCase("roles")) { //$NON-NLS-1$
+                    Iterable<Principal> group = (Iterable<Principal>) p;
+                    for (Principal principal : group) {
+                        roles.add(principal.getName());
                     }
                 }
             }

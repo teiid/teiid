@@ -21,7 +21,7 @@
         <module name="org.jboss.teiid.translator.ws"/>
         <module name="org.jboss.teiid.translator.jdbc"/>
         <module name="javax.wsdl4j.api"/>
-        <module name="org.springframework.spring" optional="true"/>  
+        <module name="org.springframework.spring"/>
         <module name="org.joda.time" />
     </dependencies>
 </module>

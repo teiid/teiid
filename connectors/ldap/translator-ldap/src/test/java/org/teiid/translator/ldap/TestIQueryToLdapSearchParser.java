@@ -17,17 +17,6 @@
  */
 package org.teiid.translator.ldap;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.naming.directory.ModificationItem;
-import javax.naming.directory.SearchControls;
-import javax.naming.ldap.LdapContext;
-import javax.naming.ldap.SortKey;
-
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -39,6 +28,17 @@ import org.teiid.metadata.Column;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
+
+import javax.naming.directory.ModificationItem;
+import javax.naming.directory.SearchControls;
+import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.SortKey;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -135,7 +135,7 @@ public class TestIQueryToLdapSearchParser {
 
         LdapContext context = Mockito.mock(LdapContext.class);
 
-        Mockito.stub(context.lookup("")).toReturn(context);
+        Mockito.when(context.lookup("")).thenReturn(context);
 
         LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
 
@@ -159,7 +159,7 @@ public class TestIQueryToLdapSearchParser {
 
         LdapContext context = Mockito.mock(LdapContext.class);
 
-        Mockito.stub(context.lookup("")).toReturn(context);
+        Mockito.when(context.lookup("")).thenReturn(context);
 
         LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
 

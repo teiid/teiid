@@ -32,7 +32,6 @@ import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSName;
 import org.jboss.logging.Logger;
-import org.jboss.security.negotiation.Constants;
 
 /**
  * Utility class for converting a {@link GSSCredential} to a {@link Subject}
@@ -56,7 +55,9 @@ class GSSUtil {
         Subject intermediateSubject = null;
         if (CREATE_SUBJECT_METHOD != null) {
             try {
-                GSSName name = delegatedCredential.getName(Constants.KERBEROS_V5);
+                //http://docs.oracle.com/cd/E21455_01/common/tutorials/kerberos_principal.html
+                org.ietf.jgss.Oid KERBEROS_V5_PRINCIPAL_NAME = new org.ietf.jgss.Oid("1.2.840.113554.1.2.2.1"); //$NON-NLS-1$
+                GSSName name = delegatedCredential.getName(KERBEROS_V5_PRINCIPAL_NAME);
                 intermediateSubject = invokeCreateSubject(CREATE_SUBJECT_METHOD, name, delegatedCredential);
                 log.trace("Delegated credential converted to Subject.");
             } catch (GSSException e) {

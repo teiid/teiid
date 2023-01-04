@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+
+<feature-spec xmlns="urn:jboss:galleon:feature-spec:1.0" name="subsystem.teiid">
+    <annotation name="jboss-op">
+        <elem name="name" value="add"/>
+        <elem name="op-params" value="buffer-manager-disk-max-space-mb,resultset-cache-infinispan-container,resultset-cache-name,preparedplan-cache-infinispan-container,preparedplan-cache-name,authentication-security-domain,policy-decider-module"/>
+        <elem name="addr-params" value="profile,subsystem"/>
+    </annotation>
+    <annotation name="feature-branch">
+        <elem name="id" value="subsystem.teiid"/>
+    </annotation>
+    <refs>
+        <ref feature="extension" include="true"/>
+        <ref feature="profile" nillable="true"/>
+    </refs>
+    <params>
+        <param name="host" default="GLN_UNDEFINED"/>
+        <param name="subsystem" feature-id="true" default="teiid"/>
+        <param name="extension" default="org.jboss.teiid"/>
+        <param name="profile" feature-id="true" default="GLN_UNDEFINED"/>
+        <param name="buffer-manager-disk-max-space-mb" nillable="true"/>
+        <param name="resultset-cache-infinispan-container" nillable="true"/>
+        <param name="resultset-cache-name" nillable="true"/>
+        <param name="preparedplan-cache-infinispan-container" nillable="true"/>
+        <param name="preparedplan-cache-name" nillable="true"/>
+        <param name="authentication-security-domain" nillable="true"/>
+        <param name="policy-decider-module" nillable="true"/>
+    </params>
+    <packages>
+        <package name="org.jboss.teiid"/>
+    </packages>
+</feature-spec>

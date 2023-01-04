@@ -18,14 +18,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -55,6 +47,12 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestPreparedStatement {
@@ -277,7 +275,7 @@ public class TestPreparedStatement {
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache);
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
-        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
+        Mockito.when(repo.getConnectorManager(Mockito.anyString())).thenReturn(new AutoGenDataService());
 
         serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null,
                 new FakeTransactionService(), null, workContext, prepPlanCache);

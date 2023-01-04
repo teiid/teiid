@@ -18,13 +18,6 @@
 
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
-
-import java.util.Map;
-
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginException;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.DataPolicy;
@@ -35,6 +28,12 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
+
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings("nls")
 public class TestDQPWorkContext {
@@ -62,13 +61,13 @@ public class TestDQPWorkContext {
     @Test public void testClearPolicies() {
         DQPWorkContext message = new DQPWorkContext();
         message.setSession(Mockito.mock(SessionMetadata.class));
-        Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
+        Mockito.when(message.getSession().getVdb()).thenReturn(new VDBMetaData());
         Map<String, DataPolicy> map = message.getAllowedDataPolicies();
         map.put("role", Mockito.mock(DataPolicy.class)); //$NON-NLS-1$
         assertFalse(map.isEmpty());
 
         message.setSession(Mockito.mock(SessionMetadata.class));
-        Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
+        Mockito.when(message.getSession().getVdb()).thenReturn(new VDBMetaData());
         map = message.getAllowedDataPolicies();
         assertTrue(map.isEmpty());
     }
@@ -81,7 +80,7 @@ public class TestDQPWorkContext {
         DataPolicyMetadata dpm = new DataPolicyMetadata();
         dpm.setAnyAuthenticated(true);
         vdb.addDataPolicy(dpm);
-        Mockito.stub(mock.getVdb()).toReturn(vdb);
+        Mockito.when(mock.getVdb()).thenReturn(vdb);
 
         //unauthenticated
         Map<String, DataPolicy> map = message.getAllowedDataPolicies();
@@ -89,7 +88,7 @@ public class TestDQPWorkContext {
 
         //authenticated
         message = new DQPWorkContext();
-        Mockito.stub(mock.getSubject()).toReturn(new Subject());
+        Mockito.when(mock.getSubject()).thenReturn(new Subject());
         message.setSession(mock);
         map = message.getAllowedDataPolicies();
         assertEquals(1, map.size());
@@ -139,7 +138,7 @@ public class TestDQPWorkContext {
         message.setSecurityHelper(sc);
         message.setSession(Mockito.mock(SessionMetadata.class));
         final String currentSC = "teiid-security-context"; //$NON-NLS-1$
-        Mockito.stub(message.getSession().getSecurityContext()).toReturn(currentSC);
+        Mockito.when(message.getSession().getSecurityContext()).thenReturn(currentSC);
 
         Runnable r = new Runnable() {
             @Override

@@ -17,15 +17,6 @@
  */
 package org.teiid.translator.accumulo;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.admin.TimeType;
@@ -49,6 +40,15 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
 
 /*
  * does not consistently run in unit tests, should still be utilized with any translator changes
@@ -84,8 +84,8 @@ public class TestAccumuloQueryExecution {
 
         connector = Connector.from(client);
 
-        Mockito.stub(connection.getInstance()).toReturn(connector);
-        Mockito.stub(connection.getAuthorizations()).toReturn(new Authorizations("public"));
+        Mockito.when(connection.getInstance()).thenReturn(connector);
+        Mockito.when(connection.getAuthorizations()).thenReturn(new Authorizations("public"));
         connector.tableOperations().create("customer", true, TimeType.LOGICAL);
         connector.tableOperations().create("rental", true, TimeType.LOGICAL);
     }

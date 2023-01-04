@@ -60,14 +60,14 @@
         <version.cassandra-driver-core>3.7.1</version.cassandra-driver-core>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
         <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
-        <version.com.fasterxml.jackson.core>2.11.0.rc1</version.com.fasterxml.jackson.core>
-        <version.com.fasterxml.jackson.dataformat>2.11.0.rc1</version.com.fasterxml.jackson.dataformat>
-        <version.com.fasterxml.jackson.core.jackson-databind>2.11.0.rc1</version.com.fasterxml.jackson.core.jackson-databind>
+        <version.com.fasterxml.jackson.core>2.12.3</version.com.fasterxml.jackson.core>
+        <version.com.fasterxml.jackson.dataformat>2.12.3</version.com.fasterxml.jackson.dataformat>
+        <version.com.fasterxml.jackson.core.jackson-databind>2.12.3</version.com.fasterxml.jackson.core.jackson-databind>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.com.force.api.41>45.1.0</version.com.force.api.41>
         <version.com.google.code.findbugs>3.0.2</version.com.google.code.findbugs>
-        <version.com.google.guava>27.0.1-jre</version.com.google.guava>
-        <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>      
+        <version.com.google.guava>30.1-jre</version.com.google.guava>
+        <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>
         
         <version.commons-configuration>1.7</version.commons-configuration>
         <version.commons-configuration2>2.7</version.commons-configuration2>
@@ -108,11 +108,10 @@
         <version.org.eclipse.jetty>9.4.41.v20210516</version.org.eclipse.jetty>
         <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
         <version.org.eclipse.persistence.javax>2.1.0</version.org.eclipse.persistence.javax>
-        <version.org.hibernate.core>5.4.12.Final</version.org.hibernate.core>
+        <version.org.hibernate.core>5.3.23.Final</version.org.hibernate.core>
         <version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api>1.0.2.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.1-api>
-        <version.org.mockito>1.10.19</version.org.mockito>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
-        <version.org.mockito>1.10.19</version.org.mockito>
+        <version.org.mockito>4.2.0</version.org.mockito>
         <version.org.mongodb.mongo-java-driver>3.9.1</version.org.mongodb.mongo-java-driver>
         <version.org.reflections>0.9.11</version.org.reflections>
         
@@ -125,7 +124,7 @@
         <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
         <version.release.plugin>2.5</version.release.plugin>
         <version.solr>6.4.1</version.solr>
-        <version.sun.jaxb>2.3.0</version.sun.jaxb>      
+        <version.sun.jaxb>2.3.3-b02</version.sun.jaxb>
         <version.swagger-parser>1.0.44</version.swagger-parser>
         <version.swagger-parser.v3>2.0.12</version.swagger-parser.v3>
         <version.xml-apis>1.4.01</version.xml-apis>
@@ -134,7 +133,7 @@
 
         
         <!-- Infinispan Translator -->
-        <version.org.infinispan>10.0.1.Final</version.org.infinispan>
+        <version.org.infinispan>12.1.7.Final</version.org.infinispan>
         <version.protostream>4.3.0.Final</version.protostream>
         
         <!--  Data Quality -->
@@ -148,11 +147,11 @@
         <version.xerces>2.12.0</version.xerces>
         <version.org.slf4j>1.7.29</version.org.slf4j>
         
-        <version.caffeine>2.8.0</version.caffeine>
-        <version.org.checkerframework>2.10.0</version.org.checkerframework>
-        
-        <version.org.apache.cxf>3.3.6</version.org.apache.cxf>
-        <version.org.springframework>5.1.14.RELEASE</version.org.springframework>
+        <version.caffeine>2.8.5</version.caffeine>
+        <version.org.checkerframework>3.4.1</version.org.checkerframework>
+
+        <version.org.apache.cxf>3.4.4</version.org.apache.cxf>
+        <version.org.springframework>5.3.21</version.org.springframework>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -257,6 +256,7 @@
 		<build>
 			<plugins>
 				<plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-gpg-plugin</artifactId>
 					<executions>
 						<execution>
@@ -2045,6 +2045,41 @@
                 <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
                 <version>${version.org.apache.cxf}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-core</artifactId>
+                <version>${version.org.apache.cxf}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${version.org.springframework}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${version.org.springframework}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${version.org.springframework}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-aop</artifactId>
+                <version>${version.org.springframework}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-expression</artifactId>
+                <version>${version.org.springframework}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-tx</artifactId>
+                <version>${version.org.springframework}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 	
@@ -2081,7 +2116,7 @@
 		<module>cache-caffeine</module>
 		<module>runtime</module>
 		<module>hibernate-dialect</module>
-		<module>eclipselink-platform</module>		
+		<module>eclipselink-platform</module>
 		<module>olingo-common</module>
 		<module>olingo</module>
         <module>connectors</module>

@@ -41,9 +41,13 @@
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-core</artifactId>
         </dependency>
-		<dependency>
-		    <groupId>org.picketbox</groupId>
-		    <artifactId>picketbox</artifactId>
-		</dependency>        
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wildfly.security</groupId>
+            <artifactId>wildfly-elytron</artifactId>
+        </dependency>
     </dependencies>
 </project>

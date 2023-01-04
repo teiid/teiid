@@ -16,6 +16,7 @@
         <module name="org.jboss.teiid.api" />
         <module name="com.googlecode.json-simple" />
         <module name="javax.wsdl4j.api"/>
-        <module name="org.springframework.spring" optional="true"/>  
+        <module name="org.springframework.spring" optional="true"/>
+        <module name="org.apache.cxf"/>
     </dependencies>
 </module>

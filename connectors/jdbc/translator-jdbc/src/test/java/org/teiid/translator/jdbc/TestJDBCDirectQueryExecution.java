@@ -18,15 +18,6 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.*;
-
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
@@ -34,6 +25,10 @@ import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
+
+import java.sql.*;
+
+import static org.junit.Assert.assertArrayEquals;
 
 @SuppressWarnings("nls")
 public class TestJDBCDirectQueryExecution {
@@ -45,17 +40,17 @@ public class TestJDBCDirectQueryExecution {
         ResultSet rs = Mockito.mock(ResultSet.class);
         ResultSetMetaData rsm = Mockito.mock(ResultSetMetaData.class);
 
-        Mockito.stub(stmt.getUpdateCount()).toReturn(-1);
-        Mockito.stub(stmt.getResultSet()).toReturn(rs);
-        Mockito.stub(rs.getMetaData()).toReturn(rsm);
-        Mockito.stub(rsm.getColumnCount()).toReturn(2);
-        Mockito.stub(connection.createStatement()).toReturn(stmt); //$NON-NLS-1$
-        Mockito.stub(stmt.execute("select * from Source")).toReturn(true);
-        Mockito.stub(rs.next()).toReturn(true);
-        Mockito.stub(rs.getObject(1)).toReturn(5);
-        Mockito.stub(rs.getObject(2)).toReturn("five");
+        Mockito.when(stmt.getUpdateCount()).thenReturn(-1);
+        Mockito.when(stmt.getResultSet()).thenReturn(rs);
+        Mockito.when(rs.getMetaData()).thenReturn(rsm);
+        Mockito.when(rsm.getColumnCount()).thenReturn(2);
+        Mockito.when(connection.createStatement()).thenReturn(stmt); //$NON-NLS-1$
+        Mockito.when(stmt.execute("select * from Source")).thenReturn(true);
+        Mockito.when(rs.next()).thenReturn(true);
+        Mockito.when(rs.getObject(1)).thenReturn(5);
+        Mockito.when(rs.getObject(2)).thenReturn("five");
         DatabaseMetaData dbmd = Mockito.mock(DatabaseMetaData.class);
-        Mockito.stub(connection.getMetaData()).toReturn(dbmd);
+        Mockito.when(connection.getMetaData()).thenReturn(dbmd);
 
         JDBCExecutionFactory ef = new JDBCExecutionFactory();
         ef.setSupportsDirectQueryProcedure(true);
@@ -71,17 +66,17 @@ public class TestJDBCDirectQueryExecution {
         ResultSet rs = Mockito.mock(ResultSet.class);
         ResultSetMetaData rsm = Mockito.mock(ResultSetMetaData.class);
 
-        Mockito.stub(stmt.getUpdateCount()).toReturn(-1);
-        Mockito.stub(stmt.getResultSet()).toReturn(rs);
-        Mockito.stub(stmt.execute()).toReturn(true);
-        Mockito.stub(rs.getMetaData()).toReturn(rsm);
-        Mockito.stub(rsm.getColumnCount()).toReturn(2);
-        Mockito.stub(connection.prepareStatement("select * from Source where e1 = ?")).toReturn(stmt); //$NON-NLS-1$
-        Mockito.stub(rs.next()).toReturn(true);
-        Mockito.stub(rs.getObject(1)).toReturn(5);
-        Mockito.stub(rs.getObject(2)).toReturn("five");
+        Mockito.when(stmt.getUpdateCount()).thenReturn(-1);
+        Mockito.when(stmt.getResultSet()).thenReturn(rs);
+        Mockito.when(stmt.execute()).thenReturn(true);
+        Mockito.when(rs.getMetaData()).thenReturn(rsm);
+        Mockito.when(rsm.getColumnCount()).thenReturn(2);
+        Mockito.when(connection.prepareStatement("select * from Source where e1 = ?")).thenReturn(stmt); //$NON-NLS-1$
+        Mockito.when(rs.next()).thenReturn(true);
+        Mockito.when(rs.getObject(1)).thenReturn(5);
+        Mockito.when(rs.getObject(2)).thenReturn("five");
         DatabaseMetaData dbmd = Mockito.mock(DatabaseMetaData.class);
-        Mockito.stub(connection.getMetaData()).toReturn(dbmd);
+        Mockito.when(connection.getMetaData()).thenReturn(dbmd);
 
         JDBCExecutionFactory ef = new JDBCExecutionFactory();
         ef.setSupportsDirectQueryProcedure(true);
@@ -98,14 +93,14 @@ public class TestJDBCDirectQueryExecution {
         ResultSet rs = Mockito.mock(ResultSet.class);
         ResultSetMetaData rsm = Mockito.mock(ResultSetMetaData.class);
 
-        Mockito.stub(stmt.getUpdateCount()).toReturn(-1);
-        Mockito.stub(stmt.getUpdateCount()).toReturn(5);
-        Mockito.stub(stmt.execute()).toReturn(false);
-        Mockito.stub(rs.getMetaData()).toReturn(rsm);
-        Mockito.stub(rsm.getColumnCount()).toReturn(2);
-        Mockito.stub(connection.prepareStatement("update source set e1=? where e2 = ?")).toReturn(stmt); //$NON-NLS-1$
+        Mockito.when(stmt.getUpdateCount()).thenReturn(-1);
+        Mockito.when(stmt.getUpdateCount()).thenReturn(5);
+        Mockito.when(stmt.execute()).thenReturn(false);
+        Mockito.when(rs.getMetaData()).thenReturn(rsm);
+        Mockito.when(rsm.getColumnCount()).thenReturn(2);
+        Mockito.when(connection.prepareStatement("update source set e1=? where e2 = ?")).thenReturn(stmt); //$NON-NLS-1$
         DatabaseMetaData dbmd = Mockito.mock(DatabaseMetaData.class);
-        Mockito.stub(connection.getMetaData()).toReturn(dbmd);
+        Mockito.when(connection.getMetaData()).thenReturn(dbmd);
 
         JDBCExecutionFactory ef = new JDBCExecutionFactory();
         ef.setSupportsDirectQueryProcedure(true);

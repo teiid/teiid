@@ -38,7 +38,7 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
         TestCase.assertEquals("PROC", metaObject.getNameInSource()); //$NON-NLS-1$
         TestCase.assertEquals(props, metaObject.getProperties());
         ProcedureExecution exec = Mockito.mock(ProcedureExecution.class);
-        Mockito.stub(exec.next()).toReturn(null);
+        Mockito.when(exec.next()).thenReturn(null);
         return exec;
     }
 
@@ -103,7 +103,7 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
 
         TestCase.assertEquals(elementProps2, elementMD2.getProperties());
         ResultSetExecution exec = Mockito.mock(ResultSetExecution.class);
-        Mockito.stub(exec.next()).toReturn(null);
+        Mockito.when(exec.next()).thenReturn(null);
         return exec;
     }
 }

@@ -18,10 +18,10 @@
 
 package org.teiid.translator.cassandra;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
-
+import com.datastax.driver.core.ColumnDefinitions;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Row;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -35,10 +35,9 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.ResultSetFuture;
-import com.datastax.driver.core.Row;
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("nls")
 public class TestNativeCassandra {
@@ -56,15 +55,15 @@ public class TestNativeCassandra {
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
 
         ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
-        Mockito.stub(rsf.isDone()).toReturn(true);
+        Mockito.when(rsf.isDone()).thenReturn(true);
         ResultSet rs = Mockito.mock(ResultSet.class);
-        Mockito.stub(rsf.getUninterruptibly()).toReturn(rs);
+        Mockito.when(rsf.getUninterruptibly()).thenReturn(rs);
         Row row = Mockito.mock(Row.class);
         ColumnDefinitions cd = Mockito.mock(ColumnDefinitions.class);
-        Mockito.stub(row.getColumnDefinitions()).toReturn(cd);
-        Mockito.stub(rs.one()).toReturn(row).toReturn(null);
+        Mockito.when(row.getColumnDefinitions()).thenReturn(cd);
+        Mockito.when(rs.one()).thenReturn(row).thenReturn(null);
 
-        Mockito.stub(connection.executeQuery("select 'a'")).toReturn(rsf);
+        Mockito.when(connection.executeQuery("select 'a'")).thenReturn(rsf);
 
         ResultSetExecution execution = (ResultSetExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
@@ -87,7 +86,7 @@ public class TestNativeCassandra {
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
 
         ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
-        Mockito.stub(connection.executeQuery("delete from 'a' where 1")).toReturn(rsf);
+        Mockito.when(connection.executeQuery("delete from 'a' where 1")).thenReturn(rsf);
 
         Execution execution = cef.createExecution(command, ec, rm, connection);
         execution.execute();

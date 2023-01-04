@@ -13,21 +13,47 @@
     <dependencies>
         <dependency>
             <groupId>org.wildfly</groupId>
-            <artifactId>wildfly-feature-pack</artifactId>
+            <artifactId>wildfly-galleon-pack</artifactId>
+            <version>${version.org.wildfly}</version>
             <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.teiid.wildfly</groupId>
-            <artifactId>teiid-client-feature-pack</artifactId>
+            <artifactId>teiid-client-galleon-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${version.org.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${version.org.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${version.org.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-expression</artifactId>
+            <version>${version.org.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aop</artifactId>
+            <version>${version.org.springframework}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${version.org.springframework}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
             <artifactId>feature-pack-jdbc</artifactId>
@@ -39,7 +65,7 @@
             <artifactId>feature-pack-ws</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-        </dependency>                        
+        </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-odata</artifactId>
@@ -54,47 +80,20 @@
         <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
             <plugin>
-                <groupId>org.wildfly.build</groupId>
-                <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
-                <version>${version.org.wildfly.build-tools}</version>
+                <groupId>org.wildfly.galleon-plugins</groupId>
+                <artifactId>wildfly-galleon-maven-plugin</artifactId>
+                <version>${version.wildfly.galleon.maven.plugin}</version>
                 <executions>
                     <execution>
                         <id>feature-pack-build</id>
                         <goals>
-                            <goal>build</goal>
+                            <goal>build-user-feature-pack</goal>
                         </goals>
                         <phase>compile</phase>
-                        <configuration>
-                            <config-file>feature-pack-build.xml</config-file>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                  <execution>
-                    <id>assemble</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                    <configuration>
-                      <descriptors>
-                        <descriptor>feature-pack-assembly.xml</descriptor>
-                      </descriptors>
-                      <recompressZippedFiles>true</recompressZippedFiles>
-                      <finalName>${project.artifactId}-${project.version}</finalName>
-                      <appendAssemblyId>false</appendAssemblyId>
-                      <outputDirectory>target/</outputDirectory>
-                      <workDirectory>target/assembly/work</workDirectory>
-                      <tarLongFileMode>gnu</tarLongFileMode>
-                    </configuration>
-                  </execution>
-                </executions>
-            </plugin>
-		</plugins>
-	</build>
+        </plugins>
+    </build>
 
 </project>

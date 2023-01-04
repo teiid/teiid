@@ -17,33 +17,49 @@
  */
 package org.teiid.jboss;
 
-import java.security.acl.Group;
 
-import javax.security.auth.login.LoginException;
+import org.wildfly.security.auth.SupportLevel;
+import org.wildfly.security.auth.server.RealmIdentity;
+import org.wildfly.security.auth.server.RealmUnavailableException;
+import org.wildfly.security.auth.server.SecurityRealm;
+import org.wildfly.security.auth.server.event.RealmAuthenticationEvent;
+import org.wildfly.security.auth.server.event.RealmAuthorizationEvent;
+import org.wildfly.security.auth.server.event.RealmEvent;
+import org.wildfly.security.credential.Credential;
+import org.wildfly.security.evidence.Evidence;
 
-import org.jboss.security.SimpleGroup;
-import org.jboss.security.auth.spi.UsernamePasswordLoginModule;
+import java.security.Principal;
+import java.security.spec.AlgorithmParameterSpec;
 
 /**
- * A simple server login module to creates subject with passed in name and null
- * password
+ * A simple server login realm to creates subject with passed in name and null password
+ * Note: Conversion to SecurityRealm is not complete
  */
-public class SimpleLoginModule extends UsernamePasswordLoginModule {
+public class SimpleLoginModule implements SecurityRealm { //extends UsernamePasswordLoginModule {
+
 
     @Override
-    protected boolean validatePassword(String inputPassword, String expectedPassword) {
-        return true;
+    public RealmIdentity getRealmIdentity(Principal principal) throws RealmUnavailableException {
+        return RealmIdentity.ANONYMOUS;
     }
 
     @Override
-    protected String getUsersPassword() throws LoginException {
-        return null;
+    public SupportLevel getCredentialAcquireSupport(Class<? extends Credential> aClass, String s, AlgorithmParameterSpec algorithmParameterSpec) {
+        return SupportLevel.UNSUPPORTED;
     }
 
     @Override
-    protected Group[] getRoleSets() throws LoginException {
-        SimpleGroup roles = new SimpleGroup("Roles"); //$NON-NLS-1$
-        Group[] roleSets = { roles };
-        return roleSets;
+    public SupportLevel getEvidenceVerifySupport(Class<? extends Evidence> aClass, String s) {
+        return SupportLevel.UNSUPPORTED;
+    }
+
+    public void handleRealmEvent(RealmEvent event) {
+        if(event instanceof RealmAuthenticationEvent){
+
+        } else if(event instanceof RealmAuthorizationEvent){
+
+        } else {
+            SecurityRealm.super.handleRealmEvent(event);
+        }
     }
 }

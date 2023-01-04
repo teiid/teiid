@@ -932,10 +932,10 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testDatabaseVersions() throws Exception {
         ConnectionImpl impl = Mockito.mock(ConnectionImpl.class);
-        Mockito.stub(impl.getConnectionProps()).toReturn(new Properties());
+        Mockito.when(impl.getConnectionProps()).thenReturn(new Properties());
         ServerConnection sconn = Mockito.mock(ServerConnection.class);
-        Mockito.stub(sconn.getServerVersion()).toReturn("01.02.03-something");
-        Mockito.stub(impl.getServerConnection()).toReturn(sconn);
+        Mockito.when(sconn.getServerVersion()).thenReturn("01.02.03-something");
+        Mockito.when(impl.getServerConnection()).thenReturn(sconn);
         DatabaseMetaDataImpl metadata = new DatabaseMetaDataImpl(impl);
         assertEquals(1, metadata.getDatabaseMajorVersion());
         assertEquals(2, metadata.getDatabaseMinorVersion());

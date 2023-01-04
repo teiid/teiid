@@ -17,26 +17,6 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.activation.DataSource;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.handler.MessageContext;
-import javax.xml.ws.http.HTTPBinding;
-
 import org.apache.olingo.commons.api.edm.geo.Point;
 import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
@@ -58,6 +38,20 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.ws.WSConnection;
+
+import javax.activation.DataSource;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
+import javax.xml.ws.handler.MessageContext;
+import javax.xml.ws.http.HTTPBinding;
+import java.io.*;
+import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataQueryExecution {
@@ -86,11 +80,11 @@ public class TestODataQueryExecution {
         headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
         Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Mockito.when(dispatch.getRequestContext()).thenReturn(headers);
+        Mockito.when(dispatch.getResponseContext()).thenReturn(headers);
 
-        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
-                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.when(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
+                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).thenReturn(dispatch);
 
         DataSource ds = new DataSource() {
             @Override
@@ -111,7 +105,7 @@ public class TestODataQueryExecution {
                 return "application/xml";
             }
         };
-        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
+        Mockito.when(dispatch.invoke(Mockito.nullable(DataSource.class))).thenReturn(ds);
 
         ResultSetExecution execution = translator
                 .createResultSetExecution((QueryExpression) cmd, context,
@@ -153,11 +147,11 @@ public class TestODataQueryExecution {
         headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
         Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Mockito.when(dispatch.getRequestContext()).thenReturn(headers);
+        Mockito.when(dispatch.getResponseContext()).thenReturn(headers);
 
-        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
-                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.when(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
+                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).thenReturn(dispatch);
 
         DataSource ds = new DataSource() {
             @Override
@@ -178,7 +172,7 @@ public class TestODataQueryExecution {
                 return "application/xml";
             }
         };
-        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
+        Mockito.when(dispatch.invoke(Mockito.nullable(DataSource.class))).thenReturn(ds);
 
         ProcedureExecution execution = translator
                 .createProcedureExecution((Call) cmd, context,

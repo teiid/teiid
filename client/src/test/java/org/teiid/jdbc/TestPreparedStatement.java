@@ -18,22 +18,7 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
-
-import java.sql.BatchUpdateException;
-import java.sql.Blob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-import java.util.TimeZone;
-
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -45,6 +30,11 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidException;
 import org.teiid.net.ServerConnection;
+
+import java.sql.*;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 
 /**
@@ -65,21 +55,21 @@ public class TestPreparedStatement {
     @Test public void testBatchedUpdateExecution() throws Exception {
         // Build up a fake connection instance for use with the prepared statement
         ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
-        Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
+        Mockito.when(conn.getConnectionProps()).thenReturn(new Properties());
         DQP dqp = Mockito.mock(DQP.class);
         ServerConnection serverConn = Mockito.mock(ServerConnection.class);
         LogonResult logonResult = Mockito.mock(LogonResult.class);
 
         // stub methods
-        Mockito.stub(conn.getServerConnection()).toReturn(serverConn);
-        Mockito.stub(serverConn.getLogonResult()).toReturn(logonResult);
-        Mockito.stub(logonResult.getTimeZone()).toReturn(TimeZone.getDefault());
+        Mockito.when(conn.getServerConnection()).thenReturn(serverConn);
+        Mockito.when(serverConn.getLogonResult()).thenReturn(logonResult);
+        Mockito.when(logonResult.getTimeZone()).thenReturn(TimeZone.getDefault());
 
         // a dummy result message that is specific to this test case
         final ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>();
         final int[] count = new int[1];
         final ResultsMessage rm = new ResultsMessage();
-        Mockito.stub(dqp.executeRequest(Matchers.anyLong(), (RequestMessage)Matchers.anyObject())).toAnswer(new Answer<ResultsFuture<ResultsMessage>>() {
+        Mockito.when(dqp.executeRequest(Mockito.anyLong(), Mockito.any(RequestMessage.class))).thenAnswer(new Answer<ResultsFuture<ResultsMessage>>() {
             @Override
             public ResultsFuture<ResultsMessage> answer(InvocationOnMock invocation)
                     throws Throwable {
@@ -97,7 +87,7 @@ public class TestPreparedStatement {
             }});
         rm.setUpdateResult(true);
         results.getResultsReceiver().receiveResults(rm);
-        Mockito.stub(conn.getDQP()).toReturn(dqp);
+        Mockito.when(conn.getDQP()).thenReturn(dqp);
 
         // some update SQL
         String sqlCommand = "delete from table where col=?"; //$NON-NLS-1$
@@ -302,9 +292,9 @@ public class TestPreparedStatement {
         ServerConnection serverConn = Mockito.mock(ServerConnection.class);
         LogonResult logonResult = Mockito.mock(LogonResult.class);
 
-        Mockito.stub(conn.getServerConnection()).toReturn(serverConn);
-        Mockito.stub(serverConn.getLogonResult()).toReturn(logonResult);
-        Mockito.stub(logonResult.getTimeZone()).toReturn(TimeZone.getDefault());
+        Mockito.when(conn.getServerConnection()).thenReturn(serverConn);
+        Mockito.when(serverConn.getLogonResult()).thenReturn(logonResult);
+        Mockito.when(logonResult.getTimeZone()).thenReturn(TimeZone.getDefault());
 
         return getMMPreparedStatement(conn, sql);
     }
